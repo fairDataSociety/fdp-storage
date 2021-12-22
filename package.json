@@ -50,7 +50,9 @@
     "lint:check": "eslint \"src/**/*.ts\" \"test/**/*.ts\" && prettier --check \"src/**/*.ts\" \"test/**/*.ts\"",
     "depcheck": "depcheck ."
   },
-  "dependencies": {},
+  "dependencies": {
+    "@ethersphere/bee-js": "^3.1.0"
+  },
   "devDependencies": {
     "@babel/core": "^7.14.6",
     "@babel/plugin-proposal-class-properties": "^7.14.5",
