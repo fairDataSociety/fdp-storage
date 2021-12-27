@@ -1,0 +1,60 @@
+import { FairdriveProtocol } from '../../src'
+
+jest.setTimeout(200000)
+describe('Account', () => {
+  function createFdp() {
+    return new FairdriveProtocol('http://localhost:5050/')
+  }
+
+  let fdp = createFdp()
+
+  it('should strip trailing slash', () => {
+    const fdp = new FairdriveProtocol('http://localhost:5050/')
+    expect(fdp.bee.url).toEqual('http://localhost:5050')
+  })
+
+  describe('Login', () => {
+    it('should login with existing user and address', async () => {
+      expect(fdp.users.debug).toBeUndefined()
+      await fdp.userImport('debug', '0xDd1AB1bA447D4D89A49d01386dbef99fB1005ED2')
+      expect(fdp.users.debug).toBeDefined()
+      await fdp.userLogin('debug', 'debug')
+
+      expect(fdp.users.demo).toBeUndefined()
+      await fdp.userImport('demo', '0xF68FAcaEFc7DBc486a07B9a8f26a5085B3e74eb3')
+      expect(fdp.users.demo).toBeDefined()
+      await fdp.userLogin('demo', 'demo')
+    })
+
+    it('should login with existing user and mnemonic', async () => {
+      fdp = createFdp()
+
+      expect(fdp.users.debug).toBeUndefined()
+      await fdp.userImport('debug', '', 'home tragic shoe fun planet false imitate raven sword tool purchase mouse')
+      expect(fdp.users.debug).toBeDefined()
+      await fdp.userLogin('debug', 'debug')
+    })
+
+    it('auth with incorrect data should throw errors', async () => {
+      // not imported user
+      await expect(fdp.userLogin('zzz', 'zzz')).rejects.toThrow('User is not imported')
+
+      // imported, but incorrect password
+      await expect(fdp.userLogin('debug', 'debug111')).rejects.toThrow('Incorrect mnemonic')
+
+      // import with address and mnemonic
+      await expect(
+        fdp.userImport('ttt', '0xDd1AB1bA447D4D89A49d01386dbef99fB1005ED2', 'some mnemonic'),
+      ).rejects.toThrow('Use only mnemonic or address')
+
+      // import with incorrect mnemonic
+      await expect(fdp.userImport('ttt', '', 'some mnemonic')).rejects.toThrow('Incorrect mnemonic')
+
+      // import without address or mnemonic
+      await expect(fdp.userImport('ttt', '', '')).rejects.toThrow('Address or mnemonic is required')
+
+      // import without info
+      await expect(fdp.userImport('', '', '')).rejects.toThrow('Username is required')
+    })
+  })
+})

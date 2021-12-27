@@ -1,8 +1,7 @@
-import {Bee, Utils} from '@ethersphere/bee-js'
-import {bmtHashString, extractEncryptedMnemonic} from "./account/utils";
-import {decrypt, keccak256Hash} from "./account/encryption";
-import {bytesToHex} from "./utils/hex";
-import {getId} from "./feed/handler";
+import { Bee } from '@ethersphere/bee-js'
+import { decrypt } from './account/encryption'
+import { getEncryptedMnemonic } from './account/mnemonic'
+import { Wallet } from 'ethers'
 
 export class FairdriveProtocol {
   public readonly bee: Bee
@@ -13,15 +12,26 @@ export class FairdriveProtocol {
     this.bee = new Bee(url)
   }
 
-  async userImport(username: string, address: string, mnemonic: string = ''): Promise<boolean> {
-    if (mnemonic) {
-      // todo implement
-      throw new Error('Mnemonic is not supported')
+  async userImport(username: string, address = '', mnemonic = ''): Promise<boolean> {
+    // todo validate address and username
+    if (!username) {
+      throw new Error('Username is required')
     }
 
-    // todo validate address and username
-    if (!(username && address)) {
-      throw new Error('Pass username and address')
+    if (address && mnemonic) {
+      throw new Error('Use only mnemonic or address')
+    }
+
+    if (!address && !mnemonic) {
+      throw new Error('Address or mnemonic is required')
+    }
+
+    if (mnemonic) {
+      try {
+        address = Wallet.fromMnemonic(mnemonic).address
+      } catch (e) {
+        throw new Error('Incorrect mnemonic')
+      }
     }
 
     this.users[username] = address
@@ -31,18 +41,18 @@ export class FairdriveProtocol {
 
   async userLogin(username: string, password: string): Promise<boolean> {
     if (!this.users[username]) {
-      throw new Error('Before login you should import the user')
+      throw new Error('User is not imported')
     }
 
     const address = this.users[username]
-    const addressBytes = Utils.makeEthAddress(address)
-    const usernameHash = bmtHashString(username)
-    const id = getId(usernameHash)
-    const chunkReference = bytesToHex(keccak256Hash(id, addressBytes))
-    const chunk = await this.bee.downloadChunk(chunkReference)
-    const encryptedMnemonic = extractEncryptedMnemonic(chunk)
+    const encryptedMnemonic = await getEncryptedMnemonic(this.bee, username, address)
     const decrypted = decrypt(password, encryptedMnemonic.text())
-    // todo check is correct mnemonic
+
+    try {
+      Wallet.fromMnemonic(decrypted)
+    } catch (e) {
+      throw new Error('Incorrect mnemonic')
+    }
 
     return true
   }

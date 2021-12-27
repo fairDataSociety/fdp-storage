@@ -1,7 +1,7 @@
-import {Data} from '@ethersphere/bee-js/dist/src/types'
-import {Bytes, wrapBytesWithHelpers} from '../utils/bytes'
-import {makeSpan} from "../chunk/span";
-import {bmtHash} from "../chunk/bmt";
+import { Data } from '@ethersphere/bee-js/dist/src/types'
+import { Bytes, wrapBytesWithHelpers } from '../utils/bytes'
+import { makeSpan } from '../chunk/span'
+import { bmtHash } from '../chunk/bmt'
 
 export function extractEncryptedMnemonic(data: Data) {
   // todo what is first 105 bytes?

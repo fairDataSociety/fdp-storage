@@ -1,6 +1,6 @@
 import crypto from 'crypto'
-import {keccak256, Message} from 'js-sha3'
-import {Bytes} from './bytes'
+import { keccak256, Message } from 'js-sha3'
+import { Bytes } from '../utils/bytes'
 
 const algorithm = 'aes-256-cfb'
 
@@ -21,7 +21,8 @@ export function decrypt(keyStr: string, text: string) {
   const iv = contents.slice(0, 16)
   const textBytes = contents.slice(16)
   const decipher = crypto.createDecipheriv(algorithm, keyBytes, iv)
-  let res = decipher.update(textBytes, '', 'utf8')
+  // @ts-ignore function should be updated
+  let res: string = decipher.update(textBytes, '', 'utf8')
   res += decipher.final('utf8')
 
   return res
