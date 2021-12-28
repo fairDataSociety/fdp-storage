@@ -44,6 +44,10 @@ export class FairdriveProtocol {
       throw new Error('User is not imported')
     }
 
+    if (!password) {
+      throw new Error('Empty password')
+    }
+
     const address = this.users[username]
     const encryptedMnemonic = await getEncryptedMnemonic(this.bee, username, address)
     const decrypted = decrypt(password, encryptedMnemonic.text())

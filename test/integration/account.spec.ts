@@ -42,6 +42,9 @@ describe('Account', () => {
       // imported, but incorrect password
       await expect(fdp.userLogin('debug', 'debug111')).rejects.toThrow('Incorrect mnemonic')
 
+      // imported, but empty password
+      await expect(fdp.userLogin('debug', '')).rejects.toThrow('Empty password')
+
       // import with address and mnemonic
       await expect(
         fdp.userImport('ttt', '0xDd1AB1bA447D4D89A49d01386dbef99fB1005ED2', 'some mnemonic'),
