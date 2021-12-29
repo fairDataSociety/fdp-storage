@@ -2,6 +2,7 @@ import { Bee } from '@ethersphere/bee-js'
 import { decrypt } from './account/encryption'
 import { getEncryptedMnemonic } from './account/mnemonic'
 import { Wallet } from 'ethers'
+import { createUser } from './account/account'
 
 export class FairdriveProtocol {
   public readonly bee: Bee
@@ -55,9 +56,18 @@ export class FairdriveProtocol {
     try {
       Wallet.fromMnemonic(decrypted)
     } catch (e) {
-      throw new Error('Incorrect mnemonic')
+      throw new Error('Incorrect password')
     }
 
     return true
+  }
+
+  async userSignup(username: string, password: string, mnemonic = '') {
+    // todo check input
+    // todo check is already exists / imported
+    const userInfo = await createUser(this.bee, username, password, mnemonic)
+    this.users[username] = userInfo.wallet.address
+
+    return userInfo
   }
 }

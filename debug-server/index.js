@@ -27,10 +27,10 @@ const server = http.createServer(function (request, res) {
     // do whatever we need to in order to respond to this request.
   });
 
-  // proxy.web(request, res, {target: 'http://pi.local:1633'});
   proxy.web(request, res, {
     changeOrigin: true,
-    target: 'https://bee-0.gateway.ethswarm.org'
+    // target: 'https://bee-0.gateway.ethswarm.org'
+    target: 'http://pi.local:1633'
   });
 });
 

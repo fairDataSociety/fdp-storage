@@ -1,5 +1,5 @@
-import {Bytes} from '../utils/bytes'
-import {makeContentAddressedChunk} from '../chunk/cac'
+import { Bytes } from '../utils/bytes'
+import { makeContentAddressedChunk } from '../chunk/cac'
 
 const TopicLength = 32
 
@@ -10,6 +10,7 @@ export function epocId(time: any, level: any): Uint8Array {
   return result
 }
 
+// todo explain what it does
 export function getId(topic: Uint8Array, time: any = '', level: any = ''): Bytes<32> {
   const bufId = new Uint8Array(40)
   let cursor = 0

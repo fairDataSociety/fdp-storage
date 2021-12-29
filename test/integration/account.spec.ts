@@ -40,7 +40,8 @@ describe('Account', () => {
       await expect(fdp.userLogin('zzz', 'zzz')).rejects.toThrow('User is not imported')
 
       // imported, but incorrect password
-      await expect(fdp.userLogin('debug', 'debug111')).rejects.toThrow('Incorrect mnemonic')
+      await fdp.userImport('debug', '0xDd1AB1bA447D4D89A49d01386dbef99fB1005ED2')
+      await expect(fdp.userLogin('debug', 'debug111')).rejects.toThrow('Incorrect password')
 
       // imported, but empty password
       await expect(fdp.userLogin('debug', '')).rejects.toThrow('Empty password')
@@ -58,6 +59,22 @@ describe('Account', () => {
 
       // import without info
       await expect(fdp.userImport('', '', '')).rejects.toThrow('Username is required')
+    })
+
+    it('signup', async () => {
+      const user = {
+        username: 'test000000000',
+        password: 'aaa',
+      }
+
+      const userInfo = await fdp.userSignup(user.username, user.password)
+      expect(userInfo).toBeDefined()
+      expect(userInfo.wallet).toBeDefined()
+      expect(userInfo.mnemonic).toBeDefined()
+      expect(userInfo.encryptedMnemonic).toBeDefined()
+      expect(userInfo.reference).toBeDefined()
+      fdp.userImport(user.username, userInfo.wallet.address)
+      await fdp.userLogin(user.username, user.password)
     })
   })
 })
