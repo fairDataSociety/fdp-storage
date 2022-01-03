@@ -3,8 +3,10 @@ import { decrypt } from './account/encryption'
 import { getEncryptedMnemonic } from './account/mnemonic'
 import { Wallet } from 'ethers'
 import { createUser } from './account/account'
+import { getFeedData } from './feed/api'
 
 export class FairdriveProtocol {
+  static POD_TOPIC = 'Pods'
   public readonly bee: Bee
   public readonly users: any = {}
 
@@ -69,5 +71,12 @@ export class FairdriveProtocol {
     this.users[username] = userInfo.wallet.address
 
     return userInfo
+  }
+
+  // todo implement protocol and account managment. Call podLs and other methods under account
+  async podLs() {
+    const address = '0xA753B85A138443EB732d0183F48e67551a19d9A7'
+    const result = await getFeedData(this.bee, FairdriveProtocol.POD_TOPIC, address)
+    console.log('result', result.text())
   }
 }

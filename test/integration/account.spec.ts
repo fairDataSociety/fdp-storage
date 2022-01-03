@@ -76,5 +76,9 @@ describe('Account', () => {
       fdp.userImport(user.username, userInfo.wallet.address)
       await fdp.userLogin(user.username, user.password)
     })
+
+    it('Pod ls', async () => {
+      await fdp.podLs()
+    })
   })
 })

@@ -3,7 +3,7 @@ import { Bytes, wrapBytesWithHelpers } from '../utils/bytes'
 import { makeSpan } from '../chunk/span'
 import { bmtHash } from '../chunk/bmt'
 
-export function extractEncryptedMnemonic(data: Data) {
+export function extractChunkData(data: Data) {
   // todo what is first 105 bytes?
 
   return wrapBytesWithHelpers(data.slice(105))

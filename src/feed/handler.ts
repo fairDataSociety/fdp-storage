@@ -1,17 +1,19 @@
 import { Bytes } from '../utils/bytes'
 import { makeContentAddressedChunk } from '../chunk/cac'
+import Long from 'long'
 
 const TopicLength = 32
 
-export function epocId(time: any, level: any): Uint8Array {
-  const result = new Uint8Array(8)
-  result[7] = 31
+export function epocId(time: number, level: number): number[] {
+  const base = Long.fromNumber(time).and(Long.MAX_UNSIGNED_VALUE.shiftLeft(level))
+  const result = base.toBytes()
+  result[7] = level
 
   return result
 }
 
 // todo explain what it does
-export function getId(topic: Uint8Array, time: any = '', level: any = ''): Bytes<32> {
+export function getId(topic: Uint8Array, time: any = '', level = 31): Bytes<32> {
   const bufId = new Uint8Array(40)
   let cursor = 0
   for (let i = 0; i < TopicLength; i++) {

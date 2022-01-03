@@ -1,5 +1,5 @@
 import { Bee, Reference, Utils } from '@ethersphere/bee-js'
-import { bmtHashString, extractEncryptedMnemonic } from './utils'
+import { bmtHashString, extractChunkData } from './utils'
 import { getId } from '../feed/handler'
 import { bytesToHex } from '../utils/hex'
 import { keccak256Hash } from './encryption'
@@ -13,7 +13,7 @@ export async function getEncryptedMnemonic(bee: Bee, username: string, address: 
   const chunkReference = bytesToHex(keccak256Hash(id, addressBytes))
   const chunk = await bee.downloadChunk(chunkReference)
 
-  return extractEncryptedMnemonic(chunk)
+  return extractChunkData(chunk)
 }
 
 // todo offload from address param, get it from wallet
