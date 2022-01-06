@@ -1,18 +1,27 @@
 import { Bee } from '@ethersphere/bee-js'
 import { Wallet } from 'ethers'
-import { createUser } from './account/account'
+import { createUser, UserAccountWithReference } from './account/account'
 import { decrypt } from './account/encryption'
 import { getEncryptedMnemonic } from './account/mnemonic'
 
 export class FairdriveProtocol {
+  /** Ethereum Swarm Bee client instance */
   public readonly bee: Bee
-  public readonly users: any = {}
+  /** username -> ethereum wallet address mapping */
+  public readonly users: { [key: string]: string } = {}
 
   constructor(url: string) {
     this.bee = new Bee(url)
   }
 
-  async userImport(username: string, address = '', mnemonic = ''): Promise<boolean> {
+  /**
+   * Import FDP user account
+   *
+   * @param username Username to import
+   * @param address 0x prefixed ethereum address of the user
+   * @param mnemonic 12 space separated words to initialize wallet
+   */
+  async userImport(username: string, address = '', mnemonic = ''): Promise<void> {
     // todo validate address and username
     if (!username) {
       throw new Error('Username is required')
@@ -26,20 +35,25 @@ export class FairdriveProtocol {
       throw new Error('Address or mnemonic is required')
     }
 
-    if (mnemonic) {
+    if (address) {
+      this.users[username] = address
+    } else if (mnemonic) {
       try {
-        address = Wallet.fromMnemonic(mnemonic).address
+        this.users[username] = Wallet.fromMnemonic(mnemonic).address
       } catch (e) {
         throw new Error('Incorrect mnemonic')
       }
     }
-
-    this.users[username] = address
-
-    return true
   }
 
-  async userLogin(username: string, password: string): Promise<boolean> {
+  /**
+   * Logs in with the FDP credentails and gives back ethers wallet
+   *
+   * @param username FDP username
+   * @param password password of the wallet
+   * @returns BIP-039 + BIG-044 Wallet
+   */
+  async userLogin(username: string, password: string): Promise<Wallet> {
     if (!this.users[username]) {
       throw new Error('User is not imported')
     }
@@ -53,15 +67,13 @@ export class FairdriveProtocol {
     const decrypted = decrypt(password, encryptedMnemonic.text())
 
     try {
-      Wallet.fromMnemonic(decrypted)
+      return Wallet.fromMnemonic(decrypted)
     } catch (e) {
       throw new Error('Incorrect password')
     }
-
-    return true
   }
 
-  async userSignup(username: string, password: string, mnemonic = '') {
+  async userSignup(username: string, password: string, mnemonic = ''): Promise<UserAccountWithReference> {
     // todo check input
     // todo check is already exists / imported
     const userInfo = await createUser(this.bee, username, password, mnemonic)
