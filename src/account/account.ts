@@ -36,13 +36,7 @@ export async function createUser(
   mnemonic = '',
 ): Promise<UserAccountWithReference> {
   const account = await createUserAccount(password, mnemonic)
-  const reference = await uploadEncryptedMnemonic(
-    bee,
-    account.wallet,
-    username,
-    account.wallet.address,
-    account.encryptedMnemonic,
-  )
+  const reference = await uploadEncryptedMnemonic(bee, account.wallet, username, account.encryptedMnemonic)
 
   return { ...account, reference }
 }
