@@ -1,15 +1,14 @@
 import { Bee } from '@ethersphere/bee-js'
-import { decrypt } from './account/encryption'
-import { getEncryptedMnemonic } from './account/mnemonic'
 import { Wallet } from 'ethers'
 import { createUser } from './account/account'
+import { decrypt } from './account/encryption'
+import { getEncryptedMnemonic } from './account/mnemonic'
 
 export class FairdriveProtocol {
   public readonly bee: Bee
   public readonly users: any = {}
 
   constructor(url: string) {
-    // todo assert url
     this.bee = new Bee(url)
   }
 
