@@ -7,15 +7,23 @@ import { getFeedData } from './feed/api'
 
 export class FairdriveProtocol {
   static POD_TOPIC = 'Pods'
+  /** Ethereum Swarm Bee client instance */
   public readonly bee: Bee
-  public readonly users: any = {}
+  /** username -> ethereum wallet address mapping */
+  public readonly users: { [key: string]: string } = {}
 
   constructor(url: string) {
-    // todo assert url
     this.bee = new Bee(url)
   }
 
-  async userImport(username: string, address = '', mnemonic = ''): Promise<boolean> {
+  /**
+   * Import FDP user account
+   *
+   * @param username Username to import
+   * @param address 0x prefixed ethereum address of the user
+   * @param mnemonic 12 space separated words to initialize wallet
+   */
+  async userImport(username: string, address = '', mnemonic = ''): Promise<void> {
     // todo validate address and username
     if (!username) {
       throw new Error('Username is required')
@@ -29,20 +37,25 @@ export class FairdriveProtocol {
       throw new Error('Address or mnemonic is required')
     }
 
-    if (mnemonic) {
+    if (address) {
+      this.users[username] = address
+    } else if (mnemonic) {
       try {
-        address = Wallet.fromMnemonic(mnemonic).address
+        this.users[username] = Wallet.fromMnemonic(mnemonic).address
       } catch (e) {
         throw new Error('Incorrect mnemonic')
       }
     }
-
-    this.users[username] = address
-
-    return true
   }
 
-  async userLogin(username: string, password: string): Promise<boolean> {
+  /**
+   * Logs in with the FDP credentails and gives back ethers wallet
+   *
+   * @param username FDP username
+   * @param password password of the wallet
+   * @returns BIP-039 + BIG-044 Wallet
+   */
+  async userLogin(username: string, password: string): Promise<Wallet> {
     if (!this.users[username]) {
       throw new Error('User is not imported')
     }
@@ -56,15 +69,13 @@ export class FairdriveProtocol {
     const decrypted = decrypt(password, encryptedMnemonic.text())
 
     try {
-      Wallet.fromMnemonic(decrypted)
+      return Wallet.fromMnemonic(decrypted)
     } catch (e) {
       throw new Error('Incorrect password')
     }
-
-    return true
   }
 
-  async userSignup(username: string, password: string, mnemonic = '') {
+  async userSignup(username: string, password: string, mnemonic = ''): Promise<UserAccountWithReference> {
     // todo check input
     // todo check is already exists / imported
     const userInfo = await createUser(this.bee, username, password, mnemonic)
@@ -73,7 +84,7 @@ export class FairdriveProtocol {
     return userInfo
   }
 
-  // todo implement protocol and account managment. Call podLs and other methods under account
+  // todo implement protocol and account management. Call podLs and other methods under account
   async podLs() {
     // todo remove specific vars
     const address = '0x1f8f8EC28a1ED657836ADB02bed12C78F05cC8Dc'

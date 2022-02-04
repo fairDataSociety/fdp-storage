@@ -1,10 +1,19 @@
+import { Bee, Reference } from '@ethersphere/bee-js'
 import { Wallet } from 'ethers'
 import { encrypt } from './encryption'
-import { Bee } from '@ethersphere/bee-js'
 import { uploadEncryptedMnemonic } from './mnemonic'
 
-// todo return {mnemonic: string, encryptedMnemonic: string}, describe it like interface somewhere?
-export async function createUserAccount(password: string, mnemonic = ''): Promise<any> {
+interface UserAccount {
+  wallet: Wallet
+  mnemonic: string
+  encryptedMnemonic: string
+}
+
+export interface UserAccountWithReference extends UserAccount {
+  reference: Reference
+}
+
+async function createUserAccount(password: string, mnemonic?: string): Promise<UserAccount> {
   // todo validate password
   if (!mnemonic) {
     mnemonic = Wallet.createRandom().mnemonic.phrase
@@ -14,21 +23,20 @@ export async function createUserAccount(password: string, mnemonic = ''): Promis
   const encryptedMnemonic = encrypt(password, mnemonic)
 
   return {
-    wallet: wallet,
+    wallet,
     mnemonic,
     encryptedMnemonic,
   }
 }
 
-export async function createUser(bee: Bee, username: string, password: string, mnemonic = ''): any {
+export async function createUser(
+  bee: Bee,
+  username: string,
+  password: string,
+  mnemonic = '',
+): Promise<UserAccountWithReference> {
   const account = await createUserAccount(password, mnemonic)
-  const reference = await uploadEncryptedMnemonic(
-    bee,
-    account.wallet,
-    username,
-    account.wallet.address,
-    account.encryptedMnemonic,
-  )
+  const reference = await uploadEncryptedMnemonic(bee, account.wallet, username, account.encryptedMnemonic)
 
   return { ...account, reference }
 }

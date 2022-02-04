@@ -1,20 +1,19 @@
 import { FairdriveProtocol } from '../../src'
 
+function createFdp() {
+  return new FairdriveProtocol('http://localhost:1633/')
+}
+
 jest.setTimeout(200000)
 describe('Account', () => {
-  function createFdp() {
-    return new FairdriveProtocol('http://localhost:5050/')
-  }
-
-  let fdp = createFdp()
-
   it('should strip trailing slash', () => {
-    const fdp = new FairdriveProtocol('http://localhost:5050/')
-    expect(fdp.bee.url).toEqual('http://localhost:5050')
+    const fdp = createFdp()
+    expect(fdp.bee.url).toEqual('http://localhost:1633')
   })
 
   describe('Login', () => {
     it('should login with existing user and address', async () => {
+      const fdp = createFdp()
       expect(fdp.users.debug).toBeUndefined()
       await fdp.userImport('debug', '0x1f8f8EC28a1ED657836ADB02bed12C78F05cC8Dc')
       expect(fdp.users.debug).toBeDefined()
@@ -27,7 +26,7 @@ describe('Account', () => {
     })
 
     it('should login with existing user and mnemonic', async () => {
-      fdp = createFdp()
+      const fdp = createFdp()
 
       expect(fdp.users.debug).toBeUndefined()
       await fdp.userImport(
@@ -40,6 +39,7 @@ describe('Account', () => {
     })
 
     it('auth with incorrect data should throw errors', async () => {
+      const fdp = createFdp()
       // not imported user
       await expect(fdp.userLogin('zzz', 'zzz')).rejects.toThrow('User is not imported')
 
@@ -66,6 +66,7 @@ describe('Account', () => {
     })
 
     it('signup', async () => {
+      const fdp = createFdp()
       const user = {
         username: 'test000000000',
         password: 'aaa',
