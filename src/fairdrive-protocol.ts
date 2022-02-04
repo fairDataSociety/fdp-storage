@@ -75,8 +75,9 @@ export class FairdriveProtocol {
 
   // todo implement protocol and account managment. Call podLs and other methods under account
   async podLs() {
-    const address = '0xA753B85A138443EB732d0183F48e67551a19d9A7'
+    // todo remove specific vars
+    const address = '0x1f8f8EC28a1ED657836ADB02bed12C78F05cC8Dc'
     const result = await getFeedData(this.bee, FairdriveProtocol.POD_TOPIC, address)
-    console.log('result', result.text())
+    console.log('result', result.text().split('\n').filter(item => !!item.trim()))
   }
 }

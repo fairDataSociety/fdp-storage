@@ -34,7 +34,7 @@ export async function uploadEncryptedMnemonic(
   // todo fill postage stamps
 
   return socWriter.upload(
-    'e9a8f99430cf2ec090f4b5b8e1befbc9cc4d48aba68f3c7db151fb5df25f6fd0',
+    '15c9a6252287bed75733a78b5464b21a7e15c5255dac49f1b88faeb4925ced63',
     id,
     mnemonicBytes,
   )
