@@ -48,7 +48,7 @@ describe('Account', () => {
       await expect(fdp.userLogin('debug', 'debug111')).rejects.toThrow('Incorrect password')
 
       // imported, but empty password
-      await expect(fdp.userLogin('debug', '')).rejects.toThrow('Empty password')
+      await expect(fdp.userLogin('debug', '')).rejects.toThrow('Incorrect password')
 
       // import with address and mnemonic
       await expect(
@@ -62,7 +62,7 @@ describe('Account', () => {
       await expect(fdp.userImport('ttt', '', '')).rejects.toThrow('Address or mnemonic is required')
 
       // import without info
-      await expect(fdp.userImport('', '', '')).rejects.toThrow('Username is required')
+      await expect(fdp.userImport('', '', '')).rejects.toThrow('Incorrect username')
     })
 
     it('signup', async () => {
@@ -78,12 +78,15 @@ describe('Account', () => {
       expect(userInfo.mnemonic).toBeDefined()
       expect(userInfo.encryptedMnemonic).toBeDefined()
       expect(userInfo.reference).toBeDefined()
-      fdp.userImport(user.username, userInfo.wallet.address)
+      await fdp.userImport(user.username, userInfo.wallet.address)
       await fdp.userLogin(user.username, user.password)
     })
 
     it('Pod ls', async () => {
-      await fdp.podLs()
+      const fdp = createFdp()
+
+      const pods = await fdp.podLs()
+      expect(pods).toHaveLength(50)
     })
   })
 })

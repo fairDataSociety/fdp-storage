@@ -17,3 +17,27 @@ export function bmtHashString(stringData: string): Bytes<32> {
 
   return bmtHash(data)
 }
+
+export function validateUsername(data: string): void {
+  if (!data) {
+    throw new Error('Incorrect username')
+  }
+}
+
+export function validatePassword(data: string): void {
+  if (!data) {
+    throw new Error('Incorrect password')
+  }
+}
+
+export function validateMnemonic(data: string): void {
+  if (!data) {
+    throw new Error('Incorrect mnemonic')
+  }
+}
+
+export function validateAddress(data: string): void {
+  if (!data) {
+    throw new Error('Incorrect address')
+  }
+}

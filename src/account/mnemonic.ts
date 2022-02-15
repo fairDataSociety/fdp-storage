@@ -1,5 +1,5 @@
 import { Bee, Reference, Utils } from '@ethersphere/bee-js'
-import { bmtHashString, extractChunkData } from './utils'
+import { bmtHashString, extractChunkData, validateUsername } from './utils'
 import { getId } from '../feed/handler'
 import { bytesToHex } from '../utils/hex'
 import { keccak256Hash } from './encryption'
@@ -16,14 +16,14 @@ export async function getEncryptedMnemonic(bee: Bee, username: string, address: 
   return extractChunkData(chunk)
 }
 
-// todo offload from address param, get it from wallet
 export async function uploadEncryptedMnemonic(
   bee: Bee,
   wallet: Wallet,
   username: string,
-  address: string,
   encryptedMnemonic: string,
 ): Promise<Reference> {
+  validateUsername(username)
+
   const usernameHash = bmtHashString(username)
   const id = getId(usernameHash)
 
@@ -33,9 +33,5 @@ export async function uploadEncryptedMnemonic(
   const socWriter = bee.makeSOCWriter(wallet.privateKey)
   // todo fill postage stamps
 
-  return socWriter.upload(
-    '15c9a6252287bed75733a78b5464b21a7e15c5255dac49f1b88faeb4925ced63',
-    id,
-    mnemonicBytes,
-  )
+  return socWriter.upload('15c9a6252287bed75733a78b5464b21a7e15c5255dac49f1b88faeb4925ced63', id, mnemonicBytes)
 }
