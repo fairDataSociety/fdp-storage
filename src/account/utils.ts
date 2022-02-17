@@ -2,10 +2,9 @@ import { Data } from '@ethersphere/bee-js/dist/src/types'
 import { bmtHash } from '../chunk/bmt'
 import { makeSpan } from '../chunk/span'
 import { Bytes, wrapBytesWithHelpers } from '../utils/bytes'
+import AccountData from './account-data'
 
 export function extractChunkData(data: Data): Data {
-  // todo what is first 105 bytes?
-
   return wrapBytesWithHelpers(data.slice(105))
 }
 
@@ -39,5 +38,11 @@ export function validateMnemonic(data: string): void {
 export function validateAddress(data: string): void {
   if (!data) {
     throw new Error('Incorrect address')
+  }
+}
+
+export function validateActiveAccount(data: AccountData): void {
+  if (!data.wallet) {
+    throw new Error('Active account not found')
   }
 }

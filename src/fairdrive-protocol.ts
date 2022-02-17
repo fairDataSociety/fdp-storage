@@ -5,20 +5,22 @@ import { Wallet } from 'ethers'
 import { createUser, UserAccountWithReference } from './account/account'
 import { getFeedData } from './feed/api'
 import { Pod } from './pod'
-import { validateAddress, validatePassword, validateUsername } from './account/utils'
+import { validateActiveAccount, validateAddress, validatePassword, validateUsername } from './account/utils'
+import AccountData from './account/account-data'
 
 export class FairdriveProtocol {
   static POD_TOPIC = 'Pods'
-  /** Ethereum Swarm Bee client instance */
-  public readonly bee: Bee
-  /** Ethereum Swarm Bee Debug client instance */
-  public readonly beeDebug: BeeDebug
+  /** AccountData instance */
+  public readonly accountData: AccountData
   /** username -> ethereum wallet address mapping */
   public readonly users: { [key: string]: string } = {}
 
   constructor(beeUrl: string, debugUrl: string) {
-    this.bee = new Bee(beeUrl)
-    this.beeDebug = new BeeDebug(debugUrl)
+    this.accountData = new AccountData(new Bee(beeUrl), new BeeDebug(debugUrl))
+  }
+
+  setActiveAccount(wallet: Wallet): void {
+    this.accountData.wallet = wallet
   }
 
   /**
@@ -44,7 +46,9 @@ export class FairdriveProtocol {
       this.users[username] = address
     } else if (mnemonic) {
       try {
-        this.users[username] = Wallet.fromMnemonic(mnemonic).address
+        const wallet = Wallet.fromMnemonic(mnemonic)
+        this.users[username] = wallet.address
+        this.setActiveAccount(wallet)
       } catch (e) {
         throw new Error('Incorrect mnemonic')
       }
@@ -68,11 +72,14 @@ export class FairdriveProtocol {
       throw new Error('User is not imported')
     }
 
-    const encryptedMnemonic = await getEncryptedMnemonic(this.bee, username, address)
+    const encryptedMnemonic = await getEncryptedMnemonic(this.accountData.bee, username, address)
     const decrypted = decrypt(password, encryptedMnemonic.text())
 
     try {
-      return Wallet.fromMnemonic(decrypted)
+      const wallet = Wallet.fromMnemonic(decrypted)
+      this.setActiveAccount(wallet)
+
+      return wallet
     } catch (e) {
       throw new Error('Incorrect password')
     }
@@ -83,17 +90,21 @@ export class FairdriveProtocol {
     validateUsername(username)
     validatePassword(password)
 
-    const userInfo = await createUser(this.bee, this.beeDebug, username, password, mnemonic)
+    const userInfo = await createUser(this.accountData, username, password, mnemonic)
     this.users[username] = userInfo.wallet.address
+    this.setActiveAccount(userInfo.wallet)
 
     return userInfo
   }
 
-  // todo implement protocol and account management. Call podLs and other methods under account
   async podLs(): Promise<Pod[]> {
-    // todo remove specific vars
-    const address = '0x1f8f8EC28a1ED657836ADB02bed12C78F05cC8Dc'
-    const result = await getFeedData(this.bee, FairdriveProtocol.POD_TOPIC, address)
+    validateActiveAccount(this.accountData)
+
+    const result = await getFeedData(
+      this.accountData.bee,
+      FairdriveProtocol.POD_TOPIC,
+      this.accountData.wallet!.address,
+    )
 
     return result
       .text()

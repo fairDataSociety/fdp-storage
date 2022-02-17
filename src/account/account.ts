@@ -1,8 +1,9 @@
-import { Bee, BeeDebug, Reference } from '@ethersphere/bee-js'
+import { Reference } from '@ethersphere/bee-js'
 import { Wallet } from 'ethers'
 import { encrypt } from './encryption'
 import { uploadEncryptedMnemonic } from './mnemonic'
 import { validateMnemonic, validatePassword } from './utils'
+import AccountData from './account-data'
 
 interface UserAccount {
   wallet: Wallet
@@ -34,14 +35,13 @@ async function createUserAccount(password: string, mnemonic?: string): Promise<U
 }
 
 export async function createUser(
-  bee: Bee,
-  beeDebug: BeeDebug,
+  accountData: AccountData,
   username: string,
   password: string,
   mnemonic = '',
 ): Promise<UserAccountWithReference> {
   const account = await createUserAccount(password, mnemonic)
-  const reference = await uploadEncryptedMnemonic(bee, beeDebug, account.wallet, username, account.encryptedMnemonic)
+  const reference = await uploadEncryptedMnemonic(accountData, account.wallet, username, account.encryptedMnemonic)
 
   return { ...account, reference }
 }

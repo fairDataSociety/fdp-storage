@@ -8,7 +8,7 @@ jest.setTimeout(200000)
 describe('Account', () => {
   it('should strip trailing slash', () => {
     const fdp = createFdp()
-    expect(fdp.bee.url).toEqual('http://localhost:1633')
+    expect(fdp.accountData.bee.url).toEqual('http://localhost:1633')
   })
 
   describe('Login', () => {
@@ -84,6 +84,11 @@ describe('Account', () => {
 
     it('Pod ls', async () => {
       const fdp = createFdp()
+      await fdp.userImport(
+        'debug',
+        '',
+        'never umbrella juice enable mask industry leopard media hybrid tornado wrong behave',
+      )
 
       const pods = await fdp.podLs()
       expect(pods).toHaveLength(50)
