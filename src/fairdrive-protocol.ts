@@ -1,4 +1,4 @@
-import { Bee } from '@ethersphere/bee-js'
+import { Bee, BeeDebug } from '@ethersphere/bee-js'
 import { decrypt } from './account/encryption'
 import { getEncryptedMnemonic } from './account/mnemonic'
 import { Wallet } from 'ethers'
@@ -11,11 +11,14 @@ export class FairdriveProtocol {
   static POD_TOPIC = 'Pods'
   /** Ethereum Swarm Bee client instance */
   public readonly bee: Bee
+  /** Ethereum Swarm Bee Debug client instance */
+  public readonly beeDebug: BeeDebug
   /** username -> ethereum wallet address mapping */
   public readonly users: { [key: string]: string } = {}
 
-  constructor(url: string) {
-    this.bee = new Bee(url)
+  constructor(beeUrl: string, debugUrl: string) {
+    this.bee = new Bee(beeUrl)
+    this.beeDebug = new BeeDebug(debugUrl)
   }
 
   /**
@@ -80,7 +83,7 @@ export class FairdriveProtocol {
     validateUsername(username)
     validatePassword(password)
 
-    const userInfo = await createUser(this.bee, username, password, mnemonic)
+    const userInfo = await createUser(this.bee, this.beeDebug, username, password, mnemonic)
     this.users[username] = userInfo.wallet.address
 
     return userInfo
