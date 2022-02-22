@@ -38,7 +38,7 @@ export async function createUser(
   accountData: AccountData,
   username: string,
   password: string,
-  mnemonic = '',
+  mnemonic?: string,
 ): Promise<UserAccountWithReference> {
   const account = await createUserAccount(password, mnemonic)
   const reference = await uploadEncryptedMnemonic(accountData, account.wallet, username, account.encryptedMnemonic)
