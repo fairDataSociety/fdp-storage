@@ -8,8 +8,9 @@ import { Pod } from './types'
 import { assertActiveAccount, assertAddress, assertMnemonic, assertPassword, assertUsername } from './account/utils'
 import AccountData from './account/account-data'
 
+export const POD_TOPIC = 'Pods'
+
 export class FairdriveProtocol {
-  static POD_TOPIC = 'Pods'
   /** AccountData instance */
   public readonly accountData: AccountData
   /** username -> ethereum wallet address mapping */
@@ -100,12 +101,7 @@ export class FairdriveProtocol {
 
   async podLs(): Promise<Pod[]> {
     assertActiveAccount(this.accountData)
-
-    const result = await getFeedData(
-      this.accountData.bee,
-      FairdriveProtocol.POD_TOPIC,
-      this.accountData.wallet!.address,
-    )
+    const result = await getFeedData(this.accountData.bee, POD_TOPIC, this.accountData.wallet!.address)
 
     return result
       .text()
