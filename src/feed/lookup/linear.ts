@@ -13,10 +13,7 @@ export async function lookup(
 
   let previousChunk
   let level = 31
-  for (;;) {
-    if (level <= 0) {
-      break
-    }
+  while (level > 0) {
 
     const epoch = new Epoch(level, time)
     try {
