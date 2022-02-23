@@ -4,7 +4,7 @@ import Long from 'long'
 
 const TopicLength = 32
 
-export function epocId(time: number, level: number): number[] {
+export function epochId(time: number, level: number): number[] {
   const base = Long.fromNumber(time).and(Long.MAX_UNSIGNED_VALUE.shiftLeft(level))
   const result = base.toBytes(true)
   result[7] = level
@@ -19,7 +19,7 @@ export function getId(topic: Uint8Array, time = 0, level = 31): Bytes<32> {
     bufId[cursor] = topic[cursor]
     cursor++
   }
-  const eid = epocId(time, level)
+  const eid = epochId(time, level)
   for (let i = 0; i < eid.length; i++) {
     bufId[cursor + i] = eid[i]
   }
