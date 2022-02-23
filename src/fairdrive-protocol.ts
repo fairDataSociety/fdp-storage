@@ -4,7 +4,7 @@ import { getEncryptedMnemonic } from './account/mnemonic'
 import { Wallet } from 'ethers'
 import { createUser, UserAccountWithReference } from './account/account'
 import { getFeedData } from './feed/api'
-import { Pod } from './pod'
+import { Pod } from './types'
 import { validateActiveAccount, validateAddress, validatePassword, validateUsername } from './account/utils'
 import AccountData from './account/account-data'
 
