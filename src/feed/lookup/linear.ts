@@ -7,7 +7,7 @@ export async function lookup(time: Long, read: (epoch: Epoch, time: Long) => Pro
     time = Long.fromNumber(Math.round(Date.now() / 1000))
   }
 
-  let previousChunk
+  let previousChunk: Data | undefined
   let level = 31
   while (level > 0) {
     const epoch = new Epoch(level, time)
