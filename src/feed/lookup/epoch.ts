@@ -10,13 +10,7 @@ export function getBaseTime(time: number, level: number): Long {
 }
 
 export class Epoch {
-  level
-  time
-
-  constructor(level: number, time: Long) {
-    this.level = level
-    this.time = time
-  }
+  constructor(public level: number, public time: Long) {}
 
   base(): Long {
     return getBaseTime(this.time, this.level)
