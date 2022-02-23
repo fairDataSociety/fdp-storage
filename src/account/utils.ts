@@ -4,6 +4,10 @@ import { makeSpan } from '../chunk/span'
 import { Bytes, wrapBytesWithHelpers } from '../utils/bytes'
 import AccountData from './account-data'
 import { BeeDebug } from '@ethersphere/bee-js'
+import { assertPrefixedHexString } from '../utils/hex'
+import { assertAddress as typeAssertAddress } from '../utils/type'
+
+export const mnemonicLength = 12
 
 export function extractChunkData(data: Data): Data {
   return wrapBytesWithHelpers(data.slice(105))
@@ -18,31 +22,32 @@ export function bmtHashString(stringData: string): Bytes<32> {
   return bmtHash(data)
 }
 
-export function validateUsername(data: string): void {
+export function assertAddress(data: string): void {
+  assertPrefixedHexString(data, 'Address')
+  typeAssertAddress(data.replace('0x', ''))
+}
+
+export function assertUsername(data: string): void {
   if (!data) {
     throw new Error('Incorrect username')
   }
 }
 
-export function validatePassword(data: string): void {
+export function assertPassword(data: string): void {
   if (!data) {
     throw new Error('Incorrect password')
   }
 }
 
-export function validateMnemonic(data: string): void {
-  if (!data) {
+export function assertMnemonic(data: string): void {
+  const words = data.split(' ')
+
+  if (words.length !== mnemonicLength) {
     throw new Error('Incorrect mnemonic')
   }
 }
 
-export function validateAddress(data: string): void {
-  if (!data) {
-    throw new Error('Incorrect address')
-  }
-}
-
-export function validateActiveAccount(data: AccountData): void {
+export function assertActiveAccount(data: AccountData): void {
   if (!data.wallet) {
     throw new Error('Active account not found')
   }

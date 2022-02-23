@@ -2,7 +2,7 @@ import { Reference } from '@ethersphere/bee-js'
 import { Wallet } from 'ethers'
 import { encrypt } from './encryption'
 import { uploadEncryptedMnemonic } from './mnemonic'
-import { validateMnemonic, validatePassword } from './utils'
+import { assertMnemonic, assertPassword } from './utils'
 import AccountData from './account-data'
 
 interface UserAccount {
@@ -16,10 +16,10 @@ export interface UserAccountWithReference extends UserAccount {
 }
 
 async function createUserAccount(password: string, mnemonic?: string): Promise<UserAccount> {
-  validatePassword(password)
+  assertPassword(password)
 
   if (mnemonic) {
-    validateMnemonic(mnemonic)
+    assertMnemonic(mnemonic)
   } else {
     mnemonic = Wallet.createRandom().mnemonic.phrase
   }

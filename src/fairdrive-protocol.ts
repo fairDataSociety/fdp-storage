@@ -5,7 +5,7 @@ import { Wallet } from 'ethers'
 import { createUser, UserAccountWithReference } from './account/account'
 import { getFeedData } from './feed/api'
 import { Pod } from './types'
-import { validateActiveAccount, validateAddress, validatePassword, validateUsername } from './account/utils'
+import { assertActiveAccount, assertAddress, assertPassword, assertUsername } from './account/utils'
 import AccountData from './account/account-data'
 
 export class FairdriveProtocol {
@@ -31,7 +31,7 @@ export class FairdriveProtocol {
    * @param mnemonic 12 space separated words to initialize wallet
    */
   async userImport(username: string, address?: string, mnemonic?: string): Promise<void> {
-    validateUsername(username)
+    assertUsername(username)
 
     if (address && mnemonic) {
       throw new Error('Use only mnemonic or address')
@@ -42,7 +42,7 @@ export class FairdriveProtocol {
     }
 
     if (address) {
-      validateAddress(address)
+      assertAddress(address)
       this.users[username] = address
     } else if (mnemonic) {
       try {
@@ -63,8 +63,8 @@ export class FairdriveProtocol {
    * @returns BIP-039 + BIG-044 Wallet
    */
   async userLogin(username: string, password: string): Promise<Wallet> {
-    validateUsername(username)
-    validatePassword(password)
+    assertUsername(username)
+    assertPassword(password)
 
     const address = this.users[username]
 
@@ -87,8 +87,8 @@ export class FairdriveProtocol {
 
   async userSignup(username: string, password: string, mnemonic = ''): Promise<UserAccountWithReference> {
     // todo check is already exists / imported
-    validateUsername(username)
-    validatePassword(password)
+    assertUsername(username)
+    assertPassword(password)
 
     const userInfo = await createUser(this.accountData, username, password, mnemonic)
     this.users[username] = userInfo.wallet.address
@@ -98,7 +98,7 @@ export class FairdriveProtocol {
   }
 
   async podLs(): Promise<Pod[]> {
-    validateActiveAccount(this.accountData)
+    assertActiveAccount(this.accountData)
 
     const result = await getFeedData(
       this.accountData.bee,
