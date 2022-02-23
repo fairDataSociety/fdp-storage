@@ -3,6 +3,7 @@ import { bmtHash } from '../chunk/bmt'
 import { makeSpan } from '../chunk/span'
 import { Bytes, wrapBytesWithHelpers } from '../utils/bytes'
 import AccountData from './account-data'
+import { BeeDebug } from '@ethersphere/bee-js'
 
 export function extractChunkData(data: Data): Data {
   return wrapBytesWithHelpers(data.slice(105))
@@ -45,4 +46,20 @@ export function validateActiveAccount(data: AccountData): void {
   if (!data.wallet) {
     throw new Error('Active account not found')
   }
+}
+
+export async function getBatchId(beeDebug: BeeDebug): Promise<string> {
+  const batches = await beeDebug.getAllPostageBatch()
+
+  if (batches.length === 0) {
+    throw new Error('Postage batch not exists')
+  }
+
+  const batchId = batches.pop()?.batchID
+
+  if (!batchId) {
+    throw new Error('Incorrect batch id found')
+  }
+
+  return batchId
 }
