@@ -1,23 +1,21 @@
 import Long from 'long'
 import { Epoch } from './epoch'
 
-export const LowestLevel = 0
-export const HighestLevel = 31
-export const DefaultLevel = HighestLevel
-export const NoClue = new Epoch(0, 0)
-export const worstHint = new Epoch(63, 0)
+export const LOWEST_LEVEL = 0
+export const HIGHEST_LEVEL = 31
+export const NO_CLUE = new Epoch(0, Long.ZERO)
 
 export class Lookup {
   getNextLevel(last: Epoch, now: Long): number {
     let mix = last.base().xor(now)
     mix = mix.or(Long.fromNumber(1).shiftLeft((last.level as number) - 1))
 
-    if (mix.greaterThan(Long.MAX_UNSIGNED_VALUE.shiftRight(Long.fromNumber(64 - HighestLevel - 1)))) {
-      return HighestLevel
+    if (mix.greaterThan(Long.MAX_UNSIGNED_VALUE.shiftRight(Long.fromNumber(64 - HIGHEST_LEVEL - 1)))) {
+      return HIGHEST_LEVEL
     }
 
-    let mask = Long.fromNumber(1).shiftLeft(HighestLevel)
-    for (let i = HighestLevel; i > LowestLevel; i--) {
+    let mask = Long.fromNumber(1).shiftLeft(HIGHEST_LEVEL)
+    for (let i = HIGHEST_LEVEL; i > LOWEST_LEVEL; i--) {
       if (mix.and(mask).notEquals(0)) {
         return i
       }
@@ -29,7 +27,7 @@ export class Lookup {
   }
 
   getNextEpoch(last: Epoch, now: Long): Epoch {
-    if (last === NoClue) {
+    if (last === NO_CLUE) {
       return this.getFirstEpoch(now)
     }
 
@@ -39,6 +37,6 @@ export class Lookup {
   }
 
   getFirstEpoch(now: Long): Epoch {
-    return new Epoch(HighestLevel, now)
+    return new Epoch(HIGHEST_LEVEL, now)
   }
 }
