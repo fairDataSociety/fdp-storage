@@ -1,9 +1,7 @@
 import Long from 'long'
-// import { maxuint64 } from './lookup'
 import { Bytes } from '@ethersphere/bee-js/dist/src/utils/bytes'
 
 const EpochLength = 8
-const MaxTime = Long.fromNumber(1).shiftLeft(56).sub(1)
 
 export declare type EpochID = Bytes<typeof EpochLength>
 
