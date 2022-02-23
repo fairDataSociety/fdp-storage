@@ -7,7 +7,7 @@ import { BeeDebug } from '@ethersphere/bee-js'
 import { assertPrefixedHexString } from '../utils/hex'
 import { assertAddress as typeAssertAddress } from '../utils/type'
 
-export const mnemonicLength = 12
+export const MNEMONIC_LENGTH = 12
 
 export function extractChunkData(data: Data): Data {
   return wrapBytesWithHelpers(data.slice(105))
@@ -42,7 +42,7 @@ export function assertPassword(data: string): void {
 export function assertMnemonic(data: string): void {
   const words = data.split(' ')
 
-  if (words.length !== mnemonicLength) {
+  if (words.length !== MNEMONIC_LENGTH) {
     throw new Error('Incorrect mnemonic')
   }
 }
