@@ -30,9 +30,8 @@ export class FairdriveProtocol {
    * @param address 0x prefixed ethereum address of the user
    * @param mnemonic 12 space separated words to initialize wallet
    */
-  async userImport(username: string, address = '', mnemonic = ''): Promise<void> {
+  async userImport(username: string, address?: string, mnemonic?: string): Promise<void> {
     validateUsername(username)
-    validateAddress(username)
 
     if (address && mnemonic) {
       throw new Error('Use only mnemonic or address')
@@ -43,6 +42,7 @@ export class FairdriveProtocol {
     }
 
     if (address) {
+      validateAddress(address)
       this.users[username] = address
     } else if (mnemonic) {
       try {
