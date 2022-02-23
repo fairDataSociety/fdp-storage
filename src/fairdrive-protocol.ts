@@ -5,7 +5,7 @@ import { Wallet } from 'ethers'
 import { createUser, UserAccountWithReference } from './account/account'
 import { getFeedData } from './feed/api'
 import { Pod } from './types'
-import { assertActiveAccount, assertAddress, assertPassword, assertUsername } from './account/utils'
+import { assertActiveAccount, assertAddress, assertMnemonic, assertPassword, assertUsername } from './account/utils'
 import AccountData from './account/account-data'
 
 export class FairdriveProtocol {
@@ -46,6 +46,7 @@ export class FairdriveProtocol {
       this.users[username] = address
     } else if (mnemonic) {
       try {
+        assertMnemonic(mnemonic)
         const wallet = Wallet.fromMnemonic(mnemonic)
         this.users[username] = wallet.address
         this.setActiveAccount(wallet)
