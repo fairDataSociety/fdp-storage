@@ -5,8 +5,8 @@ const EpochLength = 8
 
 export declare type EpochID = Bytes<typeof EpochLength>
 
-export function getBaseTime(time: number, level: number): Long {
-  return Long.fromNumber(time).and(Long.MAX_UNSIGNED_VALUE.shiftLeft(level))
+export function getBaseTime(time: Long, level: number): Long {
+  return time.and(Long.MAX_UNSIGNED_VALUE.shiftLeft(level))
 }
 
 export class Epoch {
