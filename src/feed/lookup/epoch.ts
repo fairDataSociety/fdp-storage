@@ -1,9 +1,9 @@
 import Long from 'long'
 import { Bytes } from '@ethersphere/bee-js/dist/src/utils/bytes'
 
-const EpochLength = 8
+const EPOCH_LENGTH = 8
 
-export declare type EpochID = Bytes<typeof EpochLength>
+export declare type EpochID = Bytes<typeof EPOCH_LENGTH>
 
 export function getBaseTime(time: Long, level: number): Long {
   return time.and(Long.MAX_UNSIGNED_VALUE.shiftLeft(level))
