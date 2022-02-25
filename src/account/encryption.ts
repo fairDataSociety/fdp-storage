@@ -1,6 +1,6 @@
 import crypto from 'crypto'
 import { keccak256, Message } from 'js-sha3'
-import { Bytes } from '../utils/bytes'
+import { Bytes } from '@ethersphere/bee-js/dist/src/utils/bytes'
 
 const ALGORITHM = 'aes-256-cfb'
 

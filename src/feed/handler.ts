@@ -1,4 +1,4 @@
-import { Bytes } from '../utils/bytes'
+import { Bytes } from '@ethersphere/bee-js/dist/src/utils/bytes'
 import { makeContentAddressedChunk } from '../chunk/cac'
 import Long from 'long'
 

@@ -5,7 +5,7 @@
  * generic `Length` type parameter which is runtime compatible with
  * the original, because it extends from the `number` type.
  */
-import { Data } from '../types'
+import { Data } from '@ethersphere/bee-js/dist/src/types'
 import { bytesToHex } from './hex'
 
 export interface Bytes<Length extends number> extends Uint8Array {
@@ -60,60 +60,6 @@ export function isFlexBytes<Min extends number, Max extends number = Min>(
   max: Max,
 ): b is FlexBytes<Min, Max> {
   return b instanceof Uint8Array && b.length >= min && b.length <= max
-}
-
-/**
- * Verifies if a byte array has a certain length between min and max
- *
- * @param b       The byte array
- * @param min     Minimum size of the array
- * @param max     Maximum size of the array
- */
-export function assertFlexBytes<Min extends number, Max extends number = Min>(
-  b: unknown,
-  min: Min,
-  max: Max,
-): asserts b is FlexBytes<Min, Max> {
-  if (!isFlexBytes(b, min, max)) {
-    throw new TypeError(
-      `Parameter is not valid FlexBytes of  min: ${min}, max: ${max}, length: ${(b as Uint8Array).length}`,
-    )
-  }
-}
-
-/**
- * Return `length` bytes starting from `offset`
- *
- * @param data   The original data
- * @param offset The offset to start from
- * @param length The length of data to be returned
- */
-export function bytesAtOffset<Length extends number>(data: Uint8Array, offset: number, length: Length): Bytes<Length> {
-  const offsetBytes = data.slice(offset, offset + length) as Bytes<Length>
-
-  // We are returning strongly typed Bytes so we have to verify that length is really what we claim
-  assertBytes<Length>(offsetBytes, length)
-
-  return offsetBytes
-}
-
-/**
- * Return flex bytes starting from `offset`
- *
- * @param data   The original data
- * @param offset The offset to start from
- * @param _min   The minimum size of the data
- * @param _max   The maximum size of the data
- */
-export function flexBytesAtOffset<Min extends number, Max extends number>(
-  data: Uint8Array,
-  offset: number,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _min: Min,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _max: Max,
-): FlexBytes<Min, Max> {
-  return data.slice(offset) as FlexBytes<Min, Max>
 }
 
 /**

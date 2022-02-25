@@ -4,10 +4,10 @@ import { makeSpan } from '../chunk/span'
 import { Bytes, wrapBytesWithHelpers } from '../utils/bytes'
 import AccountData from './account-data'
 import { BeeDebug } from '@ethersphere/bee-js'
-import { assertPrefixedHexString } from '../utils/hex'
-import { assertAddress as typeAssertAddress } from '../utils/type'
+import { assertHexString, assertPrefixedHexString } from '../utils/hex'
 
 export const MNEMONIC_LENGTH = 12
+export const ADDRESS_LENGTH = 40
 
 export function extractChunkData(data: Data): Data {
   return wrapBytesWithHelpers(data.slice(105))
@@ -24,7 +24,7 @@ export function bmtHashString(stringData: string): Bytes<32> {
 
 export function assertAddress(data: string): void {
   assertPrefixedHexString(data, 'Address')
-  typeAssertAddress(data.replace('0x', ''))
+  assertHexString(data.replace('0x', ''), ADDRESS_LENGTH, 'Address')
 }
 
 export function assertUsername(data: string): void {
