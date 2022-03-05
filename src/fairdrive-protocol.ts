@@ -62,7 +62,7 @@ export class FairdriveProtocol {
    *
    * @param username FDP username
    * @param password password of the wallet
-   * @returns BIP-039 + BIG-044 Wallet
+   * @returns BIP-039 + BIP-044 Wallet
    */
   async userLogin(username: string, password: string): Promise<Wallet> {
     assertUsername(username)
