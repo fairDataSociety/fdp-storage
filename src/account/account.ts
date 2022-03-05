@@ -15,6 +15,12 @@ export interface UserAccountWithReference extends UserAccount {
   reference: Reference
 }
 
+/**
+ * Creates a new user account based on the passed mnemonic phrase or without it, encrypted with a password
+ *
+ * @param password FDP password
+ * @param mnemonic mnemonic phrase
+ */
 async function createUserAccount(password: string, mnemonic?: string): Promise<UserAccount> {
   assertPassword(password)
 
@@ -34,6 +40,14 @@ async function createUserAccount(password: string, mnemonic?: string): Promise<U
   }
 }
 
+/**
+ * Creates a new user and uploads the encrypted account to the network
+ *
+ * @param accountData connection information for data uploading
+ * @param username FDP username
+ * @param password FDP password
+ * @param mnemonic mnemonic phrase
+ */
 export async function createUser(
   accountData: AccountData,
   username: string,
