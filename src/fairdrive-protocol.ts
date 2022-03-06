@@ -7,6 +7,7 @@ import { getFeedData } from './feed/api'
 import { Pod } from './types'
 import { assertActiveAccount, assertAddress, assertMnemonic, assertPassword, assertUsername } from './account/utils'
 import AccountData from './account/account-data'
+import { Data } from '@ethersphere/bee-js/dist/src/types'
 
 export const POD_TOPIC = 'Pods'
 
@@ -101,7 +102,12 @@ export class FairdriveProtocol {
 
   async podLs(): Promise<Pod[]> {
     assertActiveAccount(this.accountData)
-    const result = await getFeedData(this.accountData.bee, POD_TOPIC, this.accountData.wallet!.address)
+    let result: Data
+    try {
+      result = await getFeedData(this.accountData.bee, POD_TOPIC, this.accountData.wallet!.address)
+    } catch (e) {
+      return []
+    }
 
     return result
       .text()
