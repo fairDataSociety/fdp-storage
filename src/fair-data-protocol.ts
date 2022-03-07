@@ -11,7 +11,7 @@ import { Data } from '@ethersphere/bee-js/dist/src/types'
 
 export const POD_TOPIC = 'Pods'
 
-export class FairdriveProtocol {
+export class FairDataProtocol {
   /** AccountData instance */
   public readonly accountData: AccountData
   /** username -> ethereum wallet address mapping */

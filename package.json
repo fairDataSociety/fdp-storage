@@ -1,9 +1,9 @@
 {
-  "name": "@fairdatasociety/fairdata-protocol",
+  "name": "@fairdatasociety/fair-data-protocol",
   "version": "1.0.0",
   "description": "Javascript implementation of FairOS-dfs",
   "keywords": [
-    "fairdrive",
+    "fairdata",
     "swarm",
     "decentralised",
     "storage",
@@ -13,15 +13,15 @@
     "browser",
     "node"
   ],
-  "homepage": "https://github.com/fairDataSociety/fairdata-protocol",
+  "homepage": "https://github.com/fairDataSociety/fair-data-protocol",
   "bugs": {
-    "url": "https://github.com/fairDataSociety/fairdata-protocol/issues/"
+    "url": "https://github.com/fairDataSociety/fair-data-protocol/issues/"
   },
   "license": "BSD-3-Clause",
   "main": "dist/index.min.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/fairDataSociety/fairdata-protocol.git"
+    "url": "https://github.com/fairDataSociety/fair-data-protocol.git"
   },
   "browser": {
     "./dist/index.min.js": "./dist/index.browser.min.js",

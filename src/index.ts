@@ -1,11 +1,11 @@
-export { FairdriveProtocol } from './fairdrive-protocol'
+export { FairDataProtocol } from './fair-data-protocol'
 
 // for require-like imports
 declare global {
   interface Window {
-    // bound as 'FairdriveProtocol' via Webpack
-    FairdriveProtocol: {
-      FairdriveProtocol: typeof import('./fairdrive-protocol').FairdriveProtocol
+    // bound as 'FairDataProtocol' via Webpack
+    FairDataProtocol: {
+      FairDataProtocol: typeof import('./fair-data-protocol').FairDataProtocol
     }
   }
 }

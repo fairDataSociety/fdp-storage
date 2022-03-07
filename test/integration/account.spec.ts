@@ -1,8 +1,8 @@
-import { FairdriveProtocol } from '../../src'
+import { FairDataProtocol } from '../../src'
 import { generateUser } from '../utils'
 
 function createFdp() {
-  return new FairdriveProtocol('http://localhost:1633/', 'http://localhost:1635/')
+  return new FairDataProtocol('http://localhost:1633/', 'http://localhost:1635/')
 }
 
 jest.setTimeout(200000)
