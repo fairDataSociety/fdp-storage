@@ -93,11 +93,21 @@ export class FairDataProtocol {
     assertUsername(username)
     assertPassword(password)
 
-    const userInfo = await createUser(this.accountData, username, password, mnemonic)
-    this.users[username] = userInfo.wallet.address
-    this.setActiveAccount(userInfo.wallet)
+    try {
+      const userInfo = await createUser(this.accountData, username, password, mnemonic)
+      this.users[username] = userInfo.wallet.address
+      this.setActiveAccount(userInfo.wallet)
 
-    return userInfo
+      return userInfo
+    } catch (e) {
+      const error = e as Error
+
+      if (error.message.indexOf('Conflict: chunk already exists') >= 0) {
+        throw new Error('User already exists')
+      } else {
+        throw new Error(error.message)
+      }
+    }
   }
 
   async podLs(): Promise<Pod[]> {

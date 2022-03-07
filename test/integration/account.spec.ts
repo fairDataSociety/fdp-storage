@@ -21,15 +21,27 @@ describe('Account', () => {
     it('register required users', async () => {
       const fdp = createFdp()
       const { debug, demo } = users
-      let createdUser = await fdp.userSignup(debug.username, debug.password, debug.mnemonic)
-      expect(createdUser.mnemonic).toEqual(debug.mnemonic)
-      expect(createdUser.wallet.address).toEqual(debug.address)
-      expect(createdUser.encryptedMnemonic).toBeDefined()
-      expect(createdUser.reference).toBeDefined()
 
-      createdUser = await fdp.userSignup(demo.username, demo.password, demo.mnemonic)
-      expect(createdUser.mnemonic).toEqual(demo.mnemonic)
-      expect(createdUser.wallet.address).toEqual(demo.address)
+      for (const user of [debug, demo]) {
+        const createdUser = await fdp.userSignup(user.username, user.password, user.mnemonic)
+        expect(createdUser.mnemonic).toEqual(user.mnemonic)
+        expect(createdUser.wallet.address).toEqual(user.address)
+        expect(createdUser.encryptedMnemonic).toBeDefined()
+        expect(createdUser.reference).toBeDefined()
+      }
+    })
+
+    it('register already registered user', async () => {
+      const fdp = createFdp()
+      const { debug: user } = users
+
+      try {
+        await fdp.userSignup(user.username, user.password, user.mnemonic)
+        expect(true).toBeFalsy()
+      } catch (e) {
+        const error = e as Error
+        expect(error.message).toEqual('User already exists')
+      }
     })
   })
 
