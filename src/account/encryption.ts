@@ -12,9 +12,15 @@ export function keccak256Hash(...messages: Message[]): Bytes<32> {
   return Uint8Array.from(hasher.digest()) as Bytes<32>
 }
 
-export function decrypt(keyStr: string, text: string): string {
+/**
+ * Decrypt text with password
+ *
+ * @param password
+ * @param text
+ */
+export function decrypt(password: string, text: string): string {
   const hash = crypto.createHash('sha256')
-  hash.update(keyStr)
+  hash.update(password)
   const keyBytes = hash.digest()
 
   const contents = Buffer.from(text, 'base64')
@@ -28,9 +34,15 @@ export function decrypt(keyStr: string, text: string): string {
   return res
 }
 
-export function encrypt(keyStr: string, text: string): string {
+/**
+ * Encrypt text with password
+ *
+ * @param password
+ * @param text
+ */
+export function encrypt(password: string, text: string): string {
   const hash = crypto.createHash('sha256')
-  hash.update(keyStr)
+  hash.update(password)
   const keyBytes = hash.digest()
 
   const iv = crypto.randomBytes(16)
