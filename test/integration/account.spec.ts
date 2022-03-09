@@ -2,7 +2,10 @@ import { FairDataProtocol } from '../../src'
 import { generateUser } from '../utils'
 
 function createFdp() {
-  return new FairDataProtocol('http://localhost:1633/', 'http://localhost:1635/')
+  const beeUrl = process.env.BEE_API_URL || 'http://127.0.0.1:1633'
+  const debugUrl = process.env.BEE_DEBUG_API_URL || 'http://127.0.0.1:1635'
+
+  return new FairDataProtocol(beeUrl, debugUrl)
 }
 
 jest.setTimeout(200000)
@@ -13,8 +16,9 @@ describe('Account', () => {
   }
 
   it('should strip trailing slash', () => {
-    const fdp = createFdp()
+    const fdp = new FairDataProtocol('http://localhost:1633/', 'http://localhost:1635/')
     expect(fdp.accountData.bee.url).toEqual('http://localhost:1633')
+    expect(fdp.accountData.beeDebug.url).toEqual('http://localhost:1635')
   })
 
   describe('Registration', () => {
@@ -35,13 +39,7 @@ describe('Account', () => {
       const fdp = createFdp()
       const { debug: user } = users
 
-      try {
-        await fdp.userSignup(user.username, user.password, user.mnemonic)
-        expect(true).toBeFalsy()
-      } catch (e) {
-        const error = e as Error
-        expect(error.message).toEqual('User already exists')
-      }
+      await expect(fdp.userSignup(user.username, user.password, user.mnemonic)).rejects.toThrow('User already exists')
     })
   })
 
