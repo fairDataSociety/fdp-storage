@@ -76,9 +76,8 @@ export class FairDataProtocol {
     }
 
     const encryptedMnemonic = await getEncryptedMnemonic(this.accountData.bee, username, address)
-    const decrypted = decrypt(password, encryptedMnemonic.text())
-
     try {
+      const decrypted = decrypt(password, encryptedMnemonic.text())
       const wallet = Wallet.fromMnemonic(decrypted)
       this.setActiveAccount(wallet)
 

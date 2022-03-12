@@ -52,6 +52,8 @@
   },
   "dependencies": {
     "@ethersphere/bee-js": "^3.1.0",
+    "@types/crypto-js": "^4.1.1",
+    "buffer": "^6.0.3",
     "crypto-js": "^4.1.1",
     "ethers": "^5.5.2",
     "js-sha3": "^0.8.0",
