@@ -26,3 +26,17 @@ export function generateUser(): TestUser {
     address: wallet.address,
   }
 }
+
+/**
+ * Returns an url for testing the Bee public API
+ */
+export function beeUrl(): string {
+  return process.env.BEE_API_URL || 'http://127.0.0.1:1633'
+}
+
+/**
+ * Returns an url for testing the Bee Debug API
+ */
+export function beeDebugUrl(): string {
+  return process.env.BEE_DEBUG_API_URL || 'http://127.0.0.1:1635'
+}

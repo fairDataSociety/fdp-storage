@@ -1,15 +1,12 @@
 import { FairDataProtocol } from '../../src'
-import { generateUser } from '../utils'
+import { beeDebugUrl, beeUrl, generateUser } from '../utils'
 
 function createFdp() {
-  const beeUrl = process.env.BEE_API_URL || 'http://127.0.0.1:1633'
-  const debugUrl = process.env.BEE_DEBUG_API_URL || 'http://127.0.0.1:1635'
-
-  return new FairDataProtocol(beeUrl, debugUrl)
+  return new FairDataProtocol(beeUrl(), beeDebugUrl())
 }
 
 jest.setTimeout(200000)
-describe('Account', () => {
+describe('Fair Data Protocol class', () => {
   const users = {
     debug: generateUser(),
     demo: generateUser(),
