@@ -104,7 +104,7 @@ export class FairDataProtocol {
       if (error.message.indexOf('Conflict: chunk already exists') >= 0) {
         throw new Error('User already exists')
       } else {
-        throw new Error(error.message)
+        throw e
       }
     }
   }
