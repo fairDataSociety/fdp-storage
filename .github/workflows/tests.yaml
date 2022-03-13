@@ -12,7 +12,7 @@ env:
   BEE_VERSION: '1.4.3-1213e063-stateful'
   BLOCKCHAIN_VERSION: '1.2.0-for-1.4.3-1213e063-stateful'
   BEE_ENV_PREFIX: 'swarm-test'
-  BEE_IMAGE_PREFIX: 'docker.pkg.github.com/fairDataSociety/bee-factory'
+  BEE_IMAGE_PREFIX: 'docker.pkg.github.com/fairdatasociety/bee-factory'
   COMMIT_VERSION_TAG: 'false'
   WORKERS: 4
   BEE_API_URL: 'http://127.0.0.1:1633'
@@ -47,7 +47,7 @@ jobs:
       # Setup Bee environment
       - name: Start Bee Factory environment
         run: |
-          git clone --depth=1 https://github.com/fairDataSociety/bee-factory.git
+          git clone --depth=1 https://github.com/fairdatasociety/bee-factory.git
           chmod +x -R ./bee-factory/scripts
           ./bee-factory/scripts/environment.sh start --fairos --detach --workers=$WORKERS
 
@@ -97,7 +97,7 @@ jobs:
       # Setup Bee environment
       - name: Start Bee Factory environment
         run: |
-          git clone --depth=1 https://github.com/fairDataSociety/bee-factory.git
+          git clone --depth=1 https://github.com/fairdatasociety/bee-factory.git
           chmod +x -R ./bee-factory/scripts
           ./bee-factory/scripts/environment.sh start --fairos --detach --workers=$WORKERS
 
