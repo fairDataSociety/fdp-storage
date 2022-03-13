@@ -10,6 +10,7 @@ describe('Fair Data Protocol class', () => {
   const users = {
     debug: generateUser(),
     demo: generateUser(),
+    double: generateUser(),
   }
 
   it('should strip trailing slash', () => {
@@ -34,8 +35,9 @@ describe('Fair Data Protocol class', () => {
 
     it('register already registered user', async () => {
       const fdp = createFdp()
-      const { debug: user } = users
+      const { double: user } = users
 
+      await fdp.userSignup(user.username, user.password, user.mnemonic)
       await expect(fdp.userSignup(user.username, user.password, user.mnemonic)).rejects.toThrow('User already exists')
     })
   })

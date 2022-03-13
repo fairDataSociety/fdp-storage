@@ -6,6 +6,7 @@ describe('Fair Data Protocol class - in browser', () => {
   const users = {
     debug: generateUser(),
     demo: generateUser(),
+    double: generateUser(),
   }
   const BEE_URL = beeUrl()
   const BEE_DEBUG_URL = beeDebugUrl()
@@ -64,6 +65,30 @@ describe('Fair Data Protocol class - in browser', () => {
         expect(createdUser.encryptedMnemonic).toBeDefined()
         expect(createdUser.reference).toBeDefined()
       }
+    })
+
+    it('register already registered user', async () => {
+      await page.evaluate(
+        async (BEE_URL, BEE_DEBUG_URL, data) => {
+          const user = JSON.parse(data)
+          const fdp = new window.FairDataProtocol.FairDataProtocol(BEE_URL, BEE_DEBUG_URL)
+
+          await fdp.userSignup(user.username, user.password, user.mnemonic)
+          try {
+            await fdp.userSignup(user.username, user.password, user.mnemonic)
+            fail('Signup should fail with the same username')
+          } catch (e) {
+            if (e instanceof Error && e.message === 'User already exists') {
+              return
+            }
+
+            throw e
+          }
+        },
+        BEE_URL,
+        BEE_DEBUG_URL,
+        JSON.stringify(users.double),
+      )
     })
   })
 })
