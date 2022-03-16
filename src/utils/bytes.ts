@@ -5,25 +5,9 @@
  * generic `Length` type parameter which is runtime compatible with
  * the original, because it extends from the `number` type.
  */
-import { Data } from '@ethersphere/bee-js/dist/src/types'
+import { Data } from '@ethersphere/bee-js'
+import { Bytes } from '@ethersphere/bee-js/dist/types/utils/bytes'
 import { bytesToHex } from './hex'
-
-export interface Bytes<Length extends number> extends Uint8Array {
-  readonly length: Length
-}
-
-/**
- * Helper type for dealing with flexible sized byte arrays.
- *
- * The actual min and and max values are not stored in runtime, they
- * are only there to differentiate the type from the Uint8Array at
- * compile time.
- * @see BrandedType
- */
-export interface FlexBytes<Min extends number, Max extends number> extends Uint8Array {
-  readonly __min__: Min
-  readonly __max__: Max
-}
 
 /**
  * Type guard for `Bytes<T>` type
@@ -45,21 +29,6 @@ export function assertBytes<Length extends number>(b: unknown, length: Length): 
   if (!isBytes(b, length)) {
     throw new TypeError(`Parameter is not valid Bytes of length: ${length} !== ${(b as Uint8Array).length}`)
   }
-}
-
-/**
- * Type guard for FlexBytes<Min,Max> type
- *
- * @param b       The byte array
- * @param min     Minimum size of the array
- * @param max     Maximum size of the array
- */
-export function isFlexBytes<Min extends number, Max extends number = Min>(
-  b: unknown,
-  min: Min,
-  max: Max,
-): b is FlexBytes<Min, Max> {
-  return b instanceof Uint8Array && b.length >= min && b.length <= max
 }
 
 /**

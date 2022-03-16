@@ -1,10 +1,10 @@
-import { Data } from '@ethersphere/bee-js/dist/src/types'
+import { Data, BeeDebug } from '@ethersphere/bee-js'
 import { bmtHash } from '../chunk/bmt'
 import { makeSpan } from '../chunk/span'
-import { Bytes, wrapBytesWithHelpers } from '../utils/bytes'
+import { Bytes } from '@ethersphere/bee-js/dist/types/utils/bytes'
 import AccountData from './account-data'
-import { BeeDebug } from '@ethersphere/bee-js'
 import { assertHexString, assertPrefixedHexString } from '../utils/hex'
+import { wrapBytesWithHelpers } from '../utils/bytes'
 
 export const MNEMONIC_LENGTH = 12
 export const ADDRESS_LENGTH = 40

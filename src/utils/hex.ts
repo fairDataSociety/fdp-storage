@@ -1,4 +1,4 @@
-import { BrandedType, FlavoredType } from '@ethersphere/bee-js/dist/src/types'
+import { BrandedType, FlavoredType } from '@ethersphere/bee-js'
 
 /**
  * Nominal type to represent hex strings WITHOUT '0x' prefix.

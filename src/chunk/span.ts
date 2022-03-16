@@ -1,5 +1,5 @@
 import { BeeArgumentError } from '../utils/error'
-import { Bytes } from '@ethersphere/bee-js/dist/src/utils/bytes'
+import { Bytes } from '@ethersphere/bee-js/dist/types/utils/bytes'
 
 export const SPAN_SIZE = 8
 

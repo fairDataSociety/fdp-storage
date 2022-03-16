@@ -1,5 +1,4 @@
-import { Bee, Utils } from '@ethersphere/bee-js'
-import { Data } from '@ethersphere/bee-js/dist/src/types'
+import { Bee, Utils, Data } from '@ethersphere/bee-js'
 import { bmtHashString, extractChunkData } from '../account/utils'
 import { getId } from './handler'
 import { bytesToHex } from '../utils/hex'

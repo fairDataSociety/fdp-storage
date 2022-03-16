@@ -1,9 +1,8 @@
-import { Bee, Reference, Utils } from '@ethersphere/bee-js'
+import { Bee, Reference, Utils, Data } from '@ethersphere/bee-js'
 import { bmtHashString, extractChunkData, assertUsername, getBatchId, assertAddress } from './utils'
 import { getId } from '../feed/handler'
 import { bytesToHex } from '../utils/hex'
 import { keccak256Hash } from './encryption'
-import { Data } from '@ethersphere/bee-js/dist/src/types'
 import { Wallet } from 'ethers'
 import AccountData from './account-data'
 

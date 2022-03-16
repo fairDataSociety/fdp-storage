@@ -1,10 +1,8 @@
-import { Utils } from '@ethersphere/bee-js'
-import { BrandedType } from '@ethersphere/bee-js/dist/src/types'
+import { Utils, BrandedType } from '@ethersphere/bee-js'
 import { bmtHash } from './bmt'
-import { Bytes } from '../utils/bytes'
 import { serializeBytes } from './serialize'
 import { makeSpan, SPAN_SIZE } from './span'
-import { FlexBytes } from '@ethersphere/bee-js/dist/src/utils/bytes'
+import { FlexBytes, Bytes } from '@ethersphere/bee-js/dist/types/utils/bytes'
 
 export const MIN_PAYLOAD_SIZE = 1
 export const MAX_PAYLOAD_SIZE = 4096
