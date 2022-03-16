@@ -70,6 +70,12 @@ export default async (): Promise<Config.InitialOptions> => {
         preset: 'jest-puppeteer',
       },
       {
+        displayName: 'dom:unit:browser',
+        testRegex: 'test/unit/.*\\.spec\\.ts',
+        moduleNameMapper: await getBrowserPathMapping(),
+        preset: 'jest-puppeteer',
+      },
+      {
         displayName: 'node:integration',
         testEnvironment: 'node',
         testRegex: 'test/integration/((?!\\.browser).)*\\.spec\\.ts',
