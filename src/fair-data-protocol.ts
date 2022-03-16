@@ -1,4 +1,4 @@
-import { Bee, BeeDebug } from '@ethersphere/bee-js'
+import { Bee, BeeDebug, Data } from '@ethersphere/bee-js'
 import { decrypt } from './account/encryption'
 import { getEncryptedMnemonic } from './account/mnemonic'
 import { Wallet } from 'ethers'
@@ -7,7 +7,6 @@ import { getFeedData } from './feed/api'
 import { Pod } from './types'
 import { assertActiveAccount, assertAddress, assertMnemonic, assertPassword, assertUsername } from './account/utils'
 import AccountData from './account/account-data'
-import { Data } from '@ethersphere/bee-js/dist/src/types'
 
 export const POD_TOPIC = 'Pods'
 
