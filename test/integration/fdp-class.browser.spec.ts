@@ -3,11 +3,6 @@ import { beeDebugUrl, beeUrl, generateUser } from '../utils'
 
 jest.setTimeout(200000)
 describe('Fair Data Protocol class - in browser', () => {
-  const users = {
-    debug: generateUser(),
-    demo: generateUser(),
-    double: generateUser(),
-  }
   const BEE_URL = beeUrl()
   const BEE_DEBUG_URL = beeDebugUrl()
 
@@ -37,7 +32,7 @@ describe('Fair Data Protocol class - in browser', () => {
 
   describe('Registration', () => {
     it('register required users', async () => {
-      const usersList = [users.debug, users.demo]
+      const usersList = [generateUser(), generateUser()]
       const createdUsers = await page.evaluate(
         async (BEE_URL, BEE_DEBUG_URL, users) => {
           users = JSON.parse(users)
@@ -87,7 +82,7 @@ describe('Fair Data Protocol class - in browser', () => {
         },
         BEE_URL,
         BEE_DEBUG_URL,
-        JSON.stringify(users.double),
+        JSON.stringify(generateUser()),
       )
     })
   })
