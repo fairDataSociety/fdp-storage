@@ -21,7 +21,7 @@ export function keccak256Hash(...messages: Message[]): Bytes<32> {
 export function decrypt(password: string, text: string): string {
   const wordSize = 4
   const key = CryptoJS.SHA256(password)
-  const contents = CryptoJS.enc.Hex.parse(Buffer.from(text, 'base64').toString('hex'))
+  const contents = CryptoJS.enc.Base64url.parse(text.replaceAll('=', ''))
   const iv = CryptoJS.lib.WordArray.create(contents.words.slice(0, IV_LENGTH), IV_LENGTH)
   const textBytes = CryptoJS.lib.WordArray.create(
     contents.words.slice(IV_LENGTH / wordSize),
