@@ -28,6 +28,15 @@ export function generateUser(): TestUser {
 }
 
 /**
+ * Generate random hex string with passed length
+ *
+ * @param length
+ */
+export function generateHexString(length = 10): string {
+  return crypto.randomBytes(length).toString('hex')
+}
+
+/**
  * Returns an url for testing the Bee public API
  */
 export function beeUrl(): string {

@@ -1,5 +1,8 @@
 import { FairDataProtocol } from '../../src'
-import { beeDebugUrl, beeUrl, generateUser } from '../utils'
+import { beeDebugUrl, beeUrl, generateHexString, generateUser } from '../utils'
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import FairosJs from '@fairdatasociety/fairos-js'
 
 function createFdp() {
   return new FairDataProtocol(beeUrl(), beeDebugUrl())
@@ -103,6 +106,32 @@ describe('Fair Data Protocol class', () => {
 
       const pods = await fdp.podLs()
       expect(pods).toHaveLength(0)
+    })
+
+    it('create pods and get list of them', async () => {
+      const fdp = createFdp()
+      const fairos = new FairosJs()
+      const user = generateUser()
+      const pods = []
+      for (let i = 0; i <= 10; i++) {
+        pods.push(generateHexString())
+      }
+
+      await fairos.userSignup(user.username, user.password, user.mnemonic)
+      await fdp.userImport(user.username, user.address)
+      await fdp.userLogin(user.username, user.password)
+
+      for (const podName of pods) {
+        const podData = (await fairos.podNew(podName, user.password)).data
+        expect(podData.code).toEqual(201)
+      }
+
+      const podsList = await fdp.podLs()
+      expect(podsList.length).toEqual(pods.length)
+
+      for (const podName of podsList) {
+        expect(pods.includes(podName.name)).toBeTruthy()
+      }
     })
   })
 })
