@@ -1,11 +1,15 @@
 import { FairDataProtocol } from '../../src'
-import { beeDebugUrl, beeUrl, generateHexString, generateUser } from '../utils'
+import { beeDebugUrl, beeUrl, fairosJsUrl, generateHexString, generateUser } from '../utils'
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import FairosJs from '@fairdatasociety/fairos-js'
 
 function createFdp() {
   return new FairDataProtocol(beeUrl(), beeDebugUrl())
+}
+
+function createFairosJs() {
+  return new FairosJs(fairosJsUrl())
 }
 
 jest.setTimeout(200000)
@@ -24,6 +28,7 @@ describe('Fair Data Protocol class', () => {
 
   describe('Registration', () => {
     it('register required users', async () => {
+      const fairos = createFairosJs()
       const fdp = createFdp()
       const { debug, demo } = users
 
@@ -33,6 +38,8 @@ describe('Fair Data Protocol class', () => {
         expect(createdUser.wallet.address).toEqual(user.address)
         expect(createdUser.encryptedMnemonic).toBeDefined()
         expect(createdUser.reference).toBeDefined()
+        await fairos.userImport(user.username, user.password, '', user.address)
+        await fairos.userLogin(user.username, user.password)
       }
     })
 
@@ -110,7 +117,7 @@ describe('Fair Data Protocol class', () => {
 
     it('create pods and get list of them', async () => {
       const fdp = createFdp()
-      const fairos = new FairosJs()
+      const fairos = createFairosJs()
       const user = generateUser()
       const pods = []
       for (let i = 0; i <= 10; i++) {

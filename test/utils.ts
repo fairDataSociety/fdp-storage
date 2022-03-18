@@ -49,3 +49,10 @@ export function beeUrl(): string {
 export function beeDebugUrl(): string {
   return process.env.BEE_DEBUG_API_URL || 'http://127.0.0.1:1635'
 }
+
+/**
+ * Returns an url for testing the FairOS-dfs by API
+ */
+export function fairosJsUrl(): string {
+  return process.env.BEE_FAIROS_API_URL || 'http://127.0.0.1:9090/v1/'
+}
