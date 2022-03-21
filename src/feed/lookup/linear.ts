@@ -1,10 +1,9 @@
-import Long from 'long'
 import { Epoch } from './epoch'
-import { Data } from '@ethersphere/bee-js/dist/src/types'
+import { Data } from '@ethersphere/bee-js'
 
-export async function lookup(time: Long, read: (epoch: Epoch, time: Long) => Promise<Data>): Promise<Data> {
-  if (time.eqz()) {
-    time = Long.fromNumber(Math.round(Date.now() / 1000))
+export async function lookup(time: number, read: (epoch: Epoch, time: number) => Promise<Data>): Promise<Data> {
+  if (time === 0) {
+    time = Math.round(Date.now() / 1000)
   }
 
   let previousChunk: Data | undefined
@@ -14,7 +13,7 @@ export async function lookup(time: Long, read: (epoch: Epoch, time: Long) => Pro
     try {
       previousChunk = await read(epoch, time)
     } catch (e) {
-      time = epoch.base().sub(1)
+      time = epoch.base() - 1
 
       try {
         previousChunk = await read(epoch, time)

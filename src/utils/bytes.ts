@@ -57,3 +57,20 @@ export function wrapBytesWithHelpers(data: Uint8Array): Data {
     hex: () => bytesToHex(data),
   })
 }
+
+/**
+ * Converting long number to bytes array
+ *
+ * @param long bytes array
+ */
+export function longToByteArray(long: number): number[] {
+  const byteArray = [0, 0, 0, 0, 0, 0, 0, 0]
+
+  for (let index = 0; index < byteArray.length; index++) {
+    const byte = long & 0xff
+    byteArray[index] = byte
+    long = (long - byte) / 256
+  }
+
+  return byteArray
+}

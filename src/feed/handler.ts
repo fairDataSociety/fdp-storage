@@ -1,12 +1,12 @@
 import { Bytes } from '@ethersphere/bee-js/dist/types/utils/bytes'
 import { makeContentAddressedChunk } from '../chunk/cac'
-import Long from 'long'
+import { longToByteArray } from '../utils/bytes'
 
 const TOPIC_LENGTH = 32
 
 export function epochId(time: number, level: number): number[] {
-  const base = Long.fromNumber(time).and(Long.MAX_UNSIGNED_VALUE.shiftLeft(level))
-  const result = base.toBytes(true)
+  const base = time & (Number.MAX_SAFE_INTEGER << level)
+  const result = longToByteArray(base)
   result[7] = level
 
   return result

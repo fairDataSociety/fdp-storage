@@ -1,24 +1,24 @@
-import Long from 'long'
-import { Bytes } from '@ethersphere/bee-js/dist/src/utils/bytes'
+import { Utils } from '@ethersphere/bee-js'
+import { longToByteArray } from '../../utils/bytes'
 
 const EPOCH_LENGTH = 8
 
-export declare type EpochID = Bytes<typeof EPOCH_LENGTH>
+export declare type EpochID = Utils.Bytes<typeof EPOCH_LENGTH>
 
-export function getBaseTime(time: Long, level: number): Long {
-  return time.and(Long.MAX_UNSIGNED_VALUE.shiftLeft(level))
+export function getBaseTime(time: number, level: number): number {
+  return time & (Number.MAX_SAFE_INTEGER << level)
 }
 
 export class Epoch {
-  constructor(public level: number, public time: Long) {}
+  constructor(public level: number, public time: number) {}
 
-  base(): Long {
+  base(): number {
     return getBaseTime(this.time, this.level)
   }
 
   id(): EpochID {
     const base = this.base()
-    const id = Uint8Array.from(base.toBytes()) as EpochID
+    const id = Uint8Array.from(longToByteArray(base)) as EpochID
     id[7] = this.level
 
     return id

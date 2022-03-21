@@ -120,7 +120,7 @@ describe('Fair Data Protocol class', () => {
       const fairos = createFairosJs()
       const user = generateUser()
       const pods = []
-      for (let i = 0; i <= 10; i++) {
+      for (let i = 0; i < 10; i++) {
         pods.push(generateHexString())
       }
 
