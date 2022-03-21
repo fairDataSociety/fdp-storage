@@ -53,7 +53,6 @@
   },
   "dependencies": {
     "@ethersphere/bee-js": "^3.1.0",
-    "@types/crypto-js": "^4.1.1",
     "crypto-js": "^4.1.1",
     "ethers": "^5.5.2",
     "js-sha3": "^0.8.0",
@@ -72,6 +71,7 @@
     "@jest/test-sequencer": "^27.0.5",
     "@jest/types": "^27.0.2",
     "@types/content-disposition": "^0.5.3",
+    "@types/crypto-js": "^4.1.1",
     "@types/debug": "^4.1.5",
     "@types/elliptic": "^6.4.12",
     "@types/expect-puppeteer": "^4.4.5",
