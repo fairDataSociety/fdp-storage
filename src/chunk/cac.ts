@@ -1,6 +1,6 @@
 import { BrandedType, Utils } from '@ethersphere/bee-js'
 import { bmtHash } from './bmt'
-import { makeSpan, serializeBytes, SPAN_SIZE } from '../utils/bytes'
+import { assertFlexBytes, makeSpan, serializeBytes, SPAN_SIZE } from '../utils/bytes'
 
 export const MIN_PAYLOAD_SIZE = 1
 export const MAX_PAYLOAD_SIZE = 4096
@@ -28,14 +28,6 @@ export interface Chunk {
 }
 
 type ValidChunkData = BrandedType<Uint8Array, 'ValidChunkData'>
-
-export function assertFlexBytes<Min extends number, Max extends number = Min>(
-  b: unknown,
-  min: Min,
-  max: Max,
-): asserts b is Utils.FlexBytes<Min, Max> {
-  return Utils.assertFlexBytes(b, min, max)
-}
 
 /**
  * Creates a content addressed chunk and verifies the payload size.
