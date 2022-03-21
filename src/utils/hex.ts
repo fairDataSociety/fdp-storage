@@ -1,4 +1,4 @@
-import { BrandedType, FlavoredType } from '@ethersphere/bee-js'
+import { BrandedType, FlavoredType, Utils } from '@ethersphere/bee-js'
 
 /**
  * Nominal type to represent hex strings WITHOUT '0x' prefix.
@@ -28,15 +28,7 @@ export type PrefixedHexString = BrandedType<string, 'PrefixedHexString'>
  * @param len     The length of the non prefixed HexString
  */
 export function bytesToHex<Length extends number = number>(bytes: Uint8Array, len?: Length): HexString<Length> {
-  const hexByte = (n: number) => n.toString(16).padStart(2, '0')
-  const hex = Array.from(bytes, hexByte).join('') as HexString<Length>
-
-  // TODO: Make Length mandatory: https://github.com/ethersphere/bee-js/issues/208
-  if (len && hex.length !== len) {
-    throw new TypeError(`Resulting HexString does not have expected length ${len}: ${hex}`)
-  }
-
-  return hex
+  return Utils.bytesToHex(bytes, len)
 }
 
 /**

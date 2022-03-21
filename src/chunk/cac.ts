@@ -1,8 +1,6 @@
-import { Utils, BrandedType } from '@ethersphere/bee-js'
+import { BrandedType, Utils } from '@ethersphere/bee-js'
 import { bmtHash } from './bmt'
-import { serializeBytes } from './serialize'
-import { makeSpan, SPAN_SIZE } from './span'
-import { FlexBytes, Bytes } from '@ethersphere/bee-js/dist/types/utils/bytes'
+import { makeSpan, serializeBytes, SPAN_SIZE } from '../utils/bytes'
 
 export const MIN_PAYLOAD_SIZE = 1
 export const MAX_PAYLOAD_SIZE = 4096
@@ -23,7 +21,7 @@ export type ChunkAddress = Utils.Bytes<32>
  */
 export interface Chunk {
   readonly data: Uint8Array
-  span(): Bytes<8>
+  span(): Utils.Bytes<8>
   payload(): Utils.FlexBytes<1, 4096>
 
   address(): ChunkAddress
@@ -35,7 +33,7 @@ export function assertFlexBytes<Min extends number, Max extends number = Min>(
   b: unknown,
   min: Min,
   max: Max,
-): asserts b is FlexBytes<Min, Max> {
+): asserts b is Utils.FlexBytes<Min, Max> {
   return Utils.assertFlexBytes(b, min, max)
 }
 

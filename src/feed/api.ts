@@ -1,10 +1,10 @@
 import { Bee, Utils, Data } from '@ethersphere/bee-js'
 import { bmtHashString, extractChunkData } from '../account/utils'
 import { getId } from './handler'
-import { bytesToHex } from '../utils/hex'
 import { keccak256Hash } from '../account/encryption'
 import { lookup } from './lookup/linear'
 import { Epoch } from './lookup/epoch'
+import { bytesToHex } from '../utils/hex'
 
 const DOWNLOAD_TIMEOUT = 1000
 

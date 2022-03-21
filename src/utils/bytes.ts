@@ -5,9 +5,14 @@
  * generic `Length` type parameter which is runtime compatible with
  * the original, because it extends from the `number` type.
  */
-import { Data } from '@ethersphere/bee-js'
-import { Bytes } from '@ethersphere/bee-js/dist/types/utils/bytes'
+import { Data, Utils } from '@ethersphere/bee-js'
 import { bytesToHex } from './hex'
+import { BeeArgumentError } from './error'
+
+export const SPAN_SIZE = 8
+
+// we limit the maximum span size in 32 bits to avoid BigInt compatibility issues
+const MAX_SPAN_LENGTH = 2 ** 32 - 1
 
 /**
  * Type guard for `Bytes<T>` type
@@ -15,7 +20,7 @@ import { bytesToHex } from './hex'
  * @param b       The byte array
  * @param length  The length of the byte array
  */
-export function isBytes<Length extends number>(b: unknown, length: Length): b is Bytes<Length> {
+export function isBytes<Length extends number>(b: unknown, length: Length): b is Utils.Bytes<Length> {
   return b instanceof Uint8Array && b.length === length
 }
 
@@ -25,7 +30,7 @@ export function isBytes<Length extends number>(b: unknown, length: Length): b is
  * @param b       The byte array
  * @param length  The specified length
  */
-export function assertBytes<Length extends number>(b: unknown, length: Length): asserts b is Bytes<Length> {
+export function assertBytes<Length extends number>(b: unknown, length: Length): asserts b is Utils.Bytes<Length> {
   if (!isBytes(b, length)) {
     throw new TypeError(`Parameter is not valid Bytes of length: ${length} !== ${(b as Uint8Array).length}`)
   }
@@ -46,8 +51,8 @@ export function bytesEqual(a: Uint8Array, b: Uint8Array): boolean {
  *
  * @param length The length of data to be returned
  */
-export function makeBytes<Length extends number>(length: Length): Bytes<Length> {
-  return new Uint8Array(length) as Bytes<Length>
+export function makeBytes<Length extends number>(length: Length): Utils.Bytes<Length> {
+  return new Uint8Array(length) as Utils.Bytes<Length>
 }
 
 export function wrapBytesWithHelpers(data: Uint8Array): Data {
@@ -73,4 +78,47 @@ export function longToByteArray(long: number): number[] {
   }
 
   return byteArray
+}
+
+/**
+ * Helper function for serialize byte arrays
+ *
+ * @param arrays Any number of byte array arguments
+ */
+export function serializeBytes(...arrays: Uint8Array[]): Uint8Array {
+  const length = arrays.reduce((prev, curr) => prev + curr.length, 0)
+  const buffer = new Uint8Array(length)
+  let offset = 0
+  arrays.forEach(arr => {
+    buffer.set(arr, offset)
+    offset += arr.length
+  })
+
+  return buffer
+}
+
+/**
+ * Create a span for storing the length of the chunk
+ *
+ * The length is encoded in 64-bit little endian.
+ *
+ * @param length The length of the span
+ */
+export function makeSpan(length: number): Utils.Bytes<8> {
+  if (length <= 0) {
+    throw new BeeArgumentError('invalid length for span', length)
+  }
+
+  if (length > MAX_SPAN_LENGTH) {
+    throw new BeeArgumentError('invalid length (> MAX_SPAN_LENGTH)', length)
+  }
+
+  const span = new Uint8Array(SPAN_SIZE)
+  const dataView = new DataView(span.buffer)
+  const littleEndian = true
+  const lengthLower32 = length & 0xffffffff
+
+  dataView.setUint32(0, lengthLower32, littleEndian)
+
+  return span as Utils.Bytes<8>
 }
