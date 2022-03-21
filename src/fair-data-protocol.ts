@@ -58,6 +58,15 @@ export class FairDataProtocol {
   }
 
   /**
+   * Removing a previously imported user
+   *
+   * @param username Username to remove
+   */
+  removeImportedUser(username: string): void {
+    this.users[username] = ''
+  }
+
+  /**
    * Logs in with the FDP credentials and gives back ethers wallet
    *
    * @param username FDP username
@@ -86,10 +95,13 @@ export class FairDataProtocol {
     }
   }
 
-  async userSignup(username: string, password: string, mnemonic = ''): Promise<UserAccountWithReference> {
-    // todo check is already exists / imported
+  async userSignup(username: string, password: string, mnemonic?: string): Promise<UserAccountWithReference> {
     assertUsername(username)
     assertPassword(password)
+
+    if (this.users[username]) {
+      throw new Error('User already imported')
+    }
 
     try {
       const userInfo = await createUser(this.accountData, username, password, mnemonic)

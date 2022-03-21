@@ -48,7 +48,16 @@ describe('Fair Data Protocol class', () => {
       const { double: user } = users
 
       await fdp.userSignup(user.username, user.password, user.mnemonic)
+      fdp.removeImportedUser(user.username)
       await expect(fdp.userSignup(user.username, user.password, user.mnemonic)).rejects.toThrow('User already exists')
+    })
+
+    it('register already imported user', async () => {
+      const fdp = createFdp()
+      const user = generateUser()
+
+      await fdp.userImport(user.username, user.address)
+      await expect(fdp.userSignup(user.username, user.password, user.mnemonic)).rejects.toThrow('User already imported')
     })
   })
 

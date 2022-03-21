@@ -69,11 +69,36 @@ describe('Fair Data Protocol class - in browser', () => {
           const fdp = new window.FairDataProtocol.FairDataProtocol(BEE_URL, BEE_DEBUG_URL)
 
           await fdp.userSignup(user.username, user.password, user.mnemonic)
+          fdp.removeImportedUser(user.username)
           try {
             await fdp.userSignup(user.username, user.password, user.mnemonic)
             fail('Signup should fail with the same username')
           } catch (e) {
             if (e instanceof Error && e.message === 'User already exists') {
+              return
+            }
+
+            throw e
+          }
+        },
+        BEE_URL,
+        BEE_DEBUG_URL,
+        JSON.stringify(generateUser()),
+      )
+    })
+
+    it('register already imported user', async () => {
+      await page.evaluate(
+        async (BEE_URL, BEE_DEBUG_URL, data) => {
+          const user = JSON.parse(data)
+          const fdp = new window.FairDataProtocol.FairDataProtocol(BEE_URL, BEE_DEBUG_URL)
+
+          await fdp.userImport(user.username, user.address)
+          try {
+            await fdp.userSignup(user.username, user.password, user.mnemonic)
+            fail('Signup should fail')
+          } catch (e) {
+            if (e instanceof Error && e.message === 'User already imported') {
               return
             }
 
