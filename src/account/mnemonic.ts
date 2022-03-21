@@ -1,7 +1,6 @@
 import { Bee, Data, Reference, Utils } from '@ethersphere/bee-js'
 import { assertAddress, assertUsername, bmtHashString, extractChunkData, getBatchId } from './utils'
 import { getId } from '../feed/handler'
-import { keccak256Hash } from './encryption'
 import { Wallet } from 'ethers'
 import AccountData from './account-data'
 import { bytesToHex } from '../utils/hex'
@@ -13,7 +12,7 @@ export async function getEncryptedMnemonic(bee: Bee, username: string, address: 
   const addressBytes = Utils.makeEthAddress(address)
   const usernameHash = bmtHashString(username)
   const id = getId(usernameHash)
-  const chunkReference = bytesToHex(keccak256Hash(id, addressBytes))
+  const chunkReference = bytesToHex(Utils.keccak256Hash(id, addressBytes))
   const chunk = await bee.downloadChunk(chunkReference)
 
   return extractChunkData(chunk)

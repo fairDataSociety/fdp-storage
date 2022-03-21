@@ -1,7 +1,6 @@
 import { keccak256 } from 'js-sha3'
 import { BeeArgumentError } from '../utils/error'
 import { Utils } from '@ethersphere/bee-js'
-import { keccak256Hash } from '../account/encryption'
 
 const MAX_CHUNK_PAYLOAD_SIZE = 4096
 const SEGMENT_SIZE = 32
@@ -28,7 +27,7 @@ export function bmtHash(chunkContent: Uint8Array): Utils.Bytes<32> {
   const rootHash = bmtRootHash(payload)
   const chunkHashInput = new Uint8Array([...span, ...rootHash])
 
-  return keccak256Hash(chunkHashInput)
+  return Utils.keccak256Hash(chunkHashInput)
 }
 
 function bmtRootHash(payload: Uint8Array): Uint8Array {
