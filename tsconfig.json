@@ -2,7 +2,8 @@
   "include": ["src"],
   "compilerOptions": {
     "lib": [
-      "ES2021.String"
+      "ES2021.String",
+      "dom"
     ],
     "alwaysStrict": true,
     "target": "ES6",
