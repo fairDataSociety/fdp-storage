@@ -15,7 +15,7 @@ describe('Fair Data Protocol class - in browser', () => {
   it('should create a new FDP instance in browser', async () => {
     const urls = await page.evaluate(
       (BEE_URL, BEE_DEBUG_URL) => {
-        const accountData = new window.FairDataProtocol.FairDataProtocol(BEE_URL, BEE_DEBUG_URL).accountData
+        const accountData = new window.fdp.FairDataProtocol(BEE_URL, BEE_DEBUG_URL).accountData
 
         return {
           beeUrl: accountData.bee.url,
@@ -36,7 +36,7 @@ describe('Fair Data Protocol class - in browser', () => {
       const createdUsers = await page.evaluate(
         async (BEE_URL, BEE_DEBUG_URL, users) => {
           users = JSON.parse(users)
-          const fdp = new window.FairDataProtocol.FairDataProtocol(BEE_URL, BEE_DEBUG_URL)
+          const fdp = new window.fdp.FairDataProtocol(BEE_URL, BEE_DEBUG_URL)
           const result = []
           for (const user of users) {
             const data = await fdp.userSignup(user.username, user.password, user.mnemonic)
@@ -66,7 +66,7 @@ describe('Fair Data Protocol class - in browser', () => {
       await page.evaluate(
         async (BEE_URL, BEE_DEBUG_URL, data) => {
           const user = JSON.parse(data)
-          const fdp = new window.FairDataProtocol.FairDataProtocol(BEE_URL, BEE_DEBUG_URL)
+          const fdp = new window.fdp.FairDataProtocol(BEE_URL, BEE_DEBUG_URL)
 
           await fdp.userSignup(user.username, user.password, user.mnemonic)
           fdp.removeImportedUser(user.username)
@@ -91,7 +91,7 @@ describe('Fair Data Protocol class - in browser', () => {
       await page.evaluate(
         async (BEE_URL, BEE_DEBUG_URL, data) => {
           const user = JSON.parse(data)
-          const fdp = new window.FairDataProtocol.FairDataProtocol(BEE_URL, BEE_DEBUG_URL)
+          const fdp = new window.fdp.FairDataProtocol(BEE_URL, BEE_DEBUG_URL)
 
           await fdp.userImport(user.username, user.address)
           try {

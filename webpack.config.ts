@@ -56,7 +56,7 @@ const base = async (env?: Partial<WebpackEnvParams>): Promise<Configuration> => 
       path,
       filename,
       sourceMapFilename: filename + '.map',
-      library: 'FairDataProtocol',
+      library: 'fdp',
       libraryTarget: 'umd',
       globalObject: 'this',
     },
