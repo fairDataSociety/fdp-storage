@@ -30,10 +30,10 @@ export function generateUser(): TestUser {
 /**
  * Generate random hex string with passed length
  *
- * @param length
+ * @param length Length of output string
  */
 export function generateHexString(length = 10): string {
-  return crypto.randomBytes(length).toString('hex')
+  return crypto.randomBytes(length).toString('hex').substring(0, length)
 }
 
 /**
