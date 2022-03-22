@@ -66,10 +66,11 @@ export function wrapBytesWithHelpers(data: Uint8Array): Data {
 /**
  * Converting long number to bytes array
  *
- * @param long bytes array
+ * @param long Long number
+ * @returns Utils.Bytes<8> Representing a long as an array of bytes
  */
-export function longToByteArray(long: number): number[] {
-  const byteArray = [0, 0, 0, 0, 0, 0, 0, 0]
+export function longToByteArray(long: number): Utils.Bytes<8> {
+  const byteArray = new Uint8Array([0, 0, 0, 0, 0, 0, 0, 0])
 
   for (let index = 0; index < byteArray.length; index++) {
     const byte = long & 0xff
@@ -77,7 +78,7 @@ export function longToByteArray(long: number): number[] {
     long = (long - byte) / 256
   }
 
-  return byteArray
+  return byteArray as Utils.Bytes<8>
 }
 
 /**

@@ -337,13 +337,15 @@ describe('handler', () => {
   it('epochId', () => {
     for (const example of epochIdExamples) {
       const result = epochId(example.time, example.level)
-      expect(result).toEqual(example.result)
+      expect(result.length).toEqual(8)
+      expect(result.toString()).toEqual(example.result.toString())
     }
   })
 
   it('getId', () => {
     for (const example of getIdExamples) {
       const result = getId(new Uint8Array(example.topic), example.time, example.level)
+      expect(result.length).toEqual(32)
       expect(result.toString().split(',').map(Number)).toEqual(example.result)
     }
   })

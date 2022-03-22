@@ -4,7 +4,7 @@ import { longToByteArray } from '../utils/bytes'
 
 const TOPIC_LENGTH = 32
 
-export function epochId(time: number, level: number): number[] {
+export function epochId(time: number, level: number): Utils.Bytes<8> {
   const base = time & (Number.MAX_SAFE_INTEGER << level)
   const result = longToByteArray(base)
   result[7] = level
