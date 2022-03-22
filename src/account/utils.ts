@@ -1,4 +1,4 @@
-import { BeeDebug, Data, Utils } from '@ethersphere/bee-js'
+import { Data, Utils } from '@ethersphere/bee-js'
 import { bmtHash } from '../chunk/bmt'
 import { makeSpan, wrapBytesWithHelpers } from '../utils/bytes'
 import AccountData from './account-data'
@@ -8,7 +8,14 @@ export const MNEMONIC_LENGTH = 12
 export const ADDRESS_LENGTH = 40
 
 export function extractChunkData(data: Data): Data {
-  return wrapBytesWithHelpers(data.slice(105))
+  // length of feed (32) + signature length (65) + span length (8)
+  const chunkContentPosition = 105
+
+  if (data.length < chunkContentPosition) {
+    throw new Error('Incorrect chunk size')
+  }
+
+  return wrapBytesWithHelpers(data.slice(chunkContentPosition))
 }
 
 export function bmtHashString(stringData: string): Utils.Bytes<32> {
