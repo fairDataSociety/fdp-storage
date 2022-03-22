@@ -1,5 +1,6 @@
 import { decrypt, encrypt } from '../../src/account/encryption'
 import CryptoJS from 'crypto-js'
+import { generateHexString } from '../utils'
 
 describe('encryption', () => {
   describe('FairOS-dfs compatibility', () => {
@@ -35,6 +36,26 @@ describe('encryption', () => {
       for (const item of examples) {
         const encrypted = encrypt(item.password, item.expected, CryptoJS.enc.Hex.parse(item.iv))
         expect(encrypted).toEqual(item.data)
+      }
+    })
+
+    it('encrypt and decrypt', () => {
+      const examples = []
+
+      // examples with content length from 1 to 200 and password in range 3-10
+      for (let i = 1; i <= 200; i++) {
+        for (let j = 1; j <= 20; j++) {
+          examples.push({
+            text: generateHexString(i),
+            password: generateHexString(j),
+          })
+        }
+      }
+
+      for (const item of examples) {
+        const encrypted = encrypt(item.password, item.text)
+        const decrypted = decrypt(item.password, encrypted)
+        expect(decrypted).toEqual(item.text)
       }
     })
   })
