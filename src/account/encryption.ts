@@ -5,8 +5,8 @@ export const IV_LENGTH = 16
 /**
  * Decrypt text with password
  *
- * @param password
- * @param text
+ * @param password String to decrypt text
+ * @param text Text to be decrypted
  */
 export function decrypt(password: string, text: string): string {
   const wordSize = 4
@@ -31,9 +31,9 @@ export function decrypt(password: string, text: string): string {
 /**
  * Encrypt text with password
  *
- * @param password
- * @param text
- * @param customIv
+ * @param password String to encrypt text
+ * @param text Text to be encrypted
+ * @param customIv Initial vector for AES. In case of absence, a random vector will be created
  */
 export function encrypt(password: string, text: string, customIv?: CryptoJS.lib.WordArray): string {
   const iv = customIv || CryptoJS.lib.WordArray.random(IV_LENGTH)
