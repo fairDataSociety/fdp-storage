@@ -1,4 +1,4 @@
-import { Bytes } from '@ethersphere/bee-js/dist/types/utils/bytes'
+import { Utils } from '@ethersphere/bee-js'
 import { makeContentAddressedChunk } from '../chunk/cac'
 import { longToByteArray } from '../utils/bytes'
 
@@ -12,7 +12,7 @@ export function epochId(time: number, level: number): number[] {
   return result
 }
 
-export function getId(topic: Uint8Array, time = 0, level = 31): Bytes<32> {
+export function getId(topic: Uint8Array, time = 0, level = 31): Utils.Bytes<32> {
   const bufId = new Uint8Array(40)
   let cursor = 0
   for (let i = 0; i < TOPIC_LENGTH; i++) {

@@ -1,7 +1,6 @@
-import { BeeDebug, Data } from '@ethersphere/bee-js'
+import { BeeDebug, Data, Utils } from '@ethersphere/bee-js'
 import { bmtHash } from '../chunk/bmt'
 import { makeSpan, wrapBytesWithHelpers } from '../utils/bytes'
-import { Bytes } from '@ethersphere/bee-js/dist/types/utils/bytes'
 import AccountData from './account-data'
 import { assertHexString, assertPrefixedHexString } from '../utils/hex'
 
@@ -12,7 +11,7 @@ export function extractChunkData(data: Data): Data {
   return wrapBytesWithHelpers(data.slice(105))
 }
 
-export function bmtHashString(stringData: string): Bytes<32> {
+export function bmtHashString(stringData: string): Utils.Bytes<32> {
   const enc = new TextEncoder()
   const payload = enc.encode(stringData)
   const span = makeSpan(payload.length)
