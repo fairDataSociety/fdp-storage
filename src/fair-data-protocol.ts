@@ -7,6 +7,7 @@ import { getFeedData } from './feed/api'
 import { Pod } from './types'
 import { assertActiveAccount, assertAddress, assertMnemonic, assertPassword, assertUsername } from './account/utils'
 import AccountData from './account/account-data'
+import { prepareEthAddress } from './utils/address'
 
 export const POD_TOPIC = 'Pods'
 
@@ -28,7 +29,7 @@ export class FairDataProtocol {
    * Import FDP user account
    *
    * @param username Username to import
-   * @param address 0x prefixed ethereum address of the user
+   * @param address Ethereum address of the user with or without 0x
    * @param mnemonic 12 space separated words to initialize wallet
    */
   async userImport(username: string, address?: string, mnemonic?: string): Promise<void> {
@@ -43,13 +44,14 @@ export class FairDataProtocol {
     }
 
     if (address) {
+      address = prepareEthAddress(address)
       assertAddress(address)
       this.users[username] = address
     } else if (mnemonic) {
       try {
         assertMnemonic(mnemonic)
         const wallet = Wallet.fromMnemonic(mnemonic)
-        this.users[username] = wallet.address
+        this.users[username] = prepareEthAddress(wallet.address)
         this.setActiveAccount(wallet)
       } catch (e) {
         throw new Error('Incorrect mnemonic')
@@ -105,7 +107,7 @@ export class FairDataProtocol {
 
     try {
       const userInfo = await createUser(this.accountData, username, password, mnemonic)
-      this.users[username] = userInfo.wallet.address
+      this.users[username] = prepareEthAddress(userInfo.wallet.address)
       this.setActiveAccount(userInfo.wallet)
 
       return userInfo

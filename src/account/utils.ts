@@ -2,7 +2,7 @@ import { Data, Utils } from '@ethersphere/bee-js'
 import { bmtHash } from '../chunk/bmt'
 import { makeSpan, wrapBytesWithHelpers } from '../utils/bytes'
 import AccountData from './account-data'
-import { assertHexString, assertPrefixedHexString } from '../utils/hex'
+import { assertHexString } from '../utils/hex'
 
 export const MNEMONIC_LENGTH = 12
 export const ADDRESS_LENGTH = 40
@@ -28,8 +28,7 @@ export function bmtHashString(stringData: string): Utils.Bytes<32> {
 }
 
 export function assertAddress(data: string): void {
-  assertPrefixedHexString(data, 'Address')
-  assertHexString(data.replace('0x', ''), ADDRESS_LENGTH, 'Address')
+  assertHexString(data, ADDRESS_LENGTH, 'Address')
 }
 
 export function assertUsername(data: string): void {

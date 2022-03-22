@@ -79,16 +79,3 @@ export function assertHexString<Length extends number = number>(
     throw new TypeError(`${name} not valid hex string${lengthMsg}: ${s}`)
   }
 }
-
-/**
- * Verifies if the provided input is a PrefixedHexString.
- *
- * @param s string input
- * @param name optional name for the asserted value
- * @returns HexString or throws error
- */
-export function assertPrefixedHexString(s: string, name = 'value'): asserts s is PrefixedHexString {
-  if (!isPrefixedHexString(s)) {
-    throw new TypeError(`${name} not valid prefixed hex string: ${s}`)
-  }
-}
