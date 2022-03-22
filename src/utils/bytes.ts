@@ -124,14 +124,6 @@ export function makeSpan(length: number): Utils.Bytes<8> {
   return span as Utils.Bytes<8>
 }
 
-export function assertFlexBytes<Min extends number, Max extends number = Min>(
-  b: unknown,
-  min: Min,
-  max: Max,
-): asserts b is Utils.FlexBytes<Min, Max> {
-  return Utils.assertFlexBytes(b, min, max)
-}
-
 /**
  * Converts string to bytes array
  *
@@ -141,49 +133,6 @@ export function stringToBytes(data: string): Uint8Array {
   const enc = new TextEncoder()
 
   return enc.encode(data)
-}
-
-/**
- * Helper function for serialize byte arrays
- *
- * @param arrays Any number of byte array arguments
- */
-export function serializeBytes(...arrays: Uint8Array[]): Uint8Array {
-  const length = arrays.reduce((prev, curr) => prev + curr.length, 0)
-  const buffer = new Uint8Array(length)
-  let offset = 0
-  arrays.forEach(arr => {
-    buffer.set(arr, offset)
-    offset += arr.length
-  })
-
-  return buffer
-}
-
-/**
- * Create a span for storing the length of the chunk
- *
- * The length is encoded in 64-bit little endian.
- *
- * @param length The length of the span
- */
-export function makeSpan(length: number): Utils.Bytes<8> {
-  if (length <= 0) {
-    throw new BeeArgumentError('invalid length for span', length)
-  }
-
-  if (length > MAX_SPAN_LENGTH) {
-    throw new BeeArgumentError('invalid length (> MAX_SPAN_LENGTH)', length)
-  }
-
-  const span = new Uint8Array(SPAN_SIZE)
-  const dataView = new DataView(span.buffer)
-  const littleEndian = true
-  const lengthLower32 = length & 0xffffffff
-
-  dataView.setUint32(0, lengthLower32, littleEndian)
-
-  return span as Utils.Bytes<8>
 }
 
 export function assertFlexBytes<Min extends number, Max extends number = Min>(
