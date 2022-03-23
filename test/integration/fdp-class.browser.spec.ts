@@ -42,7 +42,7 @@ describe('Fair Data Protocol class - in browser', () => {
             const data = await fdp.userSignup(user.username, user.password, user.mnemonic)
             result.push(data)
 
-            await fdp.userImport(user.username, '', user.mnemonic)
+            await fdp.import(user.username, user.mnemonic)
             await fdp.userLogin(user.username, user.password)
           }
 
@@ -69,7 +69,7 @@ describe('Fair Data Protocol class - in browser', () => {
           const fdp = new window.fdp.FairDataProtocol(BEE_URL, BEE_DEBUG_URL)
 
           await fdp.userSignup(user.username, user.password, user.mnemonic)
-          fdp.removeImportedUser(user.username)
+          fdp.removeUserAddress(user.username)
           try {
             await fdp.userSignup(user.username, user.password, user.mnemonic)
             fail('Signup should fail with the same username')
@@ -93,7 +93,7 @@ describe('Fair Data Protocol class - in browser', () => {
           const user = JSON.parse(data)
           const fdp = new window.fdp.FairDataProtocol(BEE_URL, BEE_DEBUG_URL)
 
-          await fdp.userImport(user.username, user.address)
+          await fdp.setUserAddress(user.username, user.address)
           try {
             await fdp.userSignup(user.username, user.password, user.mnemonic)
             fail('Signup should fail')

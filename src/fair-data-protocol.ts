@@ -29,42 +29,40 @@ export class FairDataProtocol {
    * Import FDP user account
    *
    * @param username Username to import
-   * @param address Ethereum address of the user with or without 0x
    * @param mnemonic 12 space separated words to initialize wallet
    */
-  async userImport(username: string, address?: string, mnemonic?: string): Promise<void> {
+  async import(username: string, mnemonic: string): Promise<void> {
     assertUsername(username)
-
-    if (address && mnemonic) {
-      throw new Error('Use only mnemonic or address')
-    }
-
-    if (!address && !mnemonic) {
-      throw new Error('Address or mnemonic is required')
-    }
-
-    if (address) {
-      address = prepareEthAddress(address)
-      assertAddress(address)
-      this.users[username] = address
-    } else if (mnemonic) {
-      try {
-        assertMnemonic(mnemonic)
-        const wallet = Wallet.fromMnemonic(mnemonic)
-        this.users[username] = prepareEthAddress(wallet.address)
-        this.setActiveAccount(wallet)
-      } catch (e) {
-        throw new Error('Incorrect mnemonic')
-      }
+    try {
+      assertMnemonic(mnemonic)
+      const wallet = Wallet.fromMnemonic(mnemonic)
+      this.users[username] = prepareEthAddress(wallet.address)
+      this.setActiveAccount(wallet)
+    } catch (e) {
+      throw new Error('Incorrect mnemonic')
     }
   }
 
   /**
-   * Removing a previously imported user
+   * Set Ethereum address for specific username
    *
-   * @param username Username to remove
+   * @param username Username to modify
+   * @param address Ethereum address with or without 0x prefix
    */
-  removeImportedUser(username: string): void {
+  setUserAddress(username: string, address: string): void {
+    assertUsername(username)
+    address = prepareEthAddress(address)
+    assertAddress(address)
+    this.users[username] = address
+  }
+
+  /**
+   * Remove Ethereum address for specific username
+   *
+   * @param username Username to modify
+   */
+  removeUserAddress(username: string): void {
+    assertUsername(username)
     this.users[username] = ''
   }
 
