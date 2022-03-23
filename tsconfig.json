@@ -16,7 +16,8 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "typeRoots": [
-      "./src/pod/types", "node_modules/@types"],
+      "./src/pod/types", "node_modules/@types"
+    ],
     "rootDirs": ["src"],
     "outDir": "dist"
   },
