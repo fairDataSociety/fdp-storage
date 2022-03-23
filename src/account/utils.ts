@@ -7,7 +7,12 @@ import { assertHexString } from '../utils/hex'
 export const MNEMONIC_LENGTH = 12
 export const ADDRESS_LENGTH = 40
 
-export function extractChunkData(data: Data): Data {
+/**
+ * Extracts only content from chunk data
+ *
+ * @param data full chunk data
+ */
+export function extractChunkContent(data: Data): Data {
   // length of feed (32) + signature length (65) + span length (8)
   const chunkContentPosition = 105
 

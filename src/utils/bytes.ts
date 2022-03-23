@@ -64,10 +64,10 @@ export function wrapBytesWithHelpers(data: Uint8Array): Data {
 }
 
 /**
- * Converting long number to bytes array
+ * Converts long number to bytes array
  *
- * @param long Long number
- * @returns Utils.Bytes<8> Representing a long as an array of bytes
+ * @param long long number
+ * @returns representing a long as an array of bytes
  */
 export function longToByteArray(long: number): Utils.Bytes<8> {
   const byteArray = new Uint8Array([0, 0, 0, 0, 0, 0, 0, 0])

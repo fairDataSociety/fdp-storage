@@ -12,7 +12,7 @@ export class PersonalStorage {
   /**
    * Gets the list of pods for the active account
    *
-   * @returns Promise<Pod[]> List of pods
+   * @returns list of pods
    */
   async list(): Promise<Pod[]> {
     assertActiveAccount(this.accountData)

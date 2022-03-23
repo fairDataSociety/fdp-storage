@@ -1,6 +1,12 @@
 import { Epoch } from './epoch'
 import { Data } from '@ethersphere/bee-js'
 
+/**
+ * Searches feed content with linear way
+ *
+ * @param time search start time point
+ * @param read async function for downloading data using Epoch and time
+ */
 export async function lookup(time: number, read: (epoch: Epoch, time: number) => Promise<Data>): Promise<Data> {
   if (time === 0) {
     time = Math.round(Date.now() / 1000)

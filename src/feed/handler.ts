@@ -4,6 +4,14 @@ import { Epoch } from './lookup/epoch'
 
 const TOPIC_LENGTH = 32
 
+/**
+ * Calculates swarm reference with passed params
+ *
+ * @param topic identification of content
+ * @param time time in epoch for content
+ * @param level level in epoch for content
+ * @returns swarm reference
+ */
 export function getId(topic: Uint8Array, time = 0, level = 31): Utils.Bytes<32> {
   const bufId = new Uint8Array(40)
   let cursor = 0
