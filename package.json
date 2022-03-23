@@ -1,7 +1,7 @@
 {
   "name": "@fairdatasociety/fair-data-protocol",
   "version": "1.0.0",
-  "description": "Javascript implementation of FairOS-dfs",
+  "description": "Typescript implementation of FairOS-dfs",
   "keywords": [
     "fairdata",
     "swarm",
