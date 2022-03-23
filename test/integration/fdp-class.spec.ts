@@ -89,7 +89,8 @@ describe('Fair Data Protocol class', () => {
       const fdp = createFdp()
       const { debug } = users
       // not imported user
-      await expect(fdp.userLogin('zzz', 'zzz')).rejects.toThrow('User is not imported')
+      const failUsername = 'zzz'
+      await expect(fdp.userLogin(failUsername, 'zzz')).rejects.toThrow(`No address linked to the username "${failUsername}"`)
 
       // imported, but incorrect password
       await fdp.userImport(debug.username, debug.address)

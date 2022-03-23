@@ -82,7 +82,7 @@ export class FairDataProtocol {
     const address = this.users[username]
 
     if (!address) {
-      throw new Error('User is not imported')
+      throw new Error(`No address linked to the username "${username}"`)
     }
 
     const encryptedMnemonic = await getEncryptedMnemonic(this.accountData.bee, username, address)
