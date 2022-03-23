@@ -1,7 +1,7 @@
 import { Data, Utils } from '@ethersphere/bee-js'
 import { bmtHash } from '../chunk/bmt'
 import { makeSpan, wrapBytesWithHelpers } from '../utils/bytes'
-import AccountData from './account-data'
+import { AccountData } from './account-data'
 import { assertHexString } from '../utils/hex'
 
 export const MNEMONIC_LENGTH = 12

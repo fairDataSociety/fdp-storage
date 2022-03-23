@@ -6,7 +6,7 @@ import { getEncryptedMnemonic } from './mnemonic'
 import { decrypt } from './encryption'
 import { createUser, UserAccountWithReference } from './account'
 
-export default class AccountData {
+export class AccountData {
   /** username -> ethereum wallet address mapping */
   public readonly users: { [key: string]: string } = {}
 

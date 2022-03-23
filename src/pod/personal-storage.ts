@@ -2,7 +2,7 @@ import { Pod } from './types'
 import { assertActiveAccount } from '../account/utils'
 import { Data } from '@ethersphere/bee-js'
 import { getFeedData } from '../feed/api'
-import AccountData from '../account/account-data'
+import { AccountData } from '../account/account-data'
 
 export const POD_TOPIC = 'Pods'
 

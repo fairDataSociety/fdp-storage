@@ -3,7 +3,7 @@ import { Wallet } from 'ethers'
 import { encrypt } from './encryption'
 import { uploadEncryptedMnemonic } from './mnemonic'
 import { assertMnemonic, assertPassword } from './utils'
-import AccountData from './account-data'
+import { AccountData } from './account-data'
 
 interface UserAccount {
   wallet: Wallet

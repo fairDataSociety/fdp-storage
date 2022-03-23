@@ -1,5 +1,5 @@
 import { Bee, BeeDebug } from '@ethersphere/bee-js'
-import AccountData from './account/account-data'
+import { AccountData } from './account/account-data'
 import { PersonalStorage } from './pod/personal-storage'
 
 export class FairDataProtocol {
