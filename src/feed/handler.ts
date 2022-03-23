@@ -1,16 +1,8 @@
 import { Utils } from '@ethersphere/bee-js'
 import { makeContentAddressedChunk } from '../chunk/cac'
-import { longToByteArray } from '../utils/bytes'
+import { Epoch } from './lookup/epoch'
 
 const TOPIC_LENGTH = 32
-
-export function epochId(time: number, level: number): Utils.Bytes<8> {
-  const base = time & (Number.MAX_SAFE_INTEGER << level)
-  const result = longToByteArray(base)
-  result[7] = level
-
-  return result
-}
 
 export function getId(topic: Uint8Array, time = 0, level = 31): Utils.Bytes<32> {
   const bufId = new Uint8Array(40)
@@ -19,7 +11,9 @@ export function getId(topic: Uint8Array, time = 0, level = 31): Utils.Bytes<32> 
     bufId[cursor] = topic[cursor]
     cursor++
   }
-  const eid = epochId(time, level)
+
+  const epoch = new Epoch(level, time)
+  const eid = epoch.id()
   for (let i = 0; i < eid.length; i++) {
     bufId[cursor + i] = eid[i]
   }
