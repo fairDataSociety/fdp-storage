@@ -8,6 +8,7 @@
     "alwaysStrict": true,
     "target": "ES6",
     "esModuleInterop": true,
+    "skipLibCheck": true,
     "allowSyntheticDefaultImports": true,
     "moduleResolution": "node",
     "module": "commonjs",
