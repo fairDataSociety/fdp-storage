@@ -17,13 +17,12 @@ describe('Fair Data Protocol class', () => {
   const users = {
     debug: generateUser(),
     demo: generateUser(),
-    double: generateUser(),
   }
 
   it('should strip trailing slash', () => {
     const fdp = new FairDataProtocol('http://localhost:1633/', 'http://localhost:1635/')
-    expect(fdp.accountData.bee.url).toEqual('http://localhost:1633')
-    expect(fdp.accountData.beeDebug.url).toEqual('http://localhost:1635')
+    expect(fdp.bee.url).toEqual('http://localhost:1633')
+    expect(fdp.beeDebug.url).toEqual('http://localhost:1635')
   })
 
   describe('Registration', () => {
@@ -33,7 +32,7 @@ describe('Fair Data Protocol class', () => {
       const { debug, demo } = users
 
       for (const user of [debug, demo]) {
-        const createdUser = await fdp.userSignup(user.username, user.password, user.mnemonic)
+        const createdUser = await fdp.account.register(user.username, user.password, user.mnemonic)
         expect(createdUser.mnemonic).toEqual(user.mnemonic)
         expect(createdUser.wallet.address).toEqual(user.address)
         expect(createdUser.encryptedMnemonic).toBeDefined()
@@ -45,19 +44,23 @@ describe('Fair Data Protocol class', () => {
 
     it('register already registered user', async () => {
       const fdp = createFdp()
-      const { double: user } = users
+      const user = generateUser()
 
-      await fdp.userSignup(user.username, user.password, user.mnemonic)
-      fdp.removeUserAddress(user.username)
-      await expect(fdp.userSignup(user.username, user.password, user.mnemonic)).rejects.toThrow('User already exists')
+      await fdp.account.register(user.username, user.password, user.mnemonic)
+      fdp.account.removeUserAddress(user.username)
+      await expect(fdp.account.register(user.username, user.password, user.mnemonic)).rejects.toThrow(
+        'User already exists',
+      )
     })
 
     it('register already imported user', async () => {
       const fdp = createFdp()
       const user = generateUser()
 
-      await fdp.setUserAddress(user.username, user.address)
-      await expect(fdp.userSignup(user.username, user.password, user.mnemonic)).rejects.toThrow('User already imported')
+      await fdp.account.setUserAddress(user.username, user.address)
+      await expect(fdp.account.register(user.username, user.password, user.mnemonic)).rejects.toThrow(
+        'User already imported',
+      )
     })
   })
 
@@ -65,24 +68,24 @@ describe('Fair Data Protocol class', () => {
     it('should login with existing user and address', async () => {
       const fdp = createFdp()
       const { debug, demo } = users
-      expect(fdp.users.debug).toBeUndefined()
-      await fdp.setUserAddress(debug.username, debug.address)
-      expect(fdp.users[debug.username]).toBeDefined()
-      await fdp.userLogin(debug.username, debug.password)
+      expect(fdp.account.users.debug).toBeUndefined()
+      await fdp.account.setUserAddress(debug.username, debug.address)
+      expect(fdp.account.users[debug.username]).toBeDefined()
+      await fdp.account.login(debug.username, debug.password)
 
-      expect(fdp.users.demo).toBeUndefined()
-      await fdp.setUserAddress(demo.username, demo.address)
-      expect(fdp.users[demo.username]).toBeDefined()
-      await fdp.userLogin(demo.username, demo.password)
+      expect(fdp.account.users.demo).toBeUndefined()
+      await fdp.account.setUserAddress(demo.username, demo.address)
+      expect(fdp.account.users[demo.username]).toBeDefined()
+      await fdp.account.login(demo.username, demo.password)
     })
 
     it('should login with existing user and mnemonic', async () => {
       const fdp = createFdp()
       const { debug } = users
-      expect(fdp.users.debug).toBeUndefined()
-      await fdp.import(debug.username, debug.mnemonic)
-      expect(fdp.users[debug.username]).toBeDefined()
-      await fdp.userLogin(debug.username, debug.password)
+      expect(fdp.account.users.debug).toBeUndefined()
+      await fdp.account.import(debug.username, debug.mnemonic)
+      expect(fdp.account.users[debug.username]).toBeDefined()
+      await fdp.account.login(debug.username, debug.password)
     })
 
     it('auth with incorrect data should throw errors', async () => {
@@ -91,22 +94,22 @@ describe('Fair Data Protocol class', () => {
 
       // not imported user
       const failUsername = 'zzz'
-      await expect(fdp.userLogin(failUsername, 'zzz')).rejects.toThrow(
+      await expect(fdp.account.login(failUsername, 'zzz')).rejects.toThrow(
         `No address linked to the username "${failUsername}"`,
       )
 
       // imported, but incorrect password
-      await fdp.setUserAddress(debug.username, debug.address)
-      await expect(fdp.userLogin(debug.username, 'debug111')).rejects.toThrow('Incorrect password')
+      await fdp.account.setUserAddress(debug.username, debug.address)
+      await expect(fdp.account.login(debug.username, 'debug111')).rejects.toThrow('Incorrect password')
 
       // imported, but empty password
-      await expect(fdp.userLogin(debug.username, '')).rejects.toThrow('Incorrect password')
+      await expect(fdp.account.login(debug.username, '')).rejects.toThrow('Incorrect password')
 
       // import with incorrect mnemonic
-      await expect(fdp.import('ttt', 'some mnemonic')).rejects.toThrow('Incorrect mnemonic')
+      await expect(fdp.account.import('ttt', 'some mnemonic')).rejects.toThrow('Incorrect mnemonic')
 
       // import with empty username and mnemonic
-      await expect(fdp.import('', '')).rejects.toThrow('Incorrect username')
+      await expect(fdp.account.import('', '')).rejects.toThrow('Incorrect username')
     })
   })
 
@@ -114,9 +117,9 @@ describe('Fair Data Protocol class', () => {
     it('get empty pods list', async () => {
       const fdp = createFdp()
       const { debug } = users
-      await fdp.import(debug.username, debug.mnemonic)
+      await fdp.account.import(debug.username, debug.mnemonic)
 
-      const pods = await fdp.podLs()
+      const pods = await fdp.personalStorage.list()
       expect(pods).toHaveLength(0)
     })
 
@@ -130,15 +133,15 @@ describe('Fair Data Protocol class', () => {
       }
 
       await fairos.userSignup(user.username, user.password, user.mnemonic)
-      await fdp.setUserAddress(user.username, user.address)
-      await fdp.userLogin(user.username, user.password)
+      await fdp.account.setUserAddress(user.username, user.address)
+      await fdp.account.login(user.username, user.password)
 
       for (const podName of pods) {
         const podData = (await fairos.podNew(podName, user.password)).data
         expect(podData.code).toEqual(201)
       }
 
-      const podsList = await fdp.podLs()
+      const podsList = await fdp.personalStorage.list()
       expect(podsList.length).toEqual(pods.length)
 
       for (const podName of podsList) {
