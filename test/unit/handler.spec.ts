@@ -1,4 +1,5 @@
-import { epochId, getId } from '../../src/feed/handler'
+import { getId } from '../../src/feed/handler'
+import { Epoch } from '../../src/feed/lookup/epoch'
 
 describe('handler', () => {
   const epochIdExamples = [
@@ -336,7 +337,8 @@ describe('handler', () => {
 
   it('epochId', () => {
     for (const example of epochIdExamples) {
-      const result = epochId(example.time, example.level)
+      const epoch = new Epoch(example.level, example.time)
+      const result = epoch.id()
       expect(result.length).toEqual(8)
       expect(result.toString()).toEqual(example.result.toString())
     }
