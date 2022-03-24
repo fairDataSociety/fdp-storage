@@ -23,6 +23,12 @@ export function extractChunkContent(data: Data): Data {
   return wrapBytesWithHelpers(data.slice(chunkContentPosition))
 }
 
+/**
+ * Calculate a Binary Merkle Tree hash for a string
+ *
+ * @param stringData
+ * @returns the keccak256 hash in a byte array
+ */
 export function bmtHashString(stringData: string): Utils.Bytes<32> {
   const enc = new TextEncoder()
   const payload = enc.encode(stringData)
@@ -32,22 +38,42 @@ export function bmtHashString(stringData: string): Utils.Bytes<32> {
   return bmtHash(data)
 }
 
+/**
+ * Asserts that a valid address has been passed
+ *
+ * @param data Ethereum address
+ */
 export function assertAddress(data: string): void {
   assertHexString(data, ADDRESS_LENGTH, 'Address')
 }
 
+/**
+ * Asserts whether non-empty username passed
+ *
+ * @param data username
+ */
 export function assertUsername(data: string): void {
   if (!data) {
     throw new Error('Incorrect username')
   }
 }
 
+/**
+ * Asserts whether non-empty password passed
+ *
+ * @param data password
+ */
 export function assertPassword(data: string): void {
   if (!data) {
     throw new Error('Incorrect password')
   }
 }
 
+/**
+ * Asserts whether a valid mnemonic phrase has been passed
+ *
+ * @param data mnemonic phrase
+ */
 export function assertMnemonic(data: string): void {
   const words = data.split(' ')
 
@@ -56,6 +82,11 @@ export function assertMnemonic(data: string): void {
   }
 }
 
+/**
+ * Asserts whether an active account is defined
+ *
+ * @param data instance of AccountData to check
+ */
 export function assertActiveAccount(data: AccountData): void {
   if (!data.wallet) {
     throw new Error('Active account not found')
