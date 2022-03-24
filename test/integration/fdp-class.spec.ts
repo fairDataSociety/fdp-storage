@@ -68,23 +68,23 @@ describe('Fair Data Protocol class', () => {
     it('should login with existing user and address', async () => {
       const fdp = createFdp()
       const { debug, demo } = users
-      expect(fdp.account.users.debug).toBeUndefined()
+      expect(fdp.account.usernameToAddress[debug.username]).toBeUndefined()
       await fdp.account.setUserAddress(debug.username, debug.address)
-      expect(fdp.account.users[debug.username]).toBeDefined()
+      expect(fdp.account.usernameToAddress[debug.username]).toBeDefined()
       await fdp.account.login(debug.username, debug.password)
 
-      expect(fdp.account.users.demo).toBeUndefined()
+      expect(fdp.account.usernameToAddress[demo.username]).toBeUndefined()
       await fdp.account.setUserAddress(demo.username, demo.address)
-      expect(fdp.account.users[demo.username]).toBeDefined()
+      expect(fdp.account.usernameToAddress[demo.username]).toBeDefined()
       await fdp.account.login(demo.username, demo.password)
     })
 
     it('should login with existing user and mnemonic', async () => {
       const fdp = createFdp()
       const { debug } = users
-      expect(fdp.account.users.debug).toBeUndefined()
+      expect(fdp.account.usernameToAddress[debug.username]).toBeUndefined()
       await fdp.account.import(debug.username, debug.mnemonic)
-      expect(fdp.account.users[debug.username]).toBeDefined()
+      expect(fdp.account.usernameToAddress[debug.username]).toBeDefined()
       await fdp.account.login(debug.username, debug.password)
     })
 

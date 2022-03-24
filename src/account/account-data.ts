@@ -8,7 +8,7 @@ import { createUser, UserAccountWithReference } from './account'
 
 export class AccountData {
   /** username -> ethereum wallet address mapping */
-  public readonly users: { [key: string]: string } = {}
+  public readonly usernameToAddress: { [key: string]: string } = {}
 
   constructor(public readonly bee: Bee, public readonly beeDebug: BeeDebug, public wallet?: Wallet) {}
 
@@ -32,7 +32,7 @@ export class AccountData {
     try {
       assertMnemonic(mnemonic)
       const wallet = Wallet.fromMnemonic(mnemonic)
-      this.users[username] = prepareEthAddress(wallet.address)
+      this.usernameToAddress[username] = prepareEthAddress(wallet.address)
       this.setActiveAccount(wallet)
     } catch (e) {
       throw new Error('Incorrect mnemonic')
@@ -49,7 +49,7 @@ export class AccountData {
     assertUsername(username)
     address = prepareEthAddress(address)
     assertAddress(address)
-    this.users[username] = address
+    this.usernameToAddress[username] = address
   }
 
   /**
@@ -59,7 +59,7 @@ export class AccountData {
    */
   removeUserAddress(username: string): void {
     assertUsername(username)
-    this.users[username] = ''
+    this.usernameToAddress[username] = ''
   }
 
   /**
@@ -73,7 +73,7 @@ export class AccountData {
     assertUsername(username)
     assertPassword(password)
 
-    const address = this.users[username]
+    const address = this.usernameToAddress[username]
 
     if (!address) {
       throw new Error(`No address linked to the username "${username}"`)
@@ -102,13 +102,13 @@ export class AccountData {
     assertUsername(username)
     assertPassword(password)
 
-    if (this.users[username]) {
+    if (this.usernameToAddress[username]) {
       throw new Error('User already imported')
     }
 
     try {
       const userInfo = await createUser(this, username, password, mnemonic)
-      this.users[username] = prepareEthAddress(userInfo.wallet.address)
+      this.usernameToAddress[username] = prepareEthAddress(userInfo.wallet.address)
       this.setActiveAccount(userInfo.wallet)
 
       return userInfo
