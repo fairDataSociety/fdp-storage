@@ -1,5 +1,6 @@
 import { join } from 'path'
 import { beeDebugUrl, beeUrl, generateUser } from '../utils'
+import '../../src/index'
 
 jest.setTimeout(200000)
 describe('Fair Data Protocol class - in browser', () => {
