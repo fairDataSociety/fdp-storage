@@ -1,3 +1,4 @@
+import './shim/crypto'
 import { FairDataProtocol } from './fair-data-protocol'
 import { AccountData } from './account/account-data'
 import { PersonalStorage } from './pod/personal-storage'
