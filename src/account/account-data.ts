@@ -59,7 +59,7 @@ export class AccountData {
    */
   removeUserAddress(username: string): void {
     assertUsername(username)
-    this.usernameToAddress[username] = ''
+    delete this.usernameToAddress[username]
   }
 
   /**
