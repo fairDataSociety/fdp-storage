@@ -32,7 +32,7 @@ export function generateUser(): TestUser {
  *
  * @param length Length of output string
  */
-export function generateHexString(length = 10): string {
+export function generateRandomHexString(length = 10): string {
   return crypto.randomBytes(length).toString('hex').substring(0, length)
 }
 

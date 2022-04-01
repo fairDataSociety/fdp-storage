@@ -1,6 +1,6 @@
 import { decrypt, encrypt } from '../../src/account/encryption'
 import CryptoJS from 'crypto-js'
-import { generateHexString } from '../utils'
+import { generateRandomHexString } from '../utils'
 
 describe('encryption', () => {
   describe('FairOS-dfs compatibility', () => {
@@ -46,8 +46,8 @@ describe('encryption', () => {
       for (let i = 1; i <= 200; i++) {
         for (let j = 1; j <= 20; j++) {
           examples.push({
-            text: generateHexString(i),
-            password: generateHexString(j),
+            text: generateRandomHexString(i),
+            password: generateRandomHexString(j),
           })
         }
       }
