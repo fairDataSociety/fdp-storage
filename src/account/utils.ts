@@ -1,6 +1,6 @@
 import { Data, Utils } from '@ethersphere/bee-js'
 import { bmtHash } from '../chunk/bmt'
-import { makeSpan, wrapBytesWithHelpers } from '../utils/bytes'
+import { makeSpan, stringToBytes, wrapBytesWithHelpers } from '../utils/bytes'
 import { AccountData } from './account-data'
 import { assertHexString } from '../utils/hex'
 
@@ -30,8 +30,18 @@ export function extractChunkContent(data: Data): Data {
  * @returns the keccak256 hash in a byte array
  */
 export function bmtHashString(stringData: string): Utils.Bytes<32> {
-  const enc = new TextEncoder()
-  const payload = enc.encode(stringData)
+  const payload = stringToBytes(stringData)
+
+  return bmtHashBytes(payload)
+}
+
+/**
+ * Calculate a Binary Merkle Tree hash for a bytes array
+ *
+ * @param payload
+ * @returns the keccak256 hash in a byte array
+ */
+export function bmtHashBytes(payload: Uint8Array): Utils.Bytes<32> {
   const span = makeSpan(payload.length)
   const data = new Uint8Array([...span, ...payload])
 

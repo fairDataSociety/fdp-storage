@@ -1,9 +1,13 @@
-import { Bee, Utils, Data } from '@ethersphere/bee-js'
-import { bmtHashString, extractChunkContent } from '../account/utils'
+import { Bee, Data, Reference, Utils } from '@ethersphere/bee-js'
+import { bmtHashString } from '../account/utils'
 import { getId } from './handler'
 import { lookup } from './lookup/linear'
-import { Epoch } from './lookup/epoch'
+import { Epoch, HIGHEST_LEVEL } from './lookup/epoch'
 import { bytesToHex } from '../utils/hex'
+import { getBatchId } from '../utils/batch'
+import { AccountData } from '../account/account-data'
+import { getUnixTimestamp } from '../utils/time'
+import { LookupAnswer } from './types'
 
 /**
  * Finds and downloads the latest feed content
@@ -13,15 +17,41 @@ import { bytesToHex } from '../utils/hex'
  * @param address Ethereum address for calculation swarm chunk
  * @param timeout download timeout during finding
  */
-export async function getFeedData(bee: Bee, topic: string, address: string, timeout = 1000): Promise<Data> {
+export async function getFeedData(bee: Bee, topic: string, address: string, timeout = 1000): Promise<LookupAnswer> {
   const addressBytes = Utils.makeEthAddress(address)
   const topicHash = bmtHashString(topic)
-  const chunk = await lookup(0, async (epoch: Epoch, time: number): Promise<Data> => {
+
+  return lookup(0, async (epoch: Epoch, time: number): Promise<Data> => {
     const tempId = getId(topicHash, time, epoch.level)
     const chunkReference = bytesToHex(Utils.keccak256Hash(tempId, addressBytes))
 
     return await bee.downloadChunk(chunkReference, { timeout })
   })
+}
 
-  return extractChunkContent(chunk)
+/**
+ * Writes data to feed using `topic` and `epoch` as a key and signed data with `privateKey` as a value
+ *
+ * @param accountData connection information for data uploading
+ * @param topic key for data
+ * @param data data to upload
+ * @param privateKey private key to sign data
+ * @param epoch feed epoch
+ */
+export async function writeFeedData(
+  accountData: AccountData,
+  topic: string,
+  data: Uint8Array,
+  privateKey: string,
+  epoch?: Epoch,
+): Promise<Reference> {
+  if (!epoch) {
+    epoch = new Epoch(HIGHEST_LEVEL, getUnixTimestamp())
+  }
+
+  const topicHash = bmtHashString(topic)
+  const id = getId(topicHash, epoch.time, epoch.level)
+  const socWriter = accountData.bee.makeSOCWriter(privateKey)
+
+  return socWriter.upload(await getBatchId(accountData.beeDebug), id, data)
 }

@@ -4,7 +4,9 @@ import { getId } from '../feed/handler'
 import { Wallet } from 'ethers'
 import { AccountData } from './account-data'
 import { bytesToHex } from '../utils/hex'
-import { getBatchId } from '../utils/batch'
+import { stringToBytes } from '../utils/bytes'
+import { writeFeedData } from '../feed/api'
+import { Epoch, HIGHEST_LEVEL } from '../feed/lookup/epoch'
 
 /**
  * Downloads encrypted mnemonic phrase from swarm chunk
@@ -42,12 +44,11 @@ export async function uploadEncryptedMnemonic(
 ): Promise<Reference> {
   assertUsername(username)
 
-  const usernameHash = bmtHashString(username)
-  const id = getId(usernameHash)
-
-  const enc = new TextEncoder()
-  const mnemonicBytes = enc.encode(encryptedMnemonic)
-  const socWriter = accountData.bee.makeSOCWriter(wallet.privateKey)
-
-  return socWriter.upload(await getBatchId(accountData.beeDebug), id, mnemonicBytes)
+  return writeFeedData(
+    accountData,
+    username,
+    stringToBytes(encryptedMnemonic),
+    wallet.privateKey,
+    new Epoch(HIGHEST_LEVEL, 0),
+  )
 }
