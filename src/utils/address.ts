@@ -1,5 +1,5 @@
 /**
- * Removes Ethereum address for internal using
+ * Removes 0x prefix from Ethereum address
  *
  * @param address Ethereum address for preparation
  */
