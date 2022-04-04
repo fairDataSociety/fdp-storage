@@ -13,7 +13,7 @@ import { bytesToHex } from '../utils/hex'
  * @param address Ethereum address for calculation swarm chunk
  * @param timeout download timeout during finding
  */
-export async function getFeedData(bee: Bee, topic: string, address: string, timeout = 1000): Promise<Data> {
+export async function getFeedData(bee: Bee, topic: string, address: string, timeout = 5000): Promise<Data> {
   const addressBytes = Utils.makeEthAddress(address)
   const topicHash = bmtHashString(topic)
   const chunk = await lookup(0, async (epoch: Epoch, time: number): Promise<Data> => {
