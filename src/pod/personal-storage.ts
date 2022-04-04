@@ -9,6 +9,7 @@ import { getUnixTimestamp } from '../utils/time'
 import { Wallet } from 'ethers'
 import { stringToBytes } from '../utils/bytes'
 import { LookupAnswer } from '../feed/types'
+import { prepareEthAddress } from '../utils/address'
 
 export const POD_TOPIC = 'Pods'
 
@@ -25,7 +26,11 @@ export class PersonalStorage {
     let data: Data
     try {
       data = (
-        await getFeedData(this.accountData.connection.bee, POD_TOPIC, this.accountData.wallet!.address)
+        await getFeedData(
+          this.accountData.connection.bee,
+          POD_TOPIC,
+          prepareEthAddress(this.accountData.wallet!.address),
+        )
       ).data.chunkContent()
     } catch (e) {
       return []
@@ -45,7 +50,11 @@ export class PersonalStorage {
     let lookupAnswer: LookupAnswer | undefined
     let list: Pod[]
     try {
-      lookupAnswer = await getFeedData(this.accountData.connection.bee, POD_TOPIC, this.accountData.wallet!.address)
+      lookupAnswer = await getFeedData(
+        this.accountData.connection.bee,
+        POD_TOPIC,
+        prepareEthAddress(this.accountData.wallet!.address),
+      )
       list = extractPods(lookupAnswer.data.chunkContent())
     } catch (e) {
       list = []

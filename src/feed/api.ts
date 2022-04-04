@@ -17,13 +17,17 @@ import { Connection } from '../connection/connection'
  * @param address Ethereum address for calculation swarm chunk
  * @param timeout download timeout during finding
  */
-export async function getFeedData(bee: Bee, topic: string, address: string, timeout = 1000): Promise<LookupAnswer> {
-  const addressBytes = Utils.makeEthAddress(address)
+export async function getFeedData(
+  bee: Bee,
+  topic: string,
+  address: Utils.EthAddress,
+  timeout = 5000,
+): Promise<LookupAnswer> {
   const topicHash = bmtHashString(topic)
 
   return lookup(0, async (epoch: Epoch, time: number): Promise<Data> => {
     const tempId = getId(topicHash, time, epoch.level)
-    const chunkReference = bytesToHex(Utils.keccak256Hash(tempId, addressBytes))
+    const chunkReference = bytesToHex(Utils.keccak256Hash(tempId.buffer, address.buffer))
 
     return await bee.downloadChunk(chunkReference, { timeout })
   })

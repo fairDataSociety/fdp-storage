@@ -1,13 +1,9 @@
 import { Bee, Data, Reference, Utils } from '@ethersphere/bee-js'
-import { assertUsername, bmtHashString, extractChunkContent } from './utils'
-import { getId } from '../feed/handler'
+import { assertUsername } from './utils'
 import { Wallet } from 'ethers'
-import { bytesToHex } from '../utils/hex'
-import { stringToBytes } from '../utils/bytes'
-import { writeFeedData } from '../feed/api'
-import { Epoch, HIGHEST_LEVEL } from '../feed/lookup/epoch'
-import { getBatchId } from '../utils/batch'
+import { getFeedData, writeFeedData } from '../feed/api'
 import { Connection } from '../connection/connection'
+import { stringToBytes } from '../utils/bytes'
 
 /**
  * Downloads encrypted mnemonic phrase from swarm chunk
@@ -19,13 +15,7 @@ import { Connection } from '../connection/connection'
 export async function getEncryptedMnemonic(bee: Bee, username: string, address: Utils.EthAddress): Promise<Data> {
   assertUsername(username)
 
-  const addressBytes = Utils.makeEthAddress(address)
-  const usernameHash = bmtHashString(username)
-  const id = getId(usernameHash)
-  const chunkReference = bytesToHex(Utils.keccak256Hash(id, addressBytes))
-  const chunk = await bee.downloadChunk(chunkReference)
-
-  return extractChunkContent(chunk)
+  return (await getFeedData(bee, username, address)).data.chunkContent()
 }
 
 /**
@@ -44,12 +34,5 @@ export async function uploadEncryptedMnemonic(
 ): Promise<Reference> {
   assertUsername(username)
 
-  const usernameHash = bmtHashString(username)
-  const id = getId(usernameHash)
-
-  const enc = new TextEncoder()
-  const mnemonicBytes = enc.encode(encryptedMnemonic)
-  const socWriter = connection.bee.makeSOCWriter(wallet.privateKey)
-
-  return socWriter.upload(await getBatchId(connection.beeDebug), id, mnemonicBytes)
+  return writeFeedData(connection, username, stringToBytes(encryptedMnemonic), wallet.privateKey)
 }
