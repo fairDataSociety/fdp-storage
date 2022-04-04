@@ -1,14 +1,15 @@
 import { Bee, BeeDebug } from '@ethersphere/bee-js'
 import { Wallet } from 'ethers'
-import { assertAddress, assertMnemonic, assertPassword, assertUsername } from './utils'
+import { assertMnemonic, assertPassword, assertUsername } from './utils'
 import { prepareEthAddress } from '../utils/address'
 import { getEncryptedMnemonic } from './mnemonic'
 import { decrypt } from './encryption'
 import { createUser, UserAccountWithReference } from './account'
+import { EthAddress } from '@ethersphere/bee-js/dist/types/utils/eth'
 
 export class AccountData {
   /** username -> ethereum wallet address mapping */
-  public readonly usernameToAddress: { [key: string]: string } = {}
+  public readonly usernameToAddress: { [key: string]: EthAddress } = {}
 
   constructor(public readonly bee: Bee, public readonly beeDebug: BeeDebug, public wallet?: Wallet) {}
 
@@ -47,15 +48,13 @@ export class AccountData {
    */
   setUserAddress(username: string, address: string): void {
     assertUsername(username)
-    address = prepareEthAddress(address)
-    assertAddress(address)
-    this.usernameToAddress[username] = address
+    this.usernameToAddress[username] = prepareEthAddress(address)
   }
 
   /**
-   * Remove Ethereum address for specific username
+   * Removes Ethereum address for specific username
    *
-   * @param username Username to modify
+   * @param username username to modify
    */
   removeUserAddress(username: string): void {
     assertUsername(username)

@@ -1,5 +1,5 @@
 import { Bee, Data, Reference, Utils } from '@ethersphere/bee-js'
-import { assertAddress, assertUsername, bmtHashString, extractChunkContent } from './utils'
+import { assertUsername, bmtHashString, extractChunkContent } from './utils'
 import { getId } from '../feed/handler'
 import { Wallet } from 'ethers'
 import { AccountData } from './account-data'
@@ -13,9 +13,8 @@ import { getBatchId } from '../utils/batch'
  * @param username FDP account username
  * @param address FDP account address
  */
-export async function getEncryptedMnemonic(bee: Bee, username: string, address: string): Promise<Data> {
+export async function getEncryptedMnemonic(bee: Bee, username: string, address: Utils.EthAddress): Promise<Data> {
   assertUsername(username)
-  assertAddress(address)
 
   const addressBytes = Utils.makeEthAddress(address)
   const usernameHash = bmtHashString(username)

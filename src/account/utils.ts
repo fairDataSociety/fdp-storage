@@ -2,10 +2,8 @@ import { Data, Utils } from '@ethersphere/bee-js'
 import { bmtHash } from '../chunk/bmt'
 import { makeSpan, wrapBytesWithHelpers } from '../utils/bytes'
 import { AccountData } from './account-data'
-import { assertHexString } from '../utils/hex'
 
 export const MNEMONIC_LENGTH = 12
-export const ADDRESS_LENGTH = 40
 
 /**
  * Extracts only content from chunk data
@@ -36,15 +34,6 @@ export function bmtHashString(stringData: string): Utils.Bytes<32> {
   const data = new Uint8Array([...span, ...payload])
 
   return bmtHash(data)
-}
-
-/**
- * Asserts that a valid address has been passed
- *
- * @param data Ethereum address
- */
-export function assertAddress(data: string): void {
-  assertHexString(data, ADDRESS_LENGTH, 'Address')
 }
 
 /**
