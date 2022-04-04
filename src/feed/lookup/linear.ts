@@ -3,6 +3,7 @@ import { Data } from '@ethersphere/bee-js'
 import { getUnixTimestamp } from '../../utils/time'
 import { wrapChunkHelper } from '../utils'
 import { LookupAnswer } from '../types'
+import { assertUnixTimestamp } from '../../utils/time'
 
 /**
  * Searches feed content with linear way
@@ -15,6 +16,7 @@ export async function lookup(time: number, read: (epoch: Epoch, time: number) =>
     time = getUnixTimestamp()
   }
 
+  assertUnixTimestamp(time)
   let previousChunk: Data | undefined
   let level = HIGHEST_LEVEL
   let previousEpoch: Epoch | undefined

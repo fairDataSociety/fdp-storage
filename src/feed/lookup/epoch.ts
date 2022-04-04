@@ -11,7 +11,7 @@ export declare type EpochID = Utils.Bytes<typeof EPOCH_LENGTH>
 /**
  * Calculates base time in form of number
  *
- * @param time time parameter for calculation
+ * @param time unix timestamp parameter for calculation
  * @param level level parameter for calculation
  */
 export function getBaseTime(time: number, level: number): number {

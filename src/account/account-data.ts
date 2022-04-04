@@ -1,16 +1,17 @@
-import { Bee, BeeDebug } from '@ethersphere/bee-js'
 import { Wallet } from 'ethers'
-import { assertAddress, assertMnemonic, assertPassword, assertUsername } from './utils'
+import { assertMnemonic, assertPassword, assertUsername } from './utils'
 import { prepareEthAddress } from '../utils/address'
 import { getEncryptedMnemonic } from './mnemonic'
 import { decrypt } from './encryption'
 import { createUser, UserAccountWithReference } from './account'
+import { EthAddress } from '@ethersphere/bee-js/dist/types/utils/eth'
+import { Connection } from '../connection/connection'
 
 export class AccountData {
   /** username -> ethereum wallet address mapping */
-  public readonly usernameToAddress: { [key: string]: string } = {}
+  public readonly usernameToAddress: { [key: string]: EthAddress } = {}
 
-  constructor(public readonly bee: Bee, public readonly beeDebug: BeeDebug, public wallet?: Wallet) {}
+  constructor(public readonly connection: Connection, public wallet?: Wallet) {}
 
   /**
    * Sets the current account's wallet to interact with the data
@@ -24,42 +25,37 @@ export class AccountData {
   /**
    * Import FDP user account
    *
-   * @param username Username to import
+   * @param username username to import
    * @param mnemonic 12 space separated words to initialize wallet
    */
   async import(username: string, mnemonic: string): Promise<void> {
     assertUsername(username)
-    try {
-      assertMnemonic(mnemonic)
-      const wallet = Wallet.fromMnemonic(mnemonic)
-      this.usernameToAddress[username] = prepareEthAddress(wallet.address)
-      this.setActiveAccount(wallet)
-    } catch (e) {
-      throw new Error('Incorrect mnemonic')
-    }
+    assertMnemonic(mnemonic)
+
+    const wallet = Wallet.fromMnemonic(mnemonic)
+    this.usernameToAddress[username] = prepareEthAddress(wallet.address)
+    this.setActiveAccount(wallet)
   }
 
   /**
    * Set Ethereum address for specific username
    *
-   * @param username Username to modify
+   * @param username username to modify
    * @param address Ethereum address with or without 0x prefix
    */
   setUserAddress(username: string, address: string): void {
     assertUsername(username)
-    address = prepareEthAddress(address)
-    assertAddress(address)
-    this.usernameToAddress[username] = address
+    this.usernameToAddress[username] = prepareEthAddress(address)
   }
 
   /**
-   * Remove Ethereum address for specific username
+   * Removes Ethereum address for specific username
    *
-   * @param username Username to modify
+   * @param username username to modify
    */
   removeUserAddress(username: string): void {
     assertUsername(username)
-    this.usernameToAddress[username] = ''
+    delete this.usernameToAddress[username]
   }
 
   /**
@@ -67,19 +63,24 @@ export class AccountData {
    *
    * @param username FDP username
    * @param password password of the wallet
+   * @param address Ethereum address associated with FDP username
    * @returns BIP-039 + BIP-044 Wallet
    */
-  async login(username: string, password: string): Promise<Wallet> {
+  async login(username: string, password: string, address?: string): Promise<Wallet> {
     assertUsername(username)
     assertPassword(password)
 
-    const address = this.usernameToAddress[username]
+    if (address) {
+      this.setUserAddress(username, address)
+    }
 
-    if (!address) {
+    const existsAddress = this.usernameToAddress[username]
+
+    if (!existsAddress) {
       throw new Error(`No address linked to the username "${username}"`)
     }
 
-    const encryptedMnemonic = await getEncryptedMnemonic(this.bee, username, address)
+    const encryptedMnemonic = await getEncryptedMnemonic(this.connection.bee, username, existsAddress)
     try {
       const decrypted = decrypt(password, encryptedMnemonic.text())
       const wallet = Wallet.fromMnemonic(decrypted)
@@ -107,7 +108,7 @@ export class AccountData {
     }
 
     try {
-      const userInfo = await createUser(this, username, password, mnemonic)
+      const userInfo = await createUser(this.connection, username, password, mnemonic)
       this.usernameToAddress[username] = prepareEthAddress(userInfo.wallet.address)
       this.setActiveAccount(userInfo.wallet)
 

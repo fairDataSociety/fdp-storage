@@ -2,10 +2,9 @@ import { Data, Utils } from '@ethersphere/bee-js'
 import { bmtHash } from '../chunk/bmt'
 import { makeSpan, stringToBytes, wrapBytesWithHelpers } from '../utils/bytes'
 import { AccountData } from './account-data'
-import { assertHexString } from '../utils/hex'
+import { isValidMnemonic } from 'ethers/lib/utils'
 
 export const MNEMONIC_LENGTH = 12
-export const ADDRESS_LENGTH = 40
 
 /**
  * Extracts only content from chunk data
@@ -49,15 +48,6 @@ export function bmtHashBytes(payload: Uint8Array): Utils.Bytes<32> {
 }
 
 /**
- * Asserts that a valid address has been passed
- *
- * @param data Ethereum address
- */
-export function assertAddress(data: string): void {
-  assertHexString(data, ADDRESS_LENGTH, 'Address')
-}
-
-/**
  * Asserts whether non-empty username passed
  *
  * @param data username
@@ -87,7 +77,7 @@ export function assertPassword(data: string): void {
 export function assertMnemonic(data: string): void {
   const words = data.split(' ')
 
-  if (words.length !== MNEMONIC_LENGTH) {
+  if (!(words.length === MNEMONIC_LENGTH && isValidMnemonic(data))) {
     throw new Error('Incorrect mnemonic')
   }
 }

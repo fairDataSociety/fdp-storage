@@ -21,8 +21,8 @@ describe('Fair Data Protocol class', () => {
 
   it('should strip trailing slash', () => {
     const fdp = new FairDataProtocol('http://localhost:1633/', 'http://localhost:1635/')
-    expect(fdp.bee.url).toEqual('http://localhost:1633')
-    expect(fdp.beeDebug.url).toEqual('http://localhost:1635')
+    expect(fdp.connection.bee.url).toEqual('http://localhost:1633')
+    expect(fdp.connection.beeDebug.url).toEqual('http://localhost:1635')
   })
 
   describe('Registration', () => {
@@ -86,6 +86,16 @@ describe('Fair Data Protocol class', () => {
       await fdp.account.import(debug.username, debug.mnemonic)
       expect(fdp.account.usernameToAddress[debug.username]).toBeDefined()
       await fdp.account.login(debug.username, debug.password)
+    })
+
+    it('should login in one line without address importing', async () => {
+      let fdp = createFdp()
+      const user = generateUser()
+      await fdp.account.register(user.username, user.password, user.mnemonic)
+
+      fdp = createFdp()
+      await fdp.account.login(user.username, user.password, user.address)
+      expect(fdp.account.usernameToAddress[user.username]).toBeDefined()
     })
 
     it('auth with incorrect data should throw errors', async () => {

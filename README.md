@@ -105,36 +105,23 @@ There are some ways you can make this module better:
 Install project dependencies with
 
 ```sh
-npm i
+npm ci
 ```
 
 ### Test
 
-The tests run in both context: node and dom with Jest.
+The tests run in both context: Jest and Puppeteer.
 
-To run the integration tests, you need to use our [`bee-factory`](https://github.com/fairDataSociety/bee-factory/) project. Clone the repo, you can use our prebuilt Docker images with setting env. variables like:
+To run the integration tests, you need to use our [`bee-factory`](https://github.com/fairDataSociety/bee-factory/) project. Clone the repo, you can use our prebuilt Docker images with setting .env variables.
 
-```bash
-export FAIROS_VERSION="0.7.3"
-export BLOCKCHAIN_VERSION="1.2.0"
-export BEE_ENV_PREFIX="swarm-test"
-export BEE_IMAGE_PREFIX="docker.pkg.github.com/ethersphere/bee-factory"
-```
+Customize .env values based on which FairOS version you want to run. After the .env variables are set use the `./scripts/environment.sh` script with `start --fairos` parameter.
 
-Customize these values based on which FairOS version you want to run. After the env. variables are set use the `./scripts/environment.sh` script with `start --fairos` parameter.
+There are browser tests by Puppeteer, which also provide integrity testing.
 
-If you want to skip creation of postage stamps every run of integration tests you can create stamps for both nodes and set them under env. variables `BEE_POSTAGE` and `BEE_PEER_POSTAGE`.
-
-By default, for integration tests two bee nodes are expected to run on localhost on addresses `http://localhost:1633` and `http://localhost:1635`. These are the default values for the `bee-factory` script.
-If you want to use custom setup, you can change the behavior of tests to different addresses using environment variables `BEE_API_URL`, `BEE_DEBUG_API_URL`, `BEE_PEER_DEBUG_API_URL` and `BEE_PEER_API_URL`.
-
-In Visual Studio environment, the tests have been set up to run against your local bee node on `http://localhost:1633`
-To run Jest tests, choose the `vscode-jest-tests` CI job under the Run tab.
-
-There are also browser tests by Puppeteer, which also provide integrity testing.
 ```sh
 npm run test:browser
 ```
+
 The test HTML file which Puppeteer uses is the [test/testpage/testpage.html](test/testpage/testpage.html).
 To open and manually test FDP with developer console, it is necessary to build the library first with `npm run compile:browser` (running the browser tests `npm run test:browser` also builds the library).
 
