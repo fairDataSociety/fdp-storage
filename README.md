@@ -105,7 +105,7 @@ There are some ways you can make this module better:
 Install project dependencies with
 
 ```sh
-npm i
+npm ci
 ```
 
 ### Test
