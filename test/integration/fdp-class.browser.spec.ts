@@ -19,8 +19,8 @@ describe('Fair Data Protocol class - in browser', () => {
         const fdp = new window.fdp.FairDataProtocol(BEE_URL, BEE_DEBUG_URL)
 
         return {
-          beeUrl: fdp.bee.url,
-          beeDebugUrl: fdp.beeDebug.url,
+          beeUrl: fdp.connection.bee.url,
+          beeDebugUrl: fdp.connection.beeDebug.url,
         }
       },
       BEE_URL,

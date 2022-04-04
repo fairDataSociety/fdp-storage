@@ -1,4 +1,3 @@
-import { Bee, BeeDebug } from '@ethersphere/bee-js'
 import { Wallet } from 'ethers'
 import { assertMnemonic, assertPassword, assertUsername } from './utils'
 import { prepareEthAddress } from '../utils/address'
@@ -6,12 +5,13 @@ import { getEncryptedMnemonic } from './mnemonic'
 import { decrypt } from './encryption'
 import { createUser, UserAccountWithReference } from './account'
 import { EthAddress } from '@ethersphere/bee-js/dist/types/utils/eth'
+import { Connection } from '../connection/connection'
 
 export class AccountData {
   /** username -> ethereum wallet address mapping */
   public readonly usernameToAddress: { [key: string]: EthAddress } = {}
 
-  constructor(public readonly bee: Bee, public readonly beeDebug: BeeDebug, public wallet?: Wallet) {}
+  constructor(public readonly connection: Connection, public wallet?: Wallet) {}
 
   /**
    * Sets the current account's wallet to interact with the data
@@ -80,7 +80,7 @@ export class AccountData {
       throw new Error(`No address linked to the username "${username}"`)
     }
 
-    const encryptedMnemonic = await getEncryptedMnemonic(this.bee, username, existsAddress)
+    const encryptedMnemonic = await getEncryptedMnemonic(this.connection.bee, username, existsAddress)
     try {
       const decrypted = decrypt(password, encryptedMnemonic.text())
       const wallet = Wallet.fromMnemonic(decrypted)
@@ -108,7 +108,7 @@ export class AccountData {
     }
 
     try {
-      const userInfo = await createUser(this, username, password, mnemonic)
+      const userInfo = await createUser(this.connection, username, password, mnemonic)
       this.usernameToAddress[username] = prepareEthAddress(userInfo.wallet.address)
       this.setActiveAccount(userInfo.wallet)
 

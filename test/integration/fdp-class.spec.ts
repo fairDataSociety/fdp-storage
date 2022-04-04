@@ -21,8 +21,8 @@ describe('Fair Data Protocol class', () => {
 
   it('should strip trailing slash', () => {
     const fdp = new FairDataProtocol('http://localhost:1633/', 'http://localhost:1635/')
-    expect(fdp.bee.url).toEqual('http://localhost:1633')
-    expect(fdp.beeDebug.url).toEqual('http://localhost:1635')
+    expect(fdp.connection.bee.url).toEqual('http://localhost:1633')
+    expect(fdp.connection.beeDebug.url).toEqual('http://localhost:1635')
   })
 
   describe('Registration', () => {

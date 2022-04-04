@@ -3,7 +3,7 @@ import { Wallet } from 'ethers'
 import { encrypt } from './encryption'
 import { uploadEncryptedMnemonic } from './mnemonic'
 import { assertMnemonic, assertPassword } from './utils'
-import { AccountData } from './account-data'
+import { Connection } from '../connection/connection'
 
 interface UserAccount {
   wallet: Wallet
@@ -43,19 +43,19 @@ async function createUserAccount(password: string, mnemonic?: string): Promise<U
 /**
  * Creates a new user and uploads the encrypted account to the network
  *
- * @param accountData connection information for data uploading
+ * @param connection connection information for data uploading
  * @param username FDP username
  * @param password FDP password
  * @param mnemonic mnemonic phrase
  */
 export async function createUser(
-  accountData: AccountData,
+  connection: Connection,
   username: string,
   password: string,
   mnemonic?: string,
 ): Promise<UserAccountWithReference> {
   const account = await createUserAccount(password, mnemonic)
-  const reference = await uploadEncryptedMnemonic(accountData, account.wallet, username, account.encryptedMnemonic)
+  const reference = await uploadEncryptedMnemonic(connection, account.wallet, username, account.encryptedMnemonic)
 
   return { ...account, reference }
 }

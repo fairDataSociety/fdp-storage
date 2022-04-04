@@ -18,7 +18,7 @@ export class PersonalStorage {
     assertActiveAccount(this.accountData)
     let result: Data
     try {
-      result = await getFeedData(this.accountData.bee, POD_TOPIC, this.accountData.wallet!.address)
+      result = await getFeedData(this.accountData.connection.bee, POD_TOPIC, this.accountData.wallet!.address)
     } catch (e) {
       return []
     }

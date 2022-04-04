@@ -2,9 +2,9 @@ import { Bee, Data, Reference, Utils } from '@ethersphere/bee-js'
 import { assertUsername, bmtHashString, extractChunkContent } from './utils'
 import { getId } from '../feed/handler'
 import { Wallet } from 'ethers'
-import { AccountData } from './account-data'
 import { bytesToHex } from '../utils/hex'
 import { getBatchId } from '../utils/batch'
+import { Connection } from '../connection/connection'
 
 /**
  * Downloads encrypted mnemonic phrase from swarm chunk
@@ -28,13 +28,13 @@ export async function getEncryptedMnemonic(bee: Bee, username: string, address: 
 /**
  * Uploads encrypted mnemonic to swarm chunk
  *
- * @param accountData connection information for data uploading
+ * @param connection connection information for data uploading
  * @param wallet FDP account Ethereum wallet
  * @param username FDP username
  * @param encryptedMnemonic encrypted mnemonic to upload
  */
 export async function uploadEncryptedMnemonic(
-  accountData: AccountData,
+  connection: Connection,
   wallet: Wallet,
   username: string,
   encryptedMnemonic: string,
@@ -46,7 +46,7 @@ export async function uploadEncryptedMnemonic(
 
   const enc = new TextEncoder()
   const mnemonicBytes = enc.encode(encryptedMnemonic)
-  const socWriter = accountData.bee.makeSOCWriter(wallet.privateKey)
+  const socWriter = connection.bee.makeSOCWriter(wallet.privateKey)
 
-  return socWriter.upload(await getBatchId(accountData.beeDebug), id, mnemonicBytes)
+  return socWriter.upload(await getBatchId(connection.beeDebug), id, mnemonicBytes)
 }
