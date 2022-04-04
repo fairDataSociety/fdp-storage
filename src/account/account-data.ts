@@ -25,19 +25,16 @@ export class AccountData {
   /**
    * Import FDP user account
    *
-   * @param username Username to import
+   * @param username username to import
    * @param mnemonic 12 space separated words to initialize wallet
    */
   async import(username: string, mnemonic: string): Promise<void> {
     assertUsername(username)
-    try {
-      assertMnemonic(mnemonic)
-      const wallet = Wallet.fromMnemonic(mnemonic)
-      this.usernameToAddress[username] = prepareEthAddress(wallet.address)
-      this.setActiveAccount(wallet)
-    } catch (e) {
-      throw new Error('Incorrect mnemonic')
-    }
+    assertMnemonic(mnemonic)
+
+    const wallet = Wallet.fromMnemonic(mnemonic)
+    this.usernameToAddress[username] = prepareEthAddress(wallet.address)
+    this.setActiveAccount(wallet)
   }
 
   /**

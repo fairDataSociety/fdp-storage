@@ -2,6 +2,7 @@ import { Data, Utils } from '@ethersphere/bee-js'
 import { bmtHash } from '../chunk/bmt'
 import { makeSpan, wrapBytesWithHelpers } from '../utils/bytes'
 import { AccountData } from './account-data'
+import { isValidMnemonic } from 'ethers/lib/utils'
 
 export const MNEMONIC_LENGTH = 12
 
@@ -66,7 +67,7 @@ export function assertPassword(data: string): void {
 export function assertMnemonic(data: string): void {
   const words = data.split(' ')
 
-  if (words.length !== MNEMONIC_LENGTH) {
+  if (!(words.length === MNEMONIC_LENGTH && isValidMnemonic(data))) {
     throw new Error('Incorrect mnemonic')
   }
 }
