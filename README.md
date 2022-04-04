@@ -110,7 +110,7 @@ npm i
 
 ### Test
 
-The tests run in both context: node and dom with Jest.
+The tests run in both context: Jest and Puppeteer.
 
 To run the integration tests, you need to use our [`bee-factory`](https://github.com/fairDataSociety/bee-factory/) project. Clone the repo, you can use our prebuilt Docker images with setting env. variables like:
 
