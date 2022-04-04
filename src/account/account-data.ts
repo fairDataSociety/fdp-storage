@@ -43,7 +43,7 @@ export class AccountData {
   /**
    * Set Ethereum address for specific username
    *
-   * @param username Username to modify
+   * @param username username to modify
    * @param address Ethereum address with or without 0x prefix
    */
   setUserAddress(username: string, address: string): void {
@@ -66,19 +66,24 @@ export class AccountData {
    *
    * @param username FDP username
    * @param password password of the wallet
+   * @param address Ethereum address associated with FDP username
    * @returns BIP-039 + BIP-044 Wallet
    */
-  async login(username: string, password: string): Promise<Wallet> {
+  async login(username: string, password: string, address?: string): Promise<Wallet> {
     assertUsername(username)
     assertPassword(password)
 
-    const address = this.usernameToAddress[username]
+    if (address) {
+      this.setUserAddress(username, address)
+    }
 
-    if (!address) {
+    const existsAddress = this.usernameToAddress[username]
+
+    if (!existsAddress) {
       throw new Error(`No address linked to the username "${username}"`)
     }
 
-    const encryptedMnemonic = await getEncryptedMnemonic(this.bee, username, address)
+    const encryptedMnemonic = await getEncryptedMnemonic(this.bee, username, existsAddress)
     try {
       const decrypted = decrypt(password, encryptedMnemonic.text())
       const wallet = Wallet.fromMnemonic(decrypted)

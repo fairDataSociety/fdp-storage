@@ -88,6 +88,16 @@ describe('Fair Data Protocol class', () => {
       await fdp.account.login(debug.username, debug.password)
     })
 
+    it('should login in one line without address importing', async () => {
+      let fdp = createFdp()
+      const user = generateUser()
+      await fdp.account.register(user.username, user.password, user.mnemonic)
+
+      fdp = createFdp()
+      await fdp.account.login(user.username, user.password, user.address)
+      expect(fdp.account.usernameToAddress[user.username]).toBeDefined()
+    })
+
     it('auth with incorrect data should throw errors', async () => {
       const fdp = createFdp()
       const { debug } = users
