@@ -4,8 +4,10 @@ import { beeDebugUrl, beeUrl, fairosJsUrl, generateRandomHexString, generateUser
 // @ts-ignore
 import FairosJs from '@fairdatasociety/fairos-js'
 
+const GET_FEED_DATA_TIMEOUT = 1000
+
 function createFdp() {
-  return new FairDataProtocol(beeUrl(), beeDebugUrl())
+  return new FairDataProtocol(beeUrl(), beeDebugUrl(), GET_FEED_DATA_TIMEOUT)
 }
 
 function createFairosJs() {
@@ -20,7 +22,7 @@ describe('Fair Data Protocol class', () => {
   }
 
   it('should strip trailing slash', () => {
-    const fdp = new FairDataProtocol('http://localhost:1633/', 'http://localhost:1635/')
+    const fdp = new FairDataProtocol('http://localhost:1633/', 'http://localhost:1635/', GET_FEED_DATA_TIMEOUT)
     expect(fdp.connection.bee.url).toEqual('http://localhost:1633')
     expect(fdp.connection.beeDebug.url).toEqual('http://localhost:1635')
   })
