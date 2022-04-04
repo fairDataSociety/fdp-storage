@@ -8,8 +8,8 @@ export class FairDataProtocol {
   public readonly account: AccountData
   public readonly personalStorage: PersonalStorage
 
-  constructor(beeUrl: string, beeDebugUrl: string) {
-    this.connection = new Connection(new Bee(beeUrl), new BeeDebug(beeDebugUrl))
+  constructor(beeUrl: string, beeDebugUrl: string, timeout = 5000) {
+    this.connection = new Connection(new Bee(beeUrl), new BeeDebug(beeDebugUrl), timeout)
     this.account = new AccountData(this.connection)
     this.personalStorage = new PersonalStorage(this.account)
   }
