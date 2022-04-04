@@ -1,5 +1,6 @@
 import { Epoch } from './epoch'
 import { Data } from '@ethersphere/bee-js'
+import { assertUnixTimestamp } from '../../utils/time'
 
 /**
  * Searches feed content with linear way
@@ -12,6 +13,7 @@ export async function lookup(time: number, read: (epoch: Epoch, time: number) =>
     time = Math.round(Date.now() / 1000)
   }
 
+  assertUnixTimestamp(time)
   let previousChunk: Data | undefined
   let level = 31
   while (level > 0) {
