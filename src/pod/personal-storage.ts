@@ -24,7 +24,9 @@ export class PersonalStorage {
     assertActiveAccount(this.accountData)
     let data: Data
     try {
-      data = (await getFeedData(this.accountData.bee, POD_TOPIC, this.accountData.wallet!.address)).data.chunkContent()
+      data = (
+        await getFeedData(this.accountData.connection.bee, POD_TOPIC, this.accountData.wallet!.address)
+      ).data.chunkContent()
     } catch (e) {
       return []
     }
@@ -43,7 +45,7 @@ export class PersonalStorage {
     let lookupAnswer: LookupAnswer | undefined
     let list: Pod[]
     try {
-      lookupAnswer = await getFeedData(this.accountData.bee, POD_TOPIC, this.accountData.wallet!.address)
+      lookupAnswer = await getFeedData(this.accountData.connection.bee, POD_TOPIC, this.accountData.wallet!.address)
       list = extractPods(lookupAnswer.data.chunkContent())
     } catch (e) {
       list = []
@@ -67,14 +69,14 @@ export class PersonalStorage {
     const allPodsData = stringToBytes(list.map(item => `${item.name},${item.index}`).join('\n') + '\n')
     const wallet = this.accountData.wallet!
     // create pod
-    await writeFeedData(this.accountData, POD_TOPIC, allPodsData, wallet.privateKey, epoch)
+    await writeFeedData(this.accountData.connection, POD_TOPIC, allPodsData, wallet.privateKey, epoch)
     // create root directory for pod
     const now = getUnixTimestamp()
     const path = '/'
     // create a new key pair from the master mnemonic. This key pair is used as the base key pair for a newly created pod
     const pathWallet = Wallet.fromMnemonic(wallet.mnemonic.phrase, `m/44'/60'/0'/0/${index}`)
     const metadata = createMetadata(metaVersion, '', path, now, now, now)
-    await writeFeedData(this.accountData, path, metadata, pathWallet.privateKey)
+    await writeFeedData(this.accountData.connection, path, metadata, pathWallet.privateKey)
 
     return newPod
   }

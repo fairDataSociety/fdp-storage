@@ -5,9 +5,9 @@ import { lookup } from './lookup/linear'
 import { Epoch, HIGHEST_LEVEL } from './lookup/epoch'
 import { bytesToHex } from '../utils/hex'
 import { getBatchId } from '../utils/batch'
-import { AccountData } from '../account/account-data'
 import { getUnixTimestamp } from '../utils/time'
 import { LookupAnswer } from './types'
+import { Connection } from '../connection/connection'
 
 /**
  * Finds and downloads the latest feed content
@@ -32,14 +32,14 @@ export async function getFeedData(bee: Bee, topic: string, address: string, time
 /**
  * Writes data to feed using `topic` and `epoch` as a key and signed data with `privateKey` as a value
  *
- * @param accountData connection information for data uploading
+ * @param connection connection information for data uploading
  * @param topic key for data
  * @param data data to upload
  * @param privateKey private key to sign data
  * @param epoch feed epoch
  */
 export async function writeFeedData(
-  accountData: AccountData,
+  connection: Connection,
   topic: string,
   data: Uint8Array,
   privateKey: string,
@@ -51,7 +51,7 @@ export async function writeFeedData(
 
   const topicHash = bmtHashString(topic)
   const id = getId(topicHash, epoch.time, epoch.level)
-  const socWriter = accountData.bee.makeSOCWriter(privateKey)
+  const socWriter = connection.bee.makeSOCWriter(privateKey)
 
-  return socWriter.upload(await getBatchId(accountData.beeDebug), id, data)
+  return socWriter.upload(await getBatchId(connection.beeDebug), id, data)
 }
