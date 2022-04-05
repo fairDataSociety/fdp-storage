@@ -161,7 +161,7 @@ describe('Fair Data Protocol class', () => {
       }
     })
 
-    it('created pods with fdp', async () => {
+    it('create pods with fdp', async () => {
       const fdp = createFdp()
       const user = generateUser()
       const fairos = createFairosJs()
@@ -203,6 +203,39 @@ describe('Fair Data Protocol class', () => {
       await expect(fdp.personalStorage.create(failPod.name)).rejects.toThrow(
         `Pod with name "${failPod.name}" already exists`,
       )
+    })
+
+    it('delete pods', async () => {
+      const fdp = createFdp()
+      const user = generateUser()
+      const fairos = createFairosJs()
+
+      await fdp.account.register(user.username, user.password, user.mnemonic)
+      await fdp.account.login(user.username, user.password, user.address)
+      await fairos.userImport(user.username, user.password, '', user.address)
+      await fairos.userLogin(user.username, user.password)
+      expect((await fairos.podLs()).data.pod_name).toHaveLength(0)
+
+      const podName = generateRandomHexString()
+      const podName1 = generateRandomHexString()
+      await fdp.personalStorage.create(podName)
+      await fdp.personalStorage.create(podName1)
+      let list = await fdp.personalStorage.list()
+      expect(list).toHaveLength(2)
+      expect((await fairos.podLs()).data.pod_name).toHaveLength(2)
+
+      const notExistsPod = generateRandomHexString()
+      await expect(fdp.personalStorage.delete(notExistsPod)).rejects.toThrow(`Pod "${notExistsPod}" does not exist`)
+
+      await fdp.personalStorage.delete(podName)
+      list = await fdp.personalStorage.list()
+      expect(list).toHaveLength(1)
+      expect((await fairos.podLs()).data.pod_name).toHaveLength(1)
+
+      await fdp.personalStorage.delete(podName1)
+      list = await fdp.personalStorage.list()
+      expect(list).toHaveLength(0)
+      expect((await fairos.podLs()).data.pod_name).toHaveLength(0)
     })
   })
 })
