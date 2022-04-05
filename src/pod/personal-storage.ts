@@ -27,21 +27,14 @@ export class PersonalStorage {
    */
   async list(): Promise<Pod[]> {
     assertActiveAccount(this.accountData)
-    let data: Data
-    try {
-      data = (
-        await getFeedData(
-          this.accountData.connection.bee,
-          POD_TOPIC,
-          prepareEthAddress(this.accountData.wallet!.address),
-          this.accountData.connection.options?.downloadOptions,
-        )
-      ).data.chunkContent()
-    } catch (e) {
-      return []
-    }
 
-    return extractPods(data)
+    return (
+      await getPodsList(
+        this.accountData.connection.bee,
+        prepareEthAddress(this.accountData.wallet!.address),
+        this.accountData.connection.timeout,
+      )
+    ).pods
   }
 
   /**
@@ -52,19 +45,11 @@ export class PersonalStorage {
   async create(name: string): Promise<Pod> {
     assertActiveAccount(this.accountData)
     name = name.trim()
-    let lookupAnswer: LookupAnswer | undefined
-    let list: Pod[]
-    try {
-      lookupAnswer = await getFeedData(
-        this.accountData.connection.bee,
-        POD_TOPIC,
-        prepareEthAddress(this.accountData.wallet!.address),
-        this.accountData.connection.options?.downloadOptions,
-      )
-      list = extractPods(lookupAnswer.data.chunkContent())
-    } catch (e) {
-      list = []
-    }
+    const podsInfo = await getPodsList(
+      this.accountData.connection.bee,
+      prepareEthAddress(this.accountData.wallet!.address),
+      this.accountData.connection.timeout,
+    )
 
     assertPodsLength(podsInfo.pods.length + 1)
     assertPodNameAvailable(podsInfo.pods, name)
