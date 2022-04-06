@@ -59,6 +59,15 @@ export function fairosJsUrl(): string {
 }
 
 /**
+ * Converts string to Ethereum address in form of bytes
+ *
+ * @param address Ethereum address for preparation
+ */
+export function prepareEthAddress(address: string): Utils.EthAddress {
+  return Utils.makeEthAddress(address)
+}
+
+/**
  * Convert 32 bytes array of numbers to Utils.Bytes<32>
  */
 export function numbersToSegment(numbers: number[]): Utils.Bytes<32> {
