@@ -1,5 +1,6 @@
 import { Wallet } from 'ethers'
 import crypto from 'crypto'
+import { Utils } from '@ethersphere/bee-js'
 
 export interface TestUser {
   username: string
@@ -55,4 +56,13 @@ export function beeDebugUrl(): string {
  */
 export function fairosJsUrl(): string {
   return process.env.BEE_FAIROS_API_URL || 'http://127.0.0.1:9090/v1/'
+}
+
+/**
+ * Converts string to Ethereum address in form of bytes
+ *
+ * @param address Ethereum address for preparation
+ */
+export function prepareEthAddress(address: string): Utils.EthAddress {
+  return Utils.makeEthAddress(address)
 }
