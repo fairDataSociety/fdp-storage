@@ -6,6 +6,9 @@
     "jest.config.ts"
   ],
   "compilerOptions": {
-    "noEmit": true
+    "noEmit": true,
+    "lib": [
+      "dom"
+    ]
   }
 }

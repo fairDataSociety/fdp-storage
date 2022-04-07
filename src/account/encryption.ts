@@ -1,42 +1,60 @@
-import crypto from 'crypto'
-import { keccak256, Message } from 'js-sha3'
-import { Bytes } from '../utils/bytes'
+import CryptoJS from 'crypto-js'
 
-const algorithm = 'aes-256-cfb'
+export const IV_LENGTH = 16
 
-export function keccak256Hash(...messages: Message[]): Bytes<32> {
-  const hasher = keccak256.create()
+/**
+ * Decrypt text with password
+ *
+ * @param password String to decrypt text
+ * @param text Text to be decrypted
+ */
+export function decrypt(password: string, text: string): string {
+  const wordSize = 4
+  const key = CryptoJS.SHA256(password)
+  const contents = CryptoJS.enc.Base64url.parse(text.replaceAll('=', ''))
+  const iv = CryptoJS.lib.WordArray.create(contents.words.slice(0, IV_LENGTH), IV_LENGTH)
+  const textBytes = CryptoJS.lib.WordArray.create(
+    contents.words.slice(IV_LENGTH / wordSize),
+    contents.sigBytes - IV_LENGTH,
+  )
+  const cipherParams = CryptoJS.lib.CipherParams.create({
+    ciphertext: textBytes,
+  })
 
-  messages.forEach(bytes => hasher.update(bytes))
-
-  return Uint8Array.from(hasher.digest()) as Bytes<32>
+  return CryptoJS.AES.decrypt(cipherParams, key, {
+    iv,
+    mode: CryptoJS.mode.CFB,
+    padding: CryptoJS.pad.NoPadding,
+  }).toString(CryptoJS.enc.Utf8)
 }
 
-export function decrypt(keyStr: string, text: string): string {
-  const hash = crypto.createHash('sha256')
-  hash.update(keyStr)
-  const keyBytes = hash.digest()
+/**
+ * Encrypt text with password
+ *
+ * @param password String to encrypt text
+ * @param text Text to be encrypted
+ * @param customIv Initial vector for AES. In case of absence, a random vector will be created
+ */
+export function encrypt(password: string, text: string, customIv?: CryptoJS.lib.WordArray): string {
+  const iv = customIv || CryptoJS.lib.WordArray.random(IV_LENGTH)
+  const key = CryptoJS.SHA256(password)
 
-  const contents = Buffer.from(text, 'base64')
-  const iv = contents.slice(0, 16)
-  const textBytes = contents.slice(16)
-  const decipher = crypto.createDecipheriv(algorithm, keyBytes, iv)
-  // @ts-ignore function should be updated
-  let res: string = decipher.update(textBytes, '', 'utf8')
-  res += decipher.final('utf8')
+  const cipherParams = CryptoJS.AES.encrypt(text, key, {
+    iv,
+    mode: CryptoJS.mode.CFB,
+    padding: CryptoJS.pad.NoPadding,
+  })
 
-  return res
-}
+  const out = iv.concat(cipherParams.ciphertext)
+  const base64url = out.toString(CryptoJS.enc.Base64url)
+  const paddingNumber = base64url.length % 4
+  let padding = ''
 
-export function encrypt(keyStr: string, text: string): string {
-  const hash = crypto.createHash('sha256')
-  hash.update(keyStr)
-  const keyBytes = hash.digest()
+  if (paddingNumber === 2) {
+    padding = '=='
+  } else if (paddingNumber === 3) {
+    padding = '='
+  }
 
-  const iv = crypto.randomBytes(16)
-  const cipher = crypto.createCipheriv(algorithm, keyBytes, iv)
-  const enc = [iv, cipher.update(text, 'utf8')]
-  enc.push(cipher.final())
-
-  return Buffer.concat(enc).toString('base64')
+  return base64url + padding
 }

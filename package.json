@@ -1,9 +1,9 @@
 {
-  "name": "@fairdatasociety/fairdata-protocol",
+  "name": "@fairdatasociety/fair-data-protocol",
   "version": "1.0.0",
-  "description": "Javascript implementation of FairOS-dfs",
+  "description": "Typescript implementation of FairOS-dfs",
   "keywords": [
-    "fairdrive",
+    "fairdata",
     "swarm",
     "decentralised",
     "storage",
@@ -13,15 +13,15 @@
     "browser",
     "node"
   ],
-  "homepage": "https://github.com/fairDataSociety/fairdata-protocol",
+  "homepage": "https://github.com/fairDataSociety/fair-data-protocol",
   "bugs": {
-    "url": "https://github.com/fairDataSociety/fairdata-protocol/issues/"
+    "url": "https://github.com/fairDataSociety/fair-data-protocol/issues/"
   },
   "license": "BSD-3-Clause",
   "main": "dist/index.min.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/fairDataSociety/fairdata-protocol.git"
+    "url": "https://github.com/fairDataSociety/fair-data-protocol.git"
   },
   "browser": {
     "./dist/index.min.js": "./dist/index.browser.min.js",
@@ -40,6 +40,7 @@
     "docs": "rimraf docs && typedoc",
     "test": "npm run compile:browser && jest --verbose --selectProjects=node:unit node:integration dom:integration --config=jest.config.ts",
     "test:integration:browser": "npm run compile:browser && jest --verbose --selectProjects=dom:integration --config=jest.config.ts",
+    "test:unit:browser": "npm run compile:browser && jest --verbose --selectProjects=dom:unit:browser --config=jest.config.ts",
     "test:integration:node": "jest --verbose --selectProjects=node:integration --config=jest.config.ts",
     "test:integration": "npm run compile:browser && jest --verbose --selectProjects=node:integration dom:integration --config=jest.config.ts",
     "test:unit": "jest --verbose --selectProjects=node:unit --config=jest.config.ts ",
@@ -64,10 +65,12 @@
     "@babel/preset-typescript": "^7.14.5",
     "@commitlint/cli": "^12.1.1",
     "@commitlint/config-conventional": "^12.1.4",
+    "@fairdatasociety/fairos-js": "^1.0.2",
     "@fluffy-spoon/substitute": "^1.208.0",
     "@jest/test-sequencer": "^27.0.5",
     "@jest/types": "^27.0.2",
     "@types/content-disposition": "^0.5.3",
+    "@types/crypto-js": "^4.1.1",
     "@types/debug": "^4.1.5",
     "@types/elliptic": "^6.4.12",
     "@types/expect-puppeteer": "^4.4.5",

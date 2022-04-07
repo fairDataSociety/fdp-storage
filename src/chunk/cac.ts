@@ -1,9 +1,6 @@
-import { BrandedType } from '../types'
-import { BeeError } from '../utils/error'
+import { BrandedType, Utils } from '@ethersphere/bee-js'
 import { bmtHash } from './bmt'
-import { Bytes, bytesEqual, FlexBytes, flexBytesAtOffset, assertFlexBytes } from '../utils/bytes'
-import { serializeBytes } from './serialize'
-import { makeSpan, SPAN_SIZE } from './span'
+import { assertFlexBytes, makeSpan, serializeBytes, SPAN_SIZE } from '../utils/bytes'
 
 export const MIN_PAYLOAD_SIZE = 1
 export const MAX_PAYLOAD_SIZE = 4096
@@ -11,7 +8,7 @@ export const MAX_PAYLOAD_SIZE = 4096
 const CAC_SPAN_OFFSET = 0
 const CAC_PAYLOAD_OFFSET = CAC_SPAN_OFFSET + SPAN_SIZE
 
-export type ChunkAddress = Bytes<32>
+export type ChunkAddress = Utils.Bytes<32>
 
 /**
  * General chunk interface for Swarm
@@ -24,8 +21,8 @@ export type ChunkAddress = Bytes<32>
  */
 export interface Chunk {
   readonly data: Uint8Array
-  span(): Bytes<8>
-  payload(): FlexBytes<1, 4096>
+  span(): Utils.Bytes<8>
+  payload(): Utils.FlexBytes<1, 4096>
 
   address(): ChunkAddress
 }
@@ -45,35 +42,7 @@ export function makeContentAddressedChunk(payloadBytes: Uint8Array): Chunk {
   return {
     data,
     span: () => span,
-    payload: () => flexBytesAtOffset(data, CAC_PAYLOAD_OFFSET, MIN_PAYLOAD_SIZE, MAX_PAYLOAD_SIZE),
+    payload: () => Utils.flexBytesAtOffset(data, CAC_PAYLOAD_OFFSET, MIN_PAYLOAD_SIZE, MAX_PAYLOAD_SIZE),
     address: () => bmtHash(data),
-  }
-}
-
-/**
- * Type guard for valid content addressed chunk data
- *
- * @param data          The chunk data
- * @param chunkAddress  The address of the chunk
- */
-export function isValidChunkData(data: unknown, chunkAddress: ChunkAddress): data is ValidChunkData {
-  if (!(data instanceof Uint8Array)) return false
-
-  const address = bmtHash(data)
-
-  return bytesEqual(address, chunkAddress)
-}
-
-/**
- * Asserts if data are representing given address of its chunk.
- *
- * @param data          The chunk data
- * @param chunkAddress  The address of the chunk
- *
- * @returns a valid content addressed chunk or throws error
- */
-export function assertValidChunkData(data: unknown, chunkAddress: ChunkAddress): asserts data is ValidChunkData {
-  if (!isValidChunkData(data, chunkAddress)) {
-    throw new BeeError('Address of content address chunk does not match given data!')
   }
 }

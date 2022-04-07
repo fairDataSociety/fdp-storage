@@ -1,9 +1,14 @@
 {
   "include": ["src"],
   "compilerOptions": {
+    "lib": [
+      "ES2021.String",
+      "dom"
+    ],
     "alwaysStrict": true,
     "target": "ES6",
     "esModuleInterop": true,
+    "skipLibCheck": true,
     "allowSyntheticDefaultImports": true,
     "moduleResolution": "node",
     "module": "commonjs",
@@ -11,7 +16,9 @@
     "resolveJsonModule": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "typeRoots": ["./src/types", "node_modules/@types"],
+    "typeRoots": [
+      "./src/pod/types", "node_modules/@types"
+    ],
     "rootDirs": ["src"],
     "outDir": "dist"
   },

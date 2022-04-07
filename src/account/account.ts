@@ -1,7 +1,9 @@
-import { Bee, Reference } from '@ethersphere/bee-js'
+import { Reference } from '@ethersphere/bee-js'
 import { Wallet } from 'ethers'
 import { encrypt } from './encryption'
 import { uploadEncryptedMnemonic } from './mnemonic'
+import { assertMnemonic, assertPassword } from './utils'
+import { Connection } from '../connection/connection'
 
 interface UserAccount {
   wallet: Wallet
@@ -13,9 +15,18 @@ export interface UserAccountWithReference extends UserAccount {
   reference: Reference
 }
 
+/**
+ * Creates a new user account based on the passed mnemonic phrase or without it, encrypted with a password
+ *
+ * @param password FDP password
+ * @param mnemonic mnemonic phrase
+ */
 async function createUserAccount(password: string, mnemonic?: string): Promise<UserAccount> {
-  // todo validate password
-  if (!mnemonic) {
+  assertPassword(password)
+
+  if (mnemonic) {
+    assertMnemonic(mnemonic)
+  } else {
     mnemonic = Wallet.createRandom().mnemonic.phrase
   }
 
@@ -29,14 +40,22 @@ async function createUserAccount(password: string, mnemonic?: string): Promise<U
   }
 }
 
+/**
+ * Creates a new user and uploads the encrypted account to the network
+ *
+ * @param connection connection information for data uploading
+ * @param username FDP username
+ * @param password FDP password
+ * @param mnemonic mnemonic phrase
+ */
 export async function createUser(
-  bee: Bee,
+  connection: Connection,
   username: string,
   password: string,
-  mnemonic = '',
+  mnemonic?: string,
 ): Promise<UserAccountWithReference> {
   const account = await createUserAccount(password, mnemonic)
-  const reference = await uploadEncryptedMnemonic(bee, account.wallet, username, account.encryptedMnemonic)
+  const reference = await uploadEncryptedMnemonic(connection, account.wallet, username, account.encryptedMnemonic)
 
   return { ...account, reference }
 }

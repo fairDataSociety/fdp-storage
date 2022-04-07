@@ -5,25 +5,14 @@
  * generic `Length` type parameter which is runtime compatible with
  * the original, because it extends from the `number` type.
  */
-import { Data } from '../types'
+import { Data, Utils } from '@ethersphere/bee-js'
 import { bytesToHex } from './hex'
+import { BeeArgumentError } from './error'
 
-export interface Bytes<Length extends number> extends Uint8Array {
-  readonly length: Length
-}
+export const SPAN_SIZE = 8
 
-/**
- * Helper type for dealing with flexible sized byte arrays.
- *
- * The actual min and and max values are not stored in runtime, they
- * are only there to differentiate the type from the Uint8Array at
- * compile time.
- * @see BrandedType
- */
-export interface FlexBytes<Min extends number, Max extends number> extends Uint8Array {
-  readonly __min__: Min
-  readonly __max__: Max
-}
+// we limit the maximum span size in 32 bits to avoid BigInt compatibility issues
+const MAX_SPAN_LENGTH = 2 ** 32 - 1
 
 /**
  * Type guard for `Bytes<T>` type
@@ -31,7 +20,7 @@ export interface FlexBytes<Min extends number, Max extends number> extends Uint8
  * @param b       The byte array
  * @param length  The length of the byte array
  */
-export function isBytes<Length extends number>(b: unknown, length: Length): b is Bytes<Length> {
+export function isBytes<Length extends number>(b: unknown, length: Length): b is Utils.Bytes<Length> {
   return b instanceof Uint8Array && b.length === length
 }
 
@@ -41,79 +30,10 @@ export function isBytes<Length extends number>(b: unknown, length: Length): b is
  * @param b       The byte array
  * @param length  The specified length
  */
-export function assertBytes<Length extends number>(b: unknown, length: Length): asserts b is Bytes<Length> {
+export function assertBytes<Length extends number>(b: unknown, length: Length): asserts b is Utils.Bytes<Length> {
   if (!isBytes(b, length)) {
     throw new TypeError(`Parameter is not valid Bytes of length: ${length} !== ${(b as Uint8Array).length}`)
   }
-}
-
-/**
- * Type guard for FlexBytes<Min,Max> type
- *
- * @param b       The byte array
- * @param min     Minimum size of the array
- * @param max     Maximum size of the array
- */
-export function isFlexBytes<Min extends number, Max extends number = Min>(
-  b: unknown,
-  min: Min,
-  max: Max,
-): b is FlexBytes<Min, Max> {
-  return b instanceof Uint8Array && b.length >= min && b.length <= max
-}
-
-/**
- * Verifies if a byte array has a certain length between min and max
- *
- * @param b       The byte array
- * @param min     Minimum size of the array
- * @param max     Maximum size of the array
- */
-export function assertFlexBytes<Min extends number, Max extends number = Min>(
-  b: unknown,
-  min: Min,
-  max: Max,
-): asserts b is FlexBytes<Min, Max> {
-  if (!isFlexBytes(b, min, max)) {
-    throw new TypeError(
-      `Parameter is not valid FlexBytes of  min: ${min}, max: ${max}, length: ${(b as Uint8Array).length}`,
-    )
-  }
-}
-
-/**
- * Return `length` bytes starting from `offset`
- *
- * @param data   The original data
- * @param offset The offset to start from
- * @param length The length of data to be returned
- */
-export function bytesAtOffset<Length extends number>(data: Uint8Array, offset: number, length: Length): Bytes<Length> {
-  const offsetBytes = data.slice(offset, offset + length) as Bytes<Length>
-
-  // We are returning strongly typed Bytes so we have to verify that length is really what we claim
-  assertBytes<Length>(offsetBytes, length)
-
-  return offsetBytes
-}
-
-/**
- * Return flex bytes starting from `offset`
- *
- * @param data   The original data
- * @param offset The offset to start from
- * @param _min   The minimum size of the data
- * @param _max   The maximum size of the data
- */
-export function flexBytesAtOffset<Min extends number, Max extends number>(
-  data: Uint8Array,
-  offset: number,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _min: Min,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _max: Max,
-): FlexBytes<Min, Max> {
-  return data.slice(offset) as FlexBytes<Min, Max>
 }
 
 /**
@@ -131,8 +51,8 @@ export function bytesEqual(a: Uint8Array, b: Uint8Array): boolean {
  *
  * @param length The length of data to be returned
  */
-export function makeBytes<Length extends number>(length: Length): Bytes<Length> {
-  return new Uint8Array(length) as Bytes<Length>
+export function makeBytes<Length extends number>(length: Length): Utils.Bytes<Length> {
+  return new Uint8Array(length) as Utils.Bytes<Length>
 }
 
 export function wrapBytesWithHelpers(data: Uint8Array): Data {
@@ -141,4 +61,73 @@ export function wrapBytesWithHelpers(data: Uint8Array): Data {
     json: () => JSON.parse(new TextDecoder('utf-8').decode(data)),
     hex: () => bytesToHex(data),
   })
+}
+
+/**
+ * Converts long number to bytes array
+ *
+ * @param long long number
+ * @returns representing a long as an array of bytes
+ */
+export function longToByteArray(long: number): Utils.Bytes<8> {
+  const byteArray = new Uint8Array([0, 0, 0, 0, 0, 0, 0, 0])
+
+  for (let index = 0; index < byteArray.length; index++) {
+    const byte = long & 0xff
+    byteArray[index] = byte
+    long = (long - byte) / 256
+  }
+
+  return byteArray as Utils.Bytes<8>
+}
+
+/**
+ * Helper function for serialize byte arrays
+ *
+ * @param arrays Any number of byte array arguments
+ */
+export function serializeBytes(...arrays: Uint8Array[]): Uint8Array {
+  const length = arrays.reduce((prev, curr) => prev + curr.length, 0)
+  const buffer = new Uint8Array(length)
+  let offset = 0
+  arrays.forEach(arr => {
+    buffer.set(arr, offset)
+    offset += arr.length
+  })
+
+  return buffer
+}
+
+/**
+ * Create a span for storing the length of the chunk
+ *
+ * The length is encoded in 64-bit little endian.
+ *
+ * @param length The length of the span
+ */
+export function makeSpan(length: number): Utils.Bytes<8> {
+  if (length <= 0) {
+    throw new BeeArgumentError('invalid length for span', length)
+  }
+
+  if (length > MAX_SPAN_LENGTH) {
+    throw new BeeArgumentError('invalid length (> MAX_SPAN_LENGTH)', length)
+  }
+
+  const span = new Uint8Array(SPAN_SIZE)
+  const dataView = new DataView(span.buffer)
+  const littleEndian = true
+  const lengthLower32 = length & 0xffffffff
+
+  dataView.setUint32(0, lengthLower32, littleEndian)
+
+  return span as Utils.Bytes<8>
+}
+
+export function assertFlexBytes<Min extends number, Max extends number = Min>(
+  b: unknown,
+  min: Min,
+  max: Max,
+): asserts b is Utils.FlexBytes<Min, Max> {
+  return Utils.assertFlexBytes(b, min, max)
 }
