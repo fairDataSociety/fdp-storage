@@ -90,7 +90,7 @@ export function assertPodNameAvailable(list: Pod[], name: string): void {
  */
 export function podListToBytes(list: Pod[]): Uint8Array {
   if (list.length === 0) {
-    return Buffer.from([0])
+    return new Uint8Array([0])
   }
 
   return stringToBytes(list.map(pod => `${pod.name},${pod.index}`).join('\n') + '\n')
