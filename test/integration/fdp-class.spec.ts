@@ -36,7 +36,8 @@ describe('Fair Data Protocol class', () => {
       const fairos = createFairosJs()
       const fdp = createFdp()
 
-      for (const user of [generateUser(), generateUser()]) {
+      const usersList = [generateUser(), generateUser()]
+      for (const user of usersList) {
         const createdUser = await fdp.account.register(user.username, user.password, user.mnemonic)
         expect(createdUser.mnemonic).toEqual(user.mnemonic)
         expect(createdUser.wallet.address).toEqual(user.address)
@@ -72,6 +73,7 @@ describe('Fair Data Protocol class', () => {
   describe('Login', () => {
     it('should login with existing user and address', async () => {
       const fdp = createFdp()
+      const fdp1 = createFdp()
       const user = generateUser()
 
       await fdp.account.register(user.username, user.password, user.mnemonic)
@@ -80,7 +82,6 @@ describe('Fair Data Protocol class', () => {
       await fdp.account.login(user.username, user.password)
 
       // login with one line
-      const fdp1 = createFdp()
       await fdp1.account.login(user.username, user.password, user.address)
       expect(fdp1.account.usernameToAddress[user.username]).toEqual(prepareEthAddress(user.address))
     })
@@ -105,7 +106,7 @@ describe('Fair Data Protocol class', () => {
 
       await fdp1.account.register(user.username, user.password, user.mnemonic)
 
-      // not exists username
+      // not imported username
       const failUsername = generateUser().username
       await expect(fdp.account.login(failUsername, 'zzz')).rejects.toThrow(
         `No address linked to the username "${failUsername}"`,
@@ -141,18 +142,17 @@ describe('Fair Data Protocol class', () => {
       const fairos = createFairosJs()
       const user = generateUser()
       const pods = []
-      for (let i = 0; i < 10; i++) {
-        pods.push(generateRandomHexString())
-      }
 
       await fairos.userSignup(user.username, user.password, user.mnemonic)
-      await fdp.account.setUserAddress(user.username, user.address)
-      await fdp.account.login(user.username, user.password)
-
-      for (const podName of pods) {
+      for (let i = 0; i < 10; i++) {
+        const podName = generateRandomHexString()
+        pods.push(podName)
         const podData = (await fairos.podNew(podName, user.password)).data
         expect(podData.code).toEqual(201)
       }
+
+      await fdp.account.setUserAddress(user.username, user.address)
+      await fdp.account.login(user.username, user.password)
 
       const podsList = await fdp.personalStorage.list()
       expect(podsList.length).toEqual(pods.length)
