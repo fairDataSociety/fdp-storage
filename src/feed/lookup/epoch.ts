@@ -68,22 +68,18 @@ export class Epoch {
    * @return the frequency level a next update should be placed at, provided where the last update was and what time it is now
    */
   getNextLevel(time: number): number {
+    // if the last update was more than 2^HIGHEST_LEVEL seconds ago, choose the highest level
+    if (this.level > HIGHEST_LEVEL) {
+      return HIGHEST_LEVEL
+    }
     // First XOR the last epoch base time with the current clock. This will set all the FairOS most significant bits to zero.
     let mix = this.base() ^ time
     // Then, make sure we stop the below loop before one level below the current, by setting that level's bit to 1.
     // If the next level is lower than the current one, it must be exactly level-1 and not lower.
-    mix = mix | (1 << (this.level - 1))
-
-    // if the last update was more than 2^HIGHEST_LEVEL seconds ago, choose the highest level
-    const mixCompare = Number.MAX_SAFE_INTEGER >>> (64 - HIGHEST_LEVEL - 1)
-
-    if (mix > mixCompare) {
-      return HIGHEST_LEVEL
-    }
+    mix = mix | Math.abs(1 << (this.level - 1))
 
     // set up a mask to scan for nonzero bits, starting at the highest level
-    const maskNumber = Math.abs(1 << HIGHEST_LEVEL)
-    let mask = maskNumber
+    let mask = Math.abs(Math.pow(2, HIGHEST_LEVEL))
 
     for (let i = HIGHEST_LEVEL; i > LOWEST_LEVEL; i--) {
       if ((mix & mask) !== 0) {
