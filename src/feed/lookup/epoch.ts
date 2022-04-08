@@ -1,6 +1,5 @@
 import { Utils } from '@ethersphere/bee-js'
 import { longToByteArray } from '../../utils/bytes'
-import Long from 'long'
 
 const EPOCH_LENGTH = 8
 
@@ -69,31 +68,27 @@ export class Epoch {
    * @return the frequency level a next update should be placed at, provided where the last update was and what time it is now
    */
   getNextLevel(time: number): number {
-    // First XOR the last epoch base time with the current clock. This will set all the FairOS most significant bits to zero.
-    let mix = Long.fromNumber(this.base() ^ time, true)
-    // Then, make sure we stop the below loop before one level below the current, by setting that level's bit to 1.
-    // If the next level is lower than the current one, it must be exactly level-1 and not lower.
-    mix = mix.or(Long.fromNumber(1, true).shiftLeft(this.level - 1))
-
     // if the last update was more than 2^HIGHEST_LEVEL seconds ago, choose the highest level
-    const mixCompare = Long.MAX_UNSIGNED_VALUE.shiftRightUnsigned(64 - HIGHEST_LEVEL - 1).toNumber()
-
-    if (mix.greaterThan(mixCompare)) {
+    if (this.level > HIGHEST_LEVEL) {
       return HIGHEST_LEVEL
     }
+    // First XOR the last epoch base time with the current clock. This will set all the FairOS most significant bits to zero.
+    let mix = this.base() ^ time
+    // Then, make sure we stop the below loop before one level below the current, by setting that level's bit to 1.
+    // If the next level is lower than the current one, it must be exactly level-1 and not lower.
+    mix = mix | Math.abs(1 << (this.level - 1))
 
     // set up a mask to scan for nonzero bits, starting at the highest level
-    const maskNumber = Math.abs(1 << HIGHEST_LEVEL)
-    let mask = Long.fromNumber(maskNumber, true)
+    let mask = Math.abs(Math.pow(2, HIGHEST_LEVEL))
 
     for (let i = HIGHEST_LEVEL; i > LOWEST_LEVEL; i--) {
-      if (!mix.and(mask).eqz()) {
+      if ((mix & mask) !== 0) {
         // if we find a nonzero bit, this is the level the next update should be at.
         return i
       }
 
       // move our bit one position to the right
-      mask = mask.shiftRight(1)
+      mask >>>= 1
     }
 
     return 0
