@@ -1,5 +1,6 @@
 import { Wallet } from 'ethers'
 import crypto from 'crypto'
+import { Utils } from '@ethersphere/bee-js'
 
 export interface TestUser {
   username: string
@@ -55,4 +56,15 @@ export function beeDebugUrl(): string {
  */
 export function fairosJsUrl(): string {
   return process.env.BEE_FAIROS_API_URL || 'http://127.0.0.1:9090/v1/'
+}
+
+/**
+ * Convert 32 bytes array of numbers to Utils.Bytes<32>
+ */
+export function numbersToBytes(numbers: number[]): Utils.Bytes<32> {
+  if (numbers.length !== 32) {
+    throw new Error('Numbers length must be equal to 32')
+  }
+
+  return new Uint8Array(numbers) as Utils.Bytes<32>
 }
