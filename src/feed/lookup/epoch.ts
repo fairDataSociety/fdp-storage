@@ -26,7 +26,18 @@ export function getFirstEpoch(time: number): Epoch {
   return new Epoch(HIGHEST_LEVEL, time)
 }
 
+/**
+ * An epoch represents a concrete time period starting at a specific point in time, called
+ * the epoch base time and has a specific length. Period lengths are expressed as powers
+ * of 2 in seconds. The shortest period is 20^0 = 1 second, the longest is 2^31 seconds
+ */
 export class Epoch {
+  /**
+   * Create en Epoch instance
+   *
+   * @param level level that identify a specific epoch
+   * @param time time that identify a specific epoch
+   */
   constructor(public level: number, public time: number) {}
 
   /**
