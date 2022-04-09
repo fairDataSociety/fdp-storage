@@ -30,7 +30,7 @@ export class PersonalStorage {
           this.accountData.connection.bee,
           POD_TOPIC,
           prepareEthAddress(this.accountData.wallet!.address),
-          this.accountData.connection.timeout,
+          this.accountData.connection.options?.downloadOptions,
         )
       ).data.chunkContent()
     } catch (e) {
@@ -55,7 +55,7 @@ export class PersonalStorage {
         this.accountData.connection.bee,
         POD_TOPIC,
         prepareEthAddress(this.accountData.wallet!.address),
-        this.accountData.connection.timeout,
+        this.accountData.connection.options?.downloadOptions,
       )
       list = extractPods(lookupAnswer.data.chunkContent())
     } catch (e) {

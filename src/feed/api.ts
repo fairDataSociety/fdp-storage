@@ -1,4 +1,4 @@
-import { Bee, Data, Reference, Utils } from '@ethersphere/bee-js'
+import { Bee, Data, Reference, RequestOptions, Utils } from '@ethersphere/bee-js'
 import { bmtHashString } from '../account/utils'
 import { getId } from './handler'
 import { lookup } from './lookup/linear'
@@ -15,13 +15,13 @@ import { Connection } from '../connection/connection'
  * @param bee Bee client
  * @param topic topic for calculation swarm chunk
  * @param address Ethereum address for calculation swarm chunk
- * @param timeout download timeout during finding
+ * @param options download chunk options
  */
 export async function getFeedData(
   bee: Bee,
   topic: string,
   address: Utils.EthAddress,
-  timeout = 5000,
+  options?: RequestOptions,
 ): Promise<LookupAnswer> {
   const topicHash = bmtHashString(topic)
 
@@ -29,7 +29,7 @@ export async function getFeedData(
     const tempId = getId(topicHash, time, epoch.level)
     const chunkReference = bytesToHex(Utils.keccak256Hash(tempId.buffer, address.buffer))
 
-    return await bee.downloadChunk(chunkReference, { timeout })
+    return await bee.downloadChunk(chunkReference, options)
   })
 }
 
