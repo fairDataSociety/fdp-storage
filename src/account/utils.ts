@@ -5,6 +5,7 @@ import { AccountData } from './account-data'
 import { isValidMnemonic } from 'ethers/lib/utils'
 
 export const MNEMONIC_LENGTH = 12
+export const MAX_CHUNK_LENGTH = 4096
 
 /**
  * Extracts only content from chunk data
@@ -41,6 +42,10 @@ export function bmtHashString(stringData: string): Utils.Bytes<32> {
  * @returns the keccak256 hash in a byte array
  */
 export function bmtHashBytes(payload: Uint8Array): Utils.Bytes<32> {
+  if (payload.length > MAX_CHUNK_LENGTH) {
+    throw new Error(`Chunk is larger than the maximum allowed size - ${MAX_CHUNK_LENGTH} bytes`)
+  }
+
   const span = makeSpan(payload.length)
   const data = new Uint8Array([...span, ...payload])
 
