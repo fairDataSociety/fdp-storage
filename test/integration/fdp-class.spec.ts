@@ -7,7 +7,11 @@ import FairosJs from '@fairdatasociety/fairos-js'
 const GET_FEED_DATA_TIMEOUT = 1000
 
 function createFdp() {
-  return new FairDataProtocol(beeUrl(), beeDebugUrl(), GET_FEED_DATA_TIMEOUT)
+  return new FairDataProtocol(beeUrl(), beeDebugUrl(), {
+    downloadOptions: {
+      timeout: GET_FEED_DATA_TIMEOUT,
+    },
+  })
 }
 
 function createFairosJs() {
@@ -22,7 +26,11 @@ describe('Fair Data Protocol class', () => {
   }
 
   it('should strip trailing slash', () => {
-    const fdp = new FairDataProtocol('http://localhost:1633/', 'http://localhost:1635/', GET_FEED_DATA_TIMEOUT)
+    const fdp = new FairDataProtocol('http://localhost:1633/', 'http://localhost:1635/', {
+      downloadOptions: {
+        timeout: GET_FEED_DATA_TIMEOUT,
+      },
+    })
     expect(fdp.connection.bee.url).toEqual('http://localhost:1633')
     expect(fdp.connection.beeDebug.url).toEqual('http://localhost:1635')
   })
