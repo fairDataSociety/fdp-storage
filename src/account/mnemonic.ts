@@ -1,4 +1,4 @@
-import { Bee, Data, Reference, Utils } from '@ethersphere/bee-js'
+import { Bee, Reference, Utils } from '@ethersphere/bee-js'
 import { assertUsername } from './utils'
 import { Wallet } from 'ethers'
 import { getFeedData, writeFeedData } from '../feed/api'
