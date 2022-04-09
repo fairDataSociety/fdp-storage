@@ -12,7 +12,7 @@ const TOPIC_LENGTH = 32
  * @param level level in epoch for content
  * @returns swarm reference
  */
-export function getId(topic: Uint8Array, time = 0, level = HIGHEST_LEVEL): Utils.Bytes<32> {
+export function getId(topic: Utils.Bytes<32>, time = 0, level = HIGHEST_LEVEL): Utils.Bytes<32> {
   const bufId = new Uint8Array(40)
   let cursor = 0
   for (let i = 0; i < TOPIC_LENGTH; i++) {
