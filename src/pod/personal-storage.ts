@@ -84,7 +84,7 @@ export class PersonalStorage {
     // create root directory for pod
     const now = getUnixTimestamp()
     const path = '/'
-    // create a new key pair from the master mnemonic. This key pair is used as the base key pair for a newly created pod
+    // create a new key pair from the master mnemonic. This key pair is used as the base key pair for a newly created descendant pod
     const pathWallet = Wallet.fromMnemonic(wallet.mnemonic.phrase, `m/44'/60'/0'/0/${index}`)
     const metadata = createMetadata(metaVersion, '', path, now, now, now)
     await writeFeedData(this.accountData.connection, path, metadata, pathWallet.privateKey)
