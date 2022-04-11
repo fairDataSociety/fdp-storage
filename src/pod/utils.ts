@@ -52,10 +52,10 @@ export function createMetadata(
 /**
  * Verifies if pods list length is correct
  *
- * @param length length of pod list
+ * @param list list of pods
  */
-export function assertPodsLength(length: number): void {
-  if (length >= MAX_PODS_COUNT) {
+export function assertPodsLength(list: Pod[]): void {
+  if (list.length >= MAX_PODS_COUNT) {
     throw new Error('The maximum number of pods for the account has been reached')
   }
 }

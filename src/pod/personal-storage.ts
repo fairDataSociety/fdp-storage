@@ -62,7 +62,7 @@ export class PersonalStorage {
       list = []
     }
 
-    assertPodsLength(list.length)
+    assertPodsLength(list)
     assertPodNameAvailable(list, name)
 
     let epoch: Epoch
