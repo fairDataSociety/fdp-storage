@@ -1,6 +1,6 @@
 import { getId } from '../../src/feed/handler'
 import { Epoch } from '../../src/feed/lookup/epoch'
-import { numbersToBytes } from '../utils'
+import { numbersToSegment } from '../utils'
 
 describe('handler', () => {
   it('epochId', () => {
@@ -345,7 +345,7 @@ describe('handler', () => {
       },
     ]
     for (const example of examples) {
-      const result = getId(numbersToBytes(example.topic), example.time, example.level)
+      const result = getId(numbersToSegment(example.topic), example.time, example.level)
       expect(result.length).toEqual(32)
       expect(result.toString().split(',').map(Number)).toEqual(example.result)
     }

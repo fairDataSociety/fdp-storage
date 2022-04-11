@@ -61,7 +61,7 @@ export function fairosJsUrl(): string {
 /**
  * Convert 32 bytes array of numbers to Utils.Bytes<32>
  */
-export function numbersToBytes(numbers: number[]): Utils.Bytes<32> {
+export function numbersToSegment(numbers: number[]): Utils.Bytes<32> {
   if (numbers.length !== 32) {
     throw new Error('Numbers length must be equal to 32')
   }
