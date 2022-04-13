@@ -32,7 +32,7 @@ export class PersonalStorage {
       await getPodsList(
         this.accountData.connection.bee,
         prepareEthAddress(this.accountData.wallet!.address),
-        this.accountData.connection.timeout,
+        this.accountData.connection.options?.downloadOptions,
       )
     ).pods
   }
@@ -48,7 +48,7 @@ export class PersonalStorage {
     const podsInfo = await getPodsList(
       this.accountData.connection.bee,
       prepareEthAddress(this.accountData.wallet!.address),
-      this.accountData.connection.timeout,
+      this.accountData.connection.options?.downloadOptions,
     )
 
     assertPodsLength(podsInfo.pods.length + 1)
@@ -92,7 +92,7 @@ export class PersonalStorage {
     const podsInfo = await getPodsList(
       this.accountData.connection.bee,
       prepareEthAddress(this.accountData.wallet!.address),
-      this.accountData.connection.timeout,
+      this.accountData.connection.options?.downloadOptions,
     )
 
     assertPodsLength(podsInfo.pods.length)

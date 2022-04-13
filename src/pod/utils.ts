@@ -1,5 +1,5 @@
 import { Metadata, Pod } from './types'
-import { Bee, Data } from '@ethersphere/bee-js'
+import { Bee, Data, RequestOptions } from '@ethersphere/bee-js'
 import { stringToBytes } from '../utils/bytes'
 import { LookupAnswer } from '../feed/types'
 import { getFeedData } from '../feed/api'
@@ -64,7 +64,7 @@ export function createMetadata(
 /**
  * Verifies if pods list length is correct
  *
- * @param length length of pod list
+ * @param length pods list length
  */
 export function assertPodsLength(length: number): void {
   if (length > MAX_PODS_COUNT) {
@@ -104,14 +104,14 @@ export function podListToBytes(list: Pod[]): Uint8Array {
  *
  * @param bee Bee instance
  * @param address Ethereum address
- * @param timeout retrieving timeout
+ * @param options request options
  */
-export async function getPodsList(bee: Bee, address: EthAddress, timeout: number): Promise<PodsInfo> {
+export async function getPodsList(bee: Bee, address: EthAddress, options?: RequestOptions): Promise<PodsInfo> {
   let lookupAnswer: LookupAnswer | undefined
   let pods: Pod[]
 
   try {
-    lookupAnswer = await getFeedData(bee, POD_TOPIC, address, timeout)
+    lookupAnswer = await getFeedData(bee, POD_TOPIC, address, options)
     pods = extractPods(lookupAnswer.data.chunkContent())
   } catch (e) {
     pods = []
