@@ -70,9 +70,7 @@ console.log(account) // prints account information
 Login with FDP account
 
 ```js
-// before login, we need to enter the username of the account and the Ethereum address associated with it
-await fdp.account.setUserAddress('otherusername', '0x.....')
-const wallet = await fdp.account.login('otherusername', 'mypassword')
+const wallet = await fdp.account.login('otherusername', 'mypassword', '0x.....')
 console.log(wallet) // prints downloaded and decrypted wallet
 ```
 
@@ -88,6 +86,12 @@ Getting list of pods
 ```js
 const pods = await fdp.personalStorage.list()
 console.log(pods) // prints list of user's pods
+```
+
+Delete pod
+
+```js
+await fdp.personalStorage.delete('my-new-pod')
 ```
 
 ## Documentation

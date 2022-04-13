@@ -1,15 +1,13 @@
 import { Pod } from './types'
 import { assertActiveAccount } from '../account/utils'
-import { Data } from '@ethersphere/bee-js'
-import { getFeedData, writeFeedData } from '../feed/api'
+import { writeFeedData } from '../feed/api'
 import { AccountData } from '../account/account-data'
-import { assertPodNameAvailable, assertPodsLength, createMetadata, extractPods, metaVersion } from './utils'
+import { assertPodNameAvailable, assertPodsLength, createMetadata, metaVersion, podListToBytes } from './utils'
 import { Epoch, getFirstEpoch } from '../feed/lookup/epoch'
 import { getUnixTimestamp } from '../utils/time'
 import { Wallet } from 'ethers'
-import { stringToBytes } from '../utils/bytes'
-import { LookupAnswer } from '../feed/types'
 import { prepareEthAddress } from '../utils/address'
+import { getPodsList } from './api'
 
 export const POD_TOPIC = 'Pods'
 
@@ -23,21 +21,14 @@ export class PersonalStorage {
    */
   async list(): Promise<Pod[]> {
     assertActiveAccount(this.accountData)
-    let data: Data
-    try {
-      data = (
-        await getFeedData(
-          this.accountData.connection.bee,
-          POD_TOPIC,
-          prepareEthAddress(this.accountData.wallet!.address),
-          this.accountData.connection.options?.downloadOptions,
-        )
-      ).data.chunkContent()
-    } catch (e) {
-      return []
-    }
 
-    return extractPods(data)
+    return (
+      await getPodsList(
+        this.accountData.connection.bee,
+        prepareEthAddress(this.accountData.wallet!.address),
+        this.accountData.connection.options?.downloadOptions,
+      )
+    ).pods
   }
 
   /**
@@ -48,36 +39,28 @@ export class PersonalStorage {
   async create(name: string): Promise<Pod> {
     assertActiveAccount(this.accountData)
     name = name.trim()
-    let lookupAnswer: LookupAnswer | undefined
-    let list: Pod[]
-    try {
-      lookupAnswer = await getFeedData(
-        this.accountData.connection.bee,
-        POD_TOPIC,
-        prepareEthAddress(this.accountData.wallet!.address),
-        this.accountData.connection.options?.downloadOptions,
-      )
-      list = extractPods(lookupAnswer.data.chunkContent())
-    } catch (e) {
-      list = []
-    }
+    const podsInfo = await getPodsList(
+      this.accountData.connection.bee,
+      prepareEthAddress(this.accountData.wallet!.address),
+      this.accountData.connection.options?.downloadOptions,
+    )
 
-    assertPodsLength(list)
-    assertPodNameAvailable(list, name)
+    const nextIndex = podsInfo.pods.length + 1
+    assertPodsLength(nextIndex)
+    assertPodNameAvailable(podsInfo.pods, name)
 
     let epoch: Epoch
     const currentTime = getUnixTimestamp()
 
-    if (lookupAnswer) {
-      epoch = lookupAnswer.epoch.getNextEpoch(currentTime)
+    if (podsInfo.lookupAnswer) {
+      epoch = podsInfo.lookupAnswer.epoch.getNextEpoch(currentTime)
     } else {
       epoch = getFirstEpoch(currentTime)
     }
 
-    const index = list.length + 1
-    const newPod = { name, index } as Pod
-    list.push(newPod)
-    const allPodsData = stringToBytes(list.map(item => `${item.name},${item.index}`).join('\n') + '\n')
+    const newPod = { name, index: nextIndex } as Pod
+    podsInfo.pods.push(newPod)
+    const allPodsData = podListToBytes(podsInfo.pods)
     const wallet = this.accountData.wallet!
     // create pod
     await writeFeedData(this.accountData.connection, POD_TOPIC, allPodsData, wallet.privateKey, epoch)
@@ -85,10 +68,43 @@ export class PersonalStorage {
     const now = getUnixTimestamp()
     const path = '/'
     // create a new key pair from the master mnemonic. This key pair is used as the base key pair for a newly created descendant pod
-    const pathWallet = Wallet.fromMnemonic(wallet.mnemonic.phrase, `m/44'/60'/0'/0/${index}`)
+    const pathWallet = Wallet.fromMnemonic(wallet.mnemonic.phrase, `m/44'/60'/0'/0/${nextIndex}`)
     const metadata = createMetadata(metaVersion, '', path, now, now, now)
     await writeFeedData(this.accountData.connection, path, metadata, pathWallet.privateKey)
 
     return newPod
+  }
+
+  /**
+   * Deletes pod with passed name
+   *
+   * @param name pod name
+   */
+  async delete(name: string): Promise<void> {
+    assertActiveAccount(this.accountData)
+    name = name.trim()
+    const podsInfo = await getPodsList(
+      this.accountData.connection.bee,
+      prepareEthAddress(this.accountData.wallet!.address),
+      this.accountData.connection.options?.downloadOptions,
+    )
+
+    assertPodsLength(podsInfo.pods.length)
+    const pod = podsInfo.pods.find(item => item.name === name)
+
+    if (!pod) {
+      throw new Error(`Pod "${name}" does not exist`)
+    }
+
+    const podsFiltered = podsInfo.pods.filter(item => item.name !== name)
+    const allPodsData = podListToBytes(podsFiltered)
+    const wallet = this.accountData.wallet!
+    await writeFeedData(
+      this.accountData.connection,
+      POD_TOPIC,
+      allPodsData,
+      wallet.privateKey,
+      podsInfo.lookupAnswer!.epoch.getNextEpoch(getUnixTimestamp()),
+    )
   }
 }

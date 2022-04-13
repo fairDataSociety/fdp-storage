@@ -1,9 +1,18 @@
 import { Metadata, Pod } from './types'
 import { Data } from '@ethersphere/bee-js'
 import { stringToBytes } from '../utils/bytes'
+import { LookupAnswer } from '../feed/types'
 
 export const metaVersion = 1
 export const MAX_PODS_COUNT = 65536
+
+/**
+ * Information about pods list
+ */
+export interface PodsInfo {
+  pods: Pod[]
+  lookupAnswer: LookupAnswer | undefined
+}
 
 /**
  * Extracts pod information from raw data
@@ -52,10 +61,10 @@ export function createMetadata(
 /**
  * Verifies if pods list length is correct
  *
- * @param list list of pods
+ * @param length pods list length
  */
-export function assertPodsLength(list: Pod[]): void {
-  if (list.length >= MAX_PODS_COUNT) {
+export function assertPodsLength(length: number): void {
+  if (length > MAX_PODS_COUNT) {
     throw new Error('The maximum number of pods for the account has been reached')
   }
 }
@@ -72,4 +81,17 @@ export function assertPodNameAvailable(list: Pod[], name: string): void {
       throw new Error(`Pod with name "${name}" already exists`)
     }
   })
+}
+
+/**
+ * Converts pods list to bytes array
+ *
+ * @param list list of pods
+ */
+export function podListToBytes(list: Pod[]): Uint8Array {
+  if (list.length === 0) {
+    return Buffer.from([0])
+  }
+
+  return stringToBytes(list.map(pod => `${pod.name},${pod.index}`).join('\n') + '\n')
 }
