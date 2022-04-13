@@ -46,7 +46,7 @@ export async function writeFeedData(
   connection: Connection,
   topic: string,
   data: Uint8Array,
-  privateKey: string,
+  privateKey: string | Uint8Array,
   epoch?: Epoch,
 ): Promise<Reference> {
   if (!epoch) {
