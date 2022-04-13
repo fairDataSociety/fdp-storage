@@ -51,7 +51,8 @@ export class PersonalStorage {
       this.accountData.connection.options?.downloadOptions,
     )
 
-    assertPodsLength(podsInfo.pods.length + 1)
+    const nextIndex = podsInfo.pods.length + 1
+    assertPodsLength(nextIndex)
     assertPodNameAvailable(podsInfo.pods, name)
 
     let epoch: Epoch
@@ -63,8 +64,7 @@ export class PersonalStorage {
       epoch = getFirstEpoch(currentTime)
     }
 
-    const index = podsInfo.pods.length + 1
-    const newPod = { name, index } as Pod
+    const newPod = { name, index: nextIndex } as Pod
     podsInfo.pods.push(newPod)
     const allPodsData = podListToBytes(podsInfo.pods)
     const wallet = this.accountData.wallet!
@@ -74,7 +74,7 @@ export class PersonalStorage {
     const now = getUnixTimestamp()
     const path = '/'
     // create a new key pair from the master mnemonic. This key pair is used as the base key pair for a newly created descendant pod
-    const pathWallet = Wallet.fromMnemonic(wallet.mnemonic.phrase, `m/44'/60'/0'/0/${index}`)
+    const pathWallet = Wallet.fromMnemonic(wallet.mnemonic.phrase, `m/44'/60'/0'/0/${nextIndex}`)
     const metadata = createMetadata(metaVersion, '', path, now, now, now)
     await writeFeedData(this.accountData.connection, path, metadata, pathWallet.privateKey)
 
