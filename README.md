@@ -90,6 +90,12 @@ const pods = await fdp.personalStorage.list()
 console.log(pods) // prints list of user's pods
 ```
 
+Delete pod
+
+```js
+await fdp.personalStorage.delete('my-new-pod')
+```
+
 ## Documentation
 
 You can generate API docs locally with:
