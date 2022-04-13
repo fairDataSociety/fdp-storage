@@ -76,6 +76,13 @@ const wallet = await fdp.account.login('otherusername', 'mypassword')
 console.log(wallet) // prints downloaded and decrypted wallet
 ```
 
+Creating a pod
+
+```js
+const pod = await fdp.personalStorage.create('my-new-pod')
+console.log(pods) // prints info about created pod
+```
+
 Getting list of pods
 
 ```js

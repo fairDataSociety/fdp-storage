@@ -1,11 +1,17 @@
 import { FairDataProtocol } from '../../src'
-import { beeDebugUrl, beeUrl, fairosJsUrl, generateHexString, generateUser } from '../utils'
+import { beeDebugUrl, beeUrl, fairosJsUrl, generateRandomHexString, generateUser } from '../utils'
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import FairosJs from '@fairdatasociety/fairos-js'
 
+const GET_FEED_DATA_TIMEOUT = 1000
+
 function createFdp() {
-  return new FairDataProtocol(beeUrl(), beeDebugUrl())
+  return new FairDataProtocol(beeUrl(), beeDebugUrl(), {
+    downloadOptions: {
+      timeout: GET_FEED_DATA_TIMEOUT,
+    },
+  })
 }
 
 function createFairosJs() {
@@ -20,7 +26,11 @@ describe('Fair Data Protocol class', () => {
   }
 
   it('should strip trailing slash', () => {
-    const fdp = new FairDataProtocol('http://localhost:1633/', 'http://localhost:1635/')
+    const fdp = new FairDataProtocol('http://localhost:1633/', 'http://localhost:1635/', {
+      downloadOptions: {
+        timeout: GET_FEED_DATA_TIMEOUT,
+      },
+    })
     expect(fdp.connection.bee.url).toEqual('http://localhost:1633')
     expect(fdp.connection.beeDebug.url).toEqual('http://localhost:1635')
   })
@@ -133,13 +143,13 @@ describe('Fair Data Protocol class', () => {
       expect(pods).toHaveLength(0)
     })
 
-    it('create pods and get list of them', async () => {
+    it('create pods with fairos and get list of them', async () => {
       const fdp = createFdp()
       const fairos = createFairosJs()
       const user = generateUser()
       const pods = []
       for (let i = 0; i < 10; i++) {
-        pods.push(generateHexString())
+        pods.push(generateRandomHexString())
       }
 
       await fairos.userSignup(user.username, user.password, user.mnemonic)
@@ -157,6 +167,50 @@ describe('Fair Data Protocol class', () => {
       for (const podName of podsList) {
         expect(pods.includes(podName.name)).toBeTruthy()
       }
+    })
+
+    it('created pods with fdp', async () => {
+      const fdp = createFdp()
+      const user = generateUser()
+      const fairos = createFairosJs()
+
+      await fdp.account.register(user.username, user.password, user.mnemonic)
+      let list = await fdp.personalStorage.list()
+      expect(list).toHaveLength(0)
+
+      await fairos.userImport(user.username, user.password, '', user.address)
+      await fairos.userLogin(user.username, user.password)
+      expect((await fairos.podLs()).data.pod_name).toHaveLength(0)
+
+      const examples = [
+        { name: generateRandomHexString(), index: 1 },
+        { name: generateRandomHexString(), index: 2 },
+        { name: generateRandomHexString(), index: 3 },
+        { name: generateRandomHexString(), index: 4 },
+        { name: generateRandomHexString(), index: 5 },
+      ]
+
+      for (let i = 0; examples.length > i; i++) {
+        const example = examples[i]
+        const result = await fdp.personalStorage.create(example.name)
+        expect(result).toEqual(example)
+
+        list = await fdp.personalStorage.list()
+        expect(list).toHaveLength(i + 1)
+        expect(list[i]).toEqual(example)
+
+        const fairosPods = (await fairos.podLs()).data.pod_name
+        expect(fairosPods).toHaveLength(i + 1)
+        expect(fairosPods).toContain(example.name)
+
+        const openResult = (await fairos.podOpen(example.name, user.password)).data
+        expect(openResult.message).toEqual('pod opened successfully')
+      }
+
+      const failPod = examples[0]
+      await expect(fdp.personalStorage.create(failPod.name)).rejects.toThrow(
+        `Pod with name "${failPod.name}" already exists`,
+      )
     })
   })
 })

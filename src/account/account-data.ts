@@ -82,7 +82,7 @@ export class AccountData {
 
     const encryptedMnemonic = await getEncryptedMnemonic(this.connection.bee, username, existsAddress)
     try {
-      const decrypted = decrypt(password, encryptedMnemonic.text())
+      const decrypted = decrypt(password, encryptedMnemonic)
       const wallet = Wallet.fromMnemonic(decrypted)
       this.setActiveAccount(wallet)
 

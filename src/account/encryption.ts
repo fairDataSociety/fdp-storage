@@ -1,17 +1,18 @@
 import CryptoJS from 'crypto-js'
+import { decodeBase64Url, encodeBase64Url } from './utils'
 
 export const IV_LENGTH = 16
 
 /**
  * Decrypt text with password
  *
- * @param password String to decrypt text
- * @param text Text to be decrypted
+ * @param password string to decrypt text
+ * @param text text to be decrypted
  */
 export function decrypt(password: string, text: string): string {
   const wordSize = 4
   const key = CryptoJS.SHA256(password)
-  const contents = CryptoJS.enc.Base64url.parse(text.replaceAll('=', ''))
+  const contents = decodeBase64Url(text)
   const iv = CryptoJS.lib.WordArray.create(contents.words.slice(0, IV_LENGTH), IV_LENGTH)
   const textBytes = CryptoJS.lib.WordArray.create(
     contents.words.slice(IV_LENGTH / wordSize),
@@ -31,9 +32,9 @@ export function decrypt(password: string, text: string): string {
 /**
  * Encrypt text with password
  *
- * @param password String to encrypt text
- * @param text Text to be encrypted
- * @param customIv Initial vector for AES. In case of absence, a random vector will be created
+ * @param password string to encrypt text
+ * @param text text to be encrypted
+ * @param customIv initial vector for AES. In case of absence, a random vector will be created
  */
 export function encrypt(password: string, text: string, customIv?: CryptoJS.lib.WordArray): string {
   const iv = customIv || CryptoJS.lib.WordArray.random(IV_LENGTH)
@@ -46,15 +47,6 @@ export function encrypt(password: string, text: string, customIv?: CryptoJS.lib.
   })
 
   const out = iv.concat(cipherParams.ciphertext)
-  const base64url = out.toString(CryptoJS.enc.Base64url)
-  const paddingNumber = base64url.length % 4
-  let padding = ''
 
-  if (paddingNumber === 2) {
-    padding = '=='
-  } else if (paddingNumber === 3) {
-    padding = '='
-  }
-
-  return base64url + padding
+  return encodeBase64Url(out)
 }
