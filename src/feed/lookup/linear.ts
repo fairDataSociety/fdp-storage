@@ -20,7 +20,7 @@ export async function lookup(time: number, read: (epoch: Epoch, time: number) =>
   let previousChunk: Data | undefined
   let level = HIGHEST_LEVEL
   let previousEpoch: Epoch | undefined
-  let epoch: Epoch | undefined
+  let epoch = new Epoch(level, time)
   while (level > 0) {
     previousEpoch = epoch
     epoch = new Epoch(level, time)
