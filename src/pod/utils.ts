@@ -1,10 +1,7 @@
 import { Metadata, Pod } from './types'
-import { Bee, Data, RequestOptions } from '@ethersphere/bee-js'
+import { Data } from '@ethersphere/bee-js'
 import { stringToBytes } from '../utils/bytes'
 import { LookupAnswer } from '../feed/types'
-import { getFeedData } from '../feed/api'
-import { POD_TOPIC } from './personal-storage'
-import { EthAddress } from '@ethersphere/bee-js/dist/types/utils/eth'
 
 export const metaVersion = 1
 export const MAX_PODS_COUNT = 65536
@@ -97,28 +94,4 @@ export function podListToBytes(list: Pod[]): Uint8Array {
   }
 
   return stringToBytes(list.map(pod => `${pod.name},${pod.index}`).join('\n') + '\n')
-}
-
-/**
- * Gets pods list with lookup answer
- *
- * @param bee Bee instance
- * @param address Ethereum address
- * @param options request options
- */
-export async function getPodsList(bee: Bee, address: EthAddress, options?: RequestOptions): Promise<PodsInfo> {
-  let lookupAnswer: LookupAnswer | undefined
-  let pods: Pod[]
-
-  try {
-    lookupAnswer = await getFeedData(bee, POD_TOPIC, address, options)
-    pods = extractPods(lookupAnswer.data.chunkContent())
-  } catch (e) {
-    pods = []
-  }
-
-  return {
-    pods,
-    lookupAnswer,
-  }
 }

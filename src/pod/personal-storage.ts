@@ -2,18 +2,12 @@ import { Pod } from './types'
 import { assertActiveAccount } from '../account/utils'
 import { writeFeedData } from '../feed/api'
 import { AccountData } from '../account/account-data'
-import {
-  assertPodNameAvailable,
-  assertPodsLength,
-  createMetadata,
-  getPodsList,
-  metaVersion,
-  podListToBytes,
-} from './utils'
+import { assertPodNameAvailable, assertPodsLength, createMetadata, metaVersion, podListToBytes } from './utils'
 import { Epoch, getFirstEpoch } from '../feed/lookup/epoch'
 import { getUnixTimestamp } from '../utils/time'
 import { Wallet } from 'ethers'
 import { prepareEthAddress } from '../utils/address'
+import { getPodsList } from './api'
 
 export const POD_TOPIC = 'Pods'
 
