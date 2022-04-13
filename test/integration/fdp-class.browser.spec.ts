@@ -16,7 +16,7 @@ import { FairDataProtocol } from '../../src'
 // @ts-ignore
 import FairosJs from '@fairdatasociety/fairos-js'
 
-const GET_FEED_DATA_TIMEOUT = 1000
+const GET_FEED_DATA_TIMEOUT = 100
 
 function createFairosJs() {
   return new FairosJs(fairosJsUrl())
