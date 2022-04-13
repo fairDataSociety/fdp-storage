@@ -82,7 +82,7 @@ export class PersonalStorage {
   }
 
   /**
-   * Delete pods with passed name
+   * Deletes pod with passed name
    *
    * @param name pod name
    */
