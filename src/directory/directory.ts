@@ -1,9 +1,9 @@
-import { DirectoryContent } from './directory-content'
 import { getExtendedPodsList } from '../pod/api'
 import { prepareEthAddress } from '../utils/address'
 import { AccountData } from '../account/account-data'
 import { readDirectory } from './handler'
 import { assertActiveAccount } from '../account/utils'
+import { DirectoryItem } from './directory-item'
 
 /**
  * Directory related class
@@ -18,7 +18,7 @@ export class Directory {
    * @param path path to start searching from
    * @param isRecursively search with recursion or not
    */
-  async read(podName: string, path: string, isRecursively?: boolean): Promise<DirectoryContent> {
+  async read(podName: string, path: string, isRecursively?: boolean): Promise<DirectoryItem> {
     assertActiveAccount(this.accountData)
     const extendedInfo = await getExtendedPodsList(
       this.accountData.connection.bee,

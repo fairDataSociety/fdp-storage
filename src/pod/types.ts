@@ -1,5 +1,3 @@
-import { DirectoryContent } from '../directory/directory-content'
-
 /**
  * Pod information
  */
@@ -42,8 +40,7 @@ export interface FileMetadata {
 /**
  * Information about a directory
  */
-export interface DirectoryMetadata {
-  Meta: FileMetadata | PodMetadata
+export interface RawDirectoryMetadata {
+  Meta: PodMetadata
   FileOrDirNames: string[] | null
-  content?: DirectoryContent
 }

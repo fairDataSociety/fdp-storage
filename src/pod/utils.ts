@@ -1,4 +1,4 @@
-import { DirectoryMetadata, Pod } from './types'
+import { RawDirectoryMetadata, Pod } from './types'
 import { Data } from '@ethersphere/bee-js'
 import { stringToBytes } from '../utils/bytes'
 import { LookupAnswer } from '../feed/types'
@@ -76,7 +76,7 @@ export function createMetadata(
       AccessTime: accessTime,
     },
     FileOrDirNames: fileOrDirNames ?? null,
-  } as DirectoryMetadata)
+  } as RawDirectoryMetadata)
 
   return stringToBytes(data)
 }

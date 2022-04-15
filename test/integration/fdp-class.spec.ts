@@ -4,7 +4,7 @@ import { beeDebugUrl, beeUrl, fairosJsUrl, generateRandomHexString, generateUser
 // @ts-ignore
 import FairosJs from '@fairdatasociety/fairos-js'
 
-const GET_FEED_DATA_TIMEOUT = 1000
+const GET_FEED_DATA_TIMEOUT = 100
 
 function createFdp() {
   return new FairDataProtocol(beeUrl(), beeDebugUrl(), {
@@ -244,6 +244,47 @@ describe('Fair Data Protocol class', () => {
       list = await fdp.personalStorage.list()
       expect(list).toHaveLength(0)
       expect((await fairos.podLs()).data.pod_name).toHaveLength(0)
+    })
+  })
+
+  describe('Directory', () => {
+    it('should find all directories', async () => {
+      const fdp = createFdp()
+      const fairos = createFairosJs()
+      const user = generateUser()
+      const pod = generateRandomHexString()
+      const createDirectories = ['/one', '/two', '/one/one_1', '/two/two_1']
+
+      await fdp.account.register(user.username, user.password, user.mnemonic)
+      await fdp.personalStorage.create(pod)
+      await fairos.userImport(user.username, user.password, '', user.address)
+      await fairos.userLogin(user.username, user.password)
+      await fairos.podOpen(pod, user.password)
+      for (const directory of createDirectories) {
+        await fairos.dirMkdir(pod, directory)
+      }
+
+      const podsNoRecursive = await fdp.directory.read(pod, '/', false)
+      expect(podsNoRecursive.name).toEqual('/')
+      expect(podsNoRecursive.content).toHaveLength(2)
+      expect(podsNoRecursive.getFiles()).toHaveLength(0)
+      const noRecursiveDirectories = podsNoRecursive.getDirectories()
+      expect(noRecursiveDirectories).toHaveLength(2)
+      expect(noRecursiveDirectories[0].name).toEqual('one')
+      expect(noRecursiveDirectories[1].name).toEqual('two')
+      expect(noRecursiveDirectories[0].content).toHaveLength(0)
+      expect(noRecursiveDirectories[1].content).toHaveLength(0)
+
+      const podsRecursive = await fdp.directory.read(pod, '/', true)
+      expect(podsRecursive.name).toEqual('/')
+      expect(podsRecursive.content).toHaveLength(2)
+      expect(podsRecursive.getFiles()).toHaveLength(0)
+      const recursiveDirectories = podsRecursive.getDirectories()
+      expect(recursiveDirectories).toHaveLength(2)
+      expect(recursiveDirectories[0].getDirectories()).toHaveLength(1)
+      expect(recursiveDirectories[0].getDirectories()[0].name).toEqual('one_1')
+      expect(recursiveDirectories[1].getDirectories()).toHaveLength(1)
+      expect(recursiveDirectories[1].getDirectories()[0].name).toEqual('two_1')
     })
   })
 })

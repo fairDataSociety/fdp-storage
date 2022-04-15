@@ -1,9 +1,9 @@
 import { getFeedData } from '../feed/api'
-import { DirectoryMetadata, FileMetadata } from '../pod/types'
+import { RawDirectoryMetadata, FileMetadata } from '../pod/types'
 import { EthAddress } from '@ethersphere/bee-js/dist/types/utils/eth'
 import { Bee } from '@ethersphere/bee-js'
-import { DirectoryContent } from './directory-content'
 import { combine } from './utils'
+import { DirectoryItem } from './directory-item'
 
 /**
  * Get raw metadata by path
@@ -12,7 +12,7 @@ import { combine } from './utils'
  * @param path path with information
  * @param address Ethereum address of the pod which owns the path
  */
-export async function getMetadata(bee: Bee, path: string, address: EthAddress): Promise<unknown> {
+export async function getRawMetadata(bee: Bee, path: string, address: EthAddress): Promise<unknown> {
   return (await getFeedData(bee, path, address)).data.chunkContent().json()
 }
 
@@ -23,8 +23,12 @@ export async function getMetadata(bee: Bee, path: string, address: EthAddress): 
  * @param path path with information
  * @param address
  */
-export async function getDirectoryMetadata(bee: Bee, path: string, address: EthAddress): Promise<DirectoryMetadata> {
-  return (await getMetadata(bee, path, address)) as Promise<DirectoryMetadata>
+export async function getRawDirectoryMetadata(
+  bee: Bee,
+  path: string,
+  address: EthAddress,
+): Promise<RawDirectoryMetadata> {
+  return (await getRawMetadata(bee, path, address)) as Promise<RawDirectoryMetadata>
 }
 
 /**
@@ -34,8 +38,8 @@ export async function getDirectoryMetadata(bee: Bee, path: string, address: EthA
  * @param path path with information
  * @param address Ethereum address of the pod which owns the path
  */
-export async function getFileMetadata(bee: Bee, path: string, address: EthAddress): Promise<FileMetadata> {
-  return (await getMetadata(bee, path, address)) as Promise<FileMetadata>
+export async function getRawFileMetadata(bee: Bee, path: string, address: EthAddress): Promise<FileMetadata> {
+  return (await getRawMetadata(bee, path, address)) as Promise<FileMetadata>
 }
 
 /**
@@ -51,35 +55,38 @@ export async function readDirectory(
   path: string,
   address: EthAddress,
   isRecursively?: boolean,
-): Promise<DirectoryContent> {
-  const rootDirectoryMetadata = await getDirectoryMetadata(bee, path, address)
-  const directoriesMeta: DirectoryMetadata[] = []
-  const filesMeta: FileMetadata[] = []
+): Promise<DirectoryItem> {
+  const rootRawDirectoryMetadata = await getRawDirectoryMetadata(bee, path, address)
   const fileKey = '_F_'
   const directoryKey = '_D_'
 
-  if (!rootDirectoryMetadata.FileOrDirNames) {
-    return new DirectoryContent(rootDirectoryMetadata, filesMeta, directoriesMeta)
+  const resultDirectoryItem = DirectoryItem.fromRawDirectoryMetadata(rootRawDirectoryMetadata)
+
+  if (!rootRawDirectoryMetadata.FileOrDirNames) {
+    return resultDirectoryItem
   }
 
-  for (let item of rootDirectoryMetadata.FileOrDirNames) {
+  for (let item of rootRawDirectoryMetadata.FileOrDirNames) {
     const isFile = item.startsWith(fileKey)
     const isDirectory = item.startsWith(directoryKey)
 
     if (isFile) {
       item = combine(path, item.substring(fileKey.length))
-      filesMeta.push(await getFileMetadata(bee, item, address))
+      const rawFileMeta = await getRawFileMetadata(bee, item, address)
+      resultDirectoryItem.content.push(DirectoryItem.fromRawFileMetadata(rawFileMeta))
     } else if (isDirectory) {
       item = combine(path, item.substring(directoryKey.length))
-      const directoryMetadata = await getDirectoryMetadata(bee, item, address)
+      const rawDirectoryMetadata = await getRawDirectoryMetadata(bee, item, address)
+
+      const currentMetadata = DirectoryItem.fromRawDirectoryMetadata(rawDirectoryMetadata)
 
       if (isRecursively) {
-        directoryMetadata.content = await readDirectory(bee, item, address, isRecursively)
+        currentMetadata.content = (await readDirectory(bee, item, address, isRecursively)).content
       }
 
-      directoriesMeta.push(directoryMetadata)
+      resultDirectoryItem.content.push(currentMetadata)
     }
   }
 
-  return new DirectoryContent(rootDirectoryMetadata, filesMeta, directoriesMeta)
+  return resultDirectoryItem
 }
