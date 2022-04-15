@@ -5,9 +5,9 @@ import { AccountData } from '../account/account-data'
 import { assertPodNameAvailable, assertPodsLength, createMetadata, metaVersion, podListToBytes } from './utils'
 import { Epoch, getFirstEpoch } from '../feed/lookup/epoch'
 import { getUnixTimestamp } from '../utils/time'
-import { Wallet } from 'ethers'
 import { prepareEthAddress } from '../utils/address'
 import { getPodsList } from './api'
+import { getWalletByIndex } from '../utils/wallet'
 
 export const POD_TOPIC = 'Pods'
 
@@ -68,7 +68,7 @@ export class PersonalStorage {
     const now = getUnixTimestamp()
     const path = '/'
     // create a new key pair from the master mnemonic. This key pair is used as the base key pair for a newly created descendant pod
-    const pathWallet = Wallet.fromMnemonic(wallet.mnemonic.phrase, `m/44'/60'/0'/0/${nextIndex}`)
+    const pathWallet = getWalletByIndex(wallet.mnemonic.phrase, nextIndex)
     const metadata = createMetadata(metaVersion, '', path, now, now, now)
     await writeFeedData(this.accountData.connection, path, metadata, pathWallet.privateKey)
 

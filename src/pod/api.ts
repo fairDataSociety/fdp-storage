@@ -4,7 +4,10 @@ import { LookupAnswer } from '../feed/types'
 import { Pod } from './types'
 import { getFeedData } from '../feed/api'
 import { POD_TOPIC } from './personal-storage'
-import { extractPods, PodsInfo } from './utils'
+import { ExtendedPodsInfo, extractPods, PodsInfo } from './utils'
+import { Wallet } from 'ethers'
+import { prepareEthAddress } from '../utils/address'
+import { getWalletByIndex } from '../utils/wallet'
 
 /**
  * Gets pods list with lookup answer
@@ -27,5 +30,35 @@ export async function getPodsList(bee: Bee, address: EthAddress, options?: Reque
   return {
     pods,
     lookupAnswer,
+  }
+}
+
+/**
+ * Gets pods list with lookup answer and extended info about pod
+ *
+ * @param bee Bee instance
+ * @param podName pod to find
+ * @param wallet Ethereum wallet owns the FDP account
+ * @param downloadOptions request options
+ */
+export async function getExtendedPodsList(
+  bee: Bee,
+  podName: string,
+  wallet: Wallet,
+  downloadOptions?: RequestOptions,
+): Promise<ExtendedPodsInfo> {
+  const podsInfo = await getPodsList(bee, prepareEthAddress(wallet.address), downloadOptions)
+  const pod = podsInfo.pods.find(item => item.name === podName)
+
+  if (!pod) {
+    throw new Error(`Pod "${podName}" does not exist`)
+  }
+
+  const podWallet = getWalletByIndex(wallet.mnemonic.phrase, pod.index)
+
+  return {
+    foundPod: pod,
+    foundPodWallet: podWallet,
+    ...podsInfo,
   }
 }

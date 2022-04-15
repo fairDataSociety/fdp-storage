@@ -1,7 +1,8 @@
-import { Metadata, Pod } from './types'
+import { DirectoryMetadata, Pod } from './types'
 import { Data } from '@ethersphere/bee-js'
 import { stringToBytes } from '../utils/bytes'
 import { LookupAnswer } from '../feed/types'
+import { Wallet } from 'ethers'
 
 export const metaVersion = 1
 export const MAX_PODS_COUNT = 65536
@@ -12,6 +13,24 @@ export const MAX_PODS_COUNT = 65536
 export interface PodsInfo {
   pods: Pod[]
   lookupAnswer: LookupAnswer | undefined
+}
+
+/**
+ * Extended information about pods list and specific pod
+ */
+export interface ExtendedPodsInfo extends PodsInfo {
+  foundPod: Pod
+  foundPodWallet: Wallet
+  pods: Pod[]
+  lookupAnswer: LookupAnswer | undefined
+}
+
+/*
+ * Information about path with filename and path
+ */
+export interface PathInfo {
+  filename: string
+  path: string
 }
 
 /**
@@ -45,15 +64,19 @@ export function createMetadata(
   creationTime: number,
   modificationTime: number,
   accessTime: number,
+  fileOrDirNames?: string[],
 ): Uint8Array {
   const data = JSON.stringify({
-    Version: version,
-    Path: path,
-    Name: name,
-    CreationTime: creationTime,
-    ModificationTime: modificationTime,
-    AccessTime: accessTime,
-  } as Metadata)
+    Meta: {
+      Version: version,
+      Path: path,
+      Name: name,
+      CreationTime: creationTime,
+      ModificationTime: modificationTime,
+      AccessTime: accessTime,
+    },
+    FileOrDirNames: fileOrDirNames ?? null,
+  } as DirectoryMetadata)
 
   return stringToBytes(data)
 }
@@ -90,7 +113,7 @@ export function assertPodNameAvailable(list: Pod[], name: string): void {
  */
 export function podListToBytes(list: Pod[]): Uint8Array {
   if (list.length === 0) {
-    return Buffer.from([0])
+    return new Uint8Array([0])
   }
 
   return stringToBytes(list.map(pod => `${pod.name},${pod.index}`).join('\n') + '\n')
