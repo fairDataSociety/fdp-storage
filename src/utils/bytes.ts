@@ -138,7 +138,5 @@ export function assertFlexBytes<Min extends number, Max extends number = Min>(
  * @param data string data
  */
 export function stringToBytes(data: string): Uint8Array {
-  const enc = new TextEncoder()
-
-  return enc.encode(data)
+  return new TextEncoder().encode(data)
 }

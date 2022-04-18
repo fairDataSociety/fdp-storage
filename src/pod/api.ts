@@ -57,8 +57,9 @@ export async function getExtendedPodsList(
   const podWallet = getWalletByIndex(wallet.mnemonic.phrase, pod.index)
 
   return {
-    foundPod: pod,
-    foundPodWallet: podWallet,
+    pod,
+    podAddress: prepareEthAddress(podWallet.address),
+    podWallet,
     ...podsInfo,
   }
 }

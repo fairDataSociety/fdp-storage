@@ -1,7 +1,6 @@
 import { getExtendedPodsList } from '../pod/api'
-import { prepareEthAddress } from '../utils/address'
 import { AccountData } from '../account/account-data'
-import { readDirectory } from './handler'
+import { createDirectory, readDirectory } from './handler'
 import { assertActiveAccount } from '../account/utils'
 import { DirectoryItem } from './directory-item'
 
@@ -30,8 +29,28 @@ export class Directory {
     return await readDirectory(
       this.accountData.connection.bee,
       path,
-      prepareEthAddress(extendedInfo.foundPodWallet.address),
+      extendedInfo.podAddress,
       isRecursively,
+      this.accountData.connection.options?.downloadOptions,
     )
+  }
+
+  /**
+   * Creates a directory
+   *
+   * @param podName pod where to create a directory
+   * @param path path for a directory
+   */
+  async create(podName: string, path: string): Promise<void> {
+    assertActiveAccount(this.accountData)
+    const downloadOptions = this.accountData.connection.options?.downloadOptions
+    const extendedInfo = await getExtendedPodsList(
+      this.accountData.connection.bee,
+      podName,
+      this.accountData.wallet!,
+      downloadOptions,
+    )
+
+    return await createDirectory(this.accountData.connection, path, extendedInfo.podWallet, downloadOptions)
   }
 }

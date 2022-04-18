@@ -3,6 +3,8 @@ import { Data } from '@ethersphere/bee-js'
 import { stringToBytes } from '../utils/bytes'
 import { LookupAnswer } from '../feed/types'
 import { Wallet } from 'ethers'
+import { EthAddress } from '@ethersphere/bee-js/dist/types/utils/eth'
+import { getRawDirectoryMetadataBytes } from '../file/adapter'
 
 export const metaVersion = 1
 export const MAX_PODS_COUNT = 65536
@@ -19,8 +21,9 @@ export interface PodsInfo {
  * Extended information about pods list and specific pod
  */
 export interface ExtendedPodsInfo extends PodsInfo {
-  foundPod: Pod
-  foundPodWallet: Wallet
+  pod: Pod
+  podWallet: Wallet
+  podAddress: EthAddress
   pods: Pod[]
   lookupAnswer: LookupAnswer | undefined
 }
@@ -55,9 +58,9 @@ export function extractPods(data: Data): Pod[] {
 }
 
 /**
- * Creates metadata in binary format for pod directory
+ * Creates metadata in bytes format for pod directory
  */
-export function createMetadata(
+export function createRawDirectoryMetadata(
   version: number,
   path: string,
   name: string,
@@ -66,7 +69,7 @@ export function createMetadata(
   accessTime: number,
   fileOrDirNames?: string[],
 ): Uint8Array {
-  const data = JSON.stringify({
+  const data: RawDirectoryMetadata = {
     Meta: {
       Version: version,
       Path: path,
@@ -76,9 +79,9 @@ export function createMetadata(
       AccessTime: accessTime,
     },
     FileOrDirNames: fileOrDirNames ?? null,
-  } as RawDirectoryMetadata)
+  }
 
-  return stringToBytes(data)
+  return getRawDirectoryMetadataBytes(data)
 }
 
 /**

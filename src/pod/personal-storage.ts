@@ -2,12 +2,13 @@ import { Pod } from './types'
 import { assertActiveAccount } from '../account/utils'
 import { writeFeedData } from '../feed/api'
 import { AccountData } from '../account/account-data'
-import { assertPodNameAvailable, assertPodsLength, createMetadata, metaVersion, podListToBytes } from './utils'
+import { assertPodNameAvailable, assertPodsLength, podListToBytes } from './utils'
 import { Epoch, getFirstEpoch } from '../feed/lookup/epoch'
 import { getUnixTimestamp } from '../utils/time'
 import { prepareEthAddress } from '../utils/address'
 import { getPodsList } from './api'
 import { getWalletByIndex } from '../utils/wallet'
+import { createRootDirectory } from '../directory/handler'
 
 export const POD_TOPIC = 'Pods'
 
@@ -58,19 +59,14 @@ export class PersonalStorage {
       epoch = getFirstEpoch(currentTime)
     }
 
-    const newPod = { name, index: nextIndex } as Pod
+    const newPod: Pod = { name, index: nextIndex }
     podsInfo.pods.push(newPod)
     const allPodsData = podListToBytes(podsInfo.pods)
     const wallet = this.accountData.wallet!
     // create pod
     await writeFeedData(this.accountData.connection, POD_TOPIC, allPodsData, wallet.privateKey, epoch)
-    // create root directory for pod
-    const now = getUnixTimestamp()
-    const path = '/'
-    // create a new key pair from the master mnemonic. This key pair is used as the base key pair for a newly created descendant pod
-    const pathWallet = getWalletByIndex(wallet.mnemonic.phrase, nextIndex)
-    const metadata = createMetadata(metaVersion, '', path, now, now, now)
-    await writeFeedData(this.accountData.connection, path, metadata, pathWallet.privateKey)
+    const podWallet = getWalletByIndex(wallet.mnemonic.phrase, nextIndex)
+    await createRootDirectory(this.accountData.connection, podWallet.privateKey)
 
     return newPod
   }
