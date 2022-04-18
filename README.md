@@ -88,7 +88,27 @@ const pods = await fdp.personalStorage.list()
 console.log(pods) // prints list of user's pods
 ```
 
-Delete pod
+Creating a directory
+
+```js
+await fdp.directory.create('my-new-pod', 'my-dir')
+```
+
+Uploading a data as a pod file
+
+```js
+await fdp.file.uploadData('my-new-pod', '/myfile.txt', 'Hello world!')
+```
+
+Downloading a data from a file path
+
+```js
+const data = await fdp.file.downloadData('my-new-pod', '/myfile.txt')
+console.log(data.text()) // prints data content in text format 'Hello world!'
+
+```
+
+Deleting a pod
 
 ```js
 await fdp.personalStorage.delete('my-new-pod')
