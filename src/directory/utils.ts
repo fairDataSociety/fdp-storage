@@ -7,7 +7,7 @@ import { MAX_DIRECTORY_NAME_LENGTH } from './handler'
  * @param partTwo second part of path
  */
 export function combine(partOne: string, partTwo: string): string {
-  if (!partOne.endsWith('/')) {
+  if (!partOne.endsWith('/') && partOne !== '') {
     partOne = partOne + '/'
   }
 
