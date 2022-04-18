@@ -100,6 +100,16 @@ Uploading a data as a pod file
 await fdp.file.uploadData('my-new-pod', '/myfile.txt', 'Hello world!')
 ```
 
+Getting list of files and directories with recursion or not
+
+```js
+// with recursion
+const list = await fdp.directory.read('my-new-pod', '/', true)
+// without recursion
+await fdp.directory.read('my-new-pod', '/')
+console.log(list) // prints list of files and directories
+```
+
 Downloading a data from a file path
 
 ```js
