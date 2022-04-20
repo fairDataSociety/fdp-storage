@@ -91,8 +91,7 @@ describe('Fair Data Protocol class - in browser', () => {
         return result
       }, usersList)
 
-      let i = 0
-      for (const createdUser of createdUsers) {
+      for (const [i, createdUser] of createdUsers.entries()) {
         const user = usersList[i] as unknown as TestUser
         expect(createdUser.mnemonic).toEqual(user.mnemonic)
         expect(createdUser.wallet.address).toEqual(user.address)
@@ -100,7 +99,6 @@ describe('Fair Data Protocol class - in browser', () => {
         expect(createdUser.reference).toBeDefined()
         await fairos.userImport(user.username, user.password, '', user.address)
         await fairos.userLogin(user.username, user.password)
-        i++
       }
     })
 
