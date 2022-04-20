@@ -5,7 +5,7 @@ import { beeDebugUrl, beeUrl, fairosJsUrl, generateRandomHexString, generateUser
 import FairosJs from '@fairdatasociety/fairos-js'
 import { prepareEthAddress } from '../utils'
 
-const GET_FEED_DATA_TIMEOUT = 100
+const GET_FEED_DATA_TIMEOUT = 1000
 
 function createFdp() {
   return new FairDataProtocol(beeUrl(), beeDebugUrl(), {
