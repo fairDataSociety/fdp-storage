@@ -110,7 +110,7 @@ await fdp.directory.read('my-new-pod', '/')
 console.log(list) // prints list of files and directories
 ```
 
-Downloading a data from a file path
+Downloading data from a file path
 
 ```js
 const data = await fdp.file.downloadData('my-new-pod', '/myfile.txt')
