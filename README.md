@@ -94,10 +94,10 @@ Creating a directory
 await fdp.directory.create('my-new-pod', 'my-dir')
 ```
 
-Uploading a data as a pod file
+Uploading data as a file into a pod
 
 ```js
-await fdp.file.uploadData('my-new-pod', '/myfile.txt', 'Hello world!')
+await fdp.file.uploadData('my-new-pod', '/my-dir/myfile.txt', 'Hello world!')
 ```
 
 Getting list of files and directories with recursion or not
