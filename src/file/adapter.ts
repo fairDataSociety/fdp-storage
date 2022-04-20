@@ -92,8 +92,6 @@ export function rawFileMetadataToFileMetadata(data: RawFileMetadata): FileMetada
 
 /**
  * Converts FDS file metadata to FairOS file metadata
- *
- * @param data FDS file metadata
  */
 export function fileMetadataToRawFileMetadata(data: FileMetadata): RawFileMetadata {
   return {
