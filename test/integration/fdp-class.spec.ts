@@ -1,5 +1,13 @@
 import { FairDataProtocol } from '../../src'
-import { beeDebugUrl, beeUrl, bytesToString, fairosJsUrl, generateRandomHexString, generateUser } from '../utils'
+import {
+  beeDebugUrl,
+  beeUrl,
+  bytesToString,
+  fairosJsUrl,
+  generateRandomHexString,
+  generateUser,
+  prepareEthAddress,
+} from '../utils'
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import FairosJs from '@fairdatasociety/fairos-js'
