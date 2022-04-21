@@ -36,6 +36,7 @@ export async function downloadData(
   const fileMetadata = await getFileMetadata(bee, fullPath, address, downloadOptions)
 
   if (fileMetadata.compression) {
+    // TODO: implement compression support
     throw new Error('Compressed data is not supported yet')
   }
 
