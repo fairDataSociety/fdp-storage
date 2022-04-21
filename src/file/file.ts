@@ -5,7 +5,7 @@ import { getExtendedPodsList } from '../pod/api'
 import { getUnixTimestamp } from '../utils/time'
 import { stringToBytes } from '../utils/bytes'
 import { AccountData } from '../account/account-data'
-import { extractPathInfo, uploadBytes, assertFullPath } from './utils'
+import { extractPathInfo, uploadBytes, assertFullPathWithName } from './utils'
 import { writeFeedData } from '../feed/api'
 import { addEntryToDirectory, downloadData, generateBlockName } from './handler'
 import { blocksToManifest, getFileMetadataRawBytes } from './adapter'
@@ -30,7 +30,7 @@ export class File {
    */
   async downloadData(podName: string, fullPath: string): Promise<Data> {
     assertActiveAccount(this.accountData)
-    assertFullPath(fullPath)
+    assertFullPathWithName(fullPath)
     const extendedInfo = await getExtendedPodsList(
       this.accountData.connection.bee,
       podName,
@@ -62,7 +62,7 @@ export class File {
   ): Promise<FileMetadata> {
     options = { ...this.defaultUploadOptions, ...options }
     assertActiveAccount(this.accountData)
-    assertFullPath(fullPath)
+    assertFullPathWithName(fullPath)
     data = typeof data === 'string' ? stringToBytes(data) : data
     const extendedInfo = await getExtendedPodsList(
       this.accountData.connection.bee,

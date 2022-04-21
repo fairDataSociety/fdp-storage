@@ -11,7 +11,7 @@ import CryptoJS from 'crypto-js'
  *
  * @param data full path string
  */
-export function assertFullPath(data: string): void {
+export function assertFullPathWithName(data: string): void {
   if (data.length === 0) {
     throw new Error('Path is empty')
   }
@@ -25,10 +25,17 @@ export function assertFullPath(data: string): void {
   }
 
   const exploded = data.split('/')
+
+  if (exploded.length < 2) {
+    throw new Error('Path must contain at least one file or directory name')
+  }
+
   exploded.shift()
 
-  if (exploded.length === 0 || !exploded[exploded.length - 1]) {
-    throw new Error('Path must contain at least one file')
+  const name = exploded.pop()
+
+  if (!name) {
+    throw new Error('File or directory name is empty')
   }
 }
 
@@ -48,9 +55,10 @@ export async function uploadBytes(connection: Connection, data: Uint8Array): Pro
 /**
  * Extracts filename and path from full path
  *
- * @param fullPath full absolute path
+ * @param fullPath full absolute path with filename
  */
 export function extractPathInfo(fullPath: string): PathInfo {
+  assertFullPathWithName(fullPath)
   const exploded = fullPath.split('/')
   const filename = exploded.pop()
 
@@ -58,11 +66,11 @@ export function extractPathInfo(fullPath: string): PathInfo {
     throw new Error('Path must contain a file')
   }
 
-  const path = exploded.length === 1 && exploded[0] === '' ? '/' : exploded.join('/')
+  const path = exploded.join('/')
 
   return {
     filename,
-    path,
+    path: path ? path : '/',
   }
 }
 

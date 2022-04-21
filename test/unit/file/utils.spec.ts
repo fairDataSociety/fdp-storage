@@ -1,5 +1,5 @@
 import { Reference } from '@ethersphere/bee-js'
-import { assertFullPath, extractPathInfo } from '../../../src/file/utils'
+import { assertFullPathWithName, extractPathInfo } from '../../../src/file/utils'
 import { blocksToManifest } from '../../../src/file/adapter'
 import { Blocks } from '../../../src/file/types'
 
@@ -28,7 +28,7 @@ describe('file/utils', () => {
     }
   })
 
-  it('assertFullPath', () => {
+  it('assertFullPathWithName', () => {
     const examples = [
       {
         path: 'a/b/c',
@@ -43,7 +43,7 @@ describe('file/utils', () => {
       {
         path: '/',
         isError: true,
-        error: 'Path must contain at least one file',
+        error: 'File or directory name is empty',
       },
       {
         path: '/a/b/c',
@@ -53,9 +53,9 @@ describe('file/utils', () => {
     for (const example of examples) {
       if (example.isError) {
         expect(example.error).toBeDefined()
-        expect(() => assertFullPath(example.path)).toThrow(example.error)
+        expect(() => assertFullPathWithName(example.path)).toThrow(example.error)
       } else {
-        assertFullPath(example.path)
+        assertFullPathWithName(example.path)
       }
     }
   })
@@ -64,7 +64,11 @@ describe('file/utils', () => {
     const examples = [
       {
         data: '/',
-        error: 'Path must contain a file',
+        error: 'File or directory name is empty',
+      },
+      {
+        data: 'hello',
+        error: 'Path must start with "/"',
       },
       {
         data: '/file.txt',
