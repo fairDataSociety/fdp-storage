@@ -140,3 +140,11 @@ export function assertFlexBytes<Min extends number, Max extends number = Min>(
 ): asserts b is Utils.FlexBytes<Min, Max> {
   return Utils.assertFlexBytes(b, min, max)
 }
+
+export function assertFlexBytes<Min extends number, Max extends number = Min>(
+  b: unknown,
+  min: Min,
+  max: Max,
+): asserts b is Utils.FlexBytes<Min, Max> {
+  return Utils.assertFlexBytes(b, min, max)
+}
