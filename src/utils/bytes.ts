@@ -142,14 +142,3 @@ export function assertFlexBytes<Min extends number, Max extends number = Min>(
 ): asserts b is Utils.FlexBytes<Min, Max> {
   return Utils.assertFlexBytes(b, min, max)
 }
-
-/**
- * Converts string to bytes array
- *
- * @param data string data
- */
-export function stringToBytes(data: string): Uint8Array {
-  const enc = new TextEncoder()
-
-  return enc.encode(data)
-}
