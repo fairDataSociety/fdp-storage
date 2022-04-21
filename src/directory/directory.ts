@@ -11,7 +11,7 @@ export class Directory {
   constructor(private accountData: AccountData) {}
 
   /**
-   * Get files and directories under path with recursion or not
+   * Get files and directories under the given path
    *
    * @param podName pod for content search
    * @param path path to start searching from
