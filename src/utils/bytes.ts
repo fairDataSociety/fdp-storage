@@ -124,14 +124,6 @@ export function makeSpan(length: number): Utils.Bytes<8> {
   return span as Utils.Bytes<8>
 }
 
-export function assertFlexBytes<Min extends number, Max extends number = Min>(
-  b: unknown,
-  min: Min,
-  max: Max,
-): asserts b is Utils.FlexBytes<Min, Max> {
-  return Utils.assertFlexBytes(b, min, max)
-}
-
 /**
  * Converts string to bytes array
  *
@@ -141,4 +133,12 @@ export function stringToBytes(data: string): Uint8Array {
   const enc = new TextEncoder()
 
   return enc.encode(data)
+}
+
+export function assertFlexBytes<Min extends number, Max extends number = Min>(
+  b: unknown,
+  min: Min,
+  max: Max,
+): asserts b is Utils.FlexBytes<Min, Max> {
+  return Utils.assertFlexBytes(b, min, max)
 }
