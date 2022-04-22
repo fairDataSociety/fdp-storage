@@ -99,14 +99,14 @@ export async function readDirectory(
   isRecursive?: boolean,
   downloadOptions?: RequestOptions,
 ): Promise<DirectoryItem> {
-  const rootRawDirectoryMetadata = await getRawDirectoryMetadata(bee, path, address)
-  const resultDirectoryItem = DirectoryItem.fromRawDirectoryMetadata(rootRawDirectoryMetadata)
+  const parentRawDirectoryMetadata = await getRawDirectoryMetadata(bee, path, address)
+  const resultDirectoryItem = DirectoryItem.fromRawDirectoryMetadata(parentRawDirectoryMetadata)
 
-  if (!rootRawDirectoryMetadata.FileOrDirNames) {
+  if (!parentRawDirectoryMetadata.FileOrDirNames) {
     return resultDirectoryItem
   }
 
-  for (let item of rootRawDirectoryMetadata.FileOrDirNames) {
+  for (let item of parentRawDirectoryMetadata.FileOrDirNames) {
     const isFile = item.startsWith(FILE_TOKEN)
     const isDirectory = item.startsWith(DIRECTORY_TOKEN)
 
