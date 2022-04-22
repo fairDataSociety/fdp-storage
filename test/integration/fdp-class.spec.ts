@@ -373,6 +373,7 @@ describe('Fair Data Protocol class', () => {
 
       await fdp.account.register(user.username, user.password, user.mnemonic)
       await fdp.personalStorage.create(pod)
+      await expect(fdp.directory.create(pod, directoryFull1)).rejects.toThrow('Parent directory does not exist')
       await fdp.directory.create(pod, directoryFull)
       await fdp.directory.create(pod, directoryFull1)
       await expect(fdp.directory.create(pod, directoryFull)).rejects.toThrow(
