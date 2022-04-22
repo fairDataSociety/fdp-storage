@@ -2,6 +2,7 @@ import { join } from 'path'
 import {
   beeDebugUrl,
   beeUrl,
+  bytesToString,
   fairosJsUrl,
   generateRandomHexString,
   generateUser,
@@ -15,6 +16,7 @@ import { FairDataProtocol } from '../../src'
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import FairosJs from '@fairdatasociety/fairos-js'
+import { FairOSDirectoryItems } from '../types'
 
 const GET_FEED_DATA_TIMEOUT = 1000
 
@@ -411,6 +413,246 @@ describe('Fair Data Protocol class - in browser', () => {
 
       expect(list).toHaveLength(0)
       expect((await fairos.podLs()).data.pod_name).toHaveLength(0)
+    })
+  })
+
+  describe('Directory', () => {
+    it('should find all directories', async () => {
+      const user = generateUser()
+      const fairos = createFairosJs()
+      const jsonUser = user as unknown as JSONObject
+      const pod = generateRandomHexString()
+      const createDirectories = ['/one', '/two', '/one/one_1', '/two/two_1']
+
+      await page.evaluate(
+        async (user: TestUser, pod: string) => {
+          const fdp = eval(await window.initFdp()) as FairDataProtocol
+          await fdp.account.register(user.username, user.password, user.mnemonic)
+          await fdp.personalStorage.create(pod)
+        },
+        jsonUser,
+        pod,
+      )
+
+      await fairos.userImport(user.username, user.password, '', user.address)
+      await fairos.userLogin(user.username, user.password)
+      await fairos.podOpen(pod, user.password)
+      for (const directory of createDirectories) {
+        await fairos.dirMkdir(pod, directory)
+      }
+
+      const {
+        podsNoRecursive,
+        noRecursiveDirectories,
+        podsRecursive,
+        recursiveDirectories,
+        noRecursiveFiles,
+        recursiveFiles,
+      } = await page.evaluate(
+        async (user: TestUser, pod: string) => {
+          const fdp = eval(await window.initFdp()) as FairDataProtocol
+          await fdp.account.login(user.username, user.password, user.address)
+          const podsNoRecursive = await fdp.directory.read(pod, '/', false)
+          const noRecursiveDirectories = podsNoRecursive.getDirectories()
+          const noRecursiveFiles = podsNoRecursive.getFiles()
+          const podsRecursive = await fdp.directory.read(pod, '/', true)
+          const recursiveDirectories = podsRecursive.getDirectories()
+          const recursiveFiles = podsRecursive.getFiles()
+
+          return {
+            podsNoRecursive,
+            noRecursiveDirectories,
+            noRecursiveFiles,
+            podsRecursive,
+            recursiveDirectories,
+            recursiveFiles,
+          }
+        },
+        jsonUser,
+        pod,
+        createDirectories,
+      )
+
+      expect(podsNoRecursive.name).toEqual('/')
+      expect(podsNoRecursive.content).toHaveLength(2)
+      expect(noRecursiveFiles).toHaveLength(0)
+      expect(noRecursiveDirectories).toHaveLength(2)
+      expect(noRecursiveDirectories[0].name).toEqual('one')
+      expect(noRecursiveDirectories[1].name).toEqual('two')
+      expect(noRecursiveDirectories[0].content).toHaveLength(0)
+      expect(noRecursiveDirectories[1].content).toHaveLength(0)
+      expect(podsRecursive.name).toEqual('/')
+      expect(podsRecursive.content).toHaveLength(2)
+      expect(recursiveFiles).toHaveLength(0)
+      expect(recursiveDirectories).toHaveLength(2)
+      const subDirs1 = recursiveDirectories[0].content.filter(item => item.type === 'directory')
+      const subDirs2 = recursiveDirectories[1].content.filter(item => item.type === 'directory')
+      expect(subDirs1).toHaveLength(1)
+      expect(subDirs1[0].name).toEqual('one_1')
+      expect(subDirs2).toHaveLength(1)
+      expect(subDirs2[0].name).toEqual('two_1')
+    })
+
+    it('should create new directory', async () => {
+      const fairos = createFairosJs()
+      const user = generateUser()
+      const jsonUser = user as unknown as JSONObject
+      const pod = generateRandomHexString()
+      const directoryName = generateRandomHexString()
+      const directoryFull = '/' + directoryName
+      const directoryName1 = generateRandomHexString()
+      const directoryFull1 = '/' + directoryName + '/' + directoryName1
+
+      const { list, directoryInfo, directoryInfo1 } = await page.evaluate(
+        async (user: TestUser, pod: string, directoryFull: string, directoryFull1: string) => {
+          const fdp = eval(await window.initFdp()) as FairDataProtocol
+          eval(await window.shouldFailString())
+
+          await fdp.account.register(user.username, user.password, user.mnemonic)
+          await fdp.personalStorage.create(pod)
+          await window.shouldFail(fdp.directory.create(pod, directoryFull1), 'Parent directory does not exist')
+
+          await fdp.directory.create(pod, directoryFull)
+          await fdp.directory.create(pod, directoryFull1)
+          await window.shouldFail(
+            fdp.directory.create(pod, directoryFull),
+            `Directory "${directoryFull}" already exists`,
+          )
+
+          const list = await fdp.directory.read(pod, '/', true)
+          const directoryInfo = list.content[0]
+          const directoryInfo1 = list.content[0].content[0]
+
+          return {
+            list,
+            directoryInfo,
+            directoryInfo1,
+          }
+        },
+        jsonUser,
+        pod,
+        directoryFull,
+        directoryFull1,
+      )
+
+      expect(list.content).toHaveLength(1)
+      expect(list.content[0].content).toHaveLength(1)
+      expect(directoryInfo.name).toEqual(directoryName)
+      expect(directoryInfo.type).toEqual('directory')
+      expect(directoryInfo1.name).toEqual(directoryName1)
+      expect(directoryInfo1.type).toEqual('directory')
+
+      await fairos.userImport(user.username, user.password, '', user.address)
+      await fairos.userLogin(user.username, user.password)
+      await fairos.podOpen(pod, user.password)
+      const fairosList = (await fairos.dirLs(pod, '/')).data as FairOSDirectoryItems
+      expect(fairosList.dirs).toHaveLength(1)
+      const dir = fairosList.dirs[0]
+      expect(dir.name).toEqual(directoryName)
+    })
+  })
+
+  describe('File', () => {
+    it('should upload small text data as a file', async () => {
+      const fairos = createFairosJs()
+      const user = generateUser()
+      const jsonUser = user as unknown as JSONObject
+
+      const pod = generateRandomHexString()
+      const fileSizeSmall = 100
+      const contentSmall = generateRandomHexString(fileSizeSmall)
+      const filenameSmall = generateRandomHexString() + '.txt'
+      const fullFilenameSmallPath = '/' + filenameSmall
+
+      const { dataSmall, fdpList, fileInfoSmall } = await page.evaluate(
+        async (user: TestUser, pod: string, fullFilenameSmallPath: string, contentSmall: string) => {
+          const fdp = eval(await window.initFdp()) as FairDataProtocol
+          await fdp.account.register(user.username, user.password, user.mnemonic)
+          await fdp.personalStorage.create(pod)
+          await fdp.file.uploadData(pod, fullFilenameSmallPath, contentSmall)
+          const dataSmall = (await fdp.file.downloadData(pod, fullFilenameSmallPath)).text()
+          const fdpList = await fdp.directory.read(pod, '/', true)
+          const fileInfoSmall = fdpList.content[0]
+
+          return {
+            dataSmall,
+            fdpList,
+            fileInfoSmall,
+          }
+        },
+        jsonUser,
+        pod,
+        fullFilenameSmallPath,
+        contentSmall,
+      )
+
+      expect(dataSmall).toEqual(contentSmall)
+      expect(fdpList.content.length).toEqual(1)
+      expect(fileInfoSmall.type).toEqual('file')
+      expect(fileInfoSmall.name).toEqual(filenameSmall)
+      expect(fileInfoSmall.size).toEqual(fileSizeSmall)
+
+      await fairos.userImport(user.username, user.password, '', user.address)
+      await fairos.userLogin(user.username, user.password)
+      await fairos.podOpen(pod, user.password)
+      const list = (await fairos.dirLs(pod, '/')).data as FairOSDirectoryItems
+      expect(list.files).toHaveLength(1)
+      const fairosSmallFile = list.files[0]
+      expect(fairosSmallFile.name).toEqual(filenameSmall)
+      expect(fairosSmallFile.size).toEqual(fileSizeSmall.toString())
+      const dataSmallFairos = (await fairos.fileDownload(pod, fullFilenameSmallPath, filenameSmall)).data
+      expect(bytesToString(dataSmallFairos)).toEqual(contentSmall)
+    })
+
+    it('should upload big text data as a file', async () => {
+      const fairos = createFairosJs()
+      const user = generateUser()
+      const jsonUser = user as unknown as JSONObject
+      const pod = generateRandomHexString()
+      const fileSizeBig = 5000005
+      const contentBig = generateRandomHexString(fileSizeBig)
+      const filenameBig = generateRandomHexString() + '.txt'
+      const fullFilenameBigPath = '/' + filenameBig
+
+      const { dataBig, fdpList, fileInfoBig } = await page.evaluate(
+        async (user: TestUser, pod: string, fullFilenameBigPath: string, contentBig: string) => {
+          const fdp = eval(await window.initFdp()) as FairDataProtocol
+          await fdp.account.register(user.username, user.password, user.mnemonic)
+          await fdp.personalStorage.create(pod)
+          await fdp.file.uploadData(pod, fullFilenameBigPath, contentBig)
+          const dataBig = (await fdp.file.downloadData(pod, fullFilenameBigPath)).text()
+          const fdpList = await fdp.directory.read(pod, '/', true)
+          const fileInfoBig = fdpList.content[0]
+
+          return {
+            dataBig,
+            fdpList,
+            fileInfoBig,
+          }
+        },
+        jsonUser,
+        pod,
+        fullFilenameBigPath,
+        contentBig,
+      )
+
+      expect(dataBig).toEqual(contentBig)
+      expect(fdpList.content.length).toEqual(1)
+      expect(fileInfoBig.type).toEqual('file')
+      expect(fileInfoBig.name).toEqual(filenameBig)
+      expect(fileInfoBig.size).toEqual(fileSizeBig)
+
+      await fairos.userImport(user.username, user.password, '', user.address)
+      await fairos.userLogin(user.username, user.password)
+      await fairos.podOpen(pod, user.password)
+      const list = (await fairos.dirLs(pod, '/')).data as FairOSDirectoryItems
+      expect(list.files).toHaveLength(1)
+
+      const fairosBigFile = list.files[0]
+      expect(fairosBigFile.name).toEqual(filenameBig)
+      expect(fairosBigFile.size).toEqual(fileSizeBig.toString())
+      const dataBigFairos = (await fairos.fileDownload(pod, fullFilenameBigPath, filenameBig)).data
+      expect(bytesToString(dataBigFairos)).toEqual(contentBig)
     })
   })
 })
