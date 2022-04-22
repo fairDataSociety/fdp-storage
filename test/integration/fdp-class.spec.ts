@@ -315,17 +315,7 @@ describe('Fair Data Protocol class', () => {
       await fairos.userImport(user.username, user.password, '', user.address)
       await fairos.userLogin(user.username, user.password)
       await fairos.podOpen(pod, user.password)
-      const list = (await fairos.dirLs(pod, '/')).data as {
-        files: {
-          name: string
-          size: string
-          content_type: string
-          block_size: string
-          creation_time: string
-          modification_time: string
-          access_time: string
-        }[]
-      }
+      const list = (await fairos.dirLs(pod, '/')).data as FairOSDirectoryItems
       expect(list.files).toHaveLength(1)
       const fairosSmallFile = list.files[0]
       expect(fairosSmallFile.name).toEqual(filenameSmall)
