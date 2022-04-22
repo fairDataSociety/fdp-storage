@@ -89,14 +89,14 @@ export async function getFileMetadata(
  * @param bee Bee instance
  * @param path path to start searching from
  * @param address Ethereum address of the pod which owns the path
- * @param isRecursively search with recursion or not
+ * @param isRecursive search with recursion or not
  * @param downloadOptions options for downloading
  */
 export async function readDirectory(
   bee: Bee,
   path: string,
   address: EthAddress,
-  isRecursively?: boolean,
+  isRecursive?: boolean,
   downloadOptions?: RequestOptions,
 ): Promise<DirectoryItem> {
   const rootRawDirectoryMetadata = await getRawDirectoryMetadata(bee, path, address)
@@ -121,8 +121,8 @@ export async function readDirectory(
         await getRawDirectoryMetadata(bee, item, address, downloadOptions),
       )
 
-      if (isRecursively) {
-        currentMetadata.content = (await readDirectory(bee, item, address, isRecursively)).content
+      if (isRecursive) {
+        currentMetadata.content = (await readDirectory(bee, item, address, isRecursive)).content
       }
 
       resultDirectoryItem.content.push(currentMetadata)

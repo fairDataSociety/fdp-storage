@@ -15,9 +15,9 @@ export class Directory {
    *
    * @param podName pod for content search
    * @param path path to start searching from
-   * @param isRecursively search with recursion or not
+   * @param isRecursive search with recursion or not
    */
-  async read(podName: string, path: string, isRecursively?: boolean): Promise<DirectoryItem> {
+  async read(podName: string, path: string, isRecursive?: boolean): Promise<DirectoryItem> {
     assertActiveAccount(this.accountData)
     const extendedInfo = await getExtendedPodsList(
       this.accountData.connection.bee,
@@ -30,7 +30,7 @@ export class Directory {
       this.accountData.connection.bee,
       path,
       extendedInfo.podAddress,
-      isRecursively,
+      isRecursive,
       this.accountData.connection.options?.downloadOptions,
     )
   }
