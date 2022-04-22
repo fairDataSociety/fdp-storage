@@ -15,9 +15,9 @@ export function combine(partOne: string, partTwo: string): string {
 }
 
 /**
- * Splits path to directories parts
+ * Splits path to parts
  *
- * @param path
+ * @param path absolute path
  */
 export function getPathParts(path: string): string[] {
   if (path.length === 0) {
@@ -36,21 +36,25 @@ export function getPathParts(path: string): string[] {
 }
 
 /**
- * Join parts to path
+ * Join parts to path with removing a certain number of parts from the end
  *
- * @param parts
- * @param minusDirectories
+ * @param parts parts of path
+ * @param minusParts hom many parts should be removed
  */
-export function getPathFromParts(parts: string[], minusDirectories: number): string {
+export function getPathFromParts(parts: string[], minusParts = 0): string {
   if (parts.length === 0) {
-    throw new Error('Path is empty')
+    throw new Error('Parts list is empty')
   }
 
-  if (parts.length <= minusDirectories) {
+  if (parts[0] !== '/') {
+    throw new Error('Path parts must start with "/"')
+  }
+
+  if (parts.length <= minusParts) {
     throw new Error('Incorrect parts count')
   }
 
-  return '/' + parts.slice(1, parts.length - minusDirectories).join('/')
+  return '/' + parts.slice(1, parts.length - minusParts).join('/')
 }
 
 /**

@@ -53,7 +53,35 @@ describe('directory/utils', () => {
       {
         data: {
           parts: ['/', 'a', 'b', 'c'],
+          minus: 0,
+        },
+        result: '/a/b/c',
+      },
+      {
+        data: {
+          parts: ['/'],
+          minus: 0,
+        },
+        result: '/',
+      },
+      {
+        data: {
+          parts: ['a', 'b', 'c'],
+          minus: 0,
+        },
+        error: 'Path parts must start with "/"',
+      },
+      {
+        data: {
+          parts: ['/', 'a', 'b', 'c'],
           minus: 4,
+        },
+        error: 'Incorrect parts count',
+      },
+      {
+        data: {
+          parts: ['/'],
+          minus: 1,
         },
         error: 'Incorrect parts count',
       },
@@ -62,7 +90,7 @@ describe('directory/utils', () => {
           parts: [],
           minus: 3,
         },
-        error: 'Path is empty',
+        error: 'Parts list is empty',
       },
     ]
 
