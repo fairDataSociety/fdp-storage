@@ -287,6 +287,43 @@ describe('Fair Data Protocol class', () => {
       expect(recursiveDirectories[1].getDirectories()).toHaveLength(1)
       expect(recursiveDirectories[1].getDirectories()[0].name).toEqual('two_1')
     })
+
+    it('should create new directory', async () => {
+      const fdp = createFdp()
+      const fairos = createFairosJs()
+      const user = generateUser()
+      const pod = generateRandomHexString()
+      const directoryName = generateRandomHexString()
+      const directoryFull = '/' + directoryName
+      const directoryName1 = generateRandomHexString()
+      const directoryFull1 = '/' + directoryName + '/' + directoryName1
+
+      await fdp.account.register(user.username, user.password, user.mnemonic)
+      await fdp.personalStorage.create(pod)
+      await expect(fdp.directory.create(pod, directoryFull1)).rejects.toThrow('Parent directory does not exist')
+      await fdp.directory.create(pod, directoryFull)
+      await fdp.directory.create(pod, directoryFull1)
+      await expect(fdp.directory.create(pod, directoryFull)).rejects.toThrow(
+        `Directory "${directoryFull}" already exists`,
+      )
+      const list = await fdp.directory.read(pod, '/', true)
+      expect(list.content).toHaveLength(1)
+      expect(list.content[0].content).toHaveLength(1)
+      const directoryInfo = list.content[0]
+      const directoryInfo1 = list.content[0].content[0]
+      expect(directoryInfo.name).toEqual(directoryName)
+      expect(directoryInfo.type).toEqual('directory')
+      expect(directoryInfo1.name).toEqual(directoryName1)
+      expect(directoryInfo1.type).toEqual('directory')
+
+      await fairos.userImport(user.username, user.password, '', user.address)
+      await fairos.userLogin(user.username, user.password)
+      await fairos.podOpen(pod, user.password)
+      const fairosList = (await fairos.dirLs(pod, '/')).data as FairOSDirectoryItems
+      expect(fairosList.dirs).toHaveLength(1)
+      const dir = fairosList.dirs[0]
+      expect(dir.name).toEqual(directoryName)
+    })
   })
 
   describe('File', () => {
@@ -357,45 +394,6 @@ describe('Fair Data Protocol class', () => {
       expect(fairosBigFile.size).toEqual(fileSizeBig.toString())
       const dataBigFairos = (await fairos.fileDownload(pod, fullFilenameBigPath, filenameBig)).data
       expect(bytesToString(dataBigFairos)).toEqual(contentBig)
-    })
-  })
-
-  describe('Directory', () => {
-    it('should create new directory', async () => {
-      const fdp = createFdp()
-      const fairos = createFairosJs()
-      const user = generateUser()
-      const pod = generateRandomHexString()
-      const directoryName = generateRandomHexString()
-      const directoryFull = '/' + directoryName
-      const directoryName1 = generateRandomHexString()
-      const directoryFull1 = '/' + directoryName + '/' + directoryName1
-
-      await fdp.account.register(user.username, user.password, user.mnemonic)
-      await fdp.personalStorage.create(pod)
-      await expect(fdp.directory.create(pod, directoryFull1)).rejects.toThrow('Parent directory does not exist')
-      await fdp.directory.create(pod, directoryFull)
-      await fdp.directory.create(pod, directoryFull1)
-      await expect(fdp.directory.create(pod, directoryFull)).rejects.toThrow(
-        `Directory "${directoryFull}" already exists`,
-      )
-      const list = await fdp.directory.read(pod, '/', true)
-      expect(list.content).toHaveLength(1)
-      expect(list.content[0].content).toHaveLength(1)
-      const directoryInfo = list.content[0]
-      const directoryInfo1 = list.content[0].content[0]
-      expect(directoryInfo.name).toEqual(directoryName)
-      expect(directoryInfo.type).toEqual('directory')
-      expect(directoryInfo1.name).toEqual(directoryName1)
-      expect(directoryInfo1.type).toEqual('directory')
-
-      await fairos.userImport(user.username, user.password, '', user.address)
-      await fairos.userLogin(user.username, user.password)
-      await fairos.podOpen(pod, user.password)
-      const fairosList = (await fairos.dirLs(pod, '/')).data as FairOSDirectoryItems
-      expect(fairosList.dirs).toHaveLength(1)
-      const dir = fairosList.dirs[0]
-      expect(dir.name).toEqual(directoryName)
     })
   })
 })
