@@ -609,17 +609,32 @@ describe('Fair Data Protocol class - in browser', () => {
       const user = generateUser()
       const jsonUser = user as unknown as JSONObject
       const pod = generateRandomHexString()
+      const incorrectPod = generateRandomHexString()
       const fileSizeBig = 5000005
       const contentBig = generateRandomHexString(fileSizeBig)
       const filenameBig = generateRandomHexString() + '.txt'
       const fullFilenameBigPath = '/' + filenameBig
+      const incorrectFullPath = fullFilenameBigPath + generateRandomHexString()
 
       const { dataBig, fdpList, fileInfoBig } = await page.evaluate(
-        async (user: TestUser, pod: string, fullFilenameBigPath: string, contentBig: string) => {
+        async (
+          user: TestUser,
+          pod: string,
+          fullFilenameBigPath: string,
+          contentBig: string,
+          incorrectPod: string,
+          incorrectFullPath: string,
+        ) => {
           const fdp = eval(await window.initFdp()) as FairDataProtocol
+          eval(await window.shouldFailString())
           await fdp.account.register(user.username, user.password, user.mnemonic)
           await fdp.personalStorage.create(pod)
+          await window.shouldFail(
+            fdp.file.uploadData(incorrectPod, fullFilenameBigPath, contentBig),
+            `Pod "${incorrectPod}" does not exist`,
+          )
           await fdp.file.uploadData(pod, fullFilenameBigPath, contentBig)
+          await window.shouldFail(fdp.file.downloadData(pod, incorrectFullPath), 'Data not found')
           const dataBig = (await fdp.file.downloadData(pod, fullFilenameBigPath)).text()
           const fdpList = await fdp.directory.read(pod, '/', true)
           const fileInfoBig = fdpList.content[0]
@@ -634,6 +649,8 @@ describe('Fair Data Protocol class - in browser', () => {
         pod,
         fullFilenameBigPath,
         contentBig,
+        incorrectPod,
+        incorrectFullPath,
       )
 
       expect(dataBig).toEqual(contentBig)

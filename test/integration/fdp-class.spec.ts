@@ -366,16 +366,22 @@ describe('Fair Data Protocol class', () => {
       const fairos = createFairosJs()
       const user = generateUser()
       const pod = generateRandomHexString()
+      const incorrectPod = generateRandomHexString()
       const fileSizeBig = 5000005
       const contentBig = generateRandomHexString(fileSizeBig)
       const filenameBig = generateRandomHexString() + '.txt'
       const fullFilenameBigPath = '/' + filenameBig
+      const incorrectFullPath = fullFilenameBigPath + generateRandomHexString()
 
       await fdp.account.register(user.username, user.password, user.mnemonic)
       await fdp.personalStorage.create(pod)
+      await expect(fdp.file.uploadData(incorrectPod, fullFilenameBigPath, contentBig)).rejects.toThrow(
+        `Pod "${incorrectPod}" does not exist`,
+      )
       await fdp.file.uploadData(pod, fullFilenameBigPath, contentBig)
-      const dataBig = await fdp.file.downloadData(pod, fullFilenameBigPath)
-      expect(dataBig.text()).toEqual(contentBig)
+      await expect(fdp.file.downloadData(pod, incorrectFullPath)).rejects.toThrow('Data not found')
+      const dataBig = (await fdp.file.downloadData(pod, fullFilenameBigPath)).text()
+      expect(dataBig).toEqual(contentBig)
       const fdpList = await fdp.directory.read(pod, '/', true)
       expect(fdpList.content.length).toEqual(1)
       const fileInfoBig = fdpList.content[0]
