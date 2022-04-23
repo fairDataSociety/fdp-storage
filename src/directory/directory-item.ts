@@ -2,8 +2,10 @@ import { RawDirectoryMetadata, RawFileMetadata } from '../pod/types'
 import { Reference } from '@ethersphere/bee-js'
 import CryptoJS from 'crypto-js'
 
-export const TYPE_DIRECTORY = 'directory'
-export const TYPE_FILE = 'file'
+export enum DirectoryItemType {
+  directory = 'directory',
+  file = 'file',
+}
 
 /**
  * DirectoryItem is a representation of a directory or file in the pod
@@ -11,7 +13,7 @@ export const TYPE_FILE = 'file'
 export class DirectoryItem {
   constructor(
     public name?: string,
-    public type?: 'directory' | 'file',
+    public type?: DirectoryItemType.directory | DirectoryItemType.file,
     public size?: number,
     public reference?: Reference,
     public raw?: RawFileMetadata | RawDirectoryMetadata,
@@ -22,14 +24,14 @@ export class DirectoryItem {
    * Gets the list of files in the directory
    */
   getFiles(): DirectoryItem[] {
-    return this.content.filter(item => item.type === TYPE_FILE)
+    return this.content.filter(item => item.type === DirectoryItemType.file)
   }
 
   /**
    * Gets the list of directories in the directory
    */
   getDirectories(): DirectoryItem[] {
-    return this.content.filter(item => item.type === TYPE_DIRECTORY)
+    return this.content.filter(item => item.type === DirectoryItemType.directory)
   }
 
   /**
@@ -44,7 +46,7 @@ export class DirectoryItem {
       reference = CryptoJS.enc.Base64.parse(item.file_inode_reference).toString(CryptoJS.enc.Hex) as Reference
     }
 
-    return new DirectoryItem(item.file_name, TYPE_FILE, Number(item.file_size), reference, item)
+    return new DirectoryItem(item.file_name, DirectoryItemType.file, Number(item.file_size), reference, item)
   }
 
   /**
@@ -53,6 +55,6 @@ export class DirectoryItem {
    * @param item raw directory metadata from FairOS
    */
   static fromRawDirectoryMetadata(item: RawDirectoryMetadata): DirectoryItem {
-    return new DirectoryItem(item.Meta.Name, TYPE_DIRECTORY, undefined, undefined, item)
+    return new DirectoryItem(item.Meta.Name, DirectoryItemType.directory, undefined, undefined, item)
   }
 }

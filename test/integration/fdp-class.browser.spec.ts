@@ -17,6 +17,7 @@ import { FairDataProtocol } from '../../src'
 // @ts-ignore
 import FairosJs from '@fairdatasociety/fairos-js'
 import { FairOSDirectoryItems } from '../types'
+import { DirectoryItemType } from '../../src/directory/directory-item'
 
 const GET_FEED_DATA_TIMEOUT = 1000
 
@@ -485,8 +486,8 @@ describe('Fair Data Protocol class - in browser', () => {
       expect(podsRecursive.content).toHaveLength(2)
       expect(recursiveFiles).toHaveLength(0)
       expect(recursiveDirectories).toHaveLength(2)
-      const subDirs1 = recursiveDirectories[0].content.filter(item => item.type === 'directory')
-      const subDirs2 = recursiveDirectories[1].content.filter(item => item.type === 'directory')
+      const subDirs1 = recursiveDirectories[0].content.filter(item => item.type === DirectoryItemType.directory)
+      const subDirs2 = recursiveDirectories[1].content.filter(item => item.type === DirectoryItemType.directory)
       expect(subDirs1).toHaveLength(1)
       expect(subDirs1[0].name).toEqual('one_1')
       expect(subDirs2).toHaveLength(1)
@@ -588,7 +589,7 @@ describe('Fair Data Protocol class - in browser', () => {
 
       expect(dataSmall).toEqual(contentSmall)
       expect(fdpList.content.length).toEqual(1)
-      expect(fileInfoSmall.type).toEqual('file')
+      expect(fileInfoSmall.type).toEqual(DirectoryItemType.file)
       expect(fileInfoSmall.name).toEqual(filenameSmall)
       expect(fileInfoSmall.size).toEqual(fileSizeSmall)
 
@@ -655,7 +656,7 @@ describe('Fair Data Protocol class - in browser', () => {
 
       expect(dataBig).toEqual(contentBig)
       expect(fdpList.content.length).toEqual(1)
-      expect(fileInfoBig.type).toEqual('file')
+      expect(fileInfoBig.type).toEqual(DirectoryItemType.file)
       expect(fileInfoBig.name).toEqual(filenameBig)
       expect(fileInfoBig.size).toEqual(fileSizeBig)
 

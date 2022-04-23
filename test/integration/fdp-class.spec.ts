@@ -12,6 +12,7 @@ import {
 // @ts-ignore
 import FairosJs from '@fairdatasociety/fairos-js'
 import { FairOSDirectoryItems } from '../types'
+import { DirectoryItemType } from '../../src/directory/directory-item'
 
 const GET_FEED_DATA_TIMEOUT = 1000
 
@@ -312,9 +313,9 @@ describe('Fair Data Protocol class', () => {
       const directoryInfo = list.content[0]
       const directoryInfo1 = list.content[0].content[0]
       expect(directoryInfo.name).toEqual(directoryName)
-      expect(directoryInfo.type).toEqual('directory')
+      expect(directoryInfo.type).toEqual(DirectoryItemType.directory)
       expect(directoryInfo1.name).toEqual(directoryName1)
-      expect(directoryInfo1.type).toEqual('directory')
+      expect(directoryInfo1.type).toEqual(DirectoryItemType.directory)
 
       await fairos.userImport(user.username, user.password, '', user.address)
       await fairos.userLogin(user.username, user.password)
@@ -345,7 +346,7 @@ describe('Fair Data Protocol class', () => {
       const fdpList = await fdp.directory.read(pod, '/', true)
       expect(fdpList.content.length).toEqual(1)
       const fileInfoSmall = fdpList.content[0]
-      expect(fileInfoSmall.type).toEqual('file')
+      expect(fileInfoSmall.type).toEqual(DirectoryItemType.file)
       expect(fileInfoSmall.name).toEqual(filenameSmall)
       expect(fileInfoSmall.size).toEqual(fileSizeSmall)
 
@@ -385,7 +386,7 @@ describe('Fair Data Protocol class', () => {
       const fdpList = await fdp.directory.read(pod, '/', true)
       expect(fdpList.content.length).toEqual(1)
       const fileInfoBig = fdpList.content[0]
-      expect(fileInfoBig.type).toEqual('file')
+      expect(fileInfoBig.type).toEqual(DirectoryItemType.file)
       expect(fileInfoBig.name).toEqual(filenameBig)
       expect(fileInfoBig.size).toEqual(fileSizeBig)
 
