@@ -1,4 +1,4 @@
-import { getPathFromParts, getPathParts } from '../../../src/directory/utils'
+import { combine, getPathFromParts, getPathParts } from '../../../src/directory/utils'
 
 describe('directory/utils', () => {
   it('getPathParts', () => {
@@ -100,6 +100,35 @@ describe('directory/utils', () => {
       } else {
         expect(getPathFromParts(example.data.parts, example.data.minus)).toEqual(example.result)
       }
+    }
+  })
+
+  it('combine', () => {
+    const examples = [
+      // root parent + root
+      {
+        data: ['', '/'],
+        result: '/',
+      },
+      // directories + file
+      {
+        data: ['a', 'b', 'c', 'test.txt'],
+        result: '/a/b/c/test.txt',
+      },
+      // root + directory
+      {
+        data: ['/', 'one'],
+        result: '/one',
+      },
+      // parent + directory
+      {
+        data: ['/one', 'one_1'],
+        result: '/one/one_1',
+      },
+    ]
+
+    for (const example of examples) {
+      expect(combine(...example.data)).toEqual(example.result)
     }
   })
 })

@@ -1,17 +1,22 @@
 import { MAX_DIRECTORY_NAME_LENGTH } from './handler'
 
 /**
- * Combine two parts of path to full path
+ * Combine passed parts of path to full path
  *
- * @param partOne first part of path
- * @param partTwo second part of path
+ * @param parts path parts to combine
  */
-export function combine(partOne: string, partTwo: string): string {
-  if (!partOne.endsWith('/') && partOne !== '') {
-    partOne = partOne + '/'
+export function combine(...parts: string[]): string {
+  // remove empty items
+  parts = parts.filter(item => item !== '')
+  // remove slashes if element contains not only slash
+  parts = parts.map(part => (part.length > 1 ? part.replaceAll('/', '') : part))
+
+  // add slash to the start of parts if it is not the first element
+  if (parts[0] !== '/') {
+    parts.unshift('/')
   }
 
-  return partOne + partTwo
+  return getPathFromParts(parts)
 }
 
 /**
