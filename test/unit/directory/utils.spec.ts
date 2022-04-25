@@ -1,4 +1,4 @@
-import { combine, getPathFromParts, getPathParts } from '../../../src/directory/utils'
+import { assertDirectoryName, combine, getPathFromParts, getPathParts } from '../../../src/directory/utils'
 
 describe('directory/utils', () => {
   it('getPathParts', () => {
@@ -129,6 +129,38 @@ describe('directory/utils', () => {
 
     for (const example of examples) {
       expect(combine(...example.data)).toEqual(example.result)
+    }
+  })
+
+  it('assertDirectoryName', () => {
+    const examples = [
+      {
+        data: 'hello',
+      },
+      {
+        data: 'hello ',
+      },
+      {
+        data: ' hello',
+      },
+      {
+        data: 'he  llo',
+      },
+      {
+        data: 'john-doe.txt',
+      },
+      {
+        data: 'john/doe.txt',
+        error: 'Name contains "/" symbol',
+      },
+    ]
+
+    for (const example of examples) {
+      if (example.error) {
+        expect(() => assertDirectoryName(example.data)).toThrow(example.error)
+      } else {
+        assertDirectoryName(example.data)
+      }
     }
   })
 })

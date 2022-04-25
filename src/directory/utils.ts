@@ -83,6 +83,10 @@ export function assertDirectoryName(value: unknown): asserts value is string {
     throw new Error('Name is empty')
   }
 
+  if (name.indexOf('/') > -1) {
+    throw new Error('Name contains "/" symbol')
+  }
+
   if (name.length > MAX_DIRECTORY_NAME_LENGTH) {
     throw new Error('Directory name is too long')
   }
