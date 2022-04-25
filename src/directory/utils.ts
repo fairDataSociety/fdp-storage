@@ -64,10 +64,10 @@ export function getPathFromParts(parts: string[], minusParts = 0): string {
 
 /**
  * Asserts that parts length is correct
- *
- * @param parts
  */
-export function assertPartsLength(parts: string[]): void {
+export function assertPartsLength(value: unknown): asserts value is string[] {
+  const parts = value as string[]
+
   if (parts.length < 2) {
     throw new Error('Can not create directory for root')
   }
@@ -75,10 +75,10 @@ export function assertPartsLength(parts: string[]): void {
 
 /**
  * Asserts that directory name is correct
- *
- * @param name
  */
-export function assertDirectoryName(name: string): void {
+export function assertDirectoryName(value: unknown): asserts value is string {
+  const name = value as string
+
   if (name.length === 0) {
     throw new Error('Name is empty')
   }

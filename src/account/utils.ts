@@ -84,9 +84,11 @@ export function bmtHashBytes(payload: Uint8Array): Utils.Bytes<32> {
 /**
  * Asserts whether non-empty username passed
  *
- * @param data username
+ * @param value FDP username
  */
-export function assertUsername(data: string): void {
+export function assertUsername(value: unknown): asserts value is string {
+  const data = value as string
+
   if (!data) {
     throw new Error('Incorrect username')
   }
@@ -95,9 +97,11 @@ export function assertUsername(data: string): void {
 /**
  * Asserts whether non-empty password passed
  *
- * @param data password
+ * @param value password
  */
-export function assertPassword(data: string): void {
+export function assertPassword(value: unknown): asserts value is string {
+  const data = value as string
+
   if (!data) {
     throw new Error('Incorrect password')
   }
@@ -106,9 +110,10 @@ export function assertPassword(data: string): void {
 /**
  * Asserts whether a valid mnemonic phrase has been passed
  *
- * @param data mnemonic phrase
+ * @param value mnemonic phrase
  */
-export function assertMnemonic(data: string): void {
+export function assertMnemonic(value: unknown): asserts value is string {
+  const data = value as string
   const words = data.split(' ')
 
   if (!(words.length === MNEMONIC_LENGTH && isValidMnemonic(data))) {
@@ -119,9 +124,11 @@ export function assertMnemonic(data: string): void {
 /**
  * Asserts whether an active account is defined
  *
- * @param data instance of AccountData to check
+ * @param value instance of AccountData to check
  */
-export function assertActiveAccount(data: AccountData): void {
+export function assertActiveAccount(value: unknown): asserts value is AccountData {
+  const data = value as AccountData
+
   if (!data.wallet) {
     throw new Error('Active account not found')
   }
@@ -129,10 +136,10 @@ export function assertActiveAccount(data: AccountData): void {
 
 /**
  * Asserts whether string is not empty
- *
- * @param data
  */
-export function assertEmptyString(data: string): void {
+export function assertEmptyString(value: unknown): asserts value is string {
+  const data = value as string
+
   if (data.length === 0) {
     throw new Error('String is empty')
   }
@@ -140,10 +147,9 @@ export function assertEmptyString(data: string): void {
 
 /**
  * Asserts whether Base64Url encoded string is passed
- *
- * @param data
  */
-export function assertBase64UrlData(data: string): void {
+export function assertBase64UrlData(value: unknown): asserts value is string {
+  const data = value as string
   assertEmptyString(data)
 
   if (!/^[-A-Za-z0-9_]+[=]{0,2}$/.test(data)) {

@@ -7,10 +7,10 @@ export function getUnixTimestamp(): number {
 
 /**
  * Asserts unix timestamp
- *
- * @param timestamp
  */
-export function assertUnixTimestamp(timestamp: number): void {
+export function assertUnixTimestamp(value: unknown): asserts value is number {
+  const timestamp = value as number
+
   if (timestamp.toString().length > 10) {
     throw new Error('Timestamp is not a unix timestamp')
   }

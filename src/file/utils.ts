@@ -9,9 +9,11 @@ import CryptoJS from 'crypto-js'
 /**
  * Asserts that full path string is correct
  *
- * @param data full path string
+ * @param value full path string
  */
-export function assertFullPathWithName(data: string): void {
+export function assertFullPathWithName(value: unknown): asserts value is string {
+  const data = value as string
+
   if (data.length === 0) {
     throw new Error('Path is empty')
   }

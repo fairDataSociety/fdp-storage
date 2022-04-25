@@ -87,9 +87,11 @@ export function createRawDirectoryMetadata(
 /**
  * Verifies if pods list length is correct
  *
- * @param length pods list length
+ * @param value pods list length
  */
-export function assertPodsLength(length: number): void {
+export function assertPodsLength(value: unknown): asserts value is number {
+  const length = value as number
+
   if (length > MAX_PODS_COUNT) {
     throw new Error('The maximum number of pods for the account has been reached')
   }
@@ -98,10 +100,11 @@ export function assertPodsLength(length: number): void {
 /**
  * Verifies that name not exists in pods list
  *
- * @param list list of pods
+ * @param value list of pods
  * @param name name of pod
  */
-export function assertPodNameAvailable(list: Pod[], name: string): void {
+export function assertPodNameAvailable(value: unknown, name: string): asserts value is Pod[] {
+  const list = value as Pod[]
   list.forEach(pod => {
     if (pod.name === name) {
       throw new Error(`Pod with name "${name}" already exists`)
