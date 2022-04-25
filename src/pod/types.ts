@@ -10,18 +10,6 @@ export interface Pod {
 }
 
 /**
- * Metadata information for pod directory
- */
-export interface PodMetadata {
-  Version: number
-  Path: string
-  Name: string
-  CreationTime: number
-  ModificationTime: number
-  AccessTime: number
-}
-
-/**
  * Information about a file in FairOS raw format
  */
 export interface RawFileMetadata {
@@ -63,6 +51,13 @@ export interface FileMetadata {
  * Information about a directory
  */
 export interface RawDirectoryMetadata {
-  Meta: PodMetadata
+  Meta: {
+    Version: number
+    Path: string
+    Name: string
+    CreationTime: number
+    ModificationTime: number
+    AccessTime: number
+  }
   FileOrDirNames: string[] | null
 }
