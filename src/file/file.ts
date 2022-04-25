@@ -18,6 +18,7 @@ import { Data } from '@ethersphere/bee-js'
 export class File {
   public readonly defaultUploadOptions: DataUploadOptions = {
     blockSize: 1000000,
+    contentType: '',
   }
 
   constructor(private accountData: AccountData) {}
@@ -96,7 +97,7 @@ export class File {
       fileName: pathInfo.filename,
       fileSize: data.length,
       blockSize: options.blockSize,
-      contentType: '',
+      contentType: options.contentType,
       compression: '',
       creationTime: now,
       accessTime: now,

@@ -8,6 +8,10 @@ export interface DataUploadOptions {
    * Size of blocks in bytes will the file be divided
    */
   blockSize: number
+  /**
+   * Content type of the file
+   */
+  contentType: string
 }
 
 /**
