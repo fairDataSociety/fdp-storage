@@ -12,12 +12,12 @@ export enum DirectoryItemType {
  */
 export class DirectoryItem {
   constructor(
-    public name?: string,
-    public type?: DirectoryItemType.directory | DirectoryItemType.file,
+    public type: DirectoryItemType.directory | DirectoryItemType.file,
+    public name: string,
+    public content: DirectoryItem[] = [],
+    public raw?: RawFileMetadata | RawDirectoryMetadata,
     public size?: number,
     public reference?: Reference,
-    public raw?: RawFileMetadata | RawDirectoryMetadata,
-    public content: DirectoryItem[] = [],
   ) {}
 
   /**
@@ -46,7 +46,7 @@ export class DirectoryItem {
       reference = CryptoJS.enc.Base64.parse(item.file_inode_reference).toString(CryptoJS.enc.Hex) as Reference
     }
 
-    return new DirectoryItem(item.file_name, DirectoryItemType.file, Number(item.file_size), reference, item)
+    return new DirectoryItem(DirectoryItemType.file, item.file_name, [], item, Number(item.file_size), reference)
   }
 
   /**
@@ -55,6 +55,6 @@ export class DirectoryItem {
    * @param item raw directory metadata from FairOS
    */
   static fromRawDirectoryMetadata(item: RawDirectoryMetadata): DirectoryItem {
-    return new DirectoryItem(item.Meta.Name, DirectoryItemType.directory, undefined, undefined, item)
+    return new DirectoryItem(DirectoryItemType.directory, item.Meta.Name, [], item)
   }
 }
