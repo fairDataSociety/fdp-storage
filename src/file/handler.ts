@@ -1,4 +1,4 @@
-import { getFileMetadata, getRawDirectoryMetadata } from '../directory/handler'
+import { getRawDirectoryMetadata, getRawFileMetadata } from '../directory/handler'
 import { getFeedData, writeFeedData } from '../feed/api'
 import { Connection } from '../connection/connection'
 import { wrapBytesWithHelpers } from '../utils/bytes'
@@ -9,6 +9,8 @@ import { Bee, Data, Reference, RequestOptions } from '@ethersphere/bee-js'
 import { EthAddress } from '@ethersphere/bee-js/dist/types/utils/eth'
 import { downloadBlocksManifest } from './utils'
 import { getRawDirectoryMetadataBytes } from '../directory/adapter'
+import { FileMetadata } from '../pod/types'
+import { rawFileMetadataToFileMetadata } from './adapter'
 
 /**
  * File prefix
@@ -18,6 +20,23 @@ export const FILE_TOKEN = '_F_'
  * Directory prefix
  */
 export const DIRECTORY_TOKEN = '_D_'
+
+/**
+ * Get converted metadata by path
+ *
+ * @param bee Bee client
+ * @param path path with information
+ * @param address Ethereum address of the pod which owns the path
+ * @param downloadOptions options for downloading
+ */
+export async function getFileMetadata(
+  bee: Bee,
+  path: string,
+  address: EthAddress,
+  downloadOptions?: RequestOptions,
+): Promise<FileMetadata> {
+  return rawFileMetadataToFileMetadata(await getRawFileMetadata(bee, path, address, downloadOptions))
+}
 
 /**
  * Downloads file parts and compile them into Data
