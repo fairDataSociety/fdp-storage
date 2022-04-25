@@ -4,6 +4,9 @@ import { Reference } from '@ethersphere/bee-js'
  * File upload options
  */
 export interface DataUploadOptions {
+  /**
+   * Size of blocks in bytes will the file be divided
+   */
   blockSize: number
 }
 
