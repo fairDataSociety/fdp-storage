@@ -8,7 +8,7 @@ import { prepareEthAddress } from '../utils/address'
 import { Bee, Data, Reference, RequestOptions } from '@ethersphere/bee-js'
 import { EthAddress } from '@ethersphere/bee-js/dist/types/utils/eth'
 import { downloadBlocksManifest } from './utils'
-import { getRawDirectoryMetadataBytes } from './adapter'
+import { getRawDirectoryMetadataBytes } from '../directory/adapter'
 
 /**
  * File prefix

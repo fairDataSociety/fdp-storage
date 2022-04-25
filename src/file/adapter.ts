@@ -1,5 +1,5 @@
 import { Block, Blocks, RawBlock, RawBlocks } from './types'
-import { FileMetadata, RawDirectoryMetadata, RawFileMetadata } from '../pod/types'
+import { FileMetadata, RawFileMetadata } from '../pod/types'
 import { prepareEthAddress } from '../utils/address'
 import { base64toReference, referenceToBase64 } from './utils'
 import { stringToBytes } from '../utils/bytes'
@@ -118,13 +118,4 @@ export function fileMetadataToRawFileMetadata(data: FileMetadata): RawFileMetada
  */
 export function getFileMetadataRawBytes(data: FileMetadata): Uint8Array {
   return stringToBytes(JSON.stringify(fileMetadataToRawFileMetadata(data)))
-}
-
-/**
- * Converts FairOS raw directory metadata in bytes representation
- *
- * @param data
- */
-export function getRawDirectoryMetadataBytes(data: RawDirectoryMetadata): Uint8Array {
-  return stringToBytes(JSON.stringify(data))
 }

@@ -5,13 +5,14 @@ import { Bee, Reference, RequestOptions } from '@ethersphere/bee-js'
 import { assertDirectoryName, assertPartsLength, combine, getPathFromParts, getPathParts } from './utils'
 import { DirectoryItem } from './directory-item'
 import { DIRECTORY_TOKEN, FILE_TOKEN } from '../file/handler'
-import { getRawDirectoryMetadataBytes, rawFileMetadataToFileMetadata } from '../file/adapter'
+import { rawFileMetadataToFileMetadata } from '../file/adapter'
 import { getUnixTimestamp } from '../utils/time'
 import { createRawDirectoryMetadata, META_VERSION } from '../pod/utils'
 import { Connection } from '../connection/connection'
 import { LookupAnswer } from '../feed/types'
 import { Wallet } from 'ethers'
 import { prepareEthAddress } from '../utils/address'
+import { getRawDirectoryMetadataBytes } from './adapter'
 
 export const MAX_DIRECTORY_NAME_LENGTH = 100
 

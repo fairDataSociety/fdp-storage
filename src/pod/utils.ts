@@ -4,7 +4,7 @@ import { stringToBytes } from '../utils/bytes'
 import { LookupAnswer } from '../feed/types'
 import { Wallet } from 'ethers'
 import { EthAddress } from '@ethersphere/bee-js/dist/types/utils/eth'
-import { getRawDirectoryMetadataBytes } from '../file/adapter'
+import { getRawDirectoryMetadataBytes } from '../directory/adapter'
 
 export const META_VERSION = 1
 export const MAX_PODS_COUNT = 65536
