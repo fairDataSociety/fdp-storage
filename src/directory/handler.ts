@@ -7,7 +7,7 @@ import { DirectoryItem } from './directory-item'
 import { DIRECTORY_TOKEN, FILE_TOKEN } from '../file/handler'
 import { getRawDirectoryMetadataBytes, rawFileMetadataToFileMetadata } from '../file/adapter'
 import { getUnixTimestamp } from '../utils/time'
-import { createRawDirectoryMetadata, metaVersion } from '../pod/utils'
+import { createRawDirectoryMetadata, META_VERSION } from '../pod/utils'
 import { Connection } from '../connection/connection'
 import { LookupAnswer } from '../feed/types'
 import { Wallet } from 'ethers'
@@ -147,7 +147,7 @@ export async function writeDirectoryInfo(
   privateKey: string | Uint8Array,
 ): Promise<Reference> {
   const now = getUnixTimestamp()
-  const metadata = createRawDirectoryMetadata(metaVersion, path, name, now, now, now)
+  const metadata = createRawDirectoryMetadata(META_VERSION, path, name, now, now, now)
 
   return await writeFeedData(connection, combine(path, name), metadata, privateKey)
 }

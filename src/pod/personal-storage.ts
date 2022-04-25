@@ -2,7 +2,7 @@ import { Pod } from './types'
 import { assertActiveAccount } from '../account/utils'
 import { writeFeedData } from '../feed/api'
 import { AccountData } from '../account/account-data'
-import { assertPodNameAvailable, assertPodsLength, podListToBytes } from './utils'
+import { assertPodName, assertPodNameAvailable, assertPodsLength, podListToBytes } from './utils'
 import { Epoch, getFirstEpoch } from '../feed/lookup/epoch'
 import { getUnixTimestamp } from '../utils/time'
 import { prepareEthAddress } from '../utils/address'
@@ -40,6 +40,7 @@ export class PersonalStorage {
   async create(name: string): Promise<Pod> {
     assertActiveAccount(this.accountData)
     name = name.trim()
+    assertPodName(name)
     const podsInfo = await getPodsList(
       this.accountData.connection.bee,
       prepareEthAddress(this.accountData.wallet!.address),

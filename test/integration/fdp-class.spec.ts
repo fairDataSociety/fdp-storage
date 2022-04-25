@@ -13,6 +13,7 @@ import {
 import FairosJs from '@fairdatasociety/fairos-js'
 import { FairOSDirectoryItems } from '../types'
 import { DirectoryItemType } from '../../src/directory/directory-item'
+import { MAX_POD_NAME_LENGTH } from '../../src/pod/utils'
 
 const GET_FEED_DATA_TIMEOUT = 1000
 
@@ -183,6 +184,12 @@ describe('Fair Data Protocol class', () => {
       await fairos.userImport(user.username, user.password, '', user.address)
       await fairos.userLogin(user.username, user.password)
       expect((await fairos.podLs()).data.pod_name).toHaveLength(0)
+
+      const longPodName = generateRandomHexString(MAX_POD_NAME_LENGTH + 1)
+      const commaPodName = generateRandomHexString() + ', ' + generateRandomHexString()
+      await expect(fdp.personalStorage.create(longPodName)).rejects.toThrow('Pod name is too long')
+      await expect(fdp.personalStorage.create(commaPodName)).rejects.toThrow('Pod name cannot contain commas')
+      await expect(fdp.personalStorage.create('')).rejects.toThrow('Pod name is too short')
 
       const examples = [
         { name: generateRandomHexString(), index: 1 },

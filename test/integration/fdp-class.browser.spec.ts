@@ -18,6 +18,7 @@ import { FairDataProtocol } from '../../src'
 import FairosJs from '@fairdatasociety/fairos-js'
 import { FairOSDirectoryItems } from '../types'
 import { DirectoryItemType } from '../../src/directory/directory-item'
+import { MAX_POD_NAME_LENGTH } from '../../src/pod/utils'
 
 const GET_FEED_DATA_TIMEOUT = 1000
 
@@ -272,14 +273,26 @@ describe('Fair Data Protocol class - in browser', () => {
       const user = generateUser()
       const fairos = createFairosJs()
       const jsonUser = user as unknown as JSONObject
+      const longPodName = generateRandomHexString(MAX_POD_NAME_LENGTH + 1)
+      const commaPodName = generateRandomHexString() + ', ' + generateRandomHexString()
 
-      const result = await page.evaluate(async (user: TestUser) => {
-        const fdp = eval(await window.initFdp()) as FairDataProtocol
+      const result = await page.evaluate(
+        async (user: TestUser, longPodName: string, commaPodName: string) => {
+          const fdp = eval(await window.initFdp()) as FairDataProtocol
+          eval(await window.shouldFailString())
 
-        await fdp.account.register(user.username, user.password, user.mnemonic)
+          await fdp.account.register(user.username, user.password, user.mnemonic)
 
-        return await fdp.personalStorage.list()
-      }, jsonUser)
+          await window.shouldFail(fdp.personalStorage.create(longPodName), 'Pod name is too long')
+          await window.shouldFail(fdp.personalStorage.create(commaPodName), 'Pod name cannot contain commas')
+          await window.shouldFail(fdp.personalStorage.create(''), 'Pod name is too short')
+
+          return await fdp.personalStorage.list()
+        },
+        jsonUser,
+        longPodName,
+        commaPodName,
+      )
 
       expect(result).toHaveLength(0)
       await fairos.userImport(user.username, user.password, '', user.address)

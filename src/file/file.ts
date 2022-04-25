@@ -1,6 +1,6 @@
 import { FileMetadata } from '../pod/types'
 import { assertActiveAccount } from '../account/utils'
-import { metaVersion } from '../pod/utils'
+import { META_VERSION } from '../pod/utils'
 import { getExtendedPodsList } from '../pod/api'
 import { getUnixTimestamp } from '../utils/time'
 import { stringToBytes } from '../utils/bytes'
@@ -89,7 +89,7 @@ export class File {
     const manifestBytes = stringToBytes(blocksToManifest(blocks))
     const blocksReference = (await uploadBytes(this.accountData.connection, manifestBytes)).reference
     const meta: FileMetadata = {
-      version: metaVersion,
+      version: META_VERSION,
       userAddress: extendedInfo.podAddress,
       podName,
       filePath: pathInfo.path,

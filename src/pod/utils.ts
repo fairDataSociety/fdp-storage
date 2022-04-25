@@ -6,8 +6,9 @@ import { Wallet } from 'ethers'
 import { EthAddress } from '@ethersphere/bee-js/dist/types/utils/eth'
 import { getRawDirectoryMetadataBytes } from '../file/adapter'
 
-export const metaVersion = 1
+export const META_VERSION = 1
 export const MAX_PODS_COUNT = 65536
+export const MAX_POD_NAME_LENGTH = 25
 
 /**
  * Information about pods list
@@ -110,6 +111,26 @@ export function assertPodNameAvailable(value: unknown, name: string): asserts va
       throw new Error(`Pod with name "${name}" already exists`)
     }
   })
+}
+
+/**
+ * Asserts that pod name is correct
+ */
+export function assertPodName(value: unknown): asserts value is string {
+  const name = value as string
+
+  if (name.length === 0) {
+    throw new Error('Pod name is too short')
+  }
+
+  // because FairOS pod info stored as "podname,index" and does not handle comma shielding
+  if (name.includes(',')) {
+    throw new Error('Pod name cannot contain commas')
+  }
+
+  if (name.length > MAX_POD_NAME_LENGTH) {
+    throw new Error('Pod name is too long')
+  }
 }
 
 /**
