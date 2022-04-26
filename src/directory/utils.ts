@@ -83,7 +83,7 @@ export function assertDirectoryName(value: unknown): asserts value is string {
     throw new Error('Name is empty')
   }
 
-  if (name.indexOf('/') > -1) {
+  if (name.includes('/')) {
     throw new Error('Name contains "/" symbol')
   }
 

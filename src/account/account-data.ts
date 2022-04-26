@@ -116,7 +116,7 @@ export class AccountData {
     } catch (e) {
       const error = e as Error
 
-      if (error.message.indexOf('Conflict: chunk already exists') >= 0) {
+      if (error.message.startsWith('Conflict: chunk already exists')) {
         throw new Error('User already exists')
       } else {
         throw e
