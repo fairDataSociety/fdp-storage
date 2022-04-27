@@ -7,6 +7,7 @@ import {
   generateRandomHexString,
   generateUser,
   prepareEthAddress,
+  isBatchUsable,
 } from '../utils'
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
@@ -38,6 +39,24 @@ describe('Fair Data Protocol class', () => {
     })
     expect(fdp.connection.bee.url).toEqual('http://localhost:1633')
     expect(fdp.connection.beeDebug.url).toEqual('http://localhost:1635')
+  })
+
+  /**
+   * When testing through the Github actionы, sometimes there is not enough time to activate the batch, so here we check its activity
+   */
+  it('check batch usability', async () => {
+    const fdp = createFdp()
+
+    for (let i = 0; i++; i <= 3) {
+      if (await isBatchUsable(fdp.connection.beeDebug)) {
+        break
+      }
+
+      // eslint-disable-next-line no-loop-func
+      await new Promise(resolve => setTimeout(resolve, 5000))
+    }
+
+    expect(await isBatchUsable(fdp.connection.beeDebug)).toBe(true)
   })
 
   describe('Registration', () => {

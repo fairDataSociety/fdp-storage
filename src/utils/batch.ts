@@ -20,3 +20,15 @@ export async function getBatchId(beeDebug: BeeDebug): Promise<string> {
 
   return batchId
 }
+
+/**
+ * Checks default postage batch is usable
+ *
+ * @param beeDebug
+ */
+export async function isBatchUsable(beeDebug: BeeDebug): Promise<boolean> {
+  const batchId = await getBatchId(beeDebug)
+  const batch = await beeDebug.getPostageBatch(batchId)
+
+  return batch.usable
+}
