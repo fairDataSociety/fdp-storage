@@ -7,10 +7,11 @@ import { stringToBytes } from '../utils/bytes'
 import { AccountData } from '../account/account-data'
 import { extractPathInfo, uploadBytes, assertFullPathWithName } from './utils'
 import { writeFeedData } from '../feed/api'
-import { addEntryToDirectory, downloadData, generateBlockName } from './handler'
+import { downloadData, generateBlockName } from './handler'
 import { blocksToManifest, getFileMetadataRawBytes } from './adapter'
 import { Blocks, DataUploadOptions } from './types'
 import { Data } from '@ethersphere/bee-js'
+import { addEntryToDirectory } from '../common/handler'
 
 /**
  * Files management class
@@ -65,11 +66,12 @@ export class File {
     assertActiveAccount(this.accountData)
     assertFullPathWithName(fullPath)
     data = typeof data === 'string' ? stringToBytes(data) : data
+    const connection = this.accountData.connection
     const extendedInfo = await getExtendedPodsList(
-      this.accountData.connection.bee,
+      connection.bee,
       podName,
       this.accountData.wallet!,
-      this.accountData.connection.options?.downloadOptions,
+      connection.options?.downloadOptions,
     )
 
     const pathInfo = extractPathInfo(fullPath)
@@ -78,7 +80,7 @@ export class File {
     const blocks: Blocks = { blocks: [] }
     for (let i = 0; i < blocksCount; i++) {
       const currentBlock = data.slice(i * options.blockSize, (i + 1) * options.blockSize)
-      const result = await uploadBytes(this.accountData.connection, currentBlock)
+      const result = await uploadBytes(connection, currentBlock)
       blocks.blocks.push({
         name: generateBlockName(i),
         size: currentBlock.length,
@@ -88,7 +90,7 @@ export class File {
     }
 
     const manifestBytes = stringToBytes(blocksToManifest(blocks))
-    const blocksReference = (await uploadBytes(this.accountData.connection, manifestBytes)).reference
+    const blocksReference = (await uploadBytes(connection, manifestBytes)).reference
     const meta: FileMetadata = {
       version: META_VERSION,
       userAddress: extendedInfo.podAddress,
@@ -105,20 +107,8 @@ export class File {
       blocksReference,
     }
 
-    await writeFeedData(
-      this.accountData.connection,
-      fullPath,
-      getFileMetadataRawBytes(meta),
-      extendedInfo.podWallet.privateKey,
-    )
-
-    await addEntryToDirectory(
-      this.accountData.connection,
-      extendedInfo.podWallet,
-      pathInfo.path,
-      pathInfo.filename,
-      true,
-    )
+    await addEntryToDirectory(connection, extendedInfo.podWallet, pathInfo.path, pathInfo.filename, true)
+    await writeFeedData(connection, fullPath, getFileMetadataRawBytes(meta), extendedInfo.podWallet.privateKey)
 
     return meta
   }

@@ -1,16 +1,11 @@
-import { getRawDirectoryMetadata, getRawFileMetadata } from '../directory/handler'
-import { getFeedData, writeFeedData } from '../feed/api'
-import { Connection } from '../connection/connection'
+import { getRawMetadata } from '../directory/handler'
 import { wrapBytesWithHelpers } from '../utils/bytes'
-import { getUnixTimestamp } from '../utils/time'
-import { Wallet } from 'ethers'
-import { prepareEthAddress } from '../utils/address'
-import { Bee, Data, Reference, RequestOptions } from '@ethersphere/bee-js'
+import { Bee, Data, RequestOptions } from '@ethersphere/bee-js'
 import { EthAddress } from '@ethersphere/bee-js/dist/types/utils/eth'
 import { downloadBlocksManifest } from './utils'
-import { getRawDirectoryMetadataBytes } from '../directory/adapter'
 import { FileMetadata } from '../pod/types'
 import { rawFileMetadataToFileMetadata } from './adapter'
+import { assertRawFileMetadata } from '../directory/utils'
 
 /**
  * File prefix
@@ -35,7 +30,10 @@ export async function getFileMetadata(
   address: EthAddress,
   downloadOptions?: RequestOptions,
 ): Promise<FileMetadata> {
-  return rawFileMetadataToFileMetadata(await getRawFileMetadata(bee, path, address, downloadOptions))
+  const data = await getRawMetadata(bee, path, address, downloadOptions)
+  assertRawFileMetadata(data)
+
+  return rawFileMetadataToFileMetadata(data)
 }
 
 /**
@@ -78,64 +76,7 @@ export async function downloadData(
 }
 
 /**
- * Add child file or directory to defined parent directory
- *
- * @param connection current connection
- * @param wallet wallet of the pod
- * @param parentPath parent path
- * @param entryPath entry path
- * @param isFile define if entry is file or directory
- */
-export async function addEntryToDirectory(
-  connection: Connection,
-  wallet: Wallet,
-  parentPath: string,
-  entryPath: string,
-  isFile: boolean,
-): Promise<Reference> {
-  if (!parentPath) {
-    throw new Error('Incorrect parent path')
-  }
-
-  if (!entryPath) {
-    throw new Error('Incorrect entry path')
-  }
-
-  const parentData = await getRawDirectoryMetadata(
-    connection.bee,
-    parentPath,
-    prepareEthAddress(wallet.address),
-    connection.options?.downloadOptions,
-  )
-  const itemToAdd = (isFile ? FILE_TOKEN : DIRECTORY_TOKEN) + entryPath
-
-  if (!parentData.FileOrDirNames) {
-    parentData.FileOrDirNames = []
-  }
-
-  parentData.FileOrDirNames.push(itemToAdd)
-  parentData.Meta.ModificationTime = getUnixTimestamp()
-
-  const lookupAnswer = await getFeedData(
-    connection.bee,
-    parentPath,
-    prepareEthAddress(wallet.address),
-    connection.options?.downloadOptions,
-  )
-
-  return await writeFeedData(
-    connection,
-    parentPath,
-    getRawDirectoryMetadataBytes(parentData),
-    wallet.privateKey,
-    lookupAnswer.epoch.getNextEpoch(getUnixTimestamp()),
-  )
-}
-
-/**
  * Generate block name by block number
- *
- * @param blockNumber
  */
 export function generateBlockName(blockNumber: number): string {
   return 'block-' + blockNumber.toString().padStart(5, '0')

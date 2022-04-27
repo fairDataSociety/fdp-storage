@@ -310,9 +310,12 @@ describe('Fair Data Protocol class', () => {
       await fdp.personalStorage.create(pod)
       await expect(fdp.directory.create(pod, directoryFull1)).rejects.toThrow('Parent directory does not exist')
       await fdp.directory.create(pod, directoryFull)
+      await expect(fdp.directory.create(pod, directoryFull)).rejects.toThrow(
+        `Directory "${directoryFull}" already uploaded to the network`,
+      )
       await fdp.directory.create(pod, directoryFull1)
       await expect(fdp.directory.create(pod, directoryFull)).rejects.toThrow(
-        `Directory "${directoryFull}" already exists`,
+        `Directory "${directoryFull}" already uploaded to the network`,
       )
       const list = await fdp.directory.read(pod, '/', true)
       expect(list.content).toHaveLength(1)
@@ -348,6 +351,9 @@ describe('Fair Data Protocol class', () => {
       await fdp.account.register(user.username, user.password, user.mnemonic)
       await fdp.personalStorage.create(pod)
       await fdp.file.uploadData(pod, fullFilenameSmallPath, contentSmall)
+      await expect(fdp.file.uploadData(pod, fullFilenameSmallPath, contentSmall)).rejects.toThrow(
+        `File "${fullFilenameSmallPath}" already uploaded to the network`,
+      )
       const dataSmall = await fdp.file.downloadData(pod, fullFilenameSmallPath)
       expect(dataSmall.text()).toEqual(contentSmall)
       const fdpList = await fdp.directory.read(pod, '/', true)

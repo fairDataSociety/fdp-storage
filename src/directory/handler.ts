@@ -2,16 +2,24 @@ import { getFeedData, writeFeedData } from '../feed/api'
 import { RawDirectoryMetadata, RawFileMetadata } from '../pod/types'
 import { EthAddress } from '@ethersphere/bee-js/dist/types/utils/eth'
 import { Bee, Reference, RequestOptions } from '@ethersphere/bee-js'
-import { assertDirectoryName, assertPartsLength, combine, getPathFromParts, getPathParts } from './utils'
+import {
+  assertDirectoryName,
+  assertPartsLength,
+  assertRawDirectoryMetadata,
+  assertRawFileMetadata,
+  combine,
+  getPathFromParts,
+  getPathParts,
+  isRawDirectoryMetadata,
+  isRawFileMetadata,
+} from './utils'
 import { DirectoryItem } from './directory-item'
 import { DIRECTORY_TOKEN, FILE_TOKEN } from '../file/handler'
 import { getUnixTimestamp } from '../utils/time'
 import { createRawDirectoryMetadata, META_VERSION } from '../pod/utils'
 import { Connection } from '../connection/connection'
-import { LookupAnswer } from '../feed/types'
 import { Wallet } from 'ethers'
-import { prepareEthAddress } from '../utils/address'
-import { getRawDirectoryMetadataBytes } from './adapter'
+import { addEntryToDirectory } from '../common/handler'
 
 export const MAX_DIRECTORY_NAME_LENGTH = 100
 
@@ -28,42 +36,16 @@ export async function getRawMetadata(
   path: string,
   address: EthAddress,
   downloadOptions?: RequestOptions,
-): Promise<unknown> {
-  return (await getFeedData(bee, path, address, downloadOptions)).data.chunkContent().json()
-}
+): Promise<RawDirectoryMetadata | RawFileMetadata> {
+  const data = (await getFeedData(bee, path, address, downloadOptions)).data.chunkContent().json()
 
-/**
- * Get directory metadata by path
- *
- * @param bee Bee client
- * @param path path with information
- * @param address pod address
- * @param downloadOptions options for downloading
- */
-export async function getRawDirectoryMetadata(
-  bee: Bee,
-  path: string,
-  address: EthAddress,
-  downloadOptions?: RequestOptions,
-): Promise<RawDirectoryMetadata> {
-  return (await getRawMetadata(bee, path, address, downloadOptions)) as Promise<RawDirectoryMetadata>
-}
-
-/**
- * Get FairOS metadata by path
- *
- * @param bee Bee client
- * @param path path with information
- * @param address Ethereum address of the pod which owns the path
- * @param downloadOptions options for downloading
- */
-export async function getRawFileMetadata(
-  bee: Bee,
-  path: string,
-  address: EthAddress,
-  downloadOptions?: RequestOptions,
-): Promise<RawFileMetadata> {
-  return (await getRawMetadata(bee, path, address, downloadOptions)) as Promise<RawFileMetadata>
+  if (isRawDirectoryMetadata(data)) {
+    return data as RawDirectoryMetadata
+  } else if (isRawFileMetadata(data)) {
+    return data as RawFileMetadata
+  } else {
+    throw new Error('Invalid metadata')
+  }
 }
 
 /**
@@ -82,7 +64,8 @@ export async function readDirectory(
   isRecursive?: boolean,
   downloadOptions?: RequestOptions,
 ): Promise<DirectoryItem> {
-  const parentRawDirectoryMetadata = await getRawDirectoryMetadata(bee, path, address)
+  const parentRawDirectoryMetadata = await getRawMetadata(bee, path, address)
+  assertRawDirectoryMetadata(parentRawDirectoryMetadata)
   const resultDirectoryItem = DirectoryItem.fromRawDirectoryMetadata(parentRawDirectoryMetadata)
 
   if (!parentRawDirectoryMetadata.FileOrDirNames) {
@@ -95,14 +78,14 @@ export async function readDirectory(
 
     if (isFile) {
       item = combine(path, item.substring(FILE_TOKEN.length))
-      resultDirectoryItem.content.push(
-        DirectoryItem.fromRawFileMetadata(await getRawFileMetadata(bee, item, address, downloadOptions)),
-      )
+      const data = await getRawMetadata(bee, item, address, downloadOptions)
+      assertRawFileMetadata(data)
+      resultDirectoryItem.content.push(DirectoryItem.fromRawFileMetadata(data))
     } else if (isDirectory) {
       item = combine(path, item.substring(DIRECTORY_TOKEN.length))
-      const currentMetadata = DirectoryItem.fromRawDirectoryMetadata(
-        await getRawDirectoryMetadata(bee, item, address, downloadOptions),
-      )
+      const data = await getRawMetadata(bee, item, address, downloadOptions)
+      assertRawDirectoryMetadata(data)
+      const currentMetadata = DirectoryItem.fromRawDirectoryMetadata(data)
 
       if (isRecursive) {
         currentMetadata.content = (await readDirectory(bee, item, address, isRecursive)).content
@@ -149,59 +132,22 @@ export async function createRootDirectory(connection: Connection, privateKey: st
  * Creates directory under the pod
  *
  * @param connection Bee connection
- * @param path path to the directory
+ * @param fullPath path to the directory
  * @param podWallet pod wallet
  * @param downloadOptions options for downloading
  */
 export async function createDirectory(
   connection: Connection,
-  path: string,
+  fullPath: string,
   podWallet: Wallet,
   downloadOptions?: RequestOptions,
 ): Promise<void> {
-  const parts = getPathParts(path)
+  const parts = getPathParts(fullPath)
   assertPartsLength(parts)
   const name = parts[parts.length - 1]
   assertDirectoryName(name)
 
-  const address = prepareEthAddress(podWallet.address)
-  let pathData: LookupAnswer | undefined
-  try {
-    pathData = await getFeedData(connection.bee, path, address, downloadOptions)
-    // eslint-disable-next-line no-empty
-  } catch (e) {}
-
-  if (pathData) {
-    throw new Error(`Directory "${path}" already exists`)
-  }
-
   const parentPath = getPathFromParts(parts, 1)
-  let parentMeta: RawDirectoryMetadata | undefined
-  let parentData: LookupAnswer | undefined
-  try {
-    parentData = await getFeedData(connection.bee, parentPath, address, downloadOptions)
-    parentMeta = parentData.data.chunkContent().json() as unknown as RawDirectoryMetadata
-  } catch (e) {
-    throw new Error('Parent directory does not exist')
-  }
-
-  const addDirectoryName = DIRECTORY_TOKEN + name
-  parentMeta.FileOrDirNames = parentMeta.FileOrDirNames ?? []
-
-  if (parentMeta.FileOrDirNames.includes(addDirectoryName)) {
-    throw new Error('Directory already exists')
-  } else {
-    parentMeta.FileOrDirNames.push(addDirectoryName)
-  }
-
-  parentMeta.Meta.ModificationTime = getUnixTimestamp()
+  await addEntryToDirectory(connection, podWallet, parentPath, name, false, downloadOptions)
   await writeDirectoryInfo(connection, parentPath, name, podWallet.privateKey)
-  // write info to parent
-  await writeFeedData(
-    connection,
-    parentPath,
-    getRawDirectoryMetadataBytes(parentMeta),
-    podWallet.privateKey,
-    parentData.epoch.getNextEpoch(getUnixTimestamp()),
-  )
 }

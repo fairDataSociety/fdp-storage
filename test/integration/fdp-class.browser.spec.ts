@@ -527,10 +527,14 @@ describe('Fair Data Protocol class - in browser', () => {
           await window.shouldFail(fdp.directory.create(pod, directoryFull1), 'Parent directory does not exist')
 
           await fdp.directory.create(pod, directoryFull)
-          await fdp.directory.create(pod, directoryFull1)
           await window.shouldFail(
             fdp.directory.create(pod, directoryFull),
-            `Directory "${directoryFull}" already exists`,
+            `Directory "${directoryFull}" already uploaded to the network`,
+          )
+          await fdp.directory.create(pod, directoryFull1)
+          await window.shouldFail(
+            fdp.directory.create(pod, directoryFull1),
+            `Directory "${directoryFull1}" already uploaded to the network`,
           )
 
           const list = await fdp.directory.read(pod, '/', true)
@@ -581,9 +585,16 @@ describe('Fair Data Protocol class - in browser', () => {
       const { dataSmall, fdpList, fileInfoSmall } = await page.evaluate(
         async (user: TestUser, pod: string, fullFilenameSmallPath: string, contentSmall: string) => {
           const fdp = eval(await window.initFdp()) as FairDataProtocol
+          eval(await window.shouldFailString())
+
           await fdp.account.register(user.username, user.password, user.mnemonic)
           await fdp.personalStorage.create(pod)
           await fdp.file.uploadData(pod, fullFilenameSmallPath, contentSmall)
+          await window.shouldFail(
+            fdp.file.uploadData(pod, fullFilenameSmallPath, contentSmall),
+            `File "${fullFilenameSmallPath}" already uploaded to the network`,
+          )
+
           const dataSmall = (await fdp.file.downloadData(pod, fullFilenameSmallPath)).text()
           const fdpList = await fdp.directory.read(pod, '/', true)
           const fileInfoSmall = fdpList.content[0]

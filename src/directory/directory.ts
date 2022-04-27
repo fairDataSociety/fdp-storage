@@ -39,9 +39,9 @@ export class Directory {
    * Creates a directory
    *
    * @param podName pod where to create a directory
-   * @param path path for a directory
+   * @param fullPath path for a directory
    */
-  async create(podName: string, path: string): Promise<void> {
+  async create(podName: string, fullPath: string): Promise<void> {
     assertActiveAccount(this.accountData)
     const downloadOptions = this.accountData.connection.options?.downloadOptions
     const extendedInfo = await getExtendedPodsList(
@@ -51,6 +51,6 @@ export class Directory {
       downloadOptions,
     )
 
-    return await createDirectory(this.accountData.connection, path, extendedInfo.podWallet, downloadOptions)
+    return await createDirectory(this.accountData.connection, fullPath, extendedInfo.podWallet, downloadOptions)
   }
 }
