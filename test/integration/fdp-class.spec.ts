@@ -47,7 +47,7 @@ describe('Fair Data Protocol class', () => {
   it('check batch usability', async () => {
     const fdp = createFdp()
 
-    for (let i = 0; i++; i <= 3) {
+    for (let i = 0; i <= 10; i++) {
       if (await isBatchUsable(fdp.connection.beeDebug)) {
         break
       }
