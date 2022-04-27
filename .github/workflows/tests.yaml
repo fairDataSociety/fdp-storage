@@ -47,9 +47,9 @@ jobs:
       # Setup Bee environment
       - name: Start Bee Factory environment
         run: |
-          git clone --depth=1 https://github.com/ethersphere/bee-factory.git
+          git clone --depth=1 https://github.com/fairDataSociety/bee-factory.git
           chmod +x -R ./bee-factory/scripts
-          ./bee-factory/scripts/environment.sh start --detach --workers=$WORKERS
+          ./bee-factory/scripts/environment.sh start --fairos --detach --workers=$WORKERS
 
       ## Try getting the node modules from cache, if failed npm ci
       - uses: actions/cache@v2
@@ -97,9 +97,9 @@ jobs:
       # Setup Bee environment
       - name: Start Bee Factory environment
         run: |
-          git clone --depth=1 https://github.com/ethersphere/bee-factory.git
+          git clone --depth=1 https://github.com/fairDataSociety/bee-factory.git
           chmod +x -R ./bee-factory/scripts
-          ./bee-factory/scripts/environment.sh start --detach --workers=$WORKERS
+          ./bee-factory/scripts/environment.sh start --fairos --detach --workers=$WORKERS
 
       ## Try getting the node modules from cache, if failed npm ci
       - uses: actions/cache@v2
