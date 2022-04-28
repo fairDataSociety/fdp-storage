@@ -1,6 +1,7 @@
 import { Wallet } from 'ethers'
 import crypto from 'crypto'
-import { Utils } from '@ethersphere/bee-js'
+import { BeeDebug, Utils } from '@ethersphere/bee-js'
+import { getBatchId } from '../src/utils/batch'
 
 export interface TestUser {
   username: string
@@ -79,10 +80,13 @@ export function numbersToSegment(numbers: number[]): Utils.Bytes<32> {
 }
 
 /**
- * Converts bytes to string
+ * Checks default postage batch is usable
  *
- * @param data
+ * @param beeDebug
  */
-export function bytesToString(data: Uint8Array): string {
-  return new TextDecoder().decode(data)
+export async function isBatchUsable(beeDebug: BeeDebug): Promise<boolean> {
+  const batchId = await getBatchId(beeDebug)
+  const batch = await beeDebug.getPostageBatch(batchId)
+
+  return batch.usable
 }
