@@ -1,7 +1,5 @@
 /**
  * Asserts that the given value is a number
- *
- * @param value
  */
 export function assertNumber(value: unknown): asserts value is number {
   if (!isNumber(value)) {
@@ -11,8 +9,6 @@ export function assertNumber(value: unknown): asserts value is number {
 
 /**
  * Asserts that the given value is a string
- *
- * @param value
  */
 export function assertString(value: unknown): asserts value is string {
   if (!isString(value)) {

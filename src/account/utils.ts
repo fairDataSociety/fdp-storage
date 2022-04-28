@@ -56,7 +56,6 @@ export function extractChunkContent(data: Data): Data {
 /**
  * Calculate a Binary Merkle Tree hash for a string
  *
- * @param stringData
  * @returns the keccak256 hash in a byte array
  */
 export function bmtHashString(stringData: string): Utils.Bytes<32> {
@@ -68,7 +67,6 @@ export function bmtHashString(stringData: string): Utils.Bytes<32> {
 /**
  * Calculate a Binary Merkle Tree hash for a bytes array
  *
- * @param payload
  * @returns the keccak256 hash in a byte array
  */
 export function bmtHashBytes(payload: Uint8Array): Utils.Bytes<32> {
