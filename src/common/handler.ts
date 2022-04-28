@@ -74,7 +74,7 @@ export async function addEntryToDirectory(
   parentData.FileOrDirNames.push(itemToAdd)
   parentData.Meta.ModificationTime = getUnixTimestamp()
 
-  return await writeFeedData(
+  return writeFeedData(
     connection,
     parentPath,
     getRawDirectoryMetadataBytes(parentData),

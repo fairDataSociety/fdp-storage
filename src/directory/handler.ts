@@ -115,7 +115,7 @@ export async function writeDirectoryInfo(
   const now = getUnixTimestamp()
   const metadata = createRawDirectoryMetadata(META_VERSION, path, name, now, now, now)
 
-  return await writeFeedData(connection, combine(path, name), metadata, privateKey)
+  return writeFeedData(connection, combine(path, name), metadata, privateKey)
 }
 
 /**

@@ -26,7 +26,7 @@ export class Directory {
       this.accountData.connection.options?.downloadOptions,
     )
 
-    return await readDirectory(
+    return readDirectory(
       this.accountData.connection.bee,
       path,
       extendedInfo.podAddress,
@@ -51,6 +51,6 @@ export class Directory {
       downloadOptions,
     )
 
-    return await createDirectory(this.accountData.connection, fullPath, extendedInfo.podWallet, downloadOptions)
+    return createDirectory(this.accountData.connection, fullPath, extendedInfo.podWallet, downloadOptions)
   }
 }
