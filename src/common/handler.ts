@@ -11,7 +11,7 @@ import { assertRawDirectoryMetadata, combine } from '../directory/utils'
 import { RawDirectoryMetadata } from '../pod/types'
 
 /**
- * Add child file or directory to defined parent directory
+ * Add child file or directory to a defined parent directory
  *
  * @param connection current connection
  * @param wallet wallet of the pod
