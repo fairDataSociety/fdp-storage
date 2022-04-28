@@ -1,6 +1,6 @@
 import { MAX_DIRECTORY_NAME_LENGTH } from './handler'
 import { RawDirectoryMetadata, RawFileMetadata } from '../pod/types'
-import { isNumber, isString } from '../utils/type'
+import { assertString, isNumber, isString } from '../utils/type'
 
 /**
  * Combine passed parts of path to full path
@@ -79,17 +79,17 @@ export function assertPartsLength(value: unknown): asserts value is string[] {
  * Asserts that directory name is correct
  */
 export function assertDirectoryName(value: unknown): asserts value is string {
-  const name = value as string
+  assertString(value)
 
-  if (name.length === 0) {
+  if (value.length === 0) {
     throw new Error('Name is empty')
   }
 
-  if (name.includes('/')) {
+  if (value.includes('/')) {
     throw new Error('Name contains "/" symbol')
   }
 
-  if (name.length > MAX_DIRECTORY_NAME_LENGTH) {
+  if (value.length > MAX_DIRECTORY_NAME_LENGTH) {
     throw new Error('Directory name is too long')
   }
 }

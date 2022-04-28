@@ -4,6 +4,7 @@ import { makeSpan, stringToBytes, wrapBytesWithHelpers } from '../utils/bytes'
 import { AccountData } from './account-data'
 import { isValidMnemonic } from 'ethers/lib/utils'
 import CryptoJS from 'crypto-js'
+import { assertString } from '../utils/type'
 
 export const MNEMONIC_LENGTH = 12
 export const MAX_CHUNK_LENGTH = 4096
@@ -87,9 +88,9 @@ export function bmtHashBytes(payload: Uint8Array): Utils.Bytes<32> {
  * @param value FDP username
  */
 export function assertUsername(value: unknown): asserts value is string {
-  const data = value as string
+  assertString(value)
 
-  if (!data) {
+  if (!value) {
     throw new Error('Incorrect username')
   }
 }
@@ -100,9 +101,9 @@ export function assertUsername(value: unknown): asserts value is string {
  * @param value password
  */
 export function assertPassword(value: unknown): asserts value is string {
-  const data = value as string
+  assertString(value)
 
-  if (!data) {
+  if (!value) {
     throw new Error('Incorrect password')
   }
 }
@@ -113,10 +114,10 @@ export function assertPassword(value: unknown): asserts value is string {
  * @param value mnemonic phrase
  */
 export function assertMnemonic(value: unknown): asserts value is string {
-  const data = value as string
-  const words = data.split(' ')
+  assertString(value)
+  const words = value.split(' ')
 
-  if (!(words.length === MNEMONIC_LENGTH && isValidMnemonic(data))) {
+  if (!(words.length === MNEMONIC_LENGTH && isValidMnemonic(value))) {
     throw new Error('Incorrect mnemonic')
   }
 }
@@ -138,9 +139,9 @@ export function assertActiveAccount(value: unknown): asserts value is AccountDat
  * Asserts whether string is not empty
  */
 export function assertEmptyString(value: unknown): asserts value is string {
-  const data = value as string
+  assertString(value)
 
-  if (data.length === 0) {
+  if (value.length === 0) {
     throw new Error('String is empty')
   }
 }
@@ -149,10 +150,10 @@ export function assertEmptyString(value: unknown): asserts value is string {
  * Asserts whether Base64Url encoded string is passed
  */
 export function assertBase64UrlData(value: unknown): asserts value is string {
-  const data = value as string
-  assertEmptyString(data)
+  assertString(value)
+  assertEmptyString(value)
 
-  if (!/^[-A-Za-z0-9_]+[=]{0,2}$/.test(data)) {
+  if (!/^[-A-Za-z0-9_]+[=]{0,2}$/.test(value)) {
     throw new Error('Incorrect symbols in Base64Url data')
   }
 }

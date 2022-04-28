@@ -5,6 +5,7 @@ import { LookupAnswer } from '../feed/types'
 import { Wallet } from 'ethers'
 import { EthAddress } from '@ethersphere/bee-js/dist/types/utils/eth'
 import { getRawDirectoryMetadataBytes } from '../directory/adapter'
+import { assertNumber, assertString } from '../utils/type'
 
 export const META_VERSION = 1
 export const MAX_PODS_COUNT = 65536
@@ -91,9 +92,9 @@ export function createRawDirectoryMetadata(
  * @param value pods list length
  */
 export function assertPodsLength(value: unknown): asserts value is number {
-  const length = value as number
+  assertNumber(value)
 
-  if (length > MAX_PODS_COUNT) {
+  if (value > MAX_PODS_COUNT) {
     throw new Error('The maximum number of pods for the account has been reached')
   }
 }
@@ -117,18 +118,18 @@ export function assertPodNameAvailable(value: unknown, name: string): asserts va
  * Asserts that pod name is correct
  */
 export function assertPodName(value: unknown): asserts value is string {
-  const name = value as string
+  assertString(value)
 
-  if (name.length === 0) {
+  if (value.length === 0) {
     throw new Error('Pod name is too short')
   }
 
   // because FairOS pod info stored as "podname,index" and does not handle comma shielding
-  if (name.includes(',')) {
+  if (value.includes(',')) {
     throw new Error('Pod name cannot contain commas')
   }
 
-  if (name.length > MAX_POD_NAME_LENGTH) {
+  if (value.length > MAX_POD_NAME_LENGTH) {
     throw new Error('Pod name is too long')
   }
 }

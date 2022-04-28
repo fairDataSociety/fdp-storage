@@ -5,6 +5,7 @@ import { PathInfo } from '../pod/utils'
 import { Blocks, RawBlocks } from './types'
 import { rawBlocksToBlocks } from './adapter'
 import CryptoJS from 'crypto-js'
+import { assertString } from '../utils/type'
 
 /**
  * Asserts that full path string is correct
@@ -12,21 +13,21 @@ import CryptoJS from 'crypto-js'
  * @param value full path string
  */
 export function assertFullPathWithName(value: unknown): asserts value is string {
-  const data = value as string
+  assertString(value)
 
-  if (data.length === 0) {
+  if (value.length === 0) {
     throw new Error('Path is empty')
   }
 
-  if (data.trim().length !== data.length) {
+  if (value.trim().length !== value.length) {
     throw new Error('Path to contain characters that can be truncated')
   }
 
-  if (data[0] !== '/') {
+  if (value[0] !== '/') {
     throw new Error('Path must start with "/"')
   }
 
-  const exploded = data.split('/')
+  const exploded = value.split('/')
 
   if (exploded.length < 2) {
     throw new Error('Path must contain at least one file or directory name')
