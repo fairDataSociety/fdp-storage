@@ -2,7 +2,7 @@ import { RawDirectoryMetadata } from '../pod/types'
 import { stringToBytes } from '../utils/bytes'
 
 /**
- * Converts FairOS raw directory metadata in bytes representation
+ * Converts FairOS raw directory metadata to bytes representation
  *
  * @param data
  */
