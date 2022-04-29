@@ -106,8 +106,9 @@ export function assertPodsLength(value: unknown): asserts value is number {
  * @param name name of pod
  */
 export function assertPodNameAvailable(value: unknown, name: string): asserts value is Pod[] {
-  const list = value as Pod[]
-  list.forEach(pod => {
+  assertPods(value)
+
+  value.forEach(pod => {
     if (pod.name === name) {
       throw new Error(`Pod with name "${name}" already exists`)
     }
