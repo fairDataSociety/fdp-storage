@@ -5,7 +5,7 @@ import { LookupAnswer } from '../feed/types'
 import { Wallet } from 'ethers'
 import { EthAddress } from '@ethersphere/bee-js/dist/types/utils/eth'
 import { getRawDirectoryMetadataBytes } from '../directory/adapter'
-import { assertNumber, assertString } from '../utils/type'
+import { assertNumber, assertString, isNumber, isString } from '../utils/type'
 
 export const META_VERSION = 1
 export const MAX_PODS_COUNT = 65536
@@ -140,9 +140,38 @@ export function assertPodName(value: unknown): asserts value is string {
  * @param list list of pods
  */
 export function podListToBytes(list: Pod[]): Uint8Array {
+  assertPods(list)
+
   if (list.length === 0) {
     return new Uint8Array([0])
   }
 
   return stringToBytes(list.map(pod => `${pod.name},${pod.index}`).join('\n') + '\n')
+}
+
+/**
+ * Pod guard
+ */
+export function isPod(value: unknown): value is Pod {
+  const { name, index } = value as Pod
+
+  return typeof value === 'object' && value !== null && isString(name) && isNumber(index)
+}
+
+/**
+ * Asserts that pod is correct
+ */
+export function assertPod(value: unknown): asserts value is Pod {
+  if (!isPod(value)) {
+    throw new Error('Invalid pod')
+  }
+}
+
+/**
+ * Asserts that pods are correct
+ */
+export function assertPods(value: unknown): asserts value is Pod[] {
+  for (const pod of value as Pod[]) {
+    assertPod(pod)
+  }
 }
