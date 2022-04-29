@@ -99,14 +99,14 @@ export async function readDirectory(
 }
 
 /**
- * Writes directory metadata for a given directory path
+ * Creates directory metadata for a given directory path and upload it to the network
  *
  * @param connection Bee connection
  * @param path parent path
  * @param name name of the directory
  * @param privateKey private key of the pod
  */
-export async function writeDirectoryInfo(
+export async function createDirectoryInfo(
   connection: Connection,
   path: string,
   name: string,
@@ -125,7 +125,7 @@ export async function writeDirectoryInfo(
  * @param privateKey private key of the pod
  */
 export async function createRootDirectory(connection: Connection, privateKey: string | Uint8Array): Promise<Reference> {
-  return writeDirectoryInfo(connection, '', '/', privateKey)
+  return createDirectoryInfo(connection, '', '/', privateKey)
 }
 
 /**
@@ -149,5 +149,5 @@ export async function createDirectory(
 
   const parentPath = getPathFromParts(parts, 1)
   await addEntryToDirectory(connection, podWallet, parentPath, name, false, downloadOptions)
-  await writeDirectoryInfo(connection, parentPath, name, podWallet.privateKey)
+  await createDirectoryInfo(connection, parentPath, name, podWallet.privateKey)
 }
