@@ -20,13 +20,12 @@ export interface PodsInfo {
 }
 
 /**
- * Extended information about pods list and specific pod
+ * Extended information about specific pod
  */
-export interface ExtendedPodsInfo extends PodsInfo {
+export interface ExtendedPodInfo {
   pod: Pod
   podWallet: Wallet
   podAddress: EthAddress
-  pods: Pod[]
   lookupAnswer: LookupAnswer | undefined
 }
 

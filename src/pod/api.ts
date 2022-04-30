@@ -4,7 +4,7 @@ import { LookupAnswer } from '../feed/types'
 import { Pod } from './types'
 import { getFeedData } from '../feed/api'
 import { POD_TOPIC } from './personal-storage'
-import { ExtendedPodsInfo, extractPods, PodsInfo } from './utils'
+import { ExtendedPodInfo, extractPods, PodsInfo } from './utils'
 import { Wallet } from 'ethers'
 import { prepareEthAddress } from '../utils/address'
 import { getWalletByIndex } from '../utils/wallet'
@@ -46,7 +46,7 @@ export async function getExtendedPodsList(
   podName: string,
   wallet: Wallet,
   downloadOptions?: RequestOptions,
-): Promise<ExtendedPodsInfo> {
+): Promise<ExtendedPodInfo> {
   const podsInfo = await getPodsList(bee, prepareEthAddress(wallet.address), downloadOptions)
   const pod = podsInfo.pods.find(item => item.name === podName)
 
@@ -60,6 +60,6 @@ export async function getExtendedPodsList(
     pod,
     podAddress: prepareEthAddress(podWallet.address),
     podWallet,
-    ...podsInfo,
+    lookupAnswer: podsInfo.lookupAnswer,
   }
 }
