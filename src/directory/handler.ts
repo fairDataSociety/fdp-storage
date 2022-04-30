@@ -13,13 +13,13 @@ import {
   isRawDirectoryMetadata,
   isRawFileMetadata,
 } from './utils'
-import { DirectoryItem } from './directory-item'
+import { DirectoryItem } from '../directory-items/directory-item'
 import { DIRECTORY_TOKEN, FILE_TOKEN } from '../file/handler'
 import { getUnixTimestamp } from '../utils/time'
 import { createRawDirectoryMetadata, META_VERSION } from '../pod/utils'
 import { Connection } from '../connection/connection'
 import { Wallet } from 'ethers'
-import { addEntryToDirectory } from '../common/handler'
+import { addEntryToDirectory } from '../directory-items/handler'
 
 export const MAX_DIRECTORY_NAME_LENGTH = 100
 

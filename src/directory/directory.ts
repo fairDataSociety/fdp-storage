@@ -2,7 +2,7 @@ import { getExtendedPodsList } from '../pod/api'
 import { AccountData } from '../account/account-data'
 import { createDirectory, readDirectory } from './handler'
 import { assertActiveAccount } from '../account/utils'
-import { DirectoryItem } from './directory-item'
+import { DirectoryItem } from '../directory-items/directory-item'
 
 /**
  * Directory related class

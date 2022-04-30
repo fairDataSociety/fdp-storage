@@ -12,7 +12,7 @@ import {
 // @ts-ignore
 import FairosJs from '@fairdatasociety/fairos-js'
 import { FairOSDirectoryItems } from '../types'
-import { DirectoryItemType } from '../../src/directory/directory-item'
+import { DirectoryItemType } from '../../src/directory-items/directory-item'
 import { MAX_POD_NAME_LENGTH } from '../../src/pod/utils'
 
 const GET_FEED_DATA_TIMEOUT = 1000
