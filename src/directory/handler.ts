@@ -106,7 +106,7 @@ export async function readDirectory(
  * @param name name of the directory
  * @param privateKey private key of the pod
  */
-export async function createDirectoryInfo(
+async function createDirectoryInfo(
   connection: Connection,
   path: string,
   name: string,
