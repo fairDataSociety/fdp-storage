@@ -1,4 +1,4 @@
-# Fair Data Protocol (FDP)
+# Fair Data Protocol Storage
 
 > Typescript implementation of https://github.com/fairDataSociety/fairOS-dfs
 
@@ -23,13 +23,13 @@
 ### npm
 
 ```sh
-> npm install @fairdatasociety/fair-data-protocol --save
+> npm install @fairdatasociety/fdp-storage --save
 ```
 
 ### yarn
 
 ```sh
-> yarn add @fairdatasociety/fair-data-protocol
+> yarn add @fairdatasociety/fdp-storage
 ```
 
 ### Use in Node.js
@@ -37,13 +37,13 @@
 **We require Node.js's version of at least 16.x**
 
 ```js
-const FDP = require('@fairdatasociety/fair-data-protocol');
+const FDP = require('@fairdatasociety/fdp-storage');
 ```
 
 ### Use in a browser with browserify, webpack or any other bundler
 
 ```js
-const FDP = require('@fairdatasociety/fair-data-protocol');
+const FDP = require('@fairdatasociety/fdp-storage');
 ```
 
 ### Use in a browser Using a script tag
@@ -51,7 +51,7 @@ const FDP = require('@fairdatasociety/fair-data-protocol');
 Loading this module through a script tag will make the `fdp` object available in the global namespace.
 
 ```html
-<script src="https://unpkg.com/@fairdatasociety/fair-data-protocol/dist/index.browser.min.js"></script>
+<script src="https://unpkg.com/@fairdatasociety/fdp-storage/dist/index.browser.min.js"></script>
 ```
 
 ## Usage
@@ -59,9 +59,9 @@ Loading this module through a script tag will make the `fdp` object available in
 Creating FDP account
 
 ```js
-import { FairDataProtocol } from '@fairdatasociety/fair-data-protocol'
+import { FDPStorage } from '@fairdatasociety/fdp-storage'
 
-const fdp = new FairDataProtocol('http://localhost:1633', 'http://localhost:1635')
+const fdp = new FDPStorage('http://localhost:1633', 'http://localhost:1635')
 
 const account = await fdp.account.register('myusername', 'mypassword')
 console.log(account) // prints account information
@@ -138,7 +138,7 @@ The generated docs can be viewed in browser by opening `./docs/index.html`
 
 There are some ways you can make this module better:
 
-- Consult our [open issues](https://github.com/fairDataSociety/fair-data-protocol/issues) and take on one of them
+- Consult our [open issues](https://github.com/fairDataSociety/fdp-storage/issues) and take on one of them
 - Help our tests reach 100% coverage!
 
 ### Setup

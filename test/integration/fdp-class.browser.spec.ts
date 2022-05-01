@@ -12,7 +12,7 @@ import {
 import '../../src/index'
 import '../index'
 import { JSONArray, JSONObject } from 'puppeteer'
-import { FairDataProtocol } from '../../src'
+import { FDPStorage } from '../../src'
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import FairosJs from '@fairdatasociety/fairos-js'
@@ -36,7 +36,7 @@ describe('Fair Data Protocol class - in browser', () => {
     await page.goto(`file://${testPage}`)
     await page.exposeFunction(
       'initFdp',
-      (): string => `new window.fdp.FairDataProtocol('${BEE_URL}', '${BEE_DEBUG_URL}', ${GET_FEED_DATA_TIMEOUT})`,
+      (): string => `new window.fdp.FDPStorage('${BEE_URL}', '${BEE_DEBUG_URL}', ${GET_FEED_DATA_TIMEOUT})`,
     )
     await page.exposeFunction(
       'shouldFailString',
@@ -62,7 +62,7 @@ describe('Fair Data Protocol class - in browser', () => {
 
   it('should strip trailing slash', async () => {
     const urls = await page.evaluate(async () => {
-      const fdp = new window.fdp.FairDataProtocol('http://localhost:1633/', 'http://localhost:1635/')
+      const fdp = new window.fdp.FDPStorage('http://localhost:1633/', 'http://localhost:1635/')
 
       return {
         beeUrl: fdp.connection.bee.url,
@@ -80,7 +80,7 @@ describe('Fair Data Protocol class - in browser', () => {
 
       const usersList = [generateUser(), generateUser()] as unknown as JSONArray
       const createdUsers = await page.evaluate(async users => {
-        const fdp = eval(await window.initFdp()) as FairDataProtocol
+        const fdp = eval(await window.initFdp()) as FDPStorage
 
         const result = []
         for (const user of users) {
@@ -107,7 +107,7 @@ describe('Fair Data Protocol class - in browser', () => {
 
     it('should throw when registering already registered user', async () => {
       await page.evaluate(async (user: TestUser) => {
-        const fdp = eval(await window.initFdp()) as FairDataProtocol
+        const fdp = eval(await window.initFdp()) as FDPStorage
         eval(await window.shouldFailString())
 
         await fdp.account.register(user.username, user.password, user.mnemonic)
@@ -121,7 +121,7 @@ describe('Fair Data Protocol class - in browser', () => {
 
     it('should throw when registering already imported user', async () => {
       await page.evaluate(async (user: TestUser) => {
-        const fdp = eval(await window.initFdp()) as FairDataProtocol
+        const fdp = eval(await window.initFdp()) as FDPStorage
         eval(await window.shouldFailString())
 
         await fdp.account.setUserAddress(user.username, user.address)
@@ -142,8 +142,8 @@ describe('Fair Data Protocol class - in browser', () => {
           address1: string
           address2: string
         }
-        const fdp = eval(await window.initFdp()) as FairDataProtocol
-        const fdp1 = eval(await window.initFdp()) as FairDataProtocol
+        const fdp = eval(await window.initFdp()) as FDPStorage
+        const fdp1 = eval(await window.initFdp()) as FDPStorage
 
         await fdp.account.register(user.username, user.password, user.mnemonic)
         result.address1 = fdp.account.usernameToAddress[user.username].toString()
@@ -168,8 +168,8 @@ describe('Fair Data Protocol class - in browser', () => {
           address1: string
           address2: string
         }
-        const fdp = eval(await window.initFdp()) as FairDataProtocol
-        const fdp1 = eval(await window.initFdp()) as FairDataProtocol
+        const fdp = eval(await window.initFdp()) as FDPStorage
+        const fdp1 = eval(await window.initFdp()) as FDPStorage
 
         result.address1 = typeof fdp.account.usernameToAddress[user.username]
         await fdp.account.register(user.username, user.password, user.mnemonic)
@@ -193,8 +193,8 @@ describe('Fair Data Protocol class - in browser', () => {
 
       await page.evaluate(
         async (user: TestUser, randomData: string, randomData1: string) => {
-          const fdp = eval(await window.initFdp()) as FairDataProtocol
-          const fdp1 = eval(await window.initFdp()) as FairDataProtocol
+          const fdp = eval(await window.initFdp()) as FDPStorage
+          const fdp1 = eval(await window.initFdp()) as FDPStorage
           eval(await window.shouldFailString())
 
           await fdp1.account.register(user.username, user.password, user.mnemonic)
@@ -230,7 +230,7 @@ describe('Fair Data Protocol class - in browser', () => {
       const user = generateUser()
       const jsonUser = user as unknown as JSONObject
       const answer = await page.evaluate(async (user: TestUser) => {
-        const fdp = eval(await window.initFdp()) as FairDataProtocol
+        const fdp = eval(await window.initFdp()) as FDPStorage
         await fdp.account.register(user.username, user.password, user.mnemonic)
 
         return await fdp.personalStorage.list()
@@ -254,7 +254,7 @@ describe('Fair Data Protocol class - in browser', () => {
       }
 
       const podsList = await page.evaluate(async (user: TestUser) => {
-        const fdp = eval(await window.initFdp()) as FairDataProtocol
+        const fdp = eval(await window.initFdp()) as FDPStorage
         await fdp.account.setUserAddress(user.username, user.address)
         await fdp.account.login(user.username, user.password)
 
@@ -277,7 +277,7 @@ describe('Fair Data Protocol class - in browser', () => {
 
       const result = await page.evaluate(
         async (user: TestUser, longPodName: string, commaPodName: string) => {
-          const fdp = eval(await window.initFdp()) as FairDataProtocol
+          const fdp = eval(await window.initFdp()) as FDPStorage
           eval(await window.shouldFailString())
 
           await fdp.account.register(user.username, user.password, user.mnemonic)
@@ -309,7 +309,7 @@ describe('Fair Data Protocol class - in browser', () => {
       const result1 = await page.evaluate(
         async (user: TestUser, examples: JSONArray) => {
           eval(await window.shouldFailString())
-          const fdp = eval(await window.initFdp()) as FairDataProtocol
+          const fdp = eval(await window.initFdp()) as FDPStorage
           const iterations = []
           await fdp.account.login(user.username, user.password, user.address)
           for (let i = 0; examples.length > i; i++) {
@@ -358,7 +358,7 @@ describe('Fair Data Protocol class - in browser', () => {
       const jsonUser = user as unknown as JSONObject
 
       await page.evaluate(async (user: TestUser) => {
-        const fdp = eval(await window.initFdp()) as FairDataProtocol
+        const fdp = eval(await window.initFdp()) as FDPStorage
         await fdp.account.register(user.username, user.password, user.mnemonic)
         await fdp.account.login(user.username, user.password, user.address)
       }, jsonUser)
@@ -373,7 +373,7 @@ describe('Fair Data Protocol class - in browser', () => {
 
       let list = await page.evaluate(
         async (user: TestUser, podName: string, podName1: string, notExistsPod: string) => {
-          const fdp = eval(await window.initFdp()) as FairDataProtocol
+          const fdp = eval(await window.initFdp()) as FDPStorage
           eval(await window.shouldFailString())
 
           await fdp.account.login(user.username, user.password, user.address)
@@ -395,7 +395,7 @@ describe('Fair Data Protocol class - in browser', () => {
 
       list = await page.evaluate(
         async (user: TestUser, podName: string) => {
-          const fdp = eval(await window.initFdp()) as FairDataProtocol
+          const fdp = eval(await window.initFdp()) as FDPStorage
           eval(await window.shouldFailString())
 
           await fdp.account.login(user.username, user.password, user.address)
@@ -412,7 +412,7 @@ describe('Fair Data Protocol class - in browser', () => {
 
       list = await page.evaluate(
         async (user: TestUser, podName: string) => {
-          const fdp = eval(await window.initFdp()) as FairDataProtocol
+          const fdp = eval(await window.initFdp()) as FDPStorage
           eval(await window.shouldFailString())
 
           await fdp.account.login(user.username, user.password, user.address)

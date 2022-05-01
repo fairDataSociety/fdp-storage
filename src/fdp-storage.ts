@@ -6,7 +6,7 @@ import { Options } from './types'
 import { Directory } from './directory/directory'
 import { File } from './file/file'
 
-export class FairDataProtocol {
+export class FDPStorage {
   public readonly connection: Connection
   public readonly account: AccountData
   public readonly personalStorage: PersonalStorage
