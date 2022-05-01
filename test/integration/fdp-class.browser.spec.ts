@@ -17,7 +17,6 @@ import { FairDataProtocol } from '../../src'
 // @ts-ignore
 import FairosJs from '@fairdatasociety/fairos-js'
 import { FairOSDirectoryItems } from '../types'
-import { DirectoryItemType } from '../../src/directory-items/directory-item'
 import { MAX_POD_NAME_LENGTH } from '../../src/pod/utils'
 
 const GET_FEED_DATA_TIMEOUT = 1000
@@ -462,6 +461,8 @@ describe('Fair Data Protocol class - in browser', () => {
         recursiveDirectories,
         noRecursiveFiles,
         recursiveFiles,
+        subDirs1,
+        subDirs2,
       } = await page.evaluate(
         async (user: TestUser, pod: string) => {
           const fdp = eval(await window.initFdp()) as FairDataProtocol
@@ -472,6 +473,8 @@ describe('Fair Data Protocol class - in browser', () => {
           const podsRecursive = await fdp.directory.read(pod, '/', true)
           const recursiveDirectories = podsRecursive.getDirectories()
           const recursiveFiles = podsRecursive.getFiles()
+          const subDirs1 = recursiveDirectories[0].getDirectories()
+          const subDirs2 = recursiveDirectories[1].getDirectories()
 
           return {
             podsNoRecursive,
@@ -480,6 +483,8 @@ describe('Fair Data Protocol class - in browser', () => {
             podsRecursive,
             recursiveDirectories,
             recursiveFiles,
+            subDirs1,
+            subDirs2,
           }
         },
         jsonUser,
@@ -499,8 +504,6 @@ describe('Fair Data Protocol class - in browser', () => {
       expect(podsRecursive.content).toHaveLength(2)
       expect(recursiveFiles).toHaveLength(0)
       expect(recursiveDirectories).toHaveLength(2)
-      const subDirs1 = recursiveDirectories[0].content.filter(item => item.type === DirectoryItemType.directory)
-      const subDirs2 = recursiveDirectories[1].content.filter(item => item.type === DirectoryItemType.directory)
       expect(subDirs1).toHaveLength(1)
       expect(subDirs1[0].name).toEqual('one_1')
       expect(subDirs2).toHaveLength(1)
@@ -517,7 +520,7 @@ describe('Fair Data Protocol class - in browser', () => {
       const directoryName1 = generateRandomHexString()
       const directoryFull1 = '/' + directoryName + '/' + directoryName1
 
-      const { list, directoryInfo, directoryInfo1 } = await page.evaluate(
+      const { list, directoryInfo, directoryInfo1, subDirectoriesLength } = await page.evaluate(
         async (user: TestUser, pod: string, directoryFull: string, directoryFull1: string) => {
           const fdp = eval(await window.initFdp()) as FairDataProtocol
           eval(await window.shouldFailString())
@@ -538,13 +541,15 @@ describe('Fair Data Protocol class - in browser', () => {
           )
 
           const list = await fdp.directory.read(pod, '/', true)
-          const directoryInfo = list.content[0]
-          const directoryInfo1 = list.content[0].content[0]
+          const directoryInfo = list.getDirectories()[0]
+          const subDirectoriesLength = directoryInfo.getDirectories().length
+          const directoryInfo1 = directoryInfo.getDirectories()[0]
 
           return {
             list,
             directoryInfo,
             directoryInfo1,
+            subDirectoriesLength,
           }
         },
         jsonUser,
@@ -554,11 +559,9 @@ describe('Fair Data Protocol class - in browser', () => {
       )
 
       expect(list.content).toHaveLength(1)
-      expect(list.content[0].content).toHaveLength(1)
+      expect(subDirectoriesLength).toEqual(1)
       expect(directoryInfo.name).toEqual(directoryName)
-      expect(directoryInfo.type).toEqual('directory')
       expect(directoryInfo1.name).toEqual(directoryName1)
-      expect(directoryInfo1.type).toEqual('directory')
 
       await fairos.userImport(user.username, user.password, '', user.address)
       await fairos.userLogin(user.username, user.password)
@@ -597,7 +600,7 @@ describe('Fair Data Protocol class - in browser', () => {
 
           const dataSmall = (await fdp.file.downloadData(pod, fullFilenameSmallPath)).text()
           const fdpList = await fdp.directory.read(pod, '/', true)
-          const fileInfoSmall = fdpList.content[0]
+          const fileInfoSmall = fdpList.getFiles()[0]
 
           return {
             dataSmall,
@@ -613,7 +616,6 @@ describe('Fair Data Protocol class - in browser', () => {
 
       expect(dataSmall).toEqual(contentSmall)
       expect(fdpList.content.length).toEqual(1)
-      expect(fileInfoSmall.type).toEqual(DirectoryItemType.file)
       expect(fileInfoSmall.name).toEqual(filenameSmall)
       expect(fileInfoSmall.size).toEqual(fileSizeSmall)
 
@@ -662,7 +664,7 @@ describe('Fair Data Protocol class - in browser', () => {
           await window.shouldFail(fdp.file.downloadData(pod, incorrectFullPath), 'Data not found')
           const dataBig = (await fdp.file.downloadData(pod, fullFilenameBigPath)).text()
           const fdpList = await fdp.directory.read(pod, '/', true)
-          const fileInfoBig = fdpList.content[0]
+          const fileInfoBig = fdpList.getFiles()[0]
 
           return {
             dataBig,
@@ -680,7 +682,6 @@ describe('Fair Data Protocol class - in browser', () => {
 
       expect(dataBig).toEqual(contentBig)
       expect(fdpList.content.length).toEqual(1)
-      expect(fileInfoBig.type).toEqual(DirectoryItemType.file)
       expect(fileInfoBig.name).toEqual(filenameBig)
       expect(fileInfoBig.size).toEqual(fileSizeBig)
 

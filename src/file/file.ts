@@ -11,7 +11,7 @@ import { downloadData, generateBlockName } from './handler'
 import { blocksToManifest, getFileMetadataRawBytes } from './adapter'
 import { Blocks, DataUploadOptions } from './types'
 import { Data } from '@ethersphere/bee-js'
-import { addEntryToDirectory } from '../directory-items/handler'
+import { addEntryToDirectory } from '../content-items/handler'
 
 /**
  * Files management class

@@ -13,13 +13,14 @@ import {
   isRawDirectoryMetadata,
   isRawFileMetadata,
 } from './utils'
-import { DirectoryItem } from '../directory-items/directory-item'
 import { DIRECTORY_TOKEN, FILE_TOKEN } from '../file/handler'
 import { getUnixTimestamp } from '../utils/time'
 import { createRawDirectoryMetadata, META_VERSION } from '../pod/utils'
 import { Connection } from '../connection/connection'
 import { Wallet } from 'ethers'
-import { addEntryToDirectory } from '../directory-items/handler'
+import { addEntryToDirectory } from '../content-items/handler'
+import { DirectoryItem } from '../content-items/directory-item'
+import { FileItem } from '../content-items/file-item'
 
 export const MAX_DIRECTORY_NAME_LENGTH = 100
 
@@ -80,7 +81,7 @@ export async function readDirectory(
       item = combine(path, item.substring(FILE_TOKEN.length))
       const data = await getRawMetadata(bee, item, address, downloadOptions)
       assertRawFileMetadata(data)
-      resultDirectoryItem.content.push(DirectoryItem.fromRawFileMetadata(data))
+      resultDirectoryItem.content.push(FileItem.fromRawFileMetadata(data))
     } else if (isDirectory) {
       item = combine(path, item.substring(DIRECTORY_TOKEN.length))
       const data = await getRawMetadata(bee, item, address, downloadOptions)

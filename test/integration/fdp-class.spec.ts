@@ -12,7 +12,6 @@ import {
 // @ts-ignore
 import FairosJs from '@fairdatasociety/fairos-js'
 import { FairOSDirectoryItems } from '../types'
-import { DirectoryItemType } from '../../src/directory-items/directory-item'
 import { MAX_POD_NAME_LENGTH } from '../../src/pod/utils'
 
 const GET_FEED_DATA_TIMEOUT = 1000
@@ -319,13 +318,11 @@ describe('Fair Data Protocol class', () => {
       )
       const list = await fdp.directory.read(pod, '/', true)
       expect(list.content).toHaveLength(1)
-      expect(list.content[0].content).toHaveLength(1)
+      expect(list.getDirectories()[0].content).toHaveLength(1)
       const directoryInfo = list.content[0]
-      const directoryInfo1 = list.content[0].content[0]
+      const directoryInfo1 = list.getDirectories()[0].getDirectories()[0]
       expect(directoryInfo.name).toEqual(directoryName)
-      expect(directoryInfo.type).toEqual(DirectoryItemType.directory)
       expect(directoryInfo1.name).toEqual(directoryName1)
-      expect(directoryInfo1.type).toEqual(DirectoryItemType.directory)
 
       await fairos.userImport(user.username, user.password, '', user.address)
       await fairos.userLogin(user.username, user.password)
@@ -357,9 +354,8 @@ describe('Fair Data Protocol class', () => {
       const dataSmall = await fdp.file.downloadData(pod, fullFilenameSmallPath)
       expect(dataSmall.text()).toEqual(contentSmall)
       const fdpList = await fdp.directory.read(pod, '/', true)
-      expect(fdpList.content.length).toEqual(1)
-      const fileInfoSmall = fdpList.content[0]
-      expect(fileInfoSmall.type).toEqual(DirectoryItemType.file)
+      expect(fdpList.getFiles().length).toEqual(1)
+      const fileInfoSmall = fdpList.getFiles()[0]
       expect(fileInfoSmall.name).toEqual(filenameSmall)
       expect(fileInfoSmall.size).toEqual(fileSizeSmall)
 
@@ -397,9 +393,8 @@ describe('Fair Data Protocol class', () => {
       const dataBig = (await fdp.file.downloadData(pod, fullFilenameBigPath)).text()
       expect(dataBig).toEqual(contentBig)
       const fdpList = await fdp.directory.read(pod, '/', true)
-      expect(fdpList.content.length).toEqual(1)
-      const fileInfoBig = fdpList.content[0]
-      expect(fileInfoBig.type).toEqual(DirectoryItemType.file)
+      expect(fdpList.getFiles().length).toEqual(1)
+      const fileInfoBig = fdpList.getFiles()[0]
       expect(fileInfoBig.name).toEqual(filenameBig)
       expect(fileInfoBig.size).toEqual(fileSizeBig)
 
