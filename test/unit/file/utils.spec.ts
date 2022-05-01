@@ -4,7 +4,7 @@ import { blocksToManifest } from '../../../src/file/adapter'
 import { Block, Blocks } from '../../../src/file/types'
 
 describe('file/utils', () => {
-  it('blocksToManifestString', () => {
+  it('blocksToManifest', () => {
     const examples = [
       {
         blocks: [
@@ -15,8 +15,16 @@ describe('file/utils', () => {
             reference: '28d3de8a55d7543fa6f2e4819e806e9d2b4e1999703a63232f0aa8126fd24668' as Reference,
           },
         ] as Block[],
-        result:
-          '{"Blocks":[{"Name":"block-00000","Size":17,"CompressedSize":17,"Reference":{"R":"KNPeilXXVD+m8uSBnoBunStOGZlwOmMjLwqoEm/SRmg="}}]}',
+        result: {
+          Blocks: [
+            {
+              Name: 'block-00000',
+              Size: 17,
+              CompressedSize: 17,
+              Reference: { R: 'KNPeilXXVD+m8uSBnoBunStOGZlwOmMjLwqoEm/SRmg=' },
+            },
+          ],
+        },
       },
       {
         blocks: [
@@ -57,8 +65,46 @@ describe('file/utils', () => {
             reference: '4924c9fa5d0a0fccb9763c4877e214215522236a45451227bc6fda99fef35389',
           },
         ] as Block[],
-        result:
-          '{"Blocks":[{"Name":"block-00000","Size":1000000,"CompressedSize":1000000,"Reference":{"R":"CGpJuGm6EE96RSInah8uJCvjWNovmqNOM3EUkzVXdpo="}},{"Name":"block-00001","Size":1000000,"CompressedSize":1000000,"Reference":{"R":"9bo/c4cxvhhiB0FbhLwMj4MLCxwEPBfKztlZtVp1ykk="}},{"Name":"block-00002","Size":1000000,"CompressedSize":1000000,"Reference":{"R":"7PzVmuKPS+CABTZXeHRgmGkxgZImQE48AIYmwhYY2vw="}},{"Name":"block-00003","Size":1000000,"CompressedSize":1000000,"Reference":{"R":"Qn6R91f0UYObSmRFn/OSrYCBmOizKMJbm5yK3zFXUgg="}},{"Name":"block-00004","Size":1000000,"CompressedSize":1000000,"Reference":{"R":"jb4/Mz1jesXXTnKT456pGB3FiG1I5YRtDhT24wPsUEo="}},{"Name":"block-00005","Size":242880,"CompressedSize":242880,"Reference":{"R":"SSTJ+l0KD8y5djxId+IUIVUiI2pFRRInvG/amf7zU4k="}}]}',
+        result: {
+          Blocks: [
+            {
+              Name: 'block-00000',
+              Size: 1000000,
+              CompressedSize: 1000000,
+              Reference: { R: 'CGpJuGm6EE96RSInah8uJCvjWNovmqNOM3EUkzVXdpo=' },
+            },
+            {
+              Name: 'block-00001',
+              Size: 1000000,
+              CompressedSize: 1000000,
+              Reference: { R: '9bo/c4cxvhhiB0FbhLwMj4MLCxwEPBfKztlZtVp1ykk=' },
+            },
+            {
+              Name: 'block-00002',
+              Size: 1000000,
+              CompressedSize: 1000000,
+              Reference: { R: '7PzVmuKPS+CABTZXeHRgmGkxgZImQE48AIYmwhYY2vw=' },
+            },
+            {
+              Name: 'block-00003',
+              Size: 1000000,
+              CompressedSize: 1000000,
+              Reference: { R: 'Qn6R91f0UYObSmRFn/OSrYCBmOizKMJbm5yK3zFXUgg=' },
+            },
+            {
+              Name: 'block-00004',
+              Size: 1000000,
+              CompressedSize: 1000000,
+              Reference: { R: 'jb4/Mz1jesXXTnKT456pGB3FiG1I5YRtDhT24wPsUEo=' },
+            },
+            {
+              Name: 'block-00005',
+              Size: 242880,
+              CompressedSize: 242880,
+              Reference: { R: 'SSTJ+l0KD8y5djxId+IUIVUiI2pFRRInvG/amf7zU4k=' },
+            },
+          ],
+        },
       },
     ]
 
@@ -66,7 +112,7 @@ describe('file/utils', () => {
       const blocks: Blocks = {
         blocks: example.blocks,
       }
-      expect(blocksToManifest(blocks)).toEqual(example.result)
+      expect(JSON.parse(blocksToManifest(blocks))).toStrictEqual(example.result)
     }
   })
 
