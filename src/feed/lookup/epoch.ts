@@ -19,8 +19,6 @@ export function getBaseTime(time: number, level: number): number {
 
 /**
  * Creates instance of `Epoch` where the first update should be located based on what time is passed
- *
- * @param time
  */
 export function getFirstEpoch(time: number): Epoch {
   return new Epoch(HIGHEST_LEVEL, time)
@@ -75,7 +73,6 @@ export class Epoch {
    * Calculates the first nonzero bit of the XOR of base and 'time', counting from the highest significant bit
    * but limited to not return a level that is smaller than the base-1
    *
-   * @param time
    * @return the frequency level a next update should be placed at, provided where the last update was and what time it is now
    */
   getNextLevel(time: number): number {

@@ -88,7 +88,37 @@ const pods = await fdp.personalStorage.list()
 console.log(pods) // prints list of user's pods
 ```
 
-Delete pod
+Creating a directory
+
+```js
+await fdp.directory.create('my-new-pod', 'my-dir')
+```
+
+Uploading data as a file into a pod
+
+```js
+await fdp.file.uploadData('my-new-pod', '/my-dir/myfile.txt', 'Hello world!')
+```
+
+Getting list of files and directories with recursion or not
+
+```js
+// with recursion
+const list = await fdp.directory.read('my-new-pod', '/', true)
+// without recursion
+await fdp.directory.read('my-new-pod', '/')
+console.log(list) // prints list of files and directories
+```
+
+Downloading data from a file path
+
+```js
+const data = await fdp.file.downloadData('my-new-pod', '/myfile.txt')
+console.log(data.text()) // prints data content in text format 'Hello world!'
+
+```
+
+Deleting a pod
 
 ```js
 await fdp.personalStorage.delete('my-new-pod')

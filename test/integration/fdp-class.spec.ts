@@ -1,9 +1,18 @@
 import { FairDataProtocol } from '../../src'
-import { beeDebugUrl, beeUrl, fairosJsUrl, generateRandomHexString, generateUser } from '../utils'
+import {
+  beeDebugUrl,
+  beeUrl,
+  bytesToString,
+  fairosJsUrl,
+  generateRandomHexString,
+  generateUser,
+  prepareEthAddress,
+} from '../utils'
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import FairosJs from '@fairdatasociety/fairos-js'
-import { prepareEthAddress } from '../utils'
+import { FairOSDirectoryItems } from '../types'
+import { MAX_POD_NAME_LENGTH } from '../../src/pod/utils'
 
 const GET_FEED_DATA_TIMEOUT = 1000
 
@@ -175,6 +184,12 @@ describe('Fair Data Protocol class', () => {
       await fairos.userLogin(user.username, user.password)
       expect((await fairos.podLs()).data.pod_name).toHaveLength(0)
 
+      const longPodName = generateRandomHexString(MAX_POD_NAME_LENGTH + 1)
+      const commaPodName = generateRandomHexString() + ', ' + generateRandomHexString()
+      await expect(fdp.personalStorage.create(longPodName)).rejects.toThrow('Pod name is too long')
+      await expect(fdp.personalStorage.create(commaPodName)).rejects.toThrow('Pod name cannot contain commas')
+      await expect(fdp.personalStorage.create('')).rejects.toThrow('Pod name is too short')
+
       const examples = [
         { name: generateRandomHexString(), index: 1 },
         { name: generateRandomHexString(), index: 2 },
@@ -237,6 +252,163 @@ describe('Fair Data Protocol class', () => {
       list = await fdp.personalStorage.list()
       expect(list).toHaveLength(0)
       expect((await fairos.podLs()).data.pod_name).toHaveLength(0)
+    })
+  })
+
+  describe('Directory', () => {
+    it('should find all directories', async () => {
+      const fdp = createFdp()
+      const fairos = createFairosJs()
+      const user = generateUser()
+      const pod = generateRandomHexString()
+      const createDirectories = ['/one', '/two', '/one/one_1', '/two/two_1']
+
+      await fdp.account.register(user.username, user.password, user.mnemonic)
+      await fdp.personalStorage.create(pod)
+      await fairos.userImport(user.username, user.password, '', user.address)
+      await fairos.userLogin(user.username, user.password)
+      await fairos.podOpen(pod, user.password)
+      for (const directory of createDirectories) {
+        await fairos.dirMkdir(pod, directory)
+      }
+
+      const podsNoRecursive = await fdp.directory.read(pod, '/', false)
+      expect(podsNoRecursive.name).toEqual('/')
+      expect(podsNoRecursive.content).toHaveLength(2)
+      expect(podsNoRecursive.getFiles()).toHaveLength(0)
+      const noRecursiveDirectories = podsNoRecursive.getDirectories()
+      expect(noRecursiveDirectories).toHaveLength(2)
+      expect(noRecursiveDirectories[0].name).toEqual('one')
+      expect(noRecursiveDirectories[1].name).toEqual('two')
+      expect(noRecursiveDirectories[0].content).toHaveLength(0)
+      expect(noRecursiveDirectories[1].content).toHaveLength(0)
+
+      const podsRecursive = await fdp.directory.read(pod, '/', true)
+      expect(podsRecursive.name).toEqual('/')
+      expect(podsRecursive.content).toHaveLength(2)
+      expect(podsRecursive.getFiles()).toHaveLength(0)
+      const recursiveDirectories = podsRecursive.getDirectories()
+      expect(recursiveDirectories).toHaveLength(2)
+      expect(recursiveDirectories[0].getDirectories()).toHaveLength(1)
+      expect(recursiveDirectories[0].getDirectories()[0].name).toEqual('one_1')
+      expect(recursiveDirectories[1].getDirectories()).toHaveLength(1)
+      expect(recursiveDirectories[1].getDirectories()[0].name).toEqual('two_1')
+    })
+
+    it('should create new directory', async () => {
+      const fdp = createFdp()
+      const fairos = createFairosJs()
+      const user = generateUser()
+      const pod = generateRandomHexString()
+      const directoryName = generateRandomHexString()
+      const directoryFull = '/' + directoryName
+      const directoryName1 = generateRandomHexString()
+      const directoryFull1 = '/' + directoryName + '/' + directoryName1
+
+      await fdp.account.register(user.username, user.password, user.mnemonic)
+      await fdp.personalStorage.create(pod)
+      await expect(fdp.directory.create(pod, directoryFull1)).rejects.toThrow('Parent directory does not exist')
+      await fdp.directory.create(pod, directoryFull)
+      await expect(fdp.directory.create(pod, directoryFull)).rejects.toThrow(
+        `Directory "${directoryFull}" already uploaded to the network`,
+      )
+      await fdp.directory.create(pod, directoryFull1)
+      await expect(fdp.directory.create(pod, directoryFull)).rejects.toThrow(
+        `Directory "${directoryFull}" already uploaded to the network`,
+      )
+      const list = await fdp.directory.read(pod, '/', true)
+      expect(list.content).toHaveLength(1)
+      expect(list.getDirectories()[0].content).toHaveLength(1)
+      const directoryInfo = list.content[0]
+      const directoryInfo1 = list.getDirectories()[0].getDirectories()[0]
+      expect(directoryInfo.name).toEqual(directoryName)
+      expect(directoryInfo1.name).toEqual(directoryName1)
+
+      await fairos.userImport(user.username, user.password, '', user.address)
+      await fairos.userLogin(user.username, user.password)
+      await fairos.podOpen(pod, user.password)
+      const fairosList = (await fairos.dirLs(pod, '/')).data as FairOSDirectoryItems
+      expect(fairosList.dirs).toHaveLength(1)
+      const dir = fairosList.dirs[0]
+      expect(dir.name).toEqual(directoryName)
+    })
+  })
+
+  describe('File', () => {
+    it('should upload small text data as a file', async () => {
+      const fdp = createFdp()
+      const fairos = createFairosJs()
+      const user = generateUser()
+      const pod = generateRandomHexString()
+      const fileSizeSmall = 100
+      const contentSmall = generateRandomHexString(fileSizeSmall)
+      const filenameSmall = generateRandomHexString() + '.txt'
+      const fullFilenameSmallPath = '/' + filenameSmall
+
+      await fdp.account.register(user.username, user.password, user.mnemonic)
+      await fdp.personalStorage.create(pod)
+      await fdp.file.uploadData(pod, fullFilenameSmallPath, contentSmall)
+      await expect(fdp.file.uploadData(pod, fullFilenameSmallPath, contentSmall)).rejects.toThrow(
+        `File "${fullFilenameSmallPath}" already uploaded to the network`,
+      )
+      const dataSmall = await fdp.file.downloadData(pod, fullFilenameSmallPath)
+      expect(dataSmall.text()).toEqual(contentSmall)
+      const fdpList = await fdp.directory.read(pod, '/', true)
+      expect(fdpList.getFiles().length).toEqual(1)
+      const fileInfoSmall = fdpList.getFiles()[0]
+      expect(fileInfoSmall.name).toEqual(filenameSmall)
+      expect(fileInfoSmall.size).toEqual(fileSizeSmall)
+
+      await fairos.userImport(user.username, user.password, '', user.address)
+      await fairos.userLogin(user.username, user.password)
+      await fairos.podOpen(pod, user.password)
+      const list = (await fairos.dirLs(pod, '/')).data as FairOSDirectoryItems
+      expect(list.files).toHaveLength(1)
+      const fairosSmallFile = list.files[0]
+      expect(fairosSmallFile.name).toEqual(filenameSmall)
+      expect(fairosSmallFile.size).toEqual(fileSizeSmall.toString())
+      const dataSmallFairos = (await fairos.fileDownload(pod, fullFilenameSmallPath, filenameSmall)).data
+      expect(bytesToString(dataSmallFairos)).toEqual(contentSmall)
+    })
+
+    it('should upload big text data as a file', async () => {
+      const fdp = createFdp()
+      const fairos = createFairosJs()
+      const user = generateUser()
+      const pod = generateRandomHexString()
+      const incorrectPod = generateRandomHexString()
+      const fileSizeBig = 5000005
+      const contentBig = generateRandomHexString(fileSizeBig)
+      const filenameBig = generateRandomHexString() + '.txt'
+      const fullFilenameBigPath = '/' + filenameBig
+      const incorrectFullPath = fullFilenameBigPath + generateRandomHexString()
+
+      await fdp.account.register(user.username, user.password, user.mnemonic)
+      await fdp.personalStorage.create(pod)
+      await expect(fdp.file.uploadData(incorrectPod, fullFilenameBigPath, contentBig)).rejects.toThrow(
+        `Pod "${incorrectPod}" does not exist`,
+      )
+      await fdp.file.uploadData(pod, fullFilenameBigPath, contentBig)
+      await expect(fdp.file.downloadData(pod, incorrectFullPath)).rejects.toThrow('Data not found')
+      const dataBig = (await fdp.file.downloadData(pod, fullFilenameBigPath)).text()
+      expect(dataBig).toEqual(contentBig)
+      const fdpList = await fdp.directory.read(pod, '/', true)
+      expect(fdpList.getFiles().length).toEqual(1)
+      const fileInfoBig = fdpList.getFiles()[0]
+      expect(fileInfoBig.name).toEqual(filenameBig)
+      expect(fileInfoBig.size).toEqual(fileSizeBig)
+
+      await fairos.userImport(user.username, user.password, '', user.address)
+      await fairos.userLogin(user.username, user.password)
+      await fairos.podOpen(pod, user.password)
+      const list = (await fairos.dirLs(pod, '/')).data as FairOSDirectoryItems
+      expect(list.files).toHaveLength(1)
+
+      const fairosBigFile = list.files[0]
+      expect(fairosBigFile.name).toEqual(filenameBig)
+      expect(fairosBigFile.size).toEqual(fileSizeBig.toString())
+      const dataBigFairos = (await fairos.fileDownload(pod, fullFilenameBigPath, filenameBig)).data
+      expect(bytesToString(dataBigFairos)).toEqual(contentBig)
     })
   })
 })

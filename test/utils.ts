@@ -77,3 +77,12 @@ export function numbersToSegment(numbers: number[]): Utils.Bytes<32> {
 
   return new Uint8Array(numbers) as Utils.Bytes<32>
 }
+
+/**
+ * Converts bytes to string
+ *
+ * @param data
+ */
+export function bytesToString(data: Uint8Array): string {
+  return new TextDecoder().decode(data)
+}

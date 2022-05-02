@@ -29,7 +29,7 @@ export async function getFeedData(
     const tempId = getId(topicHash, time, epoch.level)
     const chunkReference = bytesToHex(Utils.keccak256Hash(tempId.buffer, address.buffer))
 
-    return await bee.downloadChunk(chunkReference, options)
+    return bee.downloadChunk(chunkReference, options)
   })
 }
 

@@ -4,6 +4,7 @@ import { makeSpan, stringToBytes, wrapBytesWithHelpers } from '../utils/bytes'
 import { AccountData } from './account-data'
 import { isValidMnemonic } from 'ethers/lib/utils'
 import CryptoJS from 'crypto-js'
+import { assertString } from '../utils/type'
 
 export const MNEMONIC_LENGTH = 12
 export const MAX_CHUNK_LENGTH = 4096
@@ -55,7 +56,6 @@ export function extractChunkContent(data: Data): Data {
 /**
  * Calculate a Binary Merkle Tree hash for a string
  *
- * @param stringData
  * @returns the keccak256 hash in a byte array
  */
 export function bmtHashString(stringData: string): Utils.Bytes<32> {
@@ -67,7 +67,6 @@ export function bmtHashString(stringData: string): Utils.Bytes<32> {
 /**
  * Calculate a Binary Merkle Tree hash for a bytes array
  *
- * @param payload
  * @returns the keccak256 hash in a byte array
  */
 export function bmtHashBytes(payload: Uint8Array): Utils.Bytes<32> {
@@ -84,10 +83,12 @@ export function bmtHashBytes(payload: Uint8Array): Utils.Bytes<32> {
 /**
  * Asserts whether non-empty username passed
  *
- * @param data username
+ * @param value FDP username
  */
-export function assertUsername(data: string): void {
-  if (!data) {
+export function assertUsername(value: unknown): asserts value is string {
+  assertString(value)
+
+  if (!value) {
     throw new Error('Incorrect username')
   }
 }
@@ -95,10 +96,12 @@ export function assertUsername(data: string): void {
 /**
  * Asserts whether non-empty password passed
  *
- * @param data password
+ * @param value password
  */
-export function assertPassword(data: string): void {
-  if (!data) {
+export function assertPassword(value: unknown): asserts value is string {
+  assertString(value)
+
+  if (!value) {
     throw new Error('Incorrect password')
   }
 }
@@ -106,12 +109,13 @@ export function assertPassword(data: string): void {
 /**
  * Asserts whether a valid mnemonic phrase has been passed
  *
- * @param data mnemonic phrase
+ * @param value mnemonic phrase
  */
-export function assertMnemonic(data: string): void {
-  const words = data.split(' ')
+export function assertMnemonic(value: unknown): asserts value is string {
+  assertString(value)
+  const words = value.split(' ')
 
-  if (!(words.length === MNEMONIC_LENGTH && isValidMnemonic(data))) {
+  if (!(words.length === MNEMONIC_LENGTH && isValidMnemonic(value))) {
     throw new Error('Incorrect mnemonic')
   }
 }
@@ -119,9 +123,11 @@ export function assertMnemonic(data: string): void {
 /**
  * Asserts whether an active account is defined
  *
- * @param data instance of AccountData to check
+ * @param value instance of AccountData to check
  */
-export function assertActiveAccount(data: AccountData): void {
+export function assertActiveAccount(value: unknown): asserts value is AccountData {
+  const data = value as AccountData
+
   if (!data.wallet) {
     throw new Error('Active account not found')
   }
@@ -129,24 +135,23 @@ export function assertActiveAccount(data: AccountData): void {
 
 /**
  * Asserts whether string is not empty
- *
- * @param data
  */
-export function assertEmptyString(data: string): void {
-  if (data.length === 0) {
+export function assertNotEmptyString(value: unknown): asserts value is string {
+  assertString(value)
+
+  if (value.length === 0) {
     throw new Error('String is empty')
   }
 }
 
 /**
  * Asserts whether Base64Url encoded string is passed
- *
- * @param data
  */
-export function assertBase64UrlData(data: string): void {
-  assertEmptyString(data)
+export function assertBase64UrlData(value: unknown): asserts value is string {
+  assertString(value)
+  assertNotEmptyString(value)
 
-  if (!/^[-A-Za-z0-9_]+[=]{0,2}$/.test(data)) {
+  if (!/^[-A-Za-z0-9_]+[=]{0,2}$/.test(value)) {
     throw new Error('Incorrect symbols in Base64Url data')
   }
 }
