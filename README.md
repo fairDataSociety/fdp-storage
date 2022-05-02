@@ -59,9 +59,9 @@ Loading this module through a script tag will make the `fdp` object available in
 Creating FDP account
 
 ```js
-import { FDPStorage } from '@fairdatasociety/fdp-storage'
+import { FdpStorage } from '@fairdatasociety/fdp-storage'
 
-const fdp = new FDPStorage('http://localhost:1633', 'http://localhost:1635')
+const fdp = new FdpStorage('http://localhost:1633', 'http://localhost:1635')
 
 const account = await fdp.account.register('myusername', 'mypassword')
 console.log(account) // prints account information

@@ -6,7 +6,7 @@ import { Options } from './types'
 import { Directory } from './directory/directory'
 import { File } from './file/file'
 
-export class FDPStorage {
+export class FdpStorage {
   public readonly connection: Connection
   public readonly account: AccountData
   public readonly personalStorage: PersonalStorage

@@ -1,4 +1,4 @@
-import { FDPStorage } from '../../src'
+import { FdpStorage } from '../../src'
 import {
   beeDebugUrl,
   beeUrl,
@@ -18,7 +18,7 @@ import { MAX_POD_NAME_LENGTH } from '../../src/pod/utils'
 const GET_FEED_DATA_TIMEOUT = 1000
 
 function createFdp() {
-  return new FDPStorage(beeUrl(), beeDebugUrl(), {
+  return new FdpStorage(beeUrl(), beeDebugUrl(), {
     downloadOptions: {
       timeout: GET_FEED_DATA_TIMEOUT,
     },
@@ -32,7 +32,7 @@ function createFairosJs() {
 jest.setTimeout(200000)
 describe('Fair Data Protocol class', () => {
   it('should strip trailing slash', () => {
-    const fdp = new FDPStorage('http://localhost:1633/', 'http://localhost:1635/', {
+    const fdp = new FdpStorage('http://localhost:1633/', 'http://localhost:1635/', {
       downloadOptions: {
         timeout: GET_FEED_DATA_TIMEOUT,
       },
