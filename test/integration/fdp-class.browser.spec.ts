@@ -16,7 +16,6 @@ import { FdpStorage } from '../../src'
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import FairosJs from '@fairdatasociety/fairos-js'
-import { FairOSDirectoryItems } from '../types'
 import { MAX_POD_NAME_LENGTH } from '../../src/pod/utils'
 
 const GET_FEED_DATA_TIMEOUT = 1000

@@ -90,3 +90,12 @@ export async function isBatchUsable(beeDebug: BeeDebug): Promise<boolean> {
 
   return batch.usable
 }
+
+/**
+ * Converts bytes to string
+ *
+ * @param data
+ */
+export function bytesToString(data: Uint8Array): string {
+  return new TextDecoder().decode(data)
+}
