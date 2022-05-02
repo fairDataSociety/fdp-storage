@@ -136,7 +136,7 @@ export function assertActiveAccount(value: unknown): asserts value is AccountDat
 /**
  * Asserts whether string is not empty
  */
-export function assertEmptyString(value: unknown): asserts value is string {
+export function assertNotEmptyString(value: unknown): asserts value is string {
   assertString(value)
 
   if (value.length === 0) {
@@ -149,7 +149,7 @@ export function assertEmptyString(value: unknown): asserts value is string {
  */
 export function assertBase64UrlData(value: unknown): asserts value is string {
   assertString(value)
-  assertEmptyString(value)
+  assertNotEmptyString(value)
 
   if (!/^[-A-Za-z0-9_]+[=]{0,2}$/.test(value)) {
     throw new Error('Incorrect symbols in Base64Url data')
