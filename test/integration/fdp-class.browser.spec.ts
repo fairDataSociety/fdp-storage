@@ -17,6 +17,7 @@ import { FdpStorage } from '../../src'
 // @ts-ignore
 import FairosJs from '@fairdatasociety/fairos-js'
 import { MAX_POD_NAME_LENGTH } from '../../src/pod/utils'
+import { FairOSDirectoryItems } from '../types'
 
 const GET_FEED_DATA_TIMEOUT = 1000
 
@@ -438,7 +439,7 @@ describe('Fair Data Protocol class - in browser', () => {
 
       await page.evaluate(
         async (user: TestUser, pod: string) => {
-          const fdp = eval(await window.initFdp()) as FairDataProtocol
+          const fdp = eval(await window.initFdp()) as FdpStorage
           await fdp.account.register(user.username, user.password, user.mnemonic)
           await fdp.personalStorage.create(pod)
         },
@@ -464,7 +465,7 @@ describe('Fair Data Protocol class - in browser', () => {
         subDirs2,
       } = await page.evaluate(
         async (user: TestUser, pod: string) => {
-          const fdp = eval(await window.initFdp()) as FairDataProtocol
+          const fdp = eval(await window.initFdp()) as FdpStorage
           await fdp.account.login(user.username, user.password, user.address)
           const podsNoRecursive = await fdp.directory.read(pod, '/', false)
           const noRecursiveDirectories = podsNoRecursive.getDirectories()
@@ -521,7 +522,7 @@ describe('Fair Data Protocol class - in browser', () => {
 
       const { list, directoryInfo, directoryInfo1, subDirectoriesLength } = await page.evaluate(
         async (user: TestUser, pod: string, directoryFull: string, directoryFull1: string) => {
-          const fdp = eval(await window.initFdp()) as FairDataProtocol
+          const fdp = eval(await window.initFdp()) as FdpStorage
           eval(await window.shouldFailString())
 
           await fdp.account.register(user.username, user.password, user.mnemonic)
@@ -586,7 +587,7 @@ describe('Fair Data Protocol class - in browser', () => {
 
       const { dataSmall, fdpList, fileInfoSmall } = await page.evaluate(
         async (user: TestUser, pod: string, fullFilenameSmallPath: string, contentSmall: string) => {
-          const fdp = eval(await window.initFdp()) as FairDataProtocol
+          const fdp = eval(await window.initFdp()) as FdpStorage
           eval(await window.shouldFailString())
 
           await fdp.account.register(user.username, user.password, user.mnemonic)
@@ -651,7 +652,7 @@ describe('Fair Data Protocol class - in browser', () => {
           incorrectPod: string,
           incorrectFullPath: string,
         ) => {
-          const fdp = eval(await window.initFdp()) as FairDataProtocol
+          const fdp = eval(await window.initFdp()) as FdpStorage
           eval(await window.shouldFailString())
           await fdp.account.register(user.username, user.password, user.mnemonic)
           await fdp.personalStorage.create(pod)
