@@ -16,5 +16,4 @@ jobs:
         with:
           token: ${{ secrets.REPO_GHA_PAT }}
           release-type: node
-          package-name: '@fairdatasociety/fdp-storage'
           bump-minor-pre-major: true

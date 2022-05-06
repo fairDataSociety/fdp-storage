@@ -32,15 +32,9 @@
 > yarn add @fairdatasociety/fdp-storage
 ```
 
-### Use in Node.js
+### Use in Node.js and browser
 
 **We require Node.js's version of at least 16.x**
-
-```js
-const FDP = require('@fairdatasociety/fdp-storage');
-```
-
-### Use in a browser with browserify, webpack or any other bundler
 
 ```js
 const FDP = require('@fairdatasociety/fdp-storage');
