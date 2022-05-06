@@ -1,6 +1,7 @@
 import { MAX_DIRECTORY_NAME_LENGTH } from './handler'
 import { RawDirectoryMetadata, RawFileMetadata } from '../pod/types'
 import { assertString, isNumber, isString } from '../utils/type'
+import { replaceAll } from '../utils/string'
 
 /**
  * Combine passed parts of path to full path
@@ -11,7 +12,7 @@ export function combine(...parts: string[]): string {
   // remove empty items
   parts = parts.filter(item => item !== '')
   // remove slashes if element contains not only slash
-  parts = parts.map(part => (part.length > 1 ? part.replaceAll('/', '') : part))
+  parts = parts.map(part => (part.length > 1 ? replaceAll(part, '/', '') : part))
 
   // add slash to the start of parts if it is not the first element
   if (parts[0] !== '/') {

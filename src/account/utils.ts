@@ -4,6 +4,7 @@ import { makeSpan, stringToBytes, wrapBytesWithHelpers } from '../utils/bytes'
 import { AccountData } from './account-data'
 import { isValidMnemonic } from 'ethers/lib/utils'
 import CryptoJS from 'crypto-js'
+import { replaceAll } from '../utils/string'
 import { assertString } from '../utils/type'
 
 export const MNEMONIC_LENGTH = 12
@@ -34,7 +35,7 @@ export function encodeBase64Url(data: CryptoJS.lib.WordArray): string {
  * @param data Base64Url data
  */
 export function decodeBase64Url(data: string): CryptoJS.lib.WordArray {
-  return CryptoJS.enc.Base64url.parse(data.replaceAll('=', ''))
+  return CryptoJS.enc.Base64url.parse(replaceAll(data, '=', ''))
 }
 
 /**

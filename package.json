@@ -1,6 +1,6 @@
 {
-  "name": "@fairdatasociety/fair-data-protocol",
-  "version": "1.0.0",
+  "name": "@fairdatasociety/fdp-storage",
+  "version": "0.1.0",
   "description": "Typescript implementation of FairOS-dfs",
   "keywords": [
     "fairdata",
@@ -13,15 +13,15 @@
     "browser",
     "node"
   ],
-  "homepage": "https://github.com/fairDataSociety/fair-data-protocol",
+  "homepage": "https://github.com/fairDataSociety/fdp-storage",
   "bugs": {
-    "url": "https://github.com/fairDataSociety/fair-data-protocol/issues/"
+    "url": "https://github.com/fairDataSociety/fdp-storage/issues/"
   },
   "license": "BSD-3-Clause",
   "main": "dist/index.min.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/fairDataSociety/fair-data-protocol.git"
+    "url": "https://github.com/fairDataSociety/fdp-storage.git"
   },
   "browser": {
     "./dist/index.min.js": "./dist/index.browser.min.js",

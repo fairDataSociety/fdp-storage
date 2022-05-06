@@ -1,4 +1,4 @@
-import { FairDataProtocol } from '../../src'
+import { FdpStorage } from '../../src'
 import {
   beeDebugUrl,
   beeUrl,
@@ -7,6 +7,7 @@ import {
   generateRandomHexString,
   generateUser,
   prepareEthAddress,
+  isBatchUsable,
 } from '../utils'
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
@@ -17,7 +18,7 @@ import { MAX_POD_NAME_LENGTH } from '../../src/pod/utils'
 const GET_FEED_DATA_TIMEOUT = 1000
 
 function createFdp() {
-  return new FairDataProtocol(beeUrl(), beeDebugUrl(), {
+  return new FdpStorage(beeUrl(), beeDebugUrl(), {
     downloadOptions: {
       timeout: GET_FEED_DATA_TIMEOUT,
     },
@@ -31,13 +32,19 @@ function createFairosJs() {
 jest.setTimeout(200000)
 describe('Fair Data Protocol class', () => {
   it('should strip trailing slash', () => {
-    const fdp = new FairDataProtocol('http://localhost:1633/', 'http://localhost:1635/', {
+    const fdp = new FdpStorage('http://localhost:1633/', 'http://localhost:1635/', {
       downloadOptions: {
         timeout: GET_FEED_DATA_TIMEOUT,
       },
     })
     expect(fdp.connection.bee.url).toEqual('http://localhost:1633')
     expect(fdp.connection.beeDebug.url).toEqual('http://localhost:1635')
+  })
+
+  it('check default batch usability', async () => {
+    const fdp = createFdp()
+
+    expect(await isBatchUsable(fdp.connection.beeDebug)).toBe(true)
   })
 
   describe('Registration', () => {
