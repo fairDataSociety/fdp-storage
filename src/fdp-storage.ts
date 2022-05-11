@@ -5,6 +5,7 @@ import { Connection } from './connection/connection'
 import { Options } from './types'
 import { Directory } from './directory/directory'
 import { File } from './file/file'
+import { ENS } from '@fairdatasociety/fdp-contracts'
 
 export class FdpStorage {
   public readonly connection: Connection
@@ -12,10 +13,12 @@ export class FdpStorage {
   public readonly personalStorage: PersonalStorage
   public readonly directory: Directory
   public readonly file: File
+  public readonly ens: ENS
 
   constructor(beeUrl: string, beeDebugUrl: string, options?: Options) {
     this.connection = new Connection(new Bee(beeUrl), new BeeDebug(beeDebugUrl), options)
-    this.account = new AccountData(this.connection)
+    this.ens = new ENS(options?.ensOptions, null, options?.ensDomain)
+    this.account = new AccountData(this.connection, this.ens, options?.minimumAccountBalanceEth)
     this.personalStorage = new PersonalStorage(this.account)
     this.directory = new Directory(this.account)
     this.file = new File(this.account)

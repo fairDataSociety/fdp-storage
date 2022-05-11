@@ -1,17 +1,21 @@
-import { Wallet } from 'ethers'
-import { assertMnemonic, assertPassword, assertUsername } from './utils'
+import { Wallet, utils } from 'ethers'
+import { assertMigrateOptions, assertMnemonic, assertPassword, assertUsername, assertUsernameAvailable } from './utils'
 import { prepareEthAddress } from '../utils/address'
-import { getEncryptedMnemonic } from './mnemonic'
+import { getEncryptedMnemonic, getEncryptedMnemonicByPublicKey } from './mnemonic'
 import { decrypt } from './encryption'
-import { createUser, UserAccountWithReference } from './account'
-import { EthAddress } from '@ethersphere/bee-js/dist/types/utils/eth'
+import { createUser } from './account'
 import { Connection } from '../connection/connection'
+import { MigrateOptions } from './types'
+import { ENS } from '@fairdatasociety/fdp-contracts'
 
 export class AccountData {
-  /** username -> ethereum wallet address mapping */
-  public readonly usernameToAddress: { [key: string]: EthAddress } = {}
+  public wallet?: Wallet
 
-  constructor(public readonly connection: Connection, public wallet?: Wallet) {}
+  constructor(
+    public readonly connection: Connection,
+    public readonly ens: ENS,
+    public readonly minimumAccountBalanceEth = '0.01',
+  ) {}
 
   /**
    * Sets the current account's wallet to interact with the data
@@ -23,39 +27,61 @@ export class AccountData {
   }
 
   /**
-   * Import FDP user account
-   *
-   * @param username username to import
-   * @param mnemonic 12 space separated words to initialize wallet
+   * Creates a new FDP account wallet
    */
-  async import(username: string, mnemonic: string): Promise<void> {
+  createWallet(): Wallet {
+    return Wallet.createRandom()
+  }
+
+  /**
+   * Exports wallet from version 1 account
+   *
+   * @param username username from version 1 account
+   * @param password password from version 1 account
+   * @param options migration options
+   */
+  async exportWallet(username: string, password: string, options: MigrateOptions): Promise<Wallet> {
     assertUsername(username)
+    assertPassword(password)
+    assertMigrateOptions(options)
+
+    let mnemonic = options.mnemonic
+
+    if (options.address) {
+      const address = prepareEthAddress(options.address)
+      const encryptedMnemonic = await getEncryptedMnemonic(this.connection.bee, username, address)
+      mnemonic = decrypt(password, encryptedMnemonic)
+    }
+
     assertMnemonic(mnemonic)
 
-    const wallet = Wallet.fromMnemonic(mnemonic)
-    this.usernameToAddress[username] = prepareEthAddress(wallet.address)
-    this.setActiveAccount(wallet)
+    return Wallet.fromMnemonic(mnemonic)
   }
 
   /**
-   * Set Ethereum address for specific username
+   * Migrates from FDP account without ENS to account with ENS
    *
-   * @param username username to modify
-   * @param address Ethereum address with or without 0x prefix
+   * @param username username from version 1 account
+   * @param password password from version 1 account
+   * @param options migration options with address or mnemonic from version 1 account
    */
-  setUserAddress(username: string, address: string): void {
+  async migrate(username: string, password: string, options: MigrateOptions): Promise<Wallet> {
     assertUsername(username)
-    this.usernameToAddress[username] = prepareEthAddress(address)
-  }
+    assertPassword(password)
+    assertMigrateOptions(options)
+    await assertUsernameAvailable(this.ens, username)
 
-  /**
-   * Removes Ethereum address for specific username
-   *
-   * @param username username to modify
-   */
-  removeUserAddress(username: string): void {
-    assertUsername(username)
-    delete this.usernameToAddress[username]
+    let mnemonic = options.mnemonic
+
+    if (options.address) {
+      const address = prepareEthAddress(options.address)
+      const encryptedMnemonic = await getEncryptedMnemonic(this.connection.bee, username, address)
+      mnemonic = decrypt(password, encryptedMnemonic)
+    }
+
+    assertMnemonic(mnemonic)
+
+    return this.register(username, password, mnemonic)
   }
 
   /**
@@ -63,24 +89,20 @@ export class AccountData {
    *
    * @param username FDP username
    * @param password password of the wallet
-   * @param address Ethereum address associated with FDP username
+   *
    * @returns BIP-039 + BIP-044 Wallet
    */
-  async login(username: string, password: string, address?: string): Promise<Wallet> {
+  async login(username: string, password: string): Promise<Wallet> {
     assertUsername(username)
     assertPassword(password)
 
-    if (address) {
-      this.setUserAddress(username, address)
+    if (await this.ens.isUsernameAvailable(username)) {
+      throw new Error('Username does not exist')
     }
 
-    const existsAddress = this.usernameToAddress[username]
-
-    if (!existsAddress) {
-      throw new Error(`No address linked to the username "${username}"`)
-    }
-
-    const encryptedMnemonic = await getEncryptedMnemonic(this.connection.bee, username, existsAddress)
+    const address = prepareEthAddress(await this.ens.getUsernameOwner(username))
+    const publicKey = await this.ens.getPublicKey(username)
+    const encryptedMnemonic = await getEncryptedMnemonicByPublicKey(this.connection.bee, publicKey, password, address)
     try {
       const decrypted = decrypt(password, encryptedMnemonic)
       const wallet = Wallet.fromMnemonic(decrypted)
@@ -97,22 +119,28 @@ export class AccountData {
    *
    * @param username FDP username
    * @param password FDP password
-   * @param mnemonic Optional mnemonic phrase for account
+   * @param mnemonic mnemonic phrase for account
    */
-  async register(username: string, password: string, mnemonic?: string): Promise<UserAccountWithReference> {
+  async register(username: string, password: string, mnemonic: string): Promise<Wallet> {
     assertUsername(username)
     assertPassword(password)
+    assertMnemonic(mnemonic)
 
-    if (this.usernameToAddress[username]) {
-      throw new Error('User already imported')
+    const wallet = Wallet.fromMnemonic(mnemonic).connect(this.ens.provider)
+    this.ens.connect(wallet)
+
+    await assertUsernameAvailable(this.ens, username)
+
+    if ((await this.ens.provider.getBalance(wallet.address)).lt(utils.parseEther(this.minimumAccountBalanceEth))) {
+      throw new Error(`Account balance is lower than ${this.minimumAccountBalanceEth}`)
     }
 
     try {
-      const userInfo = await createUser(this.connection, username, password, mnemonic)
-      this.usernameToAddress[username] = prepareEthAddress(userInfo.wallet.address)
-      this.setActiveAccount(userInfo.wallet)
+      await createUser(this.connection, username, password, mnemonic)
+      await this.ens.registerUsername(username, wallet.address, wallet.publicKey)
+      this.setActiveAccount(wallet)
 
-      return userInfo
+      return wallet
     } catch (e) {
       const error = e as Error
 

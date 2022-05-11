@@ -20,7 +20,7 @@ import { Connection } from '../connection/connection'
 export async function getFeedData(
   bee: Bee,
   topic: string,
-  address: Utils.EthAddress,
+  address: Utils.EthAddress | Uint8Array,
   options?: RequestOptions,
 ): Promise<LookupAnswer> {
   const topicHash = bmtHashString(topic)

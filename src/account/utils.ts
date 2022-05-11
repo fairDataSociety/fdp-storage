@@ -5,7 +5,9 @@ import { AccountData } from './account-data'
 import { isValidMnemonic } from 'ethers/lib/utils'
 import CryptoJS from 'crypto-js'
 import { replaceAll } from '../utils/string'
-import { assertString } from '../utils/type'
+import { assertEthAddress, assertString } from '../utils/type'
+import { MigrateOptions } from './types'
+import { ENS } from '@fairdatasociety/fdp-contracts'
 
 export const MNEMONIC_LENGTH = 12
 export const MAX_CHUNK_LENGTH = 4096
@@ -155,4 +157,37 @@ export function assertBase64UrlData(value: unknown): asserts value is string {
   if (!/^[-A-Za-z0-9_]+[=]{0,2}$/.test(value)) {
     throw new Error('Incorrect symbols in Base64Url data')
   }
+}
+
+/**
+ * Asserts whether migrate options are correct
+ */
+export function assertMigrateOptions(value: unknown): asserts value is MigrateOptions {
+  const data = value as MigrateOptions
+
+  if (!data.address && !data.mnemonic) {
+    throw new Error('Address or mnemonic should be provided')
+  }
+
+  if (data.address) {
+    assertEthAddress(data.address)
+  } else {
+    assertMnemonic(data.mnemonic)
+  }
+}
+
+/**
+ * Asserts whether ENS name is available
+ */
+export async function assertUsernameAvailable(ens: ENS, value: string): Promise<void> {
+  if (!(await ens.isUsernameAvailable(value))) {
+    throw new Error('Username already registered')
+  }
+}
+
+/**
+ * Removes 0x from hex string
+ */
+export function removeZeroFromHex(value: string): string {
+  return value.replace('0x', '')
 }
