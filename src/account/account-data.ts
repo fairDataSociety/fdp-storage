@@ -97,13 +97,13 @@ export class AccountData {
     assertPassword(password)
 
     if (await this.ens.isUsernameAvailable(username)) {
-      throw new Error('Username does not exist')
+      throw new Error(`Username "${username}" does not exists`)
     }
 
     const address = prepareEthAddress(await this.ens.getUsernameOwner(username))
     const publicKey = await this.ens.getPublicKey(username)
-    const encryptedMnemonic = await getEncryptedMnemonicByPublicKey(this.connection.bee, publicKey, password, address)
     try {
+      const encryptedMnemonic = await getEncryptedMnemonicByPublicKey(this.connection.bee, publicKey, password, address)
       const decrypted = decrypt(password, encryptedMnemonic)
       const wallet = Wallet.fromMnemonic(decrypted)
       this.setActiveAccount(wallet)
