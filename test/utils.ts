@@ -2,6 +2,7 @@ import crypto from 'crypto'
 import { BeeDebug, Utils } from '@ethersphere/bee-js'
 import { getBatchId } from '../src/utils/batch'
 import { FdpStorage } from '../src'
+import { Wallet } from 'ethers'
 
 export interface TestUser {
   username: string
@@ -18,8 +19,8 @@ export const PASSWORD_LENGTH = 6
  *
  * @returns TestUser
  */
-export function generateUser(fdp: FdpStorage): TestUser {
-  const wallet = fdp.account.createWallet()
+export function generateUser(fdp?: FdpStorage): TestUser {
+  const wallet = fdp ? fdp.account.createWallet() : Wallet.createRandom()
 
   return {
     username: crypto.randomBytes(USERNAME_LENGTH).toString('hex'),
