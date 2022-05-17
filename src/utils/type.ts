@@ -1,7 +1,5 @@
 import { Utils } from '@ethersphere/bee-js'
-import fdpContracts from '@fairdatasociety/fdp-contracts'
-
-export type PublicKey = fdpContracts.PublicKey
+export type { PublicKey } from '@fairdatasociety/fdp-contracts'
 
 /**
  * Asserts that the given value is a number
