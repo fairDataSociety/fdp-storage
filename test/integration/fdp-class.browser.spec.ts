@@ -18,18 +18,6 @@ describe('Fair Data Protocol class - in browser', () => {
     await jestPuppeteer.resetPage()
     const testPage = join(__dirname, '..', 'testpage', 'testpage.html')
     await page.goto(`file://${testPage}`)
-    //   await page.exposeFunction(
-    //     'initFdp',
-    //     (): string => `new window.fdp.FdpStorage('${BEE_URL}', '${BEE_DEBUG_URL}', {
-    //   downloadOptions: {
-    //     timeout: ${GET_FEED_DATA_TIMEOUT},
-    //   },
-    //   ensOptions: {
-    //     ...ENVIRONMENT_CONFIGS[Environments.LOCALHOST],
-    //     rpcUrl: 'http://127.0.0.1:9546/',
-    //   },
-    // })`,
-    //   )
     const ensOptions = {
       ...ENVIRONMENT_CONFIGS[Environments.LOCALHOST],
       rpcUrl: 'http://127.0.0.1:9546/',
