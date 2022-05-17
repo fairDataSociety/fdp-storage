@@ -27,8 +27,8 @@ export async function getEncryptedMnemonicByPublicKey(
   address: Utils.EthAddress,
 ): Promise<string> {
   const topic = removeZeroFromHex(publicKey) + password
-  const encryptedAddress = (await getFeedData(bee, topic, address)).data.chunkContent().text()
-  const decryptedContent = decrypt(password, encryptedAddress)
+  const encryptedContent = (await getFeedData(bee, topic, address)).data.chunkContent().text()
+  const decryptedContent = decrypt(password, encryptedContent)
   const chunkAddress = decryptedContent.substring(0, ADDRESS_LENGTH)
 
   return wrapChunkHelper(await bee.downloadChunk(chunkAddress))
