@@ -136,9 +136,7 @@ const wallet = await fdp.account.exportWallet('oldusername', 'oldpassword', {
 ```
 
 ```js
-// ask user to replenish his account
-console.log(`Please replenish your wallet ${wallet.address} by 0.01 ETH`)
-// after replenishment, you can start the migration process
+// ask user to top up his account, then can be started the migration process
 await fdp.account.migrate('oldusername', 'oldpassword', {
   mnemonic: wallet.mnemonic.phrase
 })
