@@ -36,6 +36,8 @@ export class AccountData {
   /**
    * Exports wallet from version 1 account
    *
+   * @deprecated the method will be removed after an accounts' migration process is completed
+   *
    * @param username username from version 1 account
    * @param password password from version 1 account
    * @param options migration options
@@ -60,6 +62,8 @@ export class AccountData {
 
   /**
    * Migrates from FDP account without ENS to account with ENS
+   *
+   * @deprecated the method will be removed after an accounts' migration process is completed
    *
    * @param username username from version 1 account
    * @param password password from version 1 account

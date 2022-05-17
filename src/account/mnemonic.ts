@@ -37,7 +37,9 @@ export async function getEncryptedMnemonicByPublicKey(
 }
 
 /**
- * Downloads encrypted mnemonic phrase from swarm chunk
+ * Downloads encrypted mnemonic phrase from swarm chunk for version 1 account
+ *
+ * @deprecated use `getEncryptedMnemonicByPublicKey` instead for latest version of an account
  *
  * @param bee Bee client
  * @param username FDP account username
@@ -52,7 +54,9 @@ export async function getEncryptedMnemonic(bee: Bee, username: string, address: 
 }
 
 /**
- * Uploads encrypted mnemonic to swarm chunk
+ * Uploads encrypted mnemonic from account version 1 to swarm chunk
+ *
+ * @deprecated unloading for the new version of the account is implemented in `createUser` method
  *
  * @param connection connection information for data uploading
  * @param wallet FDP account Ethereum wallet

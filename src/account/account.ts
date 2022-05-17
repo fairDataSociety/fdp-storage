@@ -65,6 +65,8 @@ async function createUserAccount(password: string, mnemonic?: string): Promise<U
 /**
  * Creates a new user (version 1) and uploads the encrypted account to the network
  *
+ * @deprecated use `createUser` method instead to create the latest version of an account
+ *
  * @param connection connection information for data uploading
  * @param username FDP username
  * @param password FDP password
