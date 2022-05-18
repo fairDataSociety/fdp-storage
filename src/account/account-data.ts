@@ -1,7 +1,7 @@
 import { Wallet } from 'ethers'
 import { assertMigrateOptions, assertMnemonic, assertPassword, assertUsername } from './utils'
 import { prepareEthAddress } from '../utils/address'
-import { getEncryptedMnemonic, getEncryptedMnemonicByPublicKey } from './mnemonic'
+import { getEncryptedMnemonic, getMnemonicByPublicKey } from './mnemonic'
 import { decrypt } from './encryption'
 import { createUser } from './account'
 import { Connection } from '../connection/connection'
@@ -110,9 +110,8 @@ export class AccountData {
     const address = prepareEthAddress(await this.ens.getUsernameOwner(username))
     const publicKey = await this.ens.getPublicKey(username)
     try {
-      const encryptedMnemonic = await getEncryptedMnemonicByPublicKey(this.connection.bee, publicKey, password, address)
-      const decrypted = decrypt(password, encryptedMnemonic)
-      const wallet = Wallet.fromMnemonic(decrypted)
+      const mnemonic = await getMnemonicByPublicKey(this.connection.bee, publicKey, password, address)
+      const wallet = Wallet.fromMnemonic(mnemonic)
       this.setActiveAccount(wallet)
 
       return wallet

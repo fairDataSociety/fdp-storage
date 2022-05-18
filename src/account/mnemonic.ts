@@ -11,16 +11,16 @@ import { wrapChunkHelper } from '../feed/utils'
 export const ADDRESS_LENGTH = 64
 
 /**
- * Downloads encrypted mnemonic phrase from swarm chunk
+ * Downloads and decrypts mnemonic phrase from swarm chunk
  *
  * @param bee Bee client
  * @param publicKey FDP account public key
  * @param password FDP account password
  * @param address FDP account address
  *
- * @returns encrypted mnemonic phrase in Base64url format
+ * @returns mnemonic phrase
  */
-export async function getEncryptedMnemonicByPublicKey(
+export async function getMnemonicByPublicKey(
   bee: Bee,
   publicKey: PublicKey,
   password: string,
@@ -30,10 +30,11 @@ export async function getEncryptedMnemonicByPublicKey(
   const encryptedContent = (await getFeedData(bee, topic, address)).data.chunkContent().text()
   const decryptedContent = decrypt(password, encryptedContent)
   const chunkAddress = decryptedContent.substring(0, ADDRESS_LENGTH)
-
-  return wrapChunkHelper(await bee.downloadChunk(chunkAddress))
+  const encryptedMnemonic = wrapChunkHelper(await bee.downloadChunk(chunkAddress))
     .chunkContent()
     .text()
+
+  return decrypt(password, encryptedMnemonic)
 }
 
 /**
