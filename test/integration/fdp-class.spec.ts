@@ -1,22 +1,7 @@
 import { FdpStorage } from '../../src'
-import { beeDebugUrl, beeUrl, generateRandomHexString, generateUser, isBatchUsable } from '../utils'
+import { createFdp, generateRandomHexString, generateUser, GET_FEED_DATA_TIMEOUT, isBatchUsable } from '../utils'
 import { MAX_POD_NAME_LENGTH } from '../../src/pod/utils'
 import { createUserV1 } from '../../src/account/account'
-import { ENVIRONMENT_CONFIGS, Environments } from '@fairdatasociety/fdp-contracts'
-
-const GET_FEED_DATA_TIMEOUT = 1000
-
-function createFdp() {
-  return new FdpStorage(beeUrl(), beeDebugUrl(), {
-    downloadOptions: {
-      timeout: GET_FEED_DATA_TIMEOUT,
-    },
-    ensOptions: {
-      ...ENVIRONMENT_CONFIGS[Environments.LOCALHOST],
-      rpcUrl: 'http://127.0.0.1:9546/',
-    },
-  })
-}
 
 async function topUpAddress(fdp: FdpStorage) {
   if (!fdp.account.wallet?.address) {
@@ -65,6 +50,14 @@ describe('Fair Data Protocol class', () => {
       await expect(async () => fdp.account.createWallet()).rejects.toThrow('Wallet already created')
     })
 
+    it('should fail on zero balance', async () => {
+      const fdp = createFdp()
+
+      const user = generateUser(fdp)
+
+      await expect(fdp.account.register(user.username, user.password)).rejects.toThrow('Not enough funds')
+    })
+
     it('should register users', async () => {
       const fdp = createFdp()
 
@@ -89,7 +82,7 @@ describe('Fair Data Protocol class', () => {
       await topUpAddress(fdp)
 
       await fdp.account.register(user.username, user.password)
-      await expect(fdp.account.register(user.username, user.password)).rejects.toThrow('Username already registered')
+      await expect(fdp.account.register(user.username, user.password)).rejects.toThrow('User account already uploaded')
     })
 
     it('should migrate v1 user to v2', async () => {
@@ -102,7 +95,7 @@ describe('Fair Data Protocol class', () => {
         mnemonic: user.mnemonic,
       })
       const loggedWallet = await fdp.account.login(user.username, user.password)
-      await expect(fdp.account.register(user.username, user.password)).rejects.toThrow('Username already registered')
+      await expect(fdp.account.register(user.username, user.password)).rejects.toThrow('User account already uploaded')
 
       expect(loggedWallet.mnemonic.phrase).toEqual(user.mnemonic)
     })

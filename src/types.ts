@@ -17,8 +17,4 @@ export interface Options {
    * ENS domain for usernames
    */
   ensDomain?: string
-  /**
-   * Minimum account balance in ETH on registration
-   */
-  minimumAccountBalanceEth?: string
 }

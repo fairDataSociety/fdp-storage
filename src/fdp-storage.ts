@@ -18,7 +18,7 @@ export class FdpStorage {
   constructor(beeUrl: string, beeDebugUrl: string, options?: Options) {
     this.connection = new Connection(new Bee(beeUrl), new BeeDebug(beeDebugUrl), options)
     this.ens = new ENS(options?.ensOptions, null, options?.ensDomain)
-    this.account = new AccountData(this.connection, this.ens, options?.minimumAccountBalanceEth)
+    this.account = new AccountData(this.connection, this.ens)
     this.personalStorage = new PersonalStorage(this.account)
     this.directory = new Directory(this.account)
     this.file = new File(this.account)

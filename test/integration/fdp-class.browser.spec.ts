@@ -1,11 +1,13 @@
 import { join } from 'path'
-import { beeDebugUrl, beeUrl, generateRandomHexString, generateUser, TestUser } from '../utils'
+import { beeDebugUrl, beeUrl, createFdp, generateRandomHexString, generateUser, TestUser } from '../utils'
 import '../../src/index'
 import '../index'
 import { JSONArray, JSONObject } from 'puppeteer'
 import { FdpStorage } from '../../src'
 import { MAX_POD_NAME_LENGTH } from '../../src/pod/utils'
 import { ENVIRONMENT_CONFIGS, Environments } from '@fairdatasociety/fdp-contracts'
+import { createUserV1 } from '../../src/account/account'
+import { Wallet } from 'ethers'
 
 const GET_FEED_DATA_TIMEOUT = 1000
 
@@ -20,6 +22,7 @@ describe('Fair Data Protocol class - in browser', () => {
     await page.goto(`file://${testPage}`)
     const ensOptions = {
       ...ENVIRONMENT_CONFIGS[Environments.LOCALHOST],
+      performChecks: true,
       rpcUrl: 'http://127.0.0.1:9546/',
     }
 
@@ -99,6 +102,18 @@ describe('Fair Data Protocol class - in browser', () => {
       expect(result.privateKey).toBeDefined()
     })
 
+    it('should fail on zero balance', async () => {
+      const user = generateUser()
+      const jsonUser = user as unknown as JSONObject
+
+      await page.evaluate(async user => {
+        const fdp = eval(await window.initFdp()) as FdpStorage
+
+        fdp.account.createWallet()
+        await window.shouldFail(fdp.account.register(user.username, user.password), 'Not enough funds')
+      }, jsonUser)
+    })
+
     it('should register users', async () => {
       const usersList = [generateUser(), generateUser()] as unknown as JSONArray
       const createdUsers = await page.evaluate(async users => {
@@ -138,8 +153,31 @@ describe('Fair Data Protocol class - in browser', () => {
         await window.topUpAddress(fdp)
 
         await fdp.account.register(user.username, user.password)
-        await window.shouldFail(fdp.account.register(user.username, user.password), 'Username already registered')
+        await window.shouldFail(fdp.account.register(user.username, user.password), 'User account already uploaded')
       }, generateUser() as unknown as JSONObject)
+    })
+
+    it('should migrate v1 user to v2', async () => {
+      const fdp = createFdp()
+      const user = generateUser()
+      const jsonUser = user as unknown as JSONObject
+      await createUserV1(fdp.connection, user.username, user.password, user.mnemonic)
+
+      const result = await page.evaluate(async (user: TestUser) => {
+        const fdp = eval(await window.initFdp()) as FdpStorage
+        fdp.account.setActiveAccount(Wallet.fromMnemonic(user.mnemonic))
+        await window.topUpAddress(fdp)
+
+        await fdp.account.migrate(user.username, user.password, {
+          mnemonic: user.mnemonic,
+        })
+        const loggedWallet = await fdp.account.login(user.username, user.password)
+        await window.shouldFail(fdp.account.register(user.username, user.password), 'User account already uploaded')
+
+        return { mnemonic: loggedWallet.mnemonic.phrase }
+      }, jsonUser)
+
+      expect(result.mnemonic).toEqual(user.mnemonic)
     })
   })
 

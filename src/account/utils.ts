@@ -177,15 +177,6 @@ export function assertMigrateOptions(value: unknown): asserts value is MigrateOp
 }
 
 /**
- * Asserts whether ENS name is available
- */
-export async function assertUsernameAvailable(ens: ENS, value: string): Promise<void> {
-  if (!(await ens.isUsernameAvailable(value))) {
-    throw new Error('Username already registered')
-  }
-}
-
-/**
  * Removes 0x from hex string
  */
 export function removeZeroFromHex(value: string): string {

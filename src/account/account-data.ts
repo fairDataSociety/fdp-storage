@@ -1,5 +1,5 @@
-import { Wallet, utils } from 'ethers'
-import { assertMigrateOptions, assertMnemonic, assertPassword, assertUsername, assertUsernameAvailable } from './utils'
+import { Wallet } from 'ethers'
+import { assertMigrateOptions, assertMnemonic, assertPassword, assertUsername } from './utils'
 import { prepareEthAddress } from '../utils/address'
 import { getEncryptedMnemonic, getEncryptedMnemonicByPublicKey } from './mnemonic'
 import { decrypt } from './encryption'
@@ -11,11 +11,7 @@ import { ENS } from '@fairdatasociety/fdp-contracts'
 export class AccountData {
   public wallet?: Wallet
 
-  constructor(
-    public readonly connection: Connection,
-    public readonly ens: ENS,
-    public readonly minimumAccountBalanceEth = '0.01',
-  ) {}
+  constructor(public readonly connection: Connection, public readonly ens: ENS) {}
 
   /**
    * Sets the current account's wallet to interact with the data
@@ -80,7 +76,6 @@ export class AccountData {
     assertUsername(username)
     assertPassword(password)
     assertMigrateOptions(options)
-    await assertUsernameAvailable(this.ens, username)
 
     let mnemonic = options.mnemonic
 
@@ -143,11 +138,6 @@ export class AccountData {
     }
 
     this.ens.connect(wallet)
-    await assertUsernameAvailable(this.ens, username)
-
-    if ((await this.ens.provider.getBalance(wallet.address)).lt(utils.parseEther(this.minimumAccountBalanceEth))) {
-      throw new Error(`Account balance is lower than ${this.minimumAccountBalanceEth}`)
-    }
 
     try {
       await createUser(this.connection, username, password, wallet.mnemonic.phrase)
@@ -159,7 +149,7 @@ export class AccountData {
       const error = e as Error
 
       if (error.message.startsWith('Conflict: chunk already exists')) {
-        throw new Error('User already exists')
+        throw new Error('User account already uploaded')
       } else {
         throw e
       }
