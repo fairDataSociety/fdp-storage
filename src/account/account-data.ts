@@ -139,7 +139,7 @@ export class AccountData {
     this.ens.connect(wallet)
 
     try {
-      await createUser(this.connection, username, password, wallet.mnemonic.phrase)
+      await createUser(this.connection, password, wallet.mnemonic.phrase)
       await this.ens.registerUsername(username, wallet.address, wallet.publicKey)
       this.setActiveAccount(wallet)
 
