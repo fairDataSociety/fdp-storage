@@ -23,14 +23,21 @@ export class AccountData {
    * @param wallet BIP-039 + BIP-044 Wallet
    */
   setActiveAccount(wallet: Wallet): void {
-    this.wallet = wallet
+    this.wallet = wallet.connect(this.ens.provider)
   }
 
   /**
    * Creates a new FDP account wallet
    */
   createWallet(): Wallet {
-    return Wallet.createRandom()
+    if (this.wallet) {
+      throw new Error('Wallet already created')
+    }
+
+    const wallet = Wallet.createRandom()
+    this.setActiveAccount(wallet)
+
+    return wallet
   }
 
   /**
@@ -84,8 +91,9 @@ export class AccountData {
     }
 
     assertMnemonic(mnemonic)
+    this.setActiveAccount(Wallet.fromMnemonic(mnemonic))
 
-    return this.register(username, password, mnemonic)
+    return this.register(username, password)
   }
 
   /**
@@ -123,16 +131,18 @@ export class AccountData {
    *
    * @param username FDP username
    * @param password FDP password
-   * @param mnemonic mnemonic phrase for account
    */
-  async register(username: string, password: string, mnemonic: string): Promise<Wallet> {
+  async register(username: string, password: string): Promise<Wallet> {
     assertUsername(username)
     assertPassword(password)
-    assertMnemonic(mnemonic)
 
-    const wallet = Wallet.fromMnemonic(mnemonic).connect(this.ens.provider)
+    const wallet = this.wallet
+
+    if (!wallet) {
+      throw new Error('Before registration, a wallet must be created using `createWallet` method')
+    }
+
     this.ens.connect(wallet)
-
     await assertUsernameAvailable(this.ens, username)
 
     if ((await this.ens.provider.getBalance(wallet.address)).lt(utils.parseEther(this.minimumAccountBalanceEth))) {
@@ -140,7 +150,7 @@ export class AccountData {
     }
 
     try {
-      await createUser(this.connection, username, password, mnemonic)
+      await createUser(this.connection, username, password, wallet.mnemonic.phrase)
       await this.ens.registerUsername(username, wallet.address, wallet.publicKey)
       this.setActiveAccount(wallet)
 

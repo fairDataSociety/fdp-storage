@@ -18,12 +18,16 @@ function createFdp() {
   })
 }
 
-async function topUpAddress(fdp: FdpStorage, address: string) {
+async function topUpAddress(fdp: FdpStorage) {
+  if (!fdp.account.wallet?.address) {
+    throw new Error('Address is not defined')
+  }
+
   const account = (await fdp.ens.provider.listAccounts())[0]
   await fdp.ens.provider.send('eth_sendTransaction', [
     {
       from: account,
-      to: address,
+      to: fdp.account.wallet!.address,
       value: '10000000000000000', // 0.01 ETH
     },
   ])
@@ -57,15 +61,23 @@ describe('Fair Data Protocol class', () => {
       expect(wallet.mnemonic.phrase).toBeDefined()
       expect(wallet.address).toBeDefined()
       expect(wallet.privateKey).toBeDefined()
+
+      await expect(async () => fdp.account.createWallet()).rejects.toThrow('Wallet already created')
     })
 
     it('should register users', async () => {
       const fdp = createFdp()
 
-      const usersList = [generateUser(fdp), generateUser(fdp)]
-      for (const user of usersList) {
-        await topUpAddress(fdp, user.address)
-        const createdUser = await fdp.account.register(user.username, user.password, user.mnemonic)
+      await expect(fdp.account.register('user', 'password')).rejects.toThrow(
+        'Before registration, a wallet must be created using `createWallet` method',
+      )
+
+      for (let i = 0; i < 2; i++) {
+        const fdp = createFdp()
+
+        const user = generateUser(fdp)
+        await topUpAddress(fdp)
+        const createdUser = await fdp.account.register(user.username, user.password)
         expect(createdUser.mnemonic.phrase).toEqual(user.mnemonic)
         expect(createdUser.address).toEqual(user.address)
       }
@@ -74,30 +86,25 @@ describe('Fair Data Protocol class', () => {
     it('should throw when registering already registered user', async () => {
       const fdp = createFdp()
       const user = generateUser(fdp)
-      await topUpAddress(fdp, user.address)
+      await topUpAddress(fdp)
 
-      await fdp.account.register(user.username, user.password, user.mnemonic)
-      await expect(fdp.account.register(user.username, user.password, user.mnemonic)).rejects.toThrow(
-        'Username already registered',
-      )
+      await fdp.account.register(user.username, user.password)
+      await expect(fdp.account.register(user.username, user.password)).rejects.toThrow('Username already registered')
     })
 
     it('should migrate v1 user to v2', async () => {
       const fdp = createFdp()
 
-      const wallet = fdp.account.createWallet()
-      await topUpAddress(fdp, wallet.address)
       const user = generateUser(fdp)
-      await createUserV1(fdp.connection, user.username, user.password, wallet.mnemonic.phrase)
+      await topUpAddress(fdp)
+      await createUserV1(fdp.connection, user.username, user.password, user.mnemonic)
       await fdp.account.migrate(user.username, user.password, {
-        mnemonic: wallet.mnemonic.phrase,
+        mnemonic: user.mnemonic,
       })
       const loggedWallet = await fdp.account.login(user.username, user.password)
-      await expect(fdp.account.register(user.username, user.password, wallet.mnemonic.phrase)).rejects.toThrow(
-        'Username already registered',
-      )
+      await expect(fdp.account.register(user.username, user.password)).rejects.toThrow('Username already registered')
 
-      expect(loggedWallet.mnemonic.phrase).toEqual(wallet.mnemonic.phrase)
+      expect(loggedWallet.mnemonic.phrase).toEqual(user.mnemonic)
     })
   })
 
@@ -106,9 +113,9 @@ describe('Fair Data Protocol class', () => {
       const fdp = createFdp()
       const fdp1 = createFdp()
       const user = generateUser(fdp)
-      await topUpAddress(fdp, user.address)
+      await topUpAddress(fdp)
 
-      const wallet = await fdp.account.register(user.username, user.password, user.mnemonic)
+      const wallet = await fdp.account.register(user.username, user.password)
       expect(wallet.address).toEqual(user.address)
       expect(wallet.mnemonic.phrase).toEqual(user.mnemonic)
 
@@ -129,10 +136,10 @@ describe('Fair Data Protocol class', () => {
     it('should throw when password is not correct', async () => {
       const fdp = createFdp()
       const user = generateUser(fdp)
-      await topUpAddress(fdp, user.address)
+      await topUpAddress(fdp)
 
-      await fdp.account.register(user.username, user.password, user.mnemonic)
-      await expect(fdp.account.login(user.username, generateUser(fdp).password)).rejects.toThrow('Incorrect password')
+      await fdp.account.register(user.username, user.password)
+      await expect(fdp.account.login(user.username, generateUser().password)).rejects.toThrow('Incorrect password')
       await expect(fdp.account.login(user.username, '')).rejects.toThrow('Incorrect password')
     })
   })
@@ -141,9 +148,9 @@ describe('Fair Data Protocol class', () => {
     it('should get empty pods list', async () => {
       const fdp = createFdp()
       const user = generateUser(fdp)
-      await topUpAddress(fdp, user.address)
+      await topUpAddress(fdp)
 
-      await fdp.account.register(user.username, user.password, user.mnemonic)
+      await fdp.account.register(user.username, user.password)
       const pods = await fdp.personalStorage.list()
       expect(pods).toHaveLength(0)
     })
@@ -151,9 +158,9 @@ describe('Fair Data Protocol class', () => {
     it('should create pods with fdp', async () => {
       const fdp = createFdp()
       const user = generateUser(fdp)
-      await topUpAddress(fdp, user.address)
+      await topUpAddress(fdp)
 
-      await fdp.account.register(user.username, user.password, user.mnemonic)
+      await fdp.account.register(user.username, user.password)
       let list = await fdp.personalStorage.list()
       expect(list).toHaveLength(0)
 
@@ -190,9 +197,9 @@ describe('Fair Data Protocol class', () => {
     it('should delete pods', async () => {
       const fdp = createFdp()
       const user = generateUser(fdp)
-      await topUpAddress(fdp, user.address)
+      await topUpAddress(fdp)
 
-      await fdp.account.register(user.username, user.password, user.mnemonic)
+      await fdp.account.register(user.username, user.password)
 
       const podName = generateRandomHexString()
       const podName1 = generateRandomHexString()
@@ -223,9 +230,9 @@ describe('Fair Data Protocol class', () => {
       const directoryFull = '/' + directoryName
       const directoryName1 = generateRandomHexString()
       const directoryFull1 = '/' + directoryName + '/' + directoryName1
-      await topUpAddress(fdp, user.address)
+      await topUpAddress(fdp)
 
-      await fdp.account.register(user.username, user.password, user.mnemonic)
+      await fdp.account.register(user.username, user.password)
       await fdp.personalStorage.create(pod)
       await expect(fdp.directory.create(pod, directoryFull1)).rejects.toThrow('Parent directory does not exist')
       await fdp.directory.create(pod, directoryFull)
@@ -255,9 +262,9 @@ describe('Fair Data Protocol class', () => {
       const contentSmall = generateRandomHexString(fileSizeSmall)
       const filenameSmall = generateRandomHexString() + '.txt'
       const fullFilenameSmallPath = '/' + filenameSmall
-      await topUpAddress(fdp, user.address)
+      await topUpAddress(fdp)
 
-      await fdp.account.register(user.username, user.password, user.mnemonic)
+      await fdp.account.register(user.username, user.password)
       await fdp.personalStorage.create(pod)
       await fdp.file.uploadData(pod, fullFilenameSmallPath, contentSmall)
       await expect(fdp.file.uploadData(pod, fullFilenameSmallPath, contentSmall)).rejects.toThrow(
@@ -282,9 +289,9 @@ describe('Fair Data Protocol class', () => {
       const filenameBig = generateRandomHexString() + '.txt'
       const fullFilenameBigPath = '/' + filenameBig
       const incorrectFullPath = fullFilenameBigPath + generateRandomHexString()
-      await topUpAddress(fdp, user.address)
+      await topUpAddress(fdp)
 
-      await fdp.account.register(user.username, user.password, user.mnemonic)
+      await fdp.account.register(user.username, user.password)
       await fdp.personalStorage.create(pod)
       await expect(fdp.file.uploadData(incorrectPod, fullFilenameBigPath, contentBig)).rejects.toThrow(
         `Pod "${incorrectPod}" does not exist`,

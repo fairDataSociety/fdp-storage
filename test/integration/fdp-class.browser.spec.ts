@@ -43,12 +43,16 @@ describe('Fair Data Protocol class - in browser', () => {
             }
         };
 
-        window.topUpAddress = async (fdp, address) => {
+        window.topUpAddress = async (fdp) => {
+            if (!fdp.account.wallet?.address) {
+              throw new Error('Address is not defined')
+            }
+
             const account = (await fdp.ens.provider.listAccounts())[0]
             await fdp.ens.provider.send('eth_sendTransaction', [
               {
                 from: account,
-                to: address,
+                to: fdp.account.wallet.address,
                 value: '10000000000000000', // 0.01 ETH
               },
             ])
@@ -80,15 +84,38 @@ describe('Fair Data Protocol class - in browser', () => {
   })
 
   describe('Registration', () => {
+    it('should create account wallet', async () => {
+      const result = await page.evaluate(async () => {
+        const fdp = eval(await window.initFdp()) as FdpStorage
+
+        const wallet = fdp.account.createWallet()
+        await window.shouldFail((async () => fdp.account.createWallet())(), 'Wallet already created')
+
+        return { address: wallet.address, mnemonic: wallet.mnemonic.phrase, privateKey: wallet.privateKey }
+      })
+
+      expect(result.mnemonic).toBeDefined()
+      expect(result.address).toBeDefined()
+      expect(result.privateKey).toBeDefined()
+    })
+
     it('should register users', async () => {
       const usersList = [generateUser(), generateUser()] as unknown as JSONArray
       const createdUsers = await page.evaluate(async users => {
         const fdp = eval(await window.initFdp()) as FdpStorage
 
+        await window.shouldFail(
+          fdp.account.register('username', 'password'),
+          'Before registration, a wallet must be created using `createWallet` method',
+        )
+
         const result = []
         for (const user of users) {
-          await window.topUpAddress(fdp, user.address)
-          const data = await fdp.account.register(user.username, user.password, user.mnemonic)
+          const fdp = eval(await window.initFdp()) as FdpStorage
+
+          fdp.account.createWallet()
+          await window.topUpAddress(fdp)
+          const data = await fdp.account.register(user.username, user.password)
           result.push({
             mnemonic: data.mnemonic.phrase,
           })
@@ -99,22 +126,19 @@ describe('Fair Data Protocol class - in browser', () => {
         return result
       }, usersList)
 
-      for (const [i, createdUser] of createdUsers.entries()) {
-        const user = usersList[i] as unknown as TestUser
-        expect(createdUser.mnemonic).toEqual(user.mnemonic)
+      for (const createdUser of createdUsers) {
+        expect(createdUser.mnemonic).toBeDefined()
       }
     })
 
     it('should throw when registering already registered user', async () => {
       await page.evaluate(async (user: TestUser) => {
         const fdp = eval(await window.initFdp()) as FdpStorage
-        await window.topUpAddress(fdp, user.address)
+        fdp.account.createWallet()
+        await window.topUpAddress(fdp)
 
-        await fdp.account.register(user.username, user.password, user.mnemonic)
-        await window.shouldFail(
-          fdp.account.register(user.username, user.password, user.mnemonic),
-          'Username already registered',
-        )
+        await fdp.account.register(user.username, user.password)
+        await window.shouldFail(fdp.account.register(user.username, user.password), 'Username already registered')
       }, generateUser() as unknown as JSONObject)
     })
   })
@@ -127,12 +151,15 @@ describe('Fair Data Protocol class - in browser', () => {
         const result = {} as {
           result1: { address: string; mnemonic: string }
           result2: { address: string; mnemonic: string }
+          createdWallet: { address: string; mnemonic: string }
         }
         const fdp = eval(await window.initFdp()) as FdpStorage
         const fdp1 = eval(await window.initFdp()) as FdpStorage
-        await window.topUpAddress(fdp, user.address)
+        const wallet = fdp.account.createWallet()
+        result.createdWallet = { address: wallet.address, mnemonic: wallet.mnemonic.phrase }
+        await window.topUpAddress(fdp)
 
-        let data = await fdp.account.register(user.username, user.password, user.mnemonic)
+        let data = await fdp.account.register(user.username, user.password)
         result.result1 = { address: data.address, mnemonic: data.mnemonic.phrase }
 
         data = await fdp1.account.login(user.username, user.password)
@@ -141,10 +168,10 @@ describe('Fair Data Protocol class - in browser', () => {
         return result
       }, jsonUser)
 
-      expect(answer.result1.address).toEqual(user.address)
-      expect(answer.result1.mnemonic).toEqual(user.mnemonic)
-      expect(answer.result2.address).toEqual(user.address)
-      expect(answer.result2.mnemonic).toEqual(user.mnemonic)
+      expect(answer.result1.address).toEqual(answer.createdWallet.address)
+      expect(answer.result1.mnemonic).toEqual(answer.createdWallet.mnemonic)
+      expect(answer.result2.address).toEqual(answer.createdWallet.address)
+      expect(answer.result2.mnemonic).toEqual(answer.createdWallet.mnemonic)
     })
 
     it('should throw when username is not registered', async () => {
@@ -170,9 +197,10 @@ describe('Fair Data Protocol class - in browser', () => {
       await page.evaluate(
         async (user: TestUser, user1: TestUser) => {
           const fdp = eval(await window.initFdp()) as FdpStorage
-          await window.topUpAddress(fdp, user.address)
+          fdp.account.createWallet()
+          await window.topUpAddress(fdp)
 
-          await fdp.account.register(user.username, user.password, user.mnemonic)
+          await fdp.account.register(user.username, user.password)
 
           await window.shouldFail(fdp.account.login(user.username, user1.password), 'Incorrect password')
           await window.shouldFail(fdp.account.login(user.username, ''), 'Incorrect password')
@@ -189,9 +217,10 @@ describe('Fair Data Protocol class - in browser', () => {
       const jsonUser = user as unknown as JSONObject
       const answer = await page.evaluate(async (user: TestUser) => {
         const fdp = eval(await window.initFdp()) as FdpStorage
-        await window.topUpAddress(fdp, user.address)
+        fdp.account.createWallet()
+        await window.topUpAddress(fdp)
 
-        await fdp.account.register(user.username, user.password, user.mnemonic)
+        await fdp.account.register(user.username, user.password)
 
         return await fdp.personalStorage.list()
       }, jsonUser)
@@ -208,9 +237,10 @@ describe('Fair Data Protocol class - in browser', () => {
       const result = await page.evaluate(
         async (user: TestUser, longPodName: string, commaPodName: string) => {
           const fdp = eval(await window.initFdp()) as FdpStorage
-          await window.topUpAddress(fdp, user.address)
+          fdp.account.createWallet()
+          await window.topUpAddress(fdp)
 
-          await fdp.account.register(user.username, user.password, user.mnemonic)
+          await fdp.account.register(user.username, user.password)
 
           await window.shouldFail(fdp.personalStorage.create(longPodName), 'Pod name is too long')
           await window.shouldFail(fdp.personalStorage.create(commaPodName), 'Pod name cannot contain commas')
@@ -280,9 +310,10 @@ describe('Fair Data Protocol class - in browser', () => {
 
       await page.evaluate(async (user: TestUser) => {
         const fdp = eval(await window.initFdp()) as FdpStorage
-        await window.topUpAddress(fdp, user.address)
+        fdp.account.createWallet()
+        await window.topUpAddress(fdp)
 
-        await fdp.account.register(user.username, user.password, user.mnemonic)
+        await fdp.account.register(user.username, user.password)
         await fdp.account.login(user.username, user.password)
       }, jsonUser)
 
@@ -355,9 +386,10 @@ describe('Fair Data Protocol class - in browser', () => {
       const { list, directoryInfo, directoryInfo1, subDirectoriesLength } = await page.evaluate(
         async (user: TestUser, pod: string, directoryFull: string, directoryFull1: string) => {
           const fdp = eval(await window.initFdp()) as FdpStorage
-          await window.topUpAddress(fdp, user.address)
+          fdp.account.createWallet()
+          await window.topUpAddress(fdp)
 
-          await fdp.account.register(user.username, user.password, user.mnemonic)
+          await fdp.account.register(user.username, user.password)
           await fdp.personalStorage.create(pod)
           await window.shouldFail(fdp.directory.create(pod, directoryFull1), 'Parent directory does not exist')
 
@@ -411,9 +443,10 @@ describe('Fair Data Protocol class - in browser', () => {
       const { dataSmall, fdpList, fileInfoSmall } = await page.evaluate(
         async (user: TestUser, pod: string, fullFilenameSmallPath: string, contentSmall: string) => {
           const fdp = eval(await window.initFdp()) as FdpStorage
-          await window.topUpAddress(fdp, user.address)
+          fdp.account.createWallet()
+          await window.topUpAddress(fdp)
 
-          await fdp.account.register(user.username, user.password, user.mnemonic)
+          await fdp.account.register(user.username, user.password)
           await fdp.personalStorage.create(pod)
           await fdp.file.uploadData(pod, fullFilenameSmallPath, contentSmall)
           await window.shouldFail(
@@ -464,9 +497,10 @@ describe('Fair Data Protocol class - in browser', () => {
           incorrectFullPath: string,
         ) => {
           const fdp = eval(await window.initFdp()) as FdpStorage
-          await window.topUpAddress(fdp, user.address)
+          fdp.account.createWallet()
+          await window.topUpAddress(fdp)
 
-          await fdp.account.register(user.username, user.password, user.mnemonic)
+          await fdp.account.register(user.username, user.password)
           await fdp.personalStorage.create(pod)
           await window.shouldFail(
             fdp.file.uploadData(incorrectPod, fullFilenameBigPath, contentBig),

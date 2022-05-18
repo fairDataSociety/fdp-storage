@@ -57,7 +57,7 @@ import { FdpStorage } from '@fairdatasociety/fdp-storage'
 
 const fdp = new FdpStorage('http://localhost:1633', 'http://localhost:1635')
 const wallet = fdp.account.createWallet() // after creating a wallet, the user must top up its balance before registration
-const account = await fdp.account.register('myusername', 'mypassword', wallet.mnemonic.phrase)
+const account = await fdp.account.register('myusername', 'mypassword')
 ```
 
 Login with FDP account
