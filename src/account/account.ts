@@ -88,16 +88,10 @@ export async function createUserV1(
  * Creates a new user (version 2) and uploads the encrypted account to the network
  *
  * @param connection connection information for data uploading
- * @param username FDP username
  * @param password FDP password
  * @param mnemonic mnemonic phrase
  */
-export async function createUser(
-  connection: Connection,
-  username: string,
-  password: string,
-  mnemonic: string,
-): Promise<Reference> {
+export async function createUser(connection: Connection, password: string, mnemonic: string): Promise<Reference> {
   const { wallet, encryptedMnemonic } = await createUserAccount(password, mnemonic)
   const topic = generateRandomBase64String(RANDOM_TOPIC_LENGTH)
   const encryptedMnemonicAddress = removeZeroFromHex(
