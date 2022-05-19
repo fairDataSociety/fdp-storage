@@ -90,6 +90,8 @@ export async function createUserV1(
  * @param connection connection information for data uploading
  * @param password FDP password
  * @param mnemonic mnemonic phrase
+ *
+ * @returns swarm reference to padded and encrypted address of the mnemonic phrase
  */
 export async function createUser(connection: Connection, password: string, mnemonic: string): Promise<Reference> {
   const { wallet, encryptedMnemonic } = await createUserAccount(password, mnemonic)
