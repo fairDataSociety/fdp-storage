@@ -5,9 +5,7 @@ import { AccountData } from './account-data'
 import { isValidMnemonic } from 'ethers/lib/utils'
 import CryptoJS from 'crypto-js'
 import { replaceAll } from '../utils/string'
-import { assertEthAddress, assertString } from '../utils/type'
-import { MigrateOptions } from './types'
-import { ENS } from '@fairdatasociety/fdp-contracts'
+import { assertString } from '../utils/type'
 
 export const MNEMONIC_LENGTH = 12
 export const MAX_CHUNK_LENGTH = 4096
@@ -156,23 +154,6 @@ export function assertBase64UrlData(value: unknown): asserts value is string {
 
   if (!/^[-A-Za-z0-9_]+[=]{0,2}$/.test(value)) {
     throw new Error('Incorrect symbols in Base64Url data')
-  }
-}
-
-/**
- * Asserts whether migrate options are correct
- */
-export function assertMigrateOptions(value: unknown): asserts value is MigrateOptions {
-  const data = value as MigrateOptions
-
-  if (!data.address && !data.mnemonic) {
-    throw new Error('Address or mnemonic should be provided')
-  }
-
-  if (data.address) {
-    assertEthAddress(data.address)
-  } else {
-    assertMnemonic(data.mnemonic)
   }
 }
 

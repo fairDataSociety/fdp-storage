@@ -20,12 +20,10 @@ export function assertString(value: unknown): asserts value is string {
 }
 
 /**
- * Asserts that the given value is an Ethereum address
+ * Checks that value is a valid Ethereum address
  */
-export function assertEthAddress(value: Utils.EthAddress): asserts value is Utils.EthAddress {
-  if (!Utils.isHexString(value) || value.length !== 20) {
-    throw new Error('Invalid ETH address')
-  }
+export function isEthAddress(value: unknown): value is Utils.EthAddress {
+  return Utils.isHexString(value) && value.length === 20
 }
 
 /**
@@ -40,4 +38,12 @@ export function isString(value: unknown): value is string {
  */
 export function isNumber(value: unknown): value is number {
   return typeof value === 'number'
+}
+
+/**
+ * Checks that value is an object
+ */
+// eslint-disable-next-line @typescript-eslint/ban-types
+export function isObject(value: unknown): value is object {
+  return typeof value === 'object'
 }

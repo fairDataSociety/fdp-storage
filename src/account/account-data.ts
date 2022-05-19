@@ -1,11 +1,11 @@
 import { Wallet } from 'ethers'
-import { assertMigrateOptions, assertMnemonic, assertPassword, assertUsername } from './utils'
+import { assertMnemonic, assertPassword, assertUsername } from './utils'
 import { prepareEthAddress } from '../utils/address'
 import { getEncryptedMnemonic, getMnemonicByPublicKey } from './mnemonic'
 import { decrypt } from './encryption'
 import { createUser } from './account'
 import { Connection } from '../connection/connection'
-import { MigrateOptions } from './types'
+import { AddressOptions, isAddressOptions, isMnemonicOptions, MnemonicOptions } from './types'
 import { ENS } from '@fairdatasociety/fdp-contracts'
 
 export class AccountData {
@@ -43,16 +43,15 @@ export class AccountData {
    *
    * @param username username from version 1 account
    * @param password password from version 1 account
-   * @param options migration options
+   * @param options migration options with address or mnemonic from version 1 account
    */
-  async exportWallet(username: string, password: string, options: MigrateOptions): Promise<Wallet> {
+  async exportWallet(username: string, password: string, options: AddressOptions | MnemonicOptions): Promise<Wallet> {
     assertUsername(username)
     assertPassword(password)
-    assertMigrateOptions(options)
 
-    let mnemonic = options.mnemonic
+    let mnemonic = isMnemonicOptions(options) ? options.mnemonic : undefined
 
-    if (options.address) {
+    if (isAddressOptions(options)) {
       const address = prepareEthAddress(options.address)
       const encryptedMnemonic = await getEncryptedMnemonic(this.connection.bee, username, address)
       mnemonic = decrypt(password, encryptedMnemonic)
@@ -72,21 +71,11 @@ export class AccountData {
    * @param password password from version 1 account
    * @param options migration options with address or mnemonic from version 1 account
    */
-  async migrate(username: string, password: string, options: MigrateOptions): Promise<Wallet> {
+  async migrate(username: string, password: string, options: AddressOptions | MnemonicOptions): Promise<Wallet> {
     assertUsername(username)
     assertPassword(password)
-    assertMigrateOptions(options)
 
-    let mnemonic = options.mnemonic
-
-    if (options.address) {
-      const address = prepareEthAddress(options.address)
-      const encryptedMnemonic = await getEncryptedMnemonic(this.connection.bee, username, address)
-      mnemonic = decrypt(password, encryptedMnemonic)
-    }
-
-    assertMnemonic(mnemonic)
-    this.setActiveAccount(Wallet.fromMnemonic(mnemonic))
+    this.setActiveAccount(await this.exportWallet(username, password, options))
 
     return this.register(username, password)
   }
