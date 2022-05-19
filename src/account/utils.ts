@@ -163,3 +163,10 @@ export function assertBase64UrlData(value: unknown): asserts value is string {
 export function removeZeroFromHex(value: string): string {
   return value.replace('0x', '')
 }
+
+/**
+ * Creates topic for storing credentials using publicKey and password
+ */
+export function createCredentialsTopic(publicKey: string, password: string): string {
+  return removeZeroFromHex(publicKey) + password
+}

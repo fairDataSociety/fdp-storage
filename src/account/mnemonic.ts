@@ -1,5 +1,5 @@
 import { Bee, Reference, Utils } from '@ethersphere/bee-js'
-import { assertBase64UrlData, assertUsername, removeZeroFromHex } from './utils'
+import { assertBase64UrlData, assertUsername, createCredentialsTopic } from './utils'
 import { Wallet } from 'ethers'
 import { getFeedData, writeFeedData } from '../feed/api'
 import { Connection } from '../connection/connection'
@@ -26,7 +26,7 @@ export async function getMnemonicByPublicKey(
   password: string,
   address: Utils.EthAddress,
 ): Promise<string> {
-  const topic = removeZeroFromHex(publicKey) + password
+  const topic = createCredentialsTopic(publicKey, password)
   const encryptedContent = (await getFeedData(bee, topic, address)).data.chunkContent().text()
   const decryptedContent = decrypt(password, encryptedContent)
   const chunkAddress = decryptedContent.substring(0, ADDRESS_LENGTH)

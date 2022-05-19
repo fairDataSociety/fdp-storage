@@ -2,7 +2,7 @@ import { Reference } from '@ethersphere/bee-js'
 import { Wallet } from 'ethers'
 import { encrypt } from './encryption'
 import { uploadEncryptedMnemonic } from './mnemonic'
-import { assertMnemonic, assertPassword, removeZeroFromHex } from './utils'
+import { assertMnemonic, assertPassword, createCredentialsTopic, removeZeroFromHex } from './utils'
 import { Connection } from '../connection/connection'
 import { writeFeedData } from '../feed/api'
 import { stringToBytes } from '../utils/bytes'
@@ -102,7 +102,7 @@ export async function createUser(connection: Connection, password: string, mnemo
   const paddingLength = Math.floor(Math.random() * (PADDING_MAX - PADDING_MIN)) + PADDING_MIN
   const randomPadding = generateRandomBase64String(paddingLength)
   const encryptedAddress = encrypt(password, encryptedMnemonicAddress + randomPadding)
-  const topicPublicKey = removeZeroFromHex(wallet.publicKey) + password
+  const topicPublicKey = createCredentialsTopic(wallet.publicKey, password)
 
   return writeFeedData(connection, topicPublicKey, stringToBytes(encryptedAddress), wallet.privateKey)
 }
