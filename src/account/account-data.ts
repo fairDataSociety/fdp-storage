@@ -20,6 +20,7 @@ export class AccountData {
    */
   setActiveAccount(wallet: Wallet): void {
     this.wallet = wallet.connect(this.ens.provider)
+    this.ens.connect(this.wallet)
   }
 
   /**
@@ -122,15 +123,12 @@ export class AccountData {
     const wallet = this.wallet
 
     if (!wallet) {
-      throw new Error('Before registration, a wallet must be created using `createWallet` method')
+      throw new Error('Before registration, an active account must be set')
     }
-
-    this.ens.connect(wallet)
 
     try {
       await createUser(this.connection, password, wallet.mnemonic.phrase)
       await this.ens.registerUsername(username, wallet.address, wallet.publicKey)
-      this.setActiveAccount(wallet)
 
       return wallet
     } catch (e) {
