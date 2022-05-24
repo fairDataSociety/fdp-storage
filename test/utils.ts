@@ -104,17 +104,22 @@ export function bytesToString(data: Uint8Array): string {
 }
 
 /**
+ * Options for FDP initialization
+ */
+export const fdpOptions = {
+  downloadOptions: {
+    timeout: GET_FEED_DATA_TIMEOUT,
+  },
+  ensOptions: {
+    ...ENVIRONMENT_CONFIGS[Environments.LOCALHOST],
+    performChecks: true,
+    rpcUrl: 'http://127.0.0.1:9546/',
+  },
+}
+
+/**
  * Creates FDP instance with default configuration for testing
  */
 export function createFdp(): FdpStorage {
-  return new FdpStorage(beeUrl(), beeDebugUrl(), {
-    downloadOptions: {
-      timeout: GET_FEED_DATA_TIMEOUT,
-    },
-    ensOptions: {
-      ...ENVIRONMENT_CONFIGS[Environments.LOCALHOST],
-      performChecks: true,
-      rpcUrl: 'http://127.0.0.1:9546/',
-    },
-  })
+  return new FdpStorage(beeUrl(), beeDebugUrl(), fdpOptions)
 }

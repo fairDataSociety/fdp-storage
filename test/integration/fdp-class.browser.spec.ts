@@ -1,5 +1,5 @@
 import { join } from 'path'
-import { beeDebugUrl, beeUrl, createFdp, generateRandomHexString, generateUser, TestUser } from '../utils'
+import { beeDebugUrl, beeUrl, createFdp, fdpOptions, generateRandomHexString, generateUser, TestUser } from '../utils'
 import '../../src/index'
 import '../index'
 import { JSONArray, JSONObject } from 'puppeteer'
@@ -20,11 +20,6 @@ describe('Fair Data Protocol class - in browser', () => {
     await jestPuppeteer.resetPage()
     const testPage = join(__dirname, '..', 'testpage', 'testpage.html')
     await page.goto(`file://${testPage}`)
-    const ensOptions = {
-      ...ENVIRONMENT_CONFIGS[Environments.LOCALHOST],
-      performChecks: true,
-      rpcUrl: 'http://127.0.0.1:9546/',
-    }
 
     await page.exposeFunction(
       'initFdp',
@@ -63,12 +58,7 @@ describe('Fair Data Protocol class - in browser', () => {
             await fdp.ens.provider.send('evm_mine', [1])
         }
 
-        new window.fdp.FdpStorage('${BEE_URL}', '${BEE_DEBUG_URL}', {
-          downloadOptions: {
-            timeout: ${GET_FEED_DATA_TIMEOUT},
-          },
-          ensOptions: ${JSON.stringify(ensOptions)},
-        })`,
+        new window.fdp.FdpStorage('${BEE_URL}', '${BEE_DEBUG_URL}', ${JSON.stringify(fdpOptions)})`,
     )
   })
 
@@ -121,7 +111,7 @@ describe('Fair Data Protocol class - in browser', () => {
 
         await window.shouldFail(
           fdp.account.register('username', 'password'),
-          'Before registration, a wallet must be created using `createWallet` method',
+          'Before registration, an active account must be set',
         )
 
         const result = []

@@ -62,7 +62,7 @@ describe('Fair Data Protocol class', () => {
       const fdp = createFdp()
 
       await expect(fdp.account.register('user', 'password')).rejects.toThrow(
-        'Before registration, a wallet must be created using `createWallet` method',
+        'Before registration, an active account must be set',
       )
 
       for (let i = 0; i < 2; i++) {
