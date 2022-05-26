@@ -9,6 +9,8 @@ import { assertString } from '../utils/type'
 
 export const MNEMONIC_LENGTH = 12
 export const MAX_CHUNK_LENGTH = 4096
+export const AUTH_VERSION = 'FDP-login-v1.0'
+export const CHUNK_SIZE = 4096
 
 /**
  * Encode input data to Base64Url with Go lang compatible paddings
@@ -155,4 +157,38 @@ export function assertBase64UrlData(value: unknown): asserts value is string {
   if (!/^[-A-Za-z0-9_]+[=]{0,2}$/.test(value)) {
     throw new Error('Incorrect symbols in Base64Url data')
   }
+}
+
+/**
+ * Removes 0x from hex string
+ */
+export function removeZeroFromHex(value: string): string {
+  return value.replace('0x', '')
+}
+
+/**
+ * Creates topic for storing private key using username and password
+ */
+export function createCredentialsTopic(username: string, password: string): Utils.Bytes<32> {
+  const topic = AUTH_VERSION + username + password
+
+  return bmtHashString(topic)
+}
+
+/**
+ * Asserts whether a valid chunk size is passed
+ */
+export function assertChunkSizeLength(value: unknown): asserts value is number {
+  const data = value as number
+
+  if (data !== CHUNK_SIZE) {
+    throw new Error('Chunk size is not incorrect')
+  }
+}
+
+/**
+ * Converts bytes to CryptoJS WordArray
+ */
+export function bytesToWordArray(data: Uint8Array): CryptoJS.lib.WordArray {
+  return CryptoJS.enc.Hex.parse(Utils.bytesToHex(data))
 }

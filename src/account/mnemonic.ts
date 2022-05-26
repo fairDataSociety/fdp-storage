@@ -6,7 +6,9 @@ import { Connection } from '../connection/connection'
 import { stringToBytes } from '../utils/bytes'
 
 /**
- * Downloads encrypted mnemonic phrase from swarm chunk
+ * Downloads encrypted mnemonic phrase from swarm chunk for version 1 account
+ *
+ * @deprecated use methods for v2 account instead
  *
  * @param bee Bee client
  * @param username FDP account username
@@ -21,7 +23,9 @@ export async function getEncryptedMnemonic(bee: Bee, username: string, address: 
 }
 
 /**
- * Uploads encrypted mnemonic to swarm chunk
+ * Uploads encrypted mnemonic from account version 1 to swarm chunk
+ *
+ * @deprecated use methods for v2 account instead
  *
  * @param connection connection information for data uploading
  * @param wallet FDP account Ethereum wallet

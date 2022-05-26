@@ -1,29 +1,12 @@
 import { join } from 'path'
-import {
-  beeDebugUrl,
-  beeUrl,
-  bytesToString,
-  fairosJsUrl,
-  generateRandomHexString,
-  generateUser,
-  prepareEthAddress,
-  TestUser,
-} from '../utils'
+import { beeDebugUrl, beeUrl, createFdp, fdpOptions, generateRandomHexString, generateUser, TestUser } from '../utils'
 import '../../src/index'
 import '../index'
 import { JSONArray, JSONObject } from 'puppeteer'
 import { FdpStorage } from '../../src'
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-import FairosJs from '@fairdatasociety/fairos-js'
 import { MAX_POD_NAME_LENGTH } from '../../src/pod/utils'
-import { FairOSDirectoryItems } from '../types'
-
-const GET_FEED_DATA_TIMEOUT = 1000
-
-function createFairosJs() {
-  return new FairosJs(fairosJsUrl())
-}
+import { createUserV1 } from '../../src/account/account'
+import { Wallet } from 'ethers'
 
 jest.setTimeout(200000)
 describe('Fair Data Protocol class - in browser', () => {
@@ -34,14 +17,11 @@ describe('Fair Data Protocol class - in browser', () => {
     await jestPuppeteer.resetPage()
     const testPage = join(__dirname, '..', 'testpage', 'testpage.html')
     await page.goto(`file://${testPage}`)
+
     await page.exposeFunction(
       'initFdp',
-      (): string => `new window.fdp.FdpStorage('${BEE_URL}', '${BEE_DEBUG_URL}', ${GET_FEED_DATA_TIMEOUT})`,
-    )
-    await page.exposeFunction(
-      'shouldFailString',
       (): string =>
-        `window.shouldFail = async(
+        `window.shouldFail = async (
             method,
             message,
             failMessage = 'Method should fail',
@@ -56,7 +36,26 @@ describe('Fair Data Protocol class - in browser', () => {
 
               throw e
             }
-          }`,
+        };
+
+        window.topUpAddress = async (fdp) => {
+            if (!fdp.account.wallet?.address) {
+              throw new Error('Address is not defined')
+            }
+
+            const account = (await fdp.ens.provider.listAccounts())[0]
+            await fdp.ens.provider.send('eth_sendTransaction', [
+              {
+                from: account,
+                to: fdp.account.wallet.address,
+                value: '10000000000000000', // 0.01 ETH
+              },
+            ])
+
+            await fdp.ens.provider.send('evm_mine', [1])
+        }
+
+        new window.fdp.FdpStorage('${BEE_URL}', '${BEE_DEBUG_URL}', ${JSON.stringify(fdpOptions)})`,
     )
   })
 
@@ -75,152 +74,161 @@ describe('Fair Data Protocol class - in browser', () => {
   })
 
   describe('Registration', () => {
-    it('should register users', async () => {
-      const fairos = createFairosJs()
+    it('should create account wallet', async () => {
+      const result = await page.evaluate(async () => {
+        const fdp = eval(await window.initFdp()) as FdpStorage
 
+        const wallet = fdp.account.createWallet()
+        await window.shouldFail((async () => fdp.account.createWallet())(), 'Wallet already created')
+
+        return { address: wallet.address, privateKey: wallet.privateKey }
+      })
+
+      expect(result.address).toBeDefined()
+      expect(result.privateKey).toBeDefined()
+    })
+
+    it('should fail on zero balance', async () => {
+      const user = generateUser()
+      const jsonUser = user as unknown as JSONObject
+
+      await page.evaluate(async user => {
+        const fdp = eval(await window.initFdp()) as FdpStorage
+
+        fdp.account.createWallet()
+        await window.shouldFail(fdp.account.register(user.username, user.password), 'Not enough funds')
+      }, jsonUser)
+    })
+
+    it('should register users', async () => {
       const usersList = [generateUser(), generateUser()] as unknown as JSONArray
       const createdUsers = await page.evaluate(async users => {
         const fdp = eval(await window.initFdp()) as FdpStorage
 
+        await window.shouldFail(
+          fdp.account.register('username', 'password'),
+          'Before registration, an active account must be set',
+        )
+
         const result = []
         for (const user of users) {
-          const data = await fdp.account.register(user.username, user.password, user.mnemonic)
-          result.push(data)
+          const fdp = eval(await window.initFdp()) as FdpStorage
 
-          await fdp.account.import(user.username, user.mnemonic)
+          fdp.account.createWallet()
+          await window.topUpAddress(fdp)
+          const data = await fdp.account.register(user.username, user.password)
+          result.push({
+            address: data.address,
+          })
+
           await fdp.account.login(user.username, user.password)
         }
 
         return result
       }, usersList)
 
-      for (const [i, createdUser] of createdUsers.entries()) {
-        const user = usersList[i] as unknown as TestUser
-        expect(createdUser.mnemonic).toEqual(user.mnemonic)
-        expect(createdUser.wallet.address).toEqual(user.address)
-        expect(createdUser.encryptedMnemonic).toBeDefined()
-        expect(createdUser.reference).toBeDefined()
-        await fairos.userImport(user.username, user.password, '', user.address)
-        await fairos.userLogin(user.username, user.password)
+      for (const createdUser of createdUsers) {
+        expect(createdUser.address).toBeDefined()
       }
     })
 
     it('should throw when registering already registered user', async () => {
       await page.evaluate(async (user: TestUser) => {
         const fdp = eval(await window.initFdp()) as FdpStorage
-        eval(await window.shouldFailString())
+        fdp.account.createWallet()
+        await window.topUpAddress(fdp)
 
-        await fdp.account.register(user.username, user.password, user.mnemonic)
-        fdp.account.removeUserAddress(user.username)
-        await window.shouldFail(
-          fdp.account.register(user.username, user.password, user.mnemonic),
-          'User already exists',
-        )
+        await fdp.account.register(user.username, user.password)
+        await window.shouldFail(fdp.account.register(user.username, user.password), 'User account already uploaded')
       }, generateUser() as unknown as JSONObject)
     })
 
-    it('should throw when registering already imported user', async () => {
-      await page.evaluate(async (user: TestUser) => {
-        const fdp = eval(await window.initFdp()) as FdpStorage
-        eval(await window.shouldFailString())
+    it('should migrate v1 user to v2', async () => {
+      const fdp = createFdp()
+      const user = generateUser()
+      const jsonUser = user as unknown as JSONObject
+      await createUserV1(fdp.connection, user.username, user.password, user.mnemonic)
 
-        await fdp.account.setUserAddress(user.username, user.address)
-        await window.shouldFail(
-          fdp.account.register(user.username, user.password, user.mnemonic),
-          'User already imported',
-        )
-      }, generateUser() as unknown as JSONObject)
+      const result = await page.evaluate(async (user: TestUser) => {
+        const fdp = eval(await window.initFdp()) as FdpStorage
+        fdp.account.setActiveAccount(Wallet.fromMnemonic(user.mnemonic))
+        await window.topUpAddress(fdp)
+
+        await fdp.account.migrate(user.username, user.password, {
+          mnemonic: user.mnemonic,
+        })
+        const loggedWallet = await fdp.account.login(user.username, user.password)
+        await window.shouldFail(fdp.account.register(user.username, user.password), 'User account already uploaded')
+
+        return { address: loggedWallet.address }
+      }, jsonUser)
+
+      expect(result.address).toEqual(user.address)
     })
   })
 
   describe('Login', () => {
-    it('should login with existing user and address', async () => {
+    it('should login with existing user', async () => {
       const user = generateUser()
       const jsonUser = user as unknown as JSONObject
       const answer = await page.evaluate(async (user: TestUser) => {
         const result = {} as {
-          address1: string
-          address2: string
+          result1: { address: string }
+          result2: { address: string }
+          createdWallet: { address: string }
         }
         const fdp = eval(await window.initFdp()) as FdpStorage
         const fdp1 = eval(await window.initFdp()) as FdpStorage
+        const wallet = fdp.account.createWallet()
+        result.createdWallet = { address: wallet.address }
+        await window.topUpAddress(fdp)
 
-        await fdp.account.register(user.username, user.password, user.mnemonic)
-        result.address1 = fdp.account.usernameToAddress[user.username].toString()
-        await fdp.account.setUserAddress(user.username, user.address)
-        await fdp.account.login(user.username, user.password)
+        let data = await fdp.account.register(user.username, user.password)
+        result.result1 = { address: data.address }
 
-        await fdp1.account.login(user.username, user.password, user.address)
-        result.address2 = fdp1.account.usernameToAddress[user.username].toString()
+        data = await fdp1.account.login(user.username, user.password)
+        result.result2 = { address: data.address }
 
         return result
       }, jsonUser)
 
-      expect(answer.address1).toEqual(prepareEthAddress(user.address).toString())
-      expect(answer.address2).toEqual(prepareEthAddress(user.address).toString())
+      expect(answer.result1.address).toEqual(answer.createdWallet.address)
+      expect(answer.result2.address).toEqual(answer.createdWallet.address)
     })
 
-    it('should login after importing with username and mnemonic', async () => {
+    it('should throw when username is not registered', async () => {
       const user = generateUser()
-      const jsonUser = user as unknown as JSONObject
-      const answer = await page.evaluate(async (user: TestUser) => {
-        const result = {} as {
-          address1: string
-          address2: string
-        }
+      const jsonFakeUser = user as unknown as JSONObject
+
+      await page.evaluate(async (fakeUser: TestUser) => {
         const fdp = eval(await window.initFdp()) as FdpStorage
-        const fdp1 = eval(await window.initFdp()) as FdpStorage
 
-        result.address1 = typeof fdp.account.usernameToAddress[user.username]
-        await fdp.account.register(user.username, user.password, user.mnemonic)
-
-        await fdp1.account.import(user.username, user.mnemonic)
-        result.address2 = fdp1.account.usernameToAddress[user.username].toString()
-        await fdp1.account.login(user.username, user.password)
-
-        return result
-      }, jsonUser)
-
-      expect(answer.address1).toEqual('undefined')
-      expect(answer.address2).toEqual(prepareEthAddress(user.address).toString())
+        await window.shouldFail(
+          fdp.account.login(fakeUser.username, fakeUser.password),
+          `Username "${fakeUser.username}" does not exists`,
+        )
+      }, jsonFakeUser)
     })
 
-    it('should throw when login with incorrect login and password', async () => {
+    it('should throw when password is not correct', async () => {
       const user = generateUser()
+      const user1 = generateUser()
       const jsonUser = user as unknown as JSONObject
-      const randomData = generateUser().username
-      const randomData1 = generateUser().username
+      const jsonUser1 = user1 as unknown as JSONObject
 
       await page.evaluate(
-        async (user: TestUser, randomData: string, randomData1: string) => {
+        async (user: TestUser, user1: TestUser) => {
           const fdp = eval(await window.initFdp()) as FdpStorage
-          const fdp1 = eval(await window.initFdp()) as FdpStorage
-          eval(await window.shouldFailString())
+          fdp.account.createWallet()
+          await window.topUpAddress(fdp)
 
-          await fdp1.account.register(user.username, user.password, user.mnemonic)
+          await fdp.account.register(user.username, user.password)
 
-          // not imported username
-          await window.shouldFail(
-            fdp.account.login(randomData, 'zzz'),
-            `No address linked to the username "${randomData}"`,
-          )
-
-          // imported but incorrect password
-          await fdp.account.setUserAddress(user.username, user.address)
-          await window.shouldFail(fdp.account.login(user.username, randomData), 'Incorrect password')
-
-          // imported but empty password
+          await window.shouldFail(fdp.account.login(user.username, user1.password), 'Incorrect password')
           await window.shouldFail(fdp.account.login(user.username, ''), 'Incorrect password')
-
-          // import with incorrect mnemonic
-          await window.shouldFail(fdp.account.import(randomData1, 'some mnemonic'), 'Incorrect mnemonic')
-
-          // import with empty username and mnemonic
-          await window.shouldFail(fdp.account.import('', ''), 'Incorrect username')
         },
         jsonUser,
-        randomData,
-        randomData1,
+        jsonUser1,
       )
     })
   })
@@ -231,7 +239,10 @@ describe('Fair Data Protocol class - in browser', () => {
       const jsonUser = user as unknown as JSONObject
       const answer = await page.evaluate(async (user: TestUser) => {
         const fdp = eval(await window.initFdp()) as FdpStorage
-        await fdp.account.register(user.username, user.password, user.mnemonic)
+        fdp.account.createWallet()
+        await window.topUpAddress(fdp)
+
+        await fdp.account.register(user.username, user.password)
 
         return await fdp.personalStorage.list()
       }, jsonUser)
@@ -239,38 +250,8 @@ describe('Fair Data Protocol class - in browser', () => {
       expect(answer).toEqual([])
     })
 
-    it('should create pods with fairos and get list of them', async () => {
-      const fairos = createFairosJs()
-      const user = generateUser()
-      const jsonUser = user as unknown as JSONObject
-
-      const pods = []
-      await fairos.userSignup(user.username, user.password, user.mnemonic)
-      for (let i = 0; i < 10; i++) {
-        const podName = generateRandomHexString()
-        pods.push(podName)
-        const podData = (await fairos.podNew(podName, user.password)).data
-        expect(podData.code).toEqual(201)
-      }
-
-      const podsList = await page.evaluate(async (user: TestUser) => {
-        const fdp = eval(await window.initFdp()) as FdpStorage
-        await fdp.account.setUserAddress(user.username, user.address)
-        await fdp.account.login(user.username, user.password)
-
-        return await fdp.personalStorage.list()
-      }, jsonUser)
-
-      expect(podsList.length).toEqual(pods.length)
-
-      for (const podName of podsList) {
-        expect(pods.includes(podName.name)).toBeTruthy()
-      }
-    })
-
     it('should create pods with fdp', async () => {
       const user = generateUser()
-      const fairos = createFairosJs()
       const jsonUser = user as unknown as JSONObject
       const longPodName = generateRandomHexString(MAX_POD_NAME_LENGTH + 1)
       const commaPodName = generateRandomHexString() + ', ' + generateRandomHexString()
@@ -278,9 +259,10 @@ describe('Fair Data Protocol class - in browser', () => {
       const result = await page.evaluate(
         async (user: TestUser, longPodName: string, commaPodName: string) => {
           const fdp = eval(await window.initFdp()) as FdpStorage
-          eval(await window.shouldFailString())
+          fdp.account.createWallet()
+          await window.topUpAddress(fdp)
 
-          await fdp.account.register(user.username, user.password, user.mnemonic)
+          await fdp.account.register(user.username, user.password)
 
           await window.shouldFail(fdp.personalStorage.create(longPodName), 'Pod name is too long')
           await window.shouldFail(fdp.personalStorage.create(commaPodName), 'Pod name cannot contain commas')
@@ -294,9 +276,6 @@ describe('Fair Data Protocol class - in browser', () => {
       )
 
       expect(result).toHaveLength(0)
-      await fairos.userImport(user.username, user.password, '', user.address)
-      await fairos.userLogin(user.username, user.password)
-      expect((await fairos.podLs()).data.pod_name).toHaveLength(0)
 
       const examples = [
         { name: generateRandomHexString(), index: 1 },
@@ -308,10 +287,9 @@ describe('Fair Data Protocol class - in browser', () => {
 
       const result1 = await page.evaluate(
         async (user: TestUser, examples: JSONArray) => {
-          eval(await window.shouldFailString())
           const fdp = eval(await window.initFdp()) as FdpStorage
           const iterations = []
-          await fdp.account.login(user.username, user.password, user.address)
+          await fdp.account.login(user.username, user.password)
           for (let i = 0; examples.length > i; i++) {
             const example = examples[i] as unknown as { name: string; index: number }
             const out = await fdp.personalStorage.create(example.name)
@@ -341,31 +319,25 @@ describe('Fair Data Protocol class - in browser', () => {
       )
 
       expect(result1).toHaveLength(examples.length)
-      const fairosPods = (await fairos.podLs()).data.pod_name
-      expect(fairosPods).toHaveLength(examples.length)
 
       for (let i = 0; result1.length > i; i++) {
         const item = result1[i]
         expect(item.result).toEqual(item.example)
-        const openResult = (await fairos.podOpen(item.example.name, user.password)).data
-        expect(openResult.message).toEqual('pod opened successfully')
       }
     })
 
     it('should delete pods', async () => {
       const user = generateUser()
-      const fairos = createFairosJs()
       const jsonUser = user as unknown as JSONObject
 
       await page.evaluate(async (user: TestUser) => {
         const fdp = eval(await window.initFdp()) as FdpStorage
-        await fdp.account.register(user.username, user.password, user.mnemonic)
-        await fdp.account.login(user.username, user.password, user.address)
-      }, jsonUser)
+        fdp.account.createWallet()
+        await window.topUpAddress(fdp)
 
-      await fairos.userImport(user.username, user.password, '', user.address)
-      await fairos.userLogin(user.username, user.password)
-      expect((await fairos.podLs()).data.pod_name).toHaveLength(0)
+        await fdp.account.register(user.username, user.password)
+        await fdp.account.login(user.username, user.password)
+      }, jsonUser)
 
       const podName = generateRandomHexString()
       const podName1 = generateRandomHexString()
@@ -374,9 +346,8 @@ describe('Fair Data Protocol class - in browser', () => {
       let list = await page.evaluate(
         async (user: TestUser, podName: string, podName1: string, notExistsPod: string) => {
           const fdp = eval(await window.initFdp()) as FdpStorage
-          eval(await window.shouldFailString())
 
-          await fdp.account.login(user.username, user.password, user.address)
+          await fdp.account.login(user.username, user.password)
           await fdp.personalStorage.create(podName)
           await fdp.personalStorage.create(podName1)
 
@@ -391,14 +362,12 @@ describe('Fair Data Protocol class - in browser', () => {
       )
 
       expect(list).toHaveLength(2)
-      expect((await fairos.podLs()).data.pod_name).toHaveLength(2)
 
       list = await page.evaluate(
         async (user: TestUser, podName: string) => {
           const fdp = eval(await window.initFdp()) as FdpStorage
-          eval(await window.shouldFailString())
 
-          await fdp.account.login(user.username, user.password, user.address)
+          await fdp.account.login(user.username, user.password)
           await fdp.personalStorage.delete(podName)
 
           return await fdp.personalStorage.list()
@@ -408,14 +377,12 @@ describe('Fair Data Protocol class - in browser', () => {
       )
 
       expect(list).toHaveLength(1)
-      expect((await fairos.podLs()).data.pod_name).toHaveLength(1)
 
       list = await page.evaluate(
         async (user: TestUser, podName: string) => {
           const fdp = eval(await window.initFdp()) as FdpStorage
-          eval(await window.shouldFailString())
 
-          await fdp.account.login(user.username, user.password, user.address)
+          await fdp.account.login(user.username, user.password)
           await fdp.personalStorage.delete(podName)
 
           return await fdp.personalStorage.list()
@@ -425,93 +392,11 @@ describe('Fair Data Protocol class - in browser', () => {
       )
 
       expect(list).toHaveLength(0)
-      expect((await fairos.podLs()).data.pod_name).toHaveLength(0)
     })
   })
 
   describe('Directory', () => {
-    it('should find all directories', async () => {
-      const user = generateUser()
-      const fairos = createFairosJs()
-      const jsonUser = user as unknown as JSONObject
-      const pod = generateRandomHexString()
-      const createDirectories = ['/one', '/two', '/one/one_1', '/two/two_1']
-
-      await page.evaluate(
-        async (user: TestUser, pod: string) => {
-          const fdp = eval(await window.initFdp()) as FdpStorage
-          await fdp.account.register(user.username, user.password, user.mnemonic)
-          await fdp.personalStorage.create(pod)
-        },
-        jsonUser,
-        pod,
-      )
-
-      await fairos.userImport(user.username, user.password, '', user.address)
-      await fairos.userLogin(user.username, user.password)
-      await fairos.podOpen(pod, user.password)
-      for (const directory of createDirectories) {
-        await fairos.dirMkdir(pod, directory)
-      }
-
-      const {
-        podsNoRecursive,
-        noRecursiveDirectories,
-        podsRecursive,
-        recursiveDirectories,
-        noRecursiveFiles,
-        recursiveFiles,
-        subDirs1,
-        subDirs2,
-      } = await page.evaluate(
-        async (user: TestUser, pod: string) => {
-          const fdp = eval(await window.initFdp()) as FdpStorage
-          await fdp.account.login(user.username, user.password, user.address)
-          const podsNoRecursive = await fdp.directory.read(pod, '/', false)
-          const noRecursiveDirectories = podsNoRecursive.getDirectories()
-          const noRecursiveFiles = podsNoRecursive.getFiles()
-          const podsRecursive = await fdp.directory.read(pod, '/', true)
-          const recursiveDirectories = podsRecursive.getDirectories()
-          const recursiveFiles = podsRecursive.getFiles()
-          const subDirs1 = recursiveDirectories[0].getDirectories()
-          const subDirs2 = recursiveDirectories[1].getDirectories()
-
-          return {
-            podsNoRecursive,
-            noRecursiveDirectories,
-            noRecursiveFiles,
-            podsRecursive,
-            recursiveDirectories,
-            recursiveFiles,
-            subDirs1,
-            subDirs2,
-          }
-        },
-        jsonUser,
-        pod,
-        createDirectories,
-      )
-
-      expect(podsNoRecursive.name).toEqual('/')
-      expect(podsNoRecursive.content).toHaveLength(2)
-      expect(noRecursiveFiles).toHaveLength(0)
-      expect(noRecursiveDirectories).toHaveLength(2)
-      expect(noRecursiveDirectories[0].name).toEqual('one')
-      expect(noRecursiveDirectories[1].name).toEqual('two')
-      expect(noRecursiveDirectories[0].content).toHaveLength(0)
-      expect(noRecursiveDirectories[1].content).toHaveLength(0)
-      expect(podsRecursive.name).toEqual('/')
-      expect(podsRecursive.content).toHaveLength(2)
-      expect(recursiveFiles).toHaveLength(0)
-      expect(recursiveDirectories).toHaveLength(2)
-      expect(subDirs1).toHaveLength(1)
-      expect(subDirs1[0].name).toEqual('one_1')
-      expect(subDirs2).toHaveLength(1)
-      expect(subDirs2[0].name).toEqual('two_1')
-    })
-
     it('should create new directory', async () => {
-      const fairos = createFairosJs()
       const user = generateUser()
       const jsonUser = user as unknown as JSONObject
       const pod = generateRandomHexString()
@@ -523,9 +408,10 @@ describe('Fair Data Protocol class - in browser', () => {
       const { list, directoryInfo, directoryInfo1, subDirectoriesLength } = await page.evaluate(
         async (user: TestUser, pod: string, directoryFull: string, directoryFull1: string) => {
           const fdp = eval(await window.initFdp()) as FdpStorage
-          eval(await window.shouldFailString())
+          fdp.account.createWallet()
+          await window.topUpAddress(fdp)
 
-          await fdp.account.register(user.username, user.password, user.mnemonic)
+          await fdp.account.register(user.username, user.password)
           await fdp.personalStorage.create(pod)
           await window.shouldFail(fdp.directory.create(pod, directoryFull1), 'Parent directory does not exist')
 
@@ -562,20 +448,11 @@ describe('Fair Data Protocol class - in browser', () => {
       expect(subDirectoriesLength).toEqual(1)
       expect(directoryInfo.name).toEqual(directoryName)
       expect(directoryInfo1.name).toEqual(directoryName1)
-
-      await fairos.userImport(user.username, user.password, '', user.address)
-      await fairos.userLogin(user.username, user.password)
-      await fairos.podOpen(pod, user.password)
-      const fairosList = (await fairos.dirLs(pod, '/')).data as FairOSDirectoryItems
-      expect(fairosList.dirs).toHaveLength(1)
-      const dir = fairosList.dirs[0]
-      expect(dir.name).toEqual(directoryName)
     })
   })
 
   describe('File', () => {
     it('should upload small text data as a file', async () => {
-      const fairos = createFairosJs()
       const user = generateUser()
       const jsonUser = user as unknown as JSONObject
 
@@ -588,9 +465,10 @@ describe('Fair Data Protocol class - in browser', () => {
       const { dataSmall, fdpList, fileInfoSmall } = await page.evaluate(
         async (user: TestUser, pod: string, fullFilenameSmallPath: string, contentSmall: string) => {
           const fdp = eval(await window.initFdp()) as FdpStorage
-          eval(await window.shouldFailString())
+          fdp.account.createWallet()
+          await window.topUpAddress(fdp)
 
-          await fdp.account.register(user.username, user.password, user.mnemonic)
+          await fdp.account.register(user.username, user.password)
           await fdp.personalStorage.create(pod)
           await fdp.file.uploadData(pod, fullFilenameSmallPath, contentSmall)
           await window.shouldFail(
@@ -618,21 +496,9 @@ describe('Fair Data Protocol class - in browser', () => {
       expect(fdpList.content.length).toEqual(1)
       expect(fileInfoSmall.name).toEqual(filenameSmall)
       expect(fileInfoSmall.size).toEqual(fileSizeSmall)
-
-      await fairos.userImport(user.username, user.password, '', user.address)
-      await fairos.userLogin(user.username, user.password)
-      await fairos.podOpen(pod, user.password)
-      const list = (await fairos.dirLs(pod, '/')).data as FairOSDirectoryItems
-      expect(list.files).toHaveLength(1)
-      const fairosSmallFile = list.files[0]
-      expect(fairosSmallFile.name).toEqual(filenameSmall)
-      expect(fairosSmallFile.size).toEqual(fileSizeSmall.toString())
-      const dataSmallFairos = (await fairos.fileDownload(pod, fullFilenameSmallPath, filenameSmall)).data
-      expect(bytesToString(dataSmallFairos)).toEqual(contentSmall)
     })
 
     it('should upload big text data as a file', async () => {
-      const fairos = createFairosJs()
       const user = generateUser()
       const jsonUser = user as unknown as JSONObject
       const pod = generateRandomHexString()
@@ -653,8 +519,10 @@ describe('Fair Data Protocol class - in browser', () => {
           incorrectFullPath: string,
         ) => {
           const fdp = eval(await window.initFdp()) as FdpStorage
-          eval(await window.shouldFailString())
-          await fdp.account.register(user.username, user.password, user.mnemonic)
+          fdp.account.createWallet()
+          await window.topUpAddress(fdp)
+
+          await fdp.account.register(user.username, user.password)
           await fdp.personalStorage.create(pod)
           await window.shouldFail(
             fdp.file.uploadData(incorrectPod, fullFilenameBigPath, contentBig),
@@ -684,18 +552,6 @@ describe('Fair Data Protocol class - in browser', () => {
       expect(fdpList.content.length).toEqual(1)
       expect(fileInfoBig.name).toEqual(filenameBig)
       expect(fileInfoBig.size).toEqual(fileSizeBig)
-
-      await fairos.userImport(user.username, user.password, '', user.address)
-      await fairos.userLogin(user.username, user.password)
-      await fairos.podOpen(pod, user.password)
-      const list = (await fairos.dirLs(pod, '/')).data as FairOSDirectoryItems
-      expect(list.files).toHaveLength(1)
-
-      const fairosBigFile = list.files[0]
-      expect(fairosBigFile.name).toEqual(filenameBig)
-      expect(fairosBigFile.size).toEqual(fileSizeBig.toString())
-      const dataBigFairos = (await fairos.fileDownload(pod, fullFilenameBigPath, filenameBig)).data
-      expect(bytesToString(dataBigFairos)).toEqual(contentBig)
     })
   })
 })

@@ -56,15 +56,14 @@ Creating FDP account
 import { FdpStorage } from '@fairdatasociety/fdp-storage'
 
 const fdp = new FdpStorage('http://localhost:1633', 'http://localhost:1635')
-
+const wallet = fdp.account.createWallet() // after creating a wallet, the user must top up its balance before registration
 const account = await fdp.account.register('myusername', 'mypassword')
-console.log(account) // prints account information
 ```
 
 Login with FDP account
 
 ```js
-const wallet = await fdp.account.login('otherusername', 'mypassword', '0x.....')
+const wallet = await fdp.account.login('otherusername', 'mypassword')
 console.log(wallet) // prints downloaded and decrypted wallet
 ```
 
@@ -116,6 +115,31 @@ Deleting a pod
 
 ```js
 await fdp.personalStorage.delete('my-new-pod')
+```
+
+### Migrate from v1 to v2 account
+
+Export old wallet with mnemonic
+
+```js
+const wallet = await fdp.account.exportWallet('oldusername', 'oldpassword', {
+  mnemonic: 'one two three one two three one two three one two three'
+})
+```
+
+or with address
+
+```js
+const wallet = await fdp.account.exportWallet('oldusername', 'oldpassword', {
+  address: '0x...'
+})
+```
+
+```js
+// ask user to top up his account, then can be started the migration process
+await fdp.account.migrate('oldusername', 'oldpassword', {
+  mnemonic: wallet.mnemonic.phrase
+})
 ```
 
 ## Documentation

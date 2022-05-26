@@ -1,17 +1,18 @@
-import { Wallet } from 'ethers'
-import { assertMnemonic, assertPassword, assertUsername } from './utils'
+import { Wallet, utils } from 'ethers'
+import { assertMnemonic, assertPassword, assertUsername, removeZeroFromHex } from './utils'
 import { prepareEthAddress } from '../utils/address'
 import { getEncryptedMnemonic } from './mnemonic'
-import { decrypt } from './encryption'
-import { createUser, UserAccountWithReference } from './account'
-import { EthAddress } from '@ethersphere/bee-js/dist/types/utils/eth'
+import { decryptText } from './encryption'
+import { uploadPortableAccount, downloadPortableAccount } from './account'
 import { Connection } from '../connection/connection'
+import { AddressOptions, isAddressOptions, isMnemonicOptions, MnemonicOptions } from './types'
+import { ENS } from '@fairdatasociety/fdp-contracts'
+import { Utils } from '@ethersphere/bee-js'
 
 export class AccountData {
-  /** username -> ethereum wallet address mapping */
-  public readonly usernameToAddress: { [key: string]: EthAddress } = {}
+  public wallet?: Wallet
 
-  constructor(public readonly connection: Connection, public wallet?: Wallet) {}
+  constructor(public readonly connection: Connection, public readonly ens: ENS) {}
 
   /**
    * Sets the current account's wallet to interact with the data
@@ -19,43 +20,66 @@ export class AccountData {
    * @param wallet BIP-039 + BIP-044 Wallet
    */
   setActiveAccount(wallet: Wallet): void {
-    this.wallet = wallet
+    this.wallet = wallet.connect(this.ens.provider)
+    this.ens.connect(this.wallet)
   }
 
   /**
-   * Import FDP user account
-   *
-   * @param username username to import
-   * @param mnemonic 12 space separated words to initialize wallet
+   * Creates a new FDP account wallet
    */
-  async import(username: string, mnemonic: string): Promise<void> {
+  createWallet(): Wallet {
+    if (this.wallet) {
+      throw new Error('Wallet already created')
+    }
+
+    const wallet = Wallet.createRandom()
+    this.setActiveAccount(wallet)
+
+    return wallet
+  }
+
+  /**
+   * Exports wallet from version 1 account
+   *
+   * @deprecated the method will be removed after an accounts' migration process is completed
+   *
+   * @param username username from version 1 account
+   * @param password password from version 1 account
+   * @param options migration options with address or mnemonic from version 1 account
+   */
+  async exportWallet(username: string, password: string, options: AddressOptions | MnemonicOptions): Promise<Wallet> {
     assertUsername(username)
+    assertPassword(password)
+
+    let mnemonic = isMnemonicOptions(options) ? options.mnemonic : undefined
+
+    if (isAddressOptions(options)) {
+      const address = prepareEthAddress(options.address)
+      const encryptedMnemonic = await getEncryptedMnemonic(this.connection.bee, username, address)
+      mnemonic = decryptText(password, encryptedMnemonic)
+    }
+
     assertMnemonic(mnemonic)
 
-    const wallet = Wallet.fromMnemonic(mnemonic)
-    this.usernameToAddress[username] = prepareEthAddress(wallet.address)
-    this.setActiveAccount(wallet)
+    return Wallet.fromMnemonic(mnemonic)
   }
 
   /**
-   * Set Ethereum address for specific username
+   * Migrates from FDP account without ENS to account with ENS
    *
-   * @param username username to modify
-   * @param address Ethereum address with or without 0x prefix
+   * @deprecated the method will be removed after an accounts' migration process is completed
+   *
+   * @param username username from version 1 account
+   * @param password password from version 1 account
+   * @param options migration options with address or mnemonic from version 1 account
    */
-  setUserAddress(username: string, address: string): void {
+  async migrate(username: string, password: string, options: AddressOptions | MnemonicOptions): Promise<Wallet> {
     assertUsername(username)
-    this.usernameToAddress[username] = prepareEthAddress(address)
-  }
+    assertPassword(password)
 
-  /**
-   * Removes Ethereum address for specific username
-   *
-   * @param username username to modify
-   */
-  removeUserAddress(username: string): void {
-    assertUsername(username)
-    delete this.usernameToAddress[username]
+    this.setActiveAccount(await this.exportWallet(username, password, options))
+
+    return this.register(username, password)
   }
 
   /**
@@ -63,27 +87,21 @@ export class AccountData {
    *
    * @param username FDP username
    * @param password password of the wallet
-   * @param address Ethereum address associated with FDP username
+   *
    * @returns BIP-039 + BIP-044 Wallet
    */
-  async login(username: string, password: string, address?: string): Promise<Wallet> {
+  async login(username: string, password: string): Promise<Wallet> {
     assertUsername(username)
     assertPassword(password)
 
-    if (address) {
-      this.setUserAddress(username, address)
+    if (await this.ens.isUsernameAvailable(username)) {
+      throw new Error(`Username "${username}" does not exists`)
     }
 
-    const existsAddress = this.usernameToAddress[username]
-
-    if (!existsAddress) {
-      throw new Error(`No address linked to the username "${username}"`)
-    }
-
-    const encryptedMnemonic = await getEncryptedMnemonic(this.connection.bee, username, existsAddress)
+    const publicKey = await this.ens.getPublicKey(username)
     try {
-      const decrypted = decrypt(password, encryptedMnemonic)
-      const wallet = Wallet.fromMnemonic(decrypted)
+      const address = prepareEthAddress(utils.computeAddress(publicKey))
+      const wallet = await downloadPortableAccount(this.connection.bee, address, username, password)
       this.setActiveAccount(wallet)
 
       return wallet
@@ -97,27 +115,32 @@ export class AccountData {
    *
    * @param username FDP username
    * @param password FDP password
-   * @param mnemonic Optional mnemonic phrase for account
    */
-  async register(username: string, password: string, mnemonic?: string): Promise<UserAccountWithReference> {
+  async register(username: string, password: string): Promise<Wallet> {
     assertUsername(username)
     assertPassword(password)
 
-    if (this.usernameToAddress[username]) {
-      throw new Error('User already imported')
+    const wallet = this.wallet
+
+    if (!wallet) {
+      throw new Error('Before registration, an active account must be set')
     }
 
     try {
-      const userInfo = await createUser(this.connection, username, password, mnemonic)
-      this.usernameToAddress[username] = prepareEthAddress(userInfo.wallet.address)
-      this.setActiveAccount(userInfo.wallet)
+      await uploadPortableAccount(
+        this.connection,
+        username,
+        password,
+        Utils.hexToBytes(removeZeroFromHex(wallet.privateKey)),
+      )
+      await this.ens.registerUsername(username, wallet.address, wallet.publicKey)
 
-      return userInfo
+      return wallet
     } catch (e) {
       const error = e as Error
 
       if (error.message.startsWith('Conflict: chunk already exists')) {
-        throw new Error('User already exists')
+        throw new Error('User account already uploaded')
       } else {
         throw e
       }

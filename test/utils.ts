@@ -1,7 +1,9 @@
-import { Wallet } from 'ethers'
 import crypto from 'crypto'
 import { BeeDebug, Utils } from '@ethersphere/bee-js'
 import { getBatchId } from '../src/utils/batch'
+import { FdpStorage } from '../src'
+import { Wallet } from 'ethers'
+import { ENVIRONMENT_CONFIGS, Environments } from '@fairdatasociety/fdp-contracts'
 
 export interface TestUser {
   username: string
@@ -12,14 +14,15 @@ export interface TestUser {
 
 export const USERNAME_LENGTH = 16
 export const PASSWORD_LENGTH = 6
+export const GET_FEED_DATA_TIMEOUT = 1000
 
 /**
  * Generate new user info
  *
  * @returns TestUser
  */
-export function generateUser(): TestUser {
-  const wallet = Wallet.createRandom()
+export function generateUser(fdp?: FdpStorage): TestUser {
+  const wallet = fdp ? fdp.account.createWallet() : Wallet.createRandom()
 
   return {
     username: crypto.randomBytes(USERNAME_LENGTH).toString('hex'),
@@ -98,4 +101,25 @@ export async function isBatchUsable(beeDebug: BeeDebug): Promise<boolean> {
  */
 export function bytesToString(data: Uint8Array): string {
   return new TextDecoder().decode(data)
+}
+
+/**
+ * Options for FDP initialization
+ */
+export const fdpOptions = {
+  downloadOptions: {
+    timeout: GET_FEED_DATA_TIMEOUT,
+  },
+  ensOptions: {
+    ...ENVIRONMENT_CONFIGS[Environments.LOCALHOST],
+    performChecks: true,
+    rpcUrl: 'http://127.0.0.1:9546/',
+  },
+}
+
+/**
+ * Creates FDP instance with default configuration for testing
+ */
+export function createFdp(): FdpStorage {
+  return new FdpStorage(beeUrl(), beeDebugUrl(), fdpOptions)
 }

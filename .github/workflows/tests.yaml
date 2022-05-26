@@ -44,6 +44,10 @@ jobs:
         run: |
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login https://docker.pkg.github.com -u ${GITHUB_ACTOR} --password-stdin
 
+      - name: Run fdp-contracts container
+        run: |
+          docker run -d -p 9546:9545 fairdatasociety/swarm-test-blockchain:1.2.0
+
       # Setup Bee environment
       - name: Start Bee Factory environment
         run: |
@@ -84,6 +88,10 @@ jobs:
       - name: Auth to Github Package Docker Registry
         run: |
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login https://docker.pkg.github.com -u ${GITHUB_ACTOR} --password-stdin
+
+      - name: Run fdp-contracts container
+        run: |
+          docker run -d -p 9546:9545 fairdatasociety/swarm-test-blockchain:1.2.0
 
       # Setup Bee environment
       - name: Start Bee Factory environment

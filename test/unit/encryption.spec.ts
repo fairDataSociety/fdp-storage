@@ -1,4 +1,4 @@
-import { decrypt, encrypt } from '../../src/account/encryption'
+import { decryptText, encryptText } from '../../src/account/encryption'
 import CryptoJS from 'crypto-js'
 import { generateRandomHexString } from '../utils'
 
@@ -25,21 +25,21 @@ describe('encryption', () => {
       },
     ]
 
-    it('decrypt', () => {
+    it('decryptText', () => {
       for (const item of examples) {
-        const decrypted = decrypt(item.password, item.data)
+        const decrypted = decryptText(item.password, item.data)
         expect(decrypted).toEqual(item.expected)
       }
     })
 
-    it('encrypt', () => {
+    it('encryptText', () => {
       for (const item of examples) {
-        const encrypted = encrypt(item.password, item.expected, CryptoJS.enc.Hex.parse(item.iv))
+        const encrypted = encryptText(item.password, item.expected, CryptoJS.enc.Hex.parse(item.iv))
         expect(encrypted).toEqual(item.data)
       }
     })
 
-    it('encrypt and decrypt', () => {
+    it('encryptText and decryptText', () => {
       const examples = []
 
       // examples with content length from 1 to 200 and password in range 3-10
@@ -53,8 +53,8 @@ describe('encryption', () => {
       }
 
       for (const item of examples) {
-        const encrypted = encrypt(item.password, item.text)
-        const decrypted = decrypt(item.password, encrypted)
+        const encrypted = encryptText(item.password, item.text)
+        const decrypted = decryptText(item.password, encrypted)
         expect(decrypted).toEqual(item.text)
       }
     })

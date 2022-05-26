@@ -54,7 +54,7 @@ export async function getExtendedPodsList(
     throw new Error(`Pod "${podName}" does not exist`)
   }
 
-  const podWallet = getWalletByIndex(wallet.mnemonic.phrase, pod.index)
+  const podWallet = getWalletByIndex(wallet.privateKey, pod.index)
 
   return {
     pod,
