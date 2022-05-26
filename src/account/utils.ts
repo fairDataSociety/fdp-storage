@@ -1,4 +1,4 @@
-import { CHUNK_SIZE, Data, Utils } from '@ethersphere/bee-js'
+import { Data, Utils } from '@ethersphere/bee-js'
 import { bmtHash } from '../chunk/bmt'
 import { makeSpan, stringToBytes, wrapBytesWithHelpers } from '../utils/bytes'
 import { AccountData } from './account-data'
@@ -10,6 +10,7 @@ import { assertString } from '../utils/type'
 export const MNEMONIC_LENGTH = 12
 export const MAX_CHUNK_LENGTH = 4096
 export const AUTH_VERSION = 'FDP-login-v1.0'
+export const CHUNK_SIZE = 4096
 
 /**
  * Encode input data to Base64Url with Go lang compatible paddings
