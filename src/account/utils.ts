@@ -169,7 +169,7 @@ export function removeZeroFromHex(value: string): string {
  * Creates topic for storing private key using username and password
  */
 export function createCredentialsTopic(username: string, password: string): Utils.Bytes<32> {
-  const topic = AUTH_VERSION + Utils.keccak256Hash(username) + password
+  const topic = AUTH_VERSION + username + password
 
   return bmtHashString(topic)
 }
