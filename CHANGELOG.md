@@ -1,5 +1,12 @@
 # Changelog
 
+### [0.1.1](https://www.github.com/fairDataSociety/fdp-storage/compare/v0.1.0...v0.1.1) (2022-05-26)
+
+
+### Bug Fixes
+
+* fixed wallet type ([#32](https://www.github.com/fairDataSociety/fdp-storage/issues/32)) ([86e5aff](https://www.github.com/fairDataSociety/fdp-storage/commit/86e5aff737de5c7ae56959c3b294ddda7e53d615))
+
 ## 0.1.0 (2022-05-26)
 
 
