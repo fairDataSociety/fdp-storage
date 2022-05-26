@@ -17,7 +17,7 @@ import { DIRECTORY_TOKEN, FILE_TOKEN } from '../file/handler'
 import { getUnixTimestamp } from '../utils/time'
 import { createRawDirectoryMetadata, META_VERSION } from '../pod/utils'
 import { Connection } from '../connection/connection'
-import { Wallet } from 'ethers'
+import { utils } from 'ethers'
 import { addEntryToDirectory } from '../content-items/handler'
 import { DirectoryItem } from '../content-items/directory-item'
 import { FileItem } from '../content-items/file-item'
@@ -140,7 +140,7 @@ export async function createRootDirectory(connection: Connection, privateKey: st
 export async function createDirectory(
   connection: Connection,
   fullPath: string,
-  podWallet: Wallet,
+  podWallet: utils.HDNode,
   downloadOptions?: RequestOptions,
 ): Promise<void> {
   const parts = getPathParts(fullPath)

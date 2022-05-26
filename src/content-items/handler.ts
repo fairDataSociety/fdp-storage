@@ -1,5 +1,5 @@
 import { Connection } from '../connection/connection'
-import { Wallet } from 'ethers'
+import { utils } from 'ethers'
 import { Reference, RequestOptions } from '@ethersphere/bee-js'
 import { prepareEthAddress } from '../utils/address'
 import { getUnixTimestamp } from '../utils/time'
@@ -22,7 +22,7 @@ import { RawDirectoryMetadata } from '../pod/types'
  */
 export async function addEntryToDirectory(
   connection: Connection,
-  wallet: Wallet,
+  wallet: utils.HDNode,
   parentPath: string,
   entryPath: string,
   isFile: boolean,
