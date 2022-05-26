@@ -1,25 +1,11 @@
-import { Reference } from '@ethersphere/bee-js'
+import { Bee, CHUNK_SIZE, PrivateKeyBytes, Reference, Utils } from '@ethersphere/bee-js'
 import { Wallet } from 'ethers'
-import { encrypt } from './encryption'
+import { decryptBytes, encryptText, encryptBytes, IV_LENGTH } from './encryption'
 import { uploadEncryptedMnemonic } from './mnemonic'
-import { assertMnemonic, assertPassword, createCredentialsTopic, removeZeroFromHex } from './utils'
+import { assertChunkSizeLength, assertMnemonic, assertPassword, createCredentialsTopic } from './utils'
 import { Connection } from '../connection/connection'
-import { writeFeedData } from '../feed/api'
-import { stringToBytes } from '../utils/bytes'
-import { generateRandomBase64String } from '../utils/string'
-
-/**
- * Maximal size of padding to store the encrypted mnemonic address
- */
-export const PADDING_MAX = 500
-/**
- * Minimal size of padding to store the encrypted mnemonic address
- */
-export const PADDING_MIN = 300
-/**
- * Topic length for uploading encrypted mnemonic
- */
-export const RANDOM_TOPIC_LENGTH = 16
+import { getBatchId } from '../utils/batch'
+import CryptoJS from 'crypto-js'
 
 /**
  * Created and encrypted user account to upload to the network
@@ -40,6 +26,8 @@ export interface UserAccountWithReference extends UserAccount {
 /**
  * Creates a new user account based on the passed mnemonic phrase or without it, encrypted with a password
  *
+ * @deprecated method for v1 accounts
+ *
  * @param password FDP password
  * @param mnemonic mnemonic phrase
  */
@@ -53,7 +41,7 @@ async function createUserAccount(password: string, mnemonic?: string): Promise<U
   }
 
   const wallet = Wallet.fromMnemonic(mnemonic)
-  const encryptedMnemonic = encrypt(password, mnemonic)
+  const encryptedMnemonic = encryptText(password, mnemonic)
 
   return {
     wallet,
@@ -85,24 +73,52 @@ export async function createUserV1(
 }
 
 /**
- * Creates a new user (version 2) and uploads the encrypted account to the network
+ * Uploads portable account (version 2)
  *
  * @param connection connection information for data uploading
+ * @param username FDP username
  * @param password FDP password
- * @param mnemonic mnemonic phrase
+ * @param privateKey account's wallet private key
  *
- * @returns swarm reference to padded and encrypted address of the mnemonic phrase
+ * @returns swarm reference to encrypted Ethereum wallet
  */
-export async function createUser(connection: Connection, password: string, mnemonic: string): Promise<Reference> {
-  const { wallet, encryptedMnemonic } = await createUserAccount(password, mnemonic)
-  const topic = generateRandomBase64String(RANDOM_TOPIC_LENGTH)
-  const encryptedMnemonicAddress = removeZeroFromHex(
-    await writeFeedData(connection, topic, stringToBytes(encryptedMnemonic), wallet.privateKey),
-  )
-  const paddingLength = Math.floor(Math.random() * (PADDING_MAX - PADDING_MIN)) + PADDING_MIN
-  const randomPadding = generateRandomBase64String(paddingLength)
-  const encryptedAddress = encrypt(password, encryptedMnemonicAddress + randomPadding)
-  const topicPublicKey = createCredentialsTopic(wallet.publicKey, password)
+export async function uploadPortableAccount(
+  connection: Connection,
+  username: string,
+  password: string,
+  privateKey: PrivateKeyBytes,
+): Promise<Reference> {
+  const paddedData = CryptoJS.lib.WordArray.random(CHUNK_SIZE - privateKey.length - IV_LENGTH)
+  const privateKeyWords = CryptoJS.enc.Hex.parse(Utils.bytesToHex(privateKey))
+  const chunkData = privateKeyWords.concat(paddedData)
+  const encryptedBytes = encryptBytes(password, chunkData)
+  assertChunkSizeLength(encryptedBytes.length)
+  const topic = createCredentialsTopic(username, password)
+  const socWriter = connection.bee.makeSOCWriter(privateKey)
 
-  return writeFeedData(connection, topicPublicKey, stringToBytes(encryptedAddress), wallet.privateKey)
+  return socWriter.upload(await getBatchId(connection.beeDebug), topic, encryptedBytes)
+}
+
+/**
+ * Downloads portable account (version 2)
+ *
+ * @param bee Bee instance
+ * @param address FDP account address
+ * @param username FDP username
+ * @param password FDP password
+ *
+ * @returns decrypted Ethereum wallet of the account
+ */
+export async function downloadPortableAccount(
+  bee: Bee,
+  address: Utils.EthAddress,
+  username: string,
+  password: string,
+): Promise<Wallet> {
+  const topic = createCredentialsTopic(username, password)
+  const socReader = bee.makeSOCReader(address)
+  const encryptedData = (await socReader.download(topic)).payload()
+  const privateKey = decryptBytes(password, encryptedData).slice(0, 32)
+
+  return new Wallet(privateKey)
 }

@@ -71,7 +71,6 @@ describe('Fair Data Protocol class', () => {
         const user = generateUser(fdp)
         await topUpAddress(fdp)
         const createdUser = await fdp.account.register(user.username, user.password)
-        expect(createdUser.mnemonic.phrase).toEqual(user.mnemonic)
         expect(createdUser.address).toEqual(user.address)
       }
     })
@@ -97,7 +96,7 @@ describe('Fair Data Protocol class', () => {
       const loggedWallet = await fdp.account.login(user.username, user.password)
       await expect(fdp.account.register(user.username, user.password)).rejects.toThrow('User account already uploaded')
 
-      expect(loggedWallet.mnemonic.phrase).toEqual(user.mnemonic)
+      expect(loggedWallet.address).toEqual(user.address)
     })
   })
 
@@ -110,11 +109,9 @@ describe('Fair Data Protocol class', () => {
 
       const wallet = await fdp.account.register(user.username, user.password)
       expect(wallet.address).toEqual(user.address)
-      expect(wallet.mnemonic.phrase).toEqual(user.mnemonic)
 
       const wallet1 = await fdp1.account.login(user.username, user.password)
       expect(wallet1.address).toEqual(user.address)
-      expect(wallet1.mnemonic.phrase).toEqual(user.mnemonic)
     })
 
     it('should throw when username is not registered', async () => {
@@ -154,6 +151,8 @@ describe('Fair Data Protocol class', () => {
       await topUpAddress(fdp)
 
       await fdp.account.register(user.username, user.password)
+      // login isn't required in general, but here it required as it reproduces user workflow after registration
+      await fdp.account.login(user.username, user.password)
       let list = await fdp.personalStorage.list()
       expect(list).toHaveLength(0)
 

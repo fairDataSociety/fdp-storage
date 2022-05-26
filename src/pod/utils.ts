@@ -2,7 +2,7 @@ import { RawDirectoryMetadata, Pod } from './types'
 import { Data } from '@ethersphere/bee-js'
 import { stringToBytes } from '../utils/bytes'
 import { LookupAnswer } from '../feed/types'
-import { Wallet } from 'ethers'
+import { utils } from 'ethers'
 import { EthAddress } from '@ethersphere/bee-js/dist/types/utils/eth'
 import { getRawDirectoryMetadataBytes } from '../directory/adapter'
 import { assertNumber, assertString, isNumber, isString } from '../utils/type'
@@ -24,7 +24,7 @@ export interface PodsInfo {
  */
 export interface ExtendedPodInfo {
   pod: Pod
-  podWallet: Wallet
+  podWallet: utils.HDNode
   podAddress: EthAddress
   lookupAnswer: LookupAnswer | undefined
 }

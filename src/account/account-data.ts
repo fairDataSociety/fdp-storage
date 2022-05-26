@@ -1,12 +1,13 @@
-import { Wallet } from 'ethers'
-import { assertMnemonic, assertPassword, assertUsername } from './utils'
+import { Wallet, utils } from 'ethers'
+import { assertMnemonic, assertPassword, assertUsername, removeZeroFromHex } from './utils'
 import { prepareEthAddress } from '../utils/address'
-import { getEncryptedMnemonic, getMnemonicByPublicKey } from './mnemonic'
-import { decrypt } from './encryption'
-import { createUser } from './account'
+import { getEncryptedMnemonic } from './mnemonic'
+import { decryptText } from './encryption'
+import { uploadPortableAccount, downloadPortableAccount } from './account'
 import { Connection } from '../connection/connection'
 import { AddressOptions, isAddressOptions, isMnemonicOptions, MnemonicOptions } from './types'
 import { ENS } from '@fairdatasociety/fdp-contracts'
+import { Utils } from '@ethersphere/bee-js'
 
 export class AccountData {
   public wallet?: Wallet
@@ -55,7 +56,7 @@ export class AccountData {
     if (isAddressOptions(options)) {
       const address = prepareEthAddress(options.address)
       const encryptedMnemonic = await getEncryptedMnemonic(this.connection.bee, username, address)
-      mnemonic = decrypt(password, encryptedMnemonic)
+      mnemonic = decryptText(password, encryptedMnemonic)
     }
 
     assertMnemonic(mnemonic)
@@ -97,11 +98,10 @@ export class AccountData {
       throw new Error(`Username "${username}" does not exists`)
     }
 
-    const address = prepareEthAddress(await this.ens.getUsernameOwner(username))
     const publicKey = await this.ens.getPublicKey(username)
     try {
-      const mnemonic = await getMnemonicByPublicKey(this.connection.bee, publicKey, password, address)
-      const wallet = Wallet.fromMnemonic(mnemonic)
+      const address = prepareEthAddress(utils.computeAddress(publicKey))
+      const wallet = await downloadPortableAccount(this.connection.bee, address, username, password)
       this.setActiveAccount(wallet)
 
       return wallet
@@ -127,7 +127,12 @@ export class AccountData {
     }
 
     try {
-      await createUser(this.connection, password, wallet.mnemonic.phrase)
+      await uploadPortableAccount(
+        this.connection,
+        username,
+        password,
+        Utils.hexToBytes(removeZeroFromHex(wallet.privateKey)),
+      )
       await this.ens.registerUsername(username, wallet.address, wallet.publicKey)
 
       return wallet

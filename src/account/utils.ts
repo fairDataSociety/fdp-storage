@@ -1,4 +1,4 @@
-import { Data, Utils } from '@ethersphere/bee-js'
+import { CHUNK_SIZE, Data, Utils } from '@ethersphere/bee-js'
 import { bmtHash } from '../chunk/bmt'
 import { makeSpan, stringToBytes, wrapBytesWithHelpers } from '../utils/bytes'
 import { AccountData } from './account-data'
@@ -9,6 +9,7 @@ import { assertString } from '../utils/type'
 
 export const MNEMONIC_LENGTH = 12
 export const MAX_CHUNK_LENGTH = 4096
+export const AUTH_VERSION = 'FDP-login-v1.0'
 
 /**
  * Encode input data to Base64Url with Go lang compatible paddings
@@ -165,8 +166,28 @@ export function removeZeroFromHex(value: string): string {
 }
 
 /**
- * Creates topic for storing credentials using publicKey and password
+ * Creates topic for storing private key using username and password
  */
-export function createCredentialsTopic(publicKey: string, password: string): string {
-  return removeZeroFromHex(publicKey) + password
+export function createCredentialsTopic(username: string, password: string): Utils.Bytes<32> {
+  const topic = AUTH_VERSION + Utils.keccak256Hash(username) + password
+
+  return bmtHashString(topic)
+}
+
+/**
+ * Asserts whether a valid chunk size is passed
+ */
+export function assertChunkSizeLength(value: unknown): asserts value is number {
+  const data = value as number
+
+  if (data !== CHUNK_SIZE) {
+    throw new Error('Chunk size is not incorrect')
+  }
+}
+
+/**
+ * Converts bytes to CryptoJS WordArray
+ */
+export function bytesToWordArray(data: Uint8Array): CryptoJS.lib.WordArray {
+  return CryptoJS.enc.Hex.parse(Utils.bytesToHex(data))
 }

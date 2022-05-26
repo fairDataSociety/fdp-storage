@@ -66,7 +66,7 @@ export class PersonalStorage {
     const wallet = this.accountData.wallet!
     // create pod
     await writeFeedData(this.accountData.connection, POD_TOPIC, allPodsData, wallet.privateKey, epoch)
-    const podWallet = getWalletByIndex(wallet.mnemonic.phrase, nextIndex)
+    const podWallet = getWalletByIndex(wallet.privateKey, nextIndex)
     await createRootDirectory(this.accountData.connection, podWallet.privateKey)
 
     return newPod

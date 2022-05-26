@@ -5,11 +5,8 @@ import '../index'
 import { JSONArray, JSONObject } from 'puppeteer'
 import { FdpStorage } from '../../src'
 import { MAX_POD_NAME_LENGTH } from '../../src/pod/utils'
-import { ENVIRONMENT_CONFIGS, Environments } from '@fairdatasociety/fdp-contracts'
 import { createUserV1 } from '../../src/account/account'
 import { Wallet } from 'ethers'
-
-const GET_FEED_DATA_TIMEOUT = 1000
 
 jest.setTimeout(200000)
 describe('Fair Data Protocol class - in browser', () => {
@@ -84,10 +81,9 @@ describe('Fair Data Protocol class - in browser', () => {
         const wallet = fdp.account.createWallet()
         await window.shouldFail((async () => fdp.account.createWallet())(), 'Wallet already created')
 
-        return { address: wallet.address, mnemonic: wallet.mnemonic.phrase, privateKey: wallet.privateKey }
+        return { address: wallet.address, privateKey: wallet.privateKey }
       })
 
-      expect(result.mnemonic).toBeDefined()
       expect(result.address).toBeDefined()
       expect(result.privateKey).toBeDefined()
     })
@@ -122,7 +118,7 @@ describe('Fair Data Protocol class - in browser', () => {
           await window.topUpAddress(fdp)
           const data = await fdp.account.register(user.username, user.password)
           result.push({
-            mnemonic: data.mnemonic.phrase,
+            address: data.address,
           })
 
           await fdp.account.login(user.username, user.password)
@@ -132,7 +128,7 @@ describe('Fair Data Protocol class - in browser', () => {
       }, usersList)
 
       for (const createdUser of createdUsers) {
-        expect(createdUser.mnemonic).toBeDefined()
+        expect(createdUser.address).toBeDefined()
       }
     })
 
@@ -164,10 +160,10 @@ describe('Fair Data Protocol class - in browser', () => {
         const loggedWallet = await fdp.account.login(user.username, user.password)
         await window.shouldFail(fdp.account.register(user.username, user.password), 'User account already uploaded')
 
-        return { mnemonic: loggedWallet.mnemonic.phrase }
+        return { address: loggedWallet.address }
       }, jsonUser)
 
-      expect(result.mnemonic).toEqual(user.mnemonic)
+      expect(result.address).toEqual(user.address)
     })
   })
 
@@ -177,29 +173,27 @@ describe('Fair Data Protocol class - in browser', () => {
       const jsonUser = user as unknown as JSONObject
       const answer = await page.evaluate(async (user: TestUser) => {
         const result = {} as {
-          result1: { address: string; mnemonic: string }
-          result2: { address: string; mnemonic: string }
-          createdWallet: { address: string; mnemonic: string }
+          result1: { address: string }
+          result2: { address: string }
+          createdWallet: { address: string }
         }
         const fdp = eval(await window.initFdp()) as FdpStorage
         const fdp1 = eval(await window.initFdp()) as FdpStorage
         const wallet = fdp.account.createWallet()
-        result.createdWallet = { address: wallet.address, mnemonic: wallet.mnemonic.phrase }
+        result.createdWallet = { address: wallet.address }
         await window.topUpAddress(fdp)
 
         let data = await fdp.account.register(user.username, user.password)
-        result.result1 = { address: data.address, mnemonic: data.mnemonic.phrase }
+        result.result1 = { address: data.address }
 
         data = await fdp1.account.login(user.username, user.password)
-        result.result2 = { address: data.address, mnemonic: data.mnemonic.phrase }
+        result.result2 = { address: data.address }
 
         return result
       }, jsonUser)
 
       expect(answer.result1.address).toEqual(answer.createdWallet.address)
-      expect(answer.result1.mnemonic).toEqual(answer.createdWallet.mnemonic)
       expect(answer.result2.address).toEqual(answer.createdWallet.address)
-      expect(answer.result2.mnemonic).toEqual(answer.createdWallet.mnemonic)
     })
 
     it('should throw when username is not registered', async () => {
