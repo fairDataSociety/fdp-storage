@@ -30,7 +30,7 @@
   "files": [
     "dist"
   ],
-  "types": "dist/src/index.d.ts",
+  "types": "dist/index.d.ts",
   "scripts": {
     "prepublishOnly": "rimraf dist && npm run compile:types && npm run compile:browser --env mode=production && npm run compile:node --env mode=production",
     "compile:node": "webpack --progress --env target=node",
