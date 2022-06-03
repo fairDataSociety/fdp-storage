@@ -1,1 +1,1 @@
-module.export = {}
+module.export = Blob
