@@ -24,9 +24,6 @@
     'use strict'
 
     exports.Blob = Blob
-    // exports.File = File;
-    // exports.FileReader = FileReader;
-    // exports.URL = URL;
   })
 })(
   (typeof self !== 'undefined' && self) ||
