@@ -449,6 +449,41 @@ describe('Fair Data Protocol class - in browser', () => {
       expect(directoryInfo.name).toEqual(directoryName)
       expect(directoryInfo1.name).toEqual(directoryName1)
     })
+
+    it('should delete a directory', async () => {
+      const user = generateUser()
+      const jsonUser = user as unknown as JSONObject
+      const pod = generateRandomHexString()
+      const directoryName = generateRandomHexString()
+      const directoryFull = '/' + directoryName
+
+      const { list, listAfter } = await page.evaluate(
+        async (user: TestUser, pod: string, directoryFull: string) => {
+          const fdp = eval(await window.initFdp()) as FdpStorage
+          fdp.account.createWallet()
+          await window.topUpAddress(fdp)
+
+          await fdp.account.register(user.username, user.password)
+          await fdp.personalStorage.create(pod)
+          await fdp.directory.create(pod, directoryFull)
+          const list = await fdp.directory.read(pod, '/', true)
+
+          await fdp.directory.delete(pod, directoryFull)
+          const listAfter = await fdp.directory.read(pod, '/', true)
+
+          return {
+            list,
+            listAfter,
+          }
+        },
+        jsonUser,
+        pod,
+        directoryFull,
+      )
+
+      expect(list.content).toHaveLength(1)
+      expect(listAfter.content).toHaveLength(0)
+    })
   })
 
   describe('File', () => {
@@ -552,6 +587,45 @@ describe('Fair Data Protocol class - in browser', () => {
       expect(fdpList.content.length).toEqual(1)
       expect(fileInfoBig.name).toEqual(filenameBig)
       expect(fileInfoBig.size).toEqual(fileSizeBig)
+    })
+
+    it('should delete a file', async () => {
+      const user = generateUser()
+      const jsonUser = user as unknown as JSONObject
+
+      const pod = generateRandomHexString()
+      const fileSizeSmall = 100
+      const contentSmall = generateRandomHexString(fileSizeSmall)
+      const filenameSmall = generateRandomHexString() + '.txt'
+      const fullFilenameSmallPath = '/' + filenameSmall
+
+      const { fdpList, fdpListAfter } = await page.evaluate(
+        async (user: TestUser, pod: string, fullFilenameSmallPath: string, contentSmall: string) => {
+          const fdp = eval(await window.initFdp()) as FdpStorage
+          fdp.account.createWallet()
+          await window.topUpAddress(fdp)
+
+          await fdp.account.register(user.username, user.password)
+          await fdp.personalStorage.create(pod)
+          await fdp.file.uploadData(pod, fullFilenameSmallPath, contentSmall)
+
+          const fdpList = await fdp.directory.read(pod, '/', true)
+          await fdp.file.delete(pod, fullFilenameSmallPath)
+          const fdpListAfter = await fdp.directory.read(pod, '/', true)
+
+          return {
+            fdpList,
+            fdpListAfter,
+          }
+        },
+        jsonUser,
+        pod,
+        fullFilenameSmallPath,
+        contentSmall,
+      )
+
+      expect(fdpList.content.length).toEqual(1)
+      expect(fdpListAfter.content.length).toEqual(0)
     })
   })
 })
