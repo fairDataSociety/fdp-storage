@@ -1,5 +1,13 @@
 # Changelog
 
+### [0.1.2](https://www.github.com/fairDataSociety/fdp-storage/compare/v0.1.1...v0.1.2) (2022-06-07)
+
+
+### Bug Fixes
+
+* fix types path ([#34](https://www.github.com/fairDataSociety/fdp-storage/issues/34)) ([#40](https://www.github.com/fairDataSociety/fdp-storage/issues/40)) ([95174b6](https://www.github.com/fairDataSociety/fdp-storage/commit/95174b62cb53dd6c263cc105f4a74646b2cf70fc))
+* remove blob polyfill from bundle ([#35](https://www.github.com/fairDataSociety/fdp-storage/issues/35)) ([#41](https://www.github.com/fairDataSociety/fdp-storage/issues/41)) ([5305169](https://www.github.com/fairDataSociety/fdp-storage/commit/5305169ef937e2b613aaf5b777fe120441dc5698))
+
 ### [0.1.1](https://www.github.com/fairDataSociety/fdp-storage/compare/v0.1.0...v0.1.1) (2022-05-26)
 
 
