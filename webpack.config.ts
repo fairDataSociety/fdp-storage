@@ -45,6 +45,11 @@ const base = async (env?: Partial<WebpackEnvParams>): Promise<Configuration> => 
       const browserReference: string = browserModuleMapping[nodeReference]
       plugins.push(new NormalModuleReplacementPlugin(new RegExp(`^${nodeReference}$`), browserReference))
     }
+    // blob-polyfill references the document object which is not available in service worker scripts.
+    // That's the reason why it is removed from the bundle
+    plugins.push(
+      new NormalModuleReplacementPlugin(/blob-polyfill/, Path.resolve(__dirname, 'src', 'polyfills', 'Blob.js')),
+    )
   }
 
   return {
