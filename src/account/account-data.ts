@@ -10,7 +10,14 @@ import { ENS } from '@fairdatasociety/fdp-contracts'
 import { Utils } from '@ethersphere/bee-js'
 
 export class AccountData {
+  /**
+   * Active FDP account wallet
+   */
   public wallet?: Wallet
+  /**
+   * Active FDP account username
+   */
+  public username?: string
 
   constructor(public readonly connection: Connection, public readonly ens: ENS) {}
 
@@ -18,8 +25,10 @@ export class AccountData {
    * Sets the current account's wallet to interact with the data
    *
    * @param wallet BIP-039 + BIP-044 Wallet
+   * @param username FDP username
    */
-  setActiveAccount(wallet: Wallet): void {
+  setActiveAccount(wallet: Wallet, username?: string): void {
+    this.username = username
     this.wallet = wallet.connect(this.ens.provider)
     this.ens.connect(this.wallet)
   }
@@ -77,7 +86,7 @@ export class AccountData {
     assertUsername(username)
     assertPassword(password)
 
-    this.setActiveAccount(await this.exportWallet(username, password, options))
+    this.setActiveAccount(await this.exportWallet(username, password, options), username)
 
     return this.register(username, password)
   }
@@ -102,7 +111,7 @@ export class AccountData {
     try {
       const address = prepareEthAddress(utils.computeAddress(publicKey))
       const wallet = await downloadPortableAccount(this.connection.bee, address, username, password)
-      this.setActiveAccount(wallet)
+      this.setActiveAccount(wallet, username)
 
       return wallet
     } catch (e) {
@@ -134,6 +143,7 @@ export class AccountData {
         Utils.hexToBytes(removeZeroFromHex(wallet.privateKey)),
       )
       await this.ens.registerUsername(username, wallet.address, wallet.publicKey)
+      this.username = username
 
       return wallet
     } catch (e) {

@@ -61,3 +61,14 @@ export interface RawDirectoryMetadata {
   }
   FileOrDirNames: string[] | null
 }
+
+/**
+ * Pod share information
+ */
+export interface PodShareInfo {
+  pod_name: string
+  pod_address: string
+  user_name: string
+  user_address: string
+  shared_time: string
+}

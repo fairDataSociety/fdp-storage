@@ -51,7 +51,7 @@ export function assertFullPathWithName(value: unknown): asserts value is string 
 export async function uploadBytes(connection: Connection, data: Uint8Array): Promise<UploadResult> {
   return connection.bee.uploadData(await getBatchId(connection.beeDebug), data, {
     pin: true,
-    encrypt: false,
+    encrypt: true,
   })
 }
 

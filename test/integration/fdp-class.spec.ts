@@ -2,6 +2,7 @@ import { FdpStorage } from '../../src'
 import { createFdp, generateRandomHexString, generateUser, GET_FEED_DATA_TIMEOUT, isBatchUsable } from '../utils'
 import { MAX_POD_NAME_LENGTH } from '../../src/pod/utils'
 import { createUserV1 } from '../../src/account/account'
+import { PodShareInfo } from '../../src/pod/types'
 
 async function topUpAddress(fdp: FdpStorage) {
   if (!fdp.account.wallet?.address) {
@@ -145,7 +146,7 @@ describe('Fair Data Protocol class', () => {
       expect(pods).toHaveLength(0)
     })
 
-    it('should create pods with fdp', async () => {
+    it('should create pods', async () => {
       const fdp = createFdp()
       const user = generateUser(fdp)
       await topUpAddress(fdp)
@@ -210,6 +211,26 @@ describe('Fair Data Protocol class', () => {
       await fdp.personalStorage.delete(podName1)
       list = await fdp.personalStorage.list()
       expect(list).toHaveLength(0)
+    })
+
+    it('should share a pod', async () => {
+      const fdp = createFdp()
+      const user = generateUser(fdp)
+      await topUpAddress(fdp)
+
+      await fdp.account.register(user.username, user.password)
+
+      const podName = generateRandomHexString()
+      await fdp.personalStorage.create(podName)
+      const sharedReference = await fdp.personalStorage.share(podName)
+      expect(sharedReference).toBeDefined()
+      const sharedData = (await fdp.connection.bee.downloadData(sharedReference)).json() as unknown as PodShareInfo
+      expect(sharedData.pod_name).toEqual(podName)
+      expect(sharedData.pod_address).toHaveLength(42)
+      expect(sharedData.user_name).toEqual(user.username)
+      expect(sharedData.user_address).toEqual(user.address.toLowerCase())
+      expect(isNaN(Number(sharedData.shared_time))).toBeFalsy()
+      expect(sharedData.shared_time.length).toBeLessThanOrEqual(10)
     })
   })
 

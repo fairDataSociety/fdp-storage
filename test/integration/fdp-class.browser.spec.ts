@@ -7,6 +7,7 @@ import { FdpStorage } from '../../src'
 import { MAX_POD_NAME_LENGTH } from '../../src/pod/utils'
 import { createUserV1 } from '../../src/account/account'
 import { Wallet } from 'ethers'
+import { PodShareInfo } from '../../src/pod/types'
 
 jest.setTimeout(200000)
 describe('Fair Data Protocol class - in browser', () => {
@@ -250,7 +251,7 @@ describe('Fair Data Protocol class - in browser', () => {
       expect(answer).toEqual([])
     })
 
-    it('should create pods with fdp', async () => {
+    it('should create pods', async () => {
       const user = generateUser()
       const jsonUser = user as unknown as JSONObject
       const longPodName = generateRandomHexString(MAX_POD_NAME_LENGTH + 1)
@@ -392,6 +393,50 @@ describe('Fair Data Protocol class - in browser', () => {
       )
 
       expect(list).toHaveLength(0)
+    })
+
+    it('should share a pod', async () => {
+      const user = generateUser()
+      const jsonUser = user as unknown as JSONObject
+
+      const walletAddress = await page.evaluate(async (user: TestUser) => {
+        const fdp = eval(await window.initFdp()) as FdpStorage
+        const wallet = fdp.account.createWallet()
+        await window.topUpAddress(fdp)
+
+        await fdp.account.register(user.username, user.password)
+        await fdp.account.login(user.username, user.password)
+
+        return wallet.address
+      }, jsonUser)
+
+      const podName = generateRandomHexString()
+
+      const { sharedReference, sharedData } = await page.evaluate(
+        async (user: TestUser, podName: string) => {
+          const fdp = eval(await window.initFdp()) as FdpStorage
+
+          await fdp.account.login(user.username, user.password)
+          await fdp.personalStorage.create(podName)
+          const sharedReference = await fdp.personalStorage.share(podName)
+          const sharedData = (await fdp.connection.bee.downloadData(sharedReference)).json() as unknown as PodShareInfo
+
+          return {
+            sharedReference,
+            sharedData,
+          }
+        },
+        jsonUser,
+        podName,
+      )
+
+      expect(sharedReference).toBeDefined()
+      expect(sharedData.pod_name).toEqual(podName)
+      expect(sharedData.pod_address).toHaveLength(42)
+      expect(sharedData.user_name).toEqual(user.username)
+      expect(sharedData.user_address).toEqual(walletAddress.toLowerCase())
+      expect(isNaN(Number(sharedData.shared_time))).toBeFalsy()
+      expect(sharedData.shared_time.length).toBeLessThanOrEqual(10)
     })
   })
 
