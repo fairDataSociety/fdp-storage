@@ -10,10 +10,10 @@ import { writeFeedData } from '../feed/api'
 import { downloadData, generateBlockName } from './handler'
 import { blocksToManifest, getFileMetadataRawBytes } from './adapter'
 import { Blocks, DataUploadOptions } from './types'
-import { addEntryToDirectory, removeEntryFromDirectory } from '../content-items/handler'
 import { Data, Reference } from '@ethersphere/bee-js'
 import { getRawMetadata } from '../content-items/utils'
 import { assertRawFileMetadata } from '../directory/utils'
+import { addEntryToDirectory, removeEntryFromDirectory } from '../content-items/handler'
 
 /**
  * Files management class
@@ -187,5 +187,31 @@ export class File {
     )
 
     await removeEntryFromDirectory(connection, extendedInfo.podWallet, pathInfo.path, pathInfo.filename, true)
+  }
+
+  /**
+   * Shares file information
+   *
+   * @param podName pod where file is stored
+   * @param fullPath full path of the file
+   */
+  async share(podName: string, fullPath: string): Promise<Reference> {
+    assertActiveAccount(this.accountData)
+    assertFullPathWithName(fullPath)
+    assertPodName(podName)
+
+    const connection = this.accountData.connection
+    const extendedInfo = await getExtendedPodsList(
+      connection.bee,
+      podName,
+      this.accountData.wallet!,
+      connection.options?.downloadOptions,
+    )
+
+    const meta = await getRawMetadata(connection.bee, fullPath, extendedInfo.podAddress)
+    assertRawFileMetadata(meta)
+    const data = stringToBytes(JSON.stringify(createFileShareInfo(meta, extendedInfo.podAddress)))
+
+    return (await uploadBytes(this.accountData.connection, data)).reference
   }
 }
