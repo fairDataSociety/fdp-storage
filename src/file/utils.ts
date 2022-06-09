@@ -1,11 +1,14 @@
 import { Connection } from '../connection/connection'
-import { Bee, Reference, RequestOptions, UploadResult } from '@ethersphere/bee-js'
+import { Bee, Reference, RequestOptions, UploadResult, Utils } from '@ethersphere/bee-js'
 import { getBatchId } from '../utils/batch'
 import { PathInfo } from '../pod/utils'
-import { Blocks, RawBlocks } from './types'
+import { Blocks, FileShareInfo, RawBlocks } from './types'
 import { rawBlocksToBlocks } from './adapter'
 import CryptoJS from 'crypto-js'
 import { assertString } from '../utils/type'
+import { RawFileMetadata } from '../pod/types'
+import { bytesToHex } from '../utils/hex'
+import { getUnixTimestamp } from '../utils/time'
 
 /**
  * Asserts that full path string is correct
@@ -110,4 +113,20 @@ export function base64toReference(base64: string): Reference {
  */
 export function referenceToBase64(reference: Reference): string {
   return CryptoJS.enc.Hex.parse(reference).toString(CryptoJS.enc.Base64)
+}
+
+/**
+ * Creates file share information structure
+ */
+export function createFileShareInfo(
+  meta: RawFileMetadata,
+  userAddress: Utils.EthAddress,
+  time?: number,
+): FileShareInfo {
+  return {
+    meta,
+    source_address: '0x' + bytesToHex(userAddress),
+    dest_address: '',
+    shared_time: time ? time.toString() : getUnixTimestamp().toString(),
+  }
 }
