@@ -36,7 +36,6 @@ export class File {
     assertActiveAccount(this.accountData)
     assertPodName(podName)
     assertFullPathWithName(fullPath)
-    assertPodName(podName)
     const extendedInfo = await getExtendedPodsList(
       this.accountData.connection.bee,
       podName,
@@ -70,7 +69,6 @@ export class File {
     assertActiveAccount(this.accountData)
     assertPodName(podName)
     assertFullPathWithName(fullPath)
-    assertPodName(podName)
     data = typeof data === 'string' ? stringToBytes(data) : data
     const connection = this.accountData.connection
     const extendedInfo = await getExtendedPodsList(
