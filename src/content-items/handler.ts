@@ -9,11 +9,13 @@ import { DIRECTORY_TOKEN, FILE_TOKEN } from '../file/handler'
 import { LookupAnswer } from '../feed/types'
 import { assertRawDirectoryMetadata, combine } from '../directory/utils'
 import { RawDirectoryMetadata } from '../pod/types'
+import { getRawMetadata } from './utils'
+import { RawMetadataWithEpoch } from './types'
 
 /**
  * Add child file or directory to a defined parent directory
  *
- * @param connection current connection
+ * @param connection connection information for data management
  * @param wallet wallet of the pod
  * @param parentPath parent path
  * @param entryPath entry path
@@ -49,17 +51,16 @@ export async function addEntryToDirectory(
   }
 
   let parentData: RawDirectoryMetadata | undefined
-  let parentLookupAnswer: LookupAnswer | undefined
+  let metadataWithEpoch: RawMetadataWithEpoch | undefined
   try {
-    parentLookupAnswer = await getFeedData(
+    metadataWithEpoch = await getRawMetadata(
       connection.bee,
       parentPath,
       prepareEthAddress(wallet.address),
-      connection.options?.downloadOptions,
+      downloadOptions,
     )
-
-    parentData = parentLookupAnswer.data.chunkContent().json() as unknown as RawDirectoryMetadata
-    assertRawDirectoryMetadata(parentData)
+    assertRawDirectoryMetadata(metadataWithEpoch.metadata)
+    parentData = metadataWithEpoch.metadata
   } catch (e) {
     throw new Error('Parent directory does not exist')
   }
@@ -79,6 +80,47 @@ export async function addEntryToDirectory(
     parentPath,
     getRawDirectoryMetadataBytes(parentData),
     wallet.privateKey,
-    parentLookupAnswer.epoch.getNextEpoch(getUnixTimestamp()),
+    metadataWithEpoch.epoch.getNextEpoch(getUnixTimestamp()),
+  )
+}
+
+/**
+ * Removes file or directory from the parent directory
+ *
+ * @param connection connection information for data management
+ * @param wallet wallet of the pod
+ * @param parentPath parent path of the entry
+ * @param entryPath full path of the entry
+ * @param isFile define if entry is file or directory
+ * @param downloadOptions download options
+ */
+export async function removeEntryFromDirectory(
+  connection: Connection,
+  wallet: utils.HDNode,
+  parentPath: string,
+  entryPath: string,
+  isFile: boolean,
+  downloadOptions?: RequestOptions,
+): Promise<Reference> {
+  const metadataWithEpoch = await getRawMetadata(
+    connection.bee,
+    parentPath,
+    prepareEthAddress(wallet.address),
+    downloadOptions,
+  )
+  const parentData = metadataWithEpoch.metadata
+  assertRawDirectoryMetadata(parentData)
+  const itemToRemove = (isFile ? FILE_TOKEN : DIRECTORY_TOKEN) + entryPath
+
+  if (parentData.FileOrDirNames) {
+    parentData.FileOrDirNames = parentData.FileOrDirNames.filter(name => name !== itemToRemove)
+  }
+
+  return writeFeedData(
+    connection,
+    parentPath,
+    getRawDirectoryMetadataBytes(parentData),
+    wallet.privateKey,
+    metadataWithEpoch.epoch.getNextEpoch(getUnixTimestamp()),
   )
 }

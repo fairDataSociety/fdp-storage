@@ -1,6 +1,6 @@
 import { FileMetadata } from '../pod/types'
 import { assertActiveAccount } from '../account/utils'
-import { META_VERSION } from '../pod/utils'
+import { assertPodName, META_VERSION } from '../pod/utils'
 import { getExtendedPodsList } from '../pod/api'
 import { getUnixTimestamp } from '../utils/time'
 import { stringToBytes } from '../utils/bytes'
@@ -11,7 +11,7 @@ import { downloadData, generateBlockName } from './handler'
 import { blocksToManifest, getFileMetadataRawBytes } from './adapter'
 import { Blocks, DataUploadOptions } from './types'
 import { Data } from '@ethersphere/bee-js'
-import { addEntryToDirectory } from '../content-items/handler'
+import { addEntryToDirectory, removeEntryFromDirectory } from '../content-items/handler'
 
 /**
  * Files management class
@@ -33,6 +33,7 @@ export class File {
   async downloadData(podName: string, fullPath: string): Promise<Data> {
     assertActiveAccount(this.accountData)
     assertFullPathWithName(fullPath)
+    assertPodName(podName)
     const extendedInfo = await getExtendedPodsList(
       this.accountData.connection.bee,
       podName,
@@ -65,6 +66,7 @@ export class File {
     options = { ...this.defaultUploadOptions, ...options }
     assertActiveAccount(this.accountData)
     assertFullPathWithName(fullPath)
+    assertPodName(podName)
     data = typeof data === 'string' ? stringToBytes(data) : data
     const connection = this.accountData.connection
     const extendedInfo = await getExtendedPodsList(
@@ -111,5 +113,27 @@ export class File {
     await writeFeedData(connection, fullPath, getFileMetadataRawBytes(meta), extendedInfo.podWallet.privateKey)
 
     return meta
+  }
+
+  /**
+   * Deletes a file
+   *
+   * @param podName pod where file is located
+   * @param fullPath full path of the file
+   */
+  async delete(podName: string, fullPath: string): Promise<void> {
+    assertActiveAccount(this.accountData)
+    assertFullPathWithName(fullPath)
+    assertPodName(podName)
+    const pathInfo = extractPathInfo(fullPath)
+    const connection = this.accountData.connection
+    const extendedInfo = await getExtendedPodsList(
+      connection.bee,
+      podName,
+      this.accountData.wallet!,
+      connection.options?.downloadOptions,
+    )
+
+    await removeEntryFromDirectory(connection, extendedInfo.podWallet, pathInfo.path, pathInfo.filename, true)
   }
 }

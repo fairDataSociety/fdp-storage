@@ -1,5 +1,4 @@
-import { getFeedData, writeFeedData } from '../feed/api'
-import { RawDirectoryMetadata, RawFileMetadata } from '../pod/types'
+import { writeFeedData } from '../feed/api'
 import { EthAddress } from '@ethersphere/bee-js/dist/types/utils/eth'
 import { Bee, Reference, RequestOptions } from '@ethersphere/bee-js'
 import {
@@ -10,8 +9,6 @@ import {
   combine,
   getPathFromParts,
   getPathParts,
-  isRawDirectoryMetadata,
-  isRawFileMetadata,
 } from './utils'
 import { DIRECTORY_TOKEN, FILE_TOKEN } from '../file/handler'
 import { getUnixTimestamp } from '../utils/time'
@@ -21,33 +18,9 @@ import { utils } from 'ethers'
 import { addEntryToDirectory } from '../content-items/handler'
 import { DirectoryItem } from '../content-items/directory-item'
 import { FileItem } from '../content-items/file-item'
+import { getRawMetadata } from '../content-items/utils'
 
 export const MAX_DIRECTORY_NAME_LENGTH = 100
-
-/**
- * Get raw metadata by path
- *
- * @param bee Bee client
- * @param path path with information
- * @param address Ethereum address of the pod which owns the path
- * @param downloadOptions options for downloading
- */
-export async function getRawMetadata(
-  bee: Bee,
-  path: string,
-  address: EthAddress,
-  downloadOptions?: RequestOptions,
-): Promise<RawDirectoryMetadata | RawFileMetadata> {
-  const data = (await getFeedData(bee, path, address, downloadOptions)).data.chunkContent().json()
-
-  if (isRawDirectoryMetadata(data)) {
-    return data as RawDirectoryMetadata
-  } else if (isRawFileMetadata(data)) {
-    return data as RawFileMetadata
-  } else {
-    throw new Error('Invalid metadata')
-  }
-}
 
 /**
  * Get files and directories under path with recursion or not
@@ -65,7 +38,7 @@ export async function readDirectory(
   isRecursive?: boolean,
   downloadOptions?: RequestOptions,
 ): Promise<DirectoryItem> {
-  const parentRawDirectoryMetadata = await getRawMetadata(bee, path, address)
+  const parentRawDirectoryMetadata = (await getRawMetadata(bee, path, address)).metadata
   assertRawDirectoryMetadata(parentRawDirectoryMetadata)
   const resultDirectoryItem = DirectoryItem.fromRawDirectoryMetadata(parentRawDirectoryMetadata)
 
@@ -79,12 +52,12 @@ export async function readDirectory(
 
     if (isFile) {
       item = combine(path, item.substring(FILE_TOKEN.length))
-      const data = await getRawMetadata(bee, item, address, downloadOptions)
+      const data = (await getRawMetadata(bee, item, address, downloadOptions)).metadata
       assertRawFileMetadata(data)
       resultDirectoryItem.content.push(FileItem.fromRawFileMetadata(data))
     } else if (isDirectory) {
       item = combine(path, item.substring(DIRECTORY_TOKEN.length))
-      const data = await getRawMetadata(bee, item, address, downloadOptions)
+      const data = (await getRawMetadata(bee, item, address, downloadOptions)).metadata
       assertRawDirectoryMetadata(data)
       const currentMetadata = DirectoryItem.fromRawDirectoryMetadata(data)
 

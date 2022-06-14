@@ -1,4 +1,3 @@
-import { getRawMetadata } from '../directory/handler'
 import { wrapBytesWithHelpers } from '../utils/bytes'
 import { Bee, Data, RequestOptions } from '@ethersphere/bee-js'
 import { EthAddress } from '@ethersphere/bee-js/dist/types/utils/eth'
@@ -6,6 +5,7 @@ import { downloadBlocksManifest } from './utils'
 import { FileMetadata } from '../pod/types'
 import { rawFileMetadataToFileMetadata } from './adapter'
 import { assertRawFileMetadata } from '../directory/utils'
+import { getRawMetadata } from '../content-items/utils'
 
 /**
  * File prefix
@@ -30,7 +30,7 @@ export async function getFileMetadata(
   address: EthAddress,
   downloadOptions?: RequestOptions,
 ): Promise<FileMetadata> {
-  const data = await getRawMetadata(bee, path, address, downloadOptions)
+  const data = (await getRawMetadata(bee, path, address, downloadOptions)).metadata
   assertRawFileMetadata(data)
 
   return rawFileMetadataToFileMetadata(data)

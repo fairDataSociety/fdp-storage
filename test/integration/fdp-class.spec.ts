@@ -243,6 +243,25 @@ describe('Fair Data Protocol class', () => {
       expect(directoryInfo.name).toEqual(directoryName)
       expect(directoryInfo1.name).toEqual(directoryName1)
     })
+
+    it('should delete a directory', async () => {
+      const fdp = createFdp()
+      const user = generateUser(fdp)
+      const pod = generateRandomHexString()
+      const directoryName = generateRandomHexString()
+      const directoryFull = '/' + directoryName
+      await topUpAddress(fdp)
+
+      await fdp.account.register(user.username, user.password)
+      await fdp.personalStorage.create(pod)
+      await fdp.directory.create(pod, directoryFull)
+      const list = await fdp.directory.read(pod, '/', true)
+      expect(list.content).toHaveLength(1)
+
+      await fdp.directory.delete(pod, directoryFull)
+      const listAfter = await fdp.directory.read(pod, '/', true)
+      expect(listAfter.content).toHaveLength(0)
+    })
   })
 
   describe('File', () => {
@@ -297,6 +316,28 @@ describe('Fair Data Protocol class', () => {
       const fileInfoBig = fdpList.getFiles()[0]
       expect(fileInfoBig.name).toEqual(filenameBig)
       expect(fileInfoBig.size).toEqual(fileSizeBig)
+    })
+
+    it('should delete a file', async () => {
+      const fdp = createFdp()
+      const user = generateUser(fdp)
+      const pod = generateRandomHexString()
+      const fileSizeSmall = 100
+      const contentSmall = generateRandomHexString(fileSizeSmall)
+      const filenameSmall = generateRandomHexString() + '.txt'
+      const fullFilenameSmallPath = '/' + filenameSmall
+      await topUpAddress(fdp)
+
+      await fdp.account.register(user.username, user.password)
+      await fdp.personalStorage.create(pod)
+      await fdp.file.uploadData(pod, fullFilenameSmallPath, contentSmall)
+
+      const fdpList = await fdp.directory.read(pod, '/', true)
+      expect(fdpList.getFiles().length).toEqual(1)
+
+      await fdp.file.delete(pod, fullFilenameSmallPath)
+      const fdpList1 = await fdp.directory.read(pod, '/', true)
+      expect(fdpList1.getFiles().length).toEqual(0)
     })
   })
 })
