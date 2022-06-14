@@ -37,6 +37,7 @@ export class File {
     assertAccount(this.accountData)
     assertPodName(podName)
     assertFullPathWithName(fullPath)
+    assertPodName(podName)
     const extendedInfo = await getExtendedPodsList(
       this.accountData.connection.bee,
       podName,
@@ -71,6 +72,7 @@ export class File {
     assertAccount(this.accountData)
     assertPodName(podName)
     assertFullPathWithName(fullPath)
+    assertPodName(podName)
     data = typeof data === 'string' ? stringToBytes(data) : data
     const connection = this.accountData.connection
     const extendedInfo = await getExtendedPodsList(
@@ -168,5 +170,27 @@ export class File {
     const data = stringToBytes(JSON.stringify(createFileShareInfo(meta, extendedInfo.podAddress)))
 
     return (await uploadBytes(connection, data)).reference
+  }
+
+  /**
+   * Deletes a file
+   *
+   * @param podName pod where file is located
+   * @param fullPath full path of the file
+   */
+  async delete(podName: string, fullPath: string): Promise<void> {
+    assertActiveAccount(this.accountData)
+    assertFullPathWithName(fullPath)
+    assertPodName(podName)
+    const pathInfo = extractPathInfo(fullPath)
+    const connection = this.accountData.connection
+    const extendedInfo = await getExtendedPodsList(
+      connection.bee,
+      podName,
+      this.accountData.wallet!,
+      connection.options?.downloadOptions,
+    )
+
+    await removeEntryFromDirectory(connection, extendedInfo.podWallet, pathInfo.path, pathInfo.filename, true)
   }
 }
