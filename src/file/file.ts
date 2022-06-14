@@ -12,7 +12,7 @@ import { blocksToManifest, getFileMetadataRawBytes } from './adapter'
 import { Blocks, DataUploadOptions } from './types'
 import { addEntryToDirectory, removeEntryFromDirectory } from '../content-items/handler'
 import { Data, Reference } from '@ethersphere/bee-js'
-import { getRawMetadata } from '../directory/handler'
+import { getRawMetadata } from '../content-items/utils'
 import { assertRawFileMetadata } from '../directory/utils'
 
 /**
