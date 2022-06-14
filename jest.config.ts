@@ -7,7 +7,7 @@ import { glob } from 'glob'
 import * as Path from 'path'
 
 export async function getBrowserPathMapping(): Promise<{ [aliasNodeReference: string]: string }> {
-  const browserSourceFiles = await new Promise<{ [aliasNodeReference: string]: string }>((resolve, reject) => {
+  return await new Promise<{ [aliasNodeReference: string]: string }>((resolve, reject) => {
     glob('src/**/*.browser.ts', (err, browserSourceCodes) => {
       if (err) reject(err)
       browserSourceCodes = browserSourceCodes.map(match => Path.resolve(__dirname, match))
@@ -25,18 +25,10 @@ export async function getBrowserPathMapping(): Promise<{ [aliasNodeReference: st
       resolve(codePathMapping)
     })
   })
-
-  return browserSourceFiles
 }
 
 export default async (): Promise<Config.InitialOptions> => {
   return {
-    // Indicates whether the coverage information should be collected while executing the test
-    // collectCoverage: false,
-
-    // This will setup the prerequisites for the tests to run
-    globalSetup: './tests-setup.ts',
-
     // The directory where Jest should output its coverage files
     coverageDirectory: 'coverage',
 
@@ -51,13 +43,6 @@ export default async (): Promise<Config.InitialOptions> => {
 
     // Run tests from one or more projects
     projects: [
-      // We don't have any DOM specific tests atm.
-      // {
-      //   displayName: 'dom:unit',
-      //   testRegex: 'test/unit/.*\\.browser\\.spec\\.ts',
-      //   moduleNameMapper: await getBrowserPathMapping(),
-      //   preset: 'jest-puppeteer',
-      // },
       {
         displayName: 'node:unit',
         testEnvironment: 'node',
