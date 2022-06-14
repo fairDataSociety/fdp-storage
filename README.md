@@ -87,10 +87,22 @@ Creating a directory
 await fdp.directory.create('my-new-pod', 'my-dir')
 ```
 
+Deleting a directory
+
+```js
+await fdp.directory.delete('my-new-pod', 'my-dir')
+```
+
 Uploading data as a file into a pod
 
 ```js
 await fdp.file.uploadData('my-new-pod', '/my-dir/myfile.txt', 'Hello world!')
+```
+
+Deleting a file from a pod
+
+```js
+await fdp.file.delete('my-new-pod', '/my-dir/myfile.txt')
 ```
 
 Getting list of files and directories with recursion or not
