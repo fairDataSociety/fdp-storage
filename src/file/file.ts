@@ -158,7 +158,7 @@ export class File {
       connection.options?.downloadOptions,
     )
 
-    const meta = await getRawMetadata(connection.bee, fullPath, extendedInfo.podAddress)
+    const meta = (await getRawMetadata(connection.bee, fullPath, extendedInfo.podAddress)).metadata
     assertRawFileMetadata(meta)
     const data = stringToBytes(JSON.stringify(createFileShareInfo(meta, extendedInfo.podAddress)))
 
