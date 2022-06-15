@@ -118,14 +118,10 @@ export function referenceToBase64(reference: Reference): string {
 /**
  * Creates file share information structure
  */
-export function createFileShareInfo(
-  meta: RawFileMetadata,
-  userAddress: Utils.EthAddress,
-  time?: number,
-): FileShareInfo {
+export function createFileShareInfo(meta: RawFileMetadata, podAddress: Utils.EthAddress, time?: number): FileShareInfo {
   return {
     meta,
-    source_address: '0x' + bytesToHex(userAddress),
+    source_address: '0x' + bytesToHex(podAddress),
     dest_address: '',
     shared_time: time ? time.toString() : getUnixTimestamp().toString(),
   }
