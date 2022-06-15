@@ -14,7 +14,6 @@ import { addEntryToDirectory, removeEntryFromDirectory } from '../content-items/
 import { Data, Reference } from '@ethersphere/bee-js'
 import { getRawMetadata } from '../content-items/utils'
 import { assertRawFileMetadata } from '../directory/utils'
-import { addEntryToDirectory, removeEntryFromDirectory } from '../content-items/handler'
 
 /**
  * Files management class
