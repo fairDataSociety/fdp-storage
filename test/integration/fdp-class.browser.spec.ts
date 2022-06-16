@@ -263,7 +263,7 @@ describe('Fair Data Protocol class - in browser', () => {
 
         await fdp.account.register(user.username, user.password)
 
-        return await fdp.personalStorage.list()
+        return (await fdp.personalStorage.list()).getPods()
       }, jsonUser)
 
       expect(answer).toEqual([])
@@ -287,7 +287,7 @@ describe('Fair Data Protocol class - in browser', () => {
           await window.shouldFail(fdp.personalStorage.create(commaPodName), 'Pod name cannot contain commas')
           await window.shouldFail(fdp.personalStorage.create(''), 'Pod name is too short')
 
-          return await fdp.personalStorage.list()
+          return (await fdp.personalStorage.list()).getPods()
         },
         jsonUser,
         longPodName,
@@ -372,7 +372,7 @@ describe('Fair Data Protocol class - in browser', () => {
 
           await window.shouldFail(fdp.personalStorage.delete(notExistsPod), `Pod "${notExistsPod}" does not exist`)
 
-          return await fdp.personalStorage.list()
+          return (await fdp.personalStorage.list()).getPods()
         },
         jsonUser,
         podName,
@@ -389,7 +389,7 @@ describe('Fair Data Protocol class - in browser', () => {
           await fdp.account.login(user.username, user.password)
           await fdp.personalStorage.delete(podName)
 
-          return await fdp.personalStorage.list()
+          return (await fdp.personalStorage.list()).getPods()
         },
         jsonUser,
         podName,
@@ -404,7 +404,7 @@ describe('Fair Data Protocol class - in browser', () => {
           await fdp.account.login(user.username, user.password)
           await fdp.personalStorage.delete(podName)
 
-          return await fdp.personalStorage.list()
+          return (await fdp.personalStorage.list()).getPods()
         },
         jsonUser,
         podName1,
@@ -438,6 +438,47 @@ describe('Fair Data Protocol class - in browser', () => {
           await fdp.personalStorage.create(podName)
           const sharedReference = await fdp.personalStorage.share(podName)
           const sharedData = (await fdp.connection.bee.downloadData(sharedReference)).json() as unknown as PodShareInfo
+
+          return {
+            sharedReference,
+            sharedData,
+          }
+        },
+        jsonUser,
+        podName,
+      )
+
+      expect(sharedReference).toBeDefined()
+      expect(sharedData.pod_name).toEqual(podName)
+      expect(sharedData.pod_address).toHaveLength(40)
+      expect(sharedData.user_address).toEqual(walletAddress.toLowerCase().replace('0x', ''))
+    })
+
+    it('should receive shared pod info', async () => {
+      const user = generateUser()
+      const jsonUser = user as unknown as JSONObject
+
+      const walletAddress = await page.evaluate(async (user: TestUser) => {
+        const fdp = eval(await window.initFdp()) as FdpStorage
+        const wallet = fdp.account.createWallet()
+        await window.topUpAddress(fdp)
+
+        await fdp.account.register(user.username, user.password)
+        await fdp.account.login(user.username, user.password)
+
+        return wallet.address
+      }, jsonUser)
+
+      const podName = generateRandomHexString()
+
+      const { sharedReference, sharedData } = await page.evaluate(
+        async (user: TestUser, podName: string) => {
+          const fdp = eval(await window.initFdp()) as FdpStorage
+
+          await fdp.account.login(user.username, user.password)
+          await fdp.personalStorage.create(podName)
+          const sharedReference = await fdp.personalStorage.share(podName)
+          const sharedData = await fdp.personalStorage.getSharedInfo(sharedReference)
 
           return {
             sharedReference,

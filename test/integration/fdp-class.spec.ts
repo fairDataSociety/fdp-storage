@@ -157,7 +157,7 @@ describe('Fair Data Protocol class', () => {
       await topUpAddress(fdp)
 
       await fdp.account.register(user.username, user.password)
-      const pods = await fdp.personalStorage.list()
+      const pods = (await fdp.personalStorage.list()).getPods()
       expect(pods).toHaveLength(0)
     })
 
@@ -169,7 +169,7 @@ describe('Fair Data Protocol class', () => {
       await fdp.account.register(user.username, user.password)
       // login isn't required in general, but here it required as it reproduces user workflow after registration
       await fdp.account.login(user.username, user.password)
-      let list = await fdp.personalStorage.list()
+      let list = (await fdp.personalStorage.list()).getPods()
       expect(list).toHaveLength(0)
 
       const longPodName = generateRandomHexString(MAX_POD_NAME_LENGTH + 1)
@@ -191,7 +191,7 @@ describe('Fair Data Protocol class', () => {
         const result = await fdp.personalStorage.create(example.name)
         expect(result).toEqual(example)
 
-        list = await fdp.personalStorage.list()
+        list = (await fdp.personalStorage.list()).getPods()
         expect(list).toHaveLength(i + 1)
         expect(list[i]).toEqual(example)
       }
@@ -213,18 +213,18 @@ describe('Fair Data Protocol class', () => {
       const podName1 = generateRandomHexString()
       await fdp.personalStorage.create(podName)
       await fdp.personalStorage.create(podName1)
-      let list = await fdp.personalStorage.list()
+      let list = (await fdp.personalStorage.list()).getPods()
       expect(list).toHaveLength(2)
 
       const notExistsPod = generateRandomHexString()
       await expect(fdp.personalStorage.delete(notExistsPod)).rejects.toThrow(`Pod "${notExistsPod}" does not exist`)
 
       await fdp.personalStorage.delete(podName)
-      list = await fdp.personalStorage.list()
+      list = (await fdp.personalStorage.list()).getPods()
       expect(list).toHaveLength(1)
 
       await fdp.personalStorage.delete(podName1)
-      list = await fdp.personalStorage.list()
+      list = (await fdp.personalStorage.list()).getPods()
       expect(list).toHaveLength(0)
     })
 
@@ -240,6 +240,22 @@ describe('Fair Data Protocol class', () => {
       const sharedReference = await fdp.personalStorage.share(podName)
       expect(sharedReference).toHaveLength(128)
       const sharedData = (await fdp.connection.bee.downloadData(sharedReference)).json() as unknown as PodShareInfo
+      expect(sharedData.pod_name).toEqual(podName)
+      expect(sharedData.pod_address).toHaveLength(40)
+      expect(sharedData.user_address).toEqual(user.address.toLowerCase().replace('0x', ''))
+    })
+
+    it('should receive shared pod info', async () => {
+      const fdp = createFdp()
+      const user = generateUser(fdp)
+      await topUpAddress(fdp)
+
+      await fdp.account.register(user.username, user.password)
+      const podName = generateRandomHexString()
+      await fdp.personalStorage.create(podName)
+      const sharedReference = await fdp.personalStorage.share(podName)
+      const sharedData = await fdp.personalStorage.getSharedInfo(sharedReference)
+
       expect(sharedData.pod_name).toEqual(podName)
       expect(sharedData.pod_address).toHaveLength(40)
       expect(sharedData.user_address).toEqual(user.address.toLowerCase().replace('0x', ''))

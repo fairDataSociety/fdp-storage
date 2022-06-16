@@ -1,4 +1,4 @@
-import { EthAddress } from '@ethersphere/bee-js/dist/types/utils/eth'
+import { Utils } from '@ethersphere/bee-js'
 import { Reference } from '@ethersphere/bee-js'
 
 /**
@@ -7,6 +7,13 @@ import { Reference } from '@ethersphere/bee-js'
 export interface Pod {
   name: string
   index: number
+}
+/**
+ * Shared pod information
+ */
+export interface SharedPod {
+  name: string
+  address: Utils.EthAddress
 }
 
 /**
@@ -33,7 +40,7 @@ export interface RawFileMetadata {
  */
 export interface FileMetadata {
   version: number
-  userAddress: EthAddress
+  userAddress: Utils.EthAddress
   podName: string
   filePath: string
   fileName: string
