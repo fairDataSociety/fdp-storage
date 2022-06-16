@@ -261,6 +261,22 @@ describe('Fair Data Protocol class', () => {
       expect(sharedData.user_address).toEqual(user.address.toLowerCase().replace('0x', ''))
     })
 
+    it('should receive shared pod info', async () => {
+      const fdp = createFdp()
+      const user = generateUser(fdp)
+      await topUpAddress(fdp)
+
+      await fdp.account.register(user.username, user.password)
+      const podName = generateRandomHexString()
+      await fdp.personalStorage.create(podName)
+      const sharedReference = await fdp.personalStorage.share(podName)
+      const sharedData = await fdp.personalStorage.getSharedInfo(sharedReference)
+
+      expect(sharedData.pod_name).toEqual(podName)
+      expect(sharedData.pod_address).toHaveLength(40)
+      expect(sharedData.user_address).toEqual(user.address.toLowerCase().replace('0x', ''))
+    })
+
     it('should save shared pod', async () => {
       const fdp = createFdp()
       const fdp1 = createFdp()

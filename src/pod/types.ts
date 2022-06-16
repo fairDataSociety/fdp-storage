@@ -7,6 +7,13 @@ export interface Pod {
   name: string
   index: number
 }
+/**
+ * Shared pod information
+ */
+export interface SharedPod {
+  name: string
+  address: Utils.EthAddress
+}
 
 /**
  * Shared pod information
