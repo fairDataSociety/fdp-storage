@@ -154,10 +154,6 @@ export function assertRegistrationAccount(value: unknown): asserts value is Acco
   if (!data.publicKey) {
     throw new Error('Account public key not found')
   }
-
-  if (!data.username) {
-    throw new Error('Active username not found')
-  }
 }
 
 /**
