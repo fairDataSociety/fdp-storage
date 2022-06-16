@@ -227,11 +227,8 @@ describe('Fair Data Protocol class', () => {
       expect(sharedReference).toHaveLength(128)
       const sharedData = (await fdp.connection.bee.downloadData(sharedReference)).json() as unknown as PodShareInfo
       expect(sharedData.pod_name).toEqual(podName)
-      expect(sharedData.pod_address).toHaveLength(42)
-      expect(sharedData.user_name).toEqual(user.username)
-      expect(sharedData.user_address).toEqual(user.address.toLowerCase())
-      expect(isNaN(Number(sharedData.shared_time))).toBeFalsy()
-      expect(sharedData.shared_time.length).toBeLessThanOrEqual(10)
+      expect(sharedData.pod_address).toHaveLength(40)
+      expect(sharedData.user_address).toEqual(user.address.toLowerCase().replace('0x', ''))
     })
   })
 
@@ -380,9 +377,7 @@ describe('Fair Data Protocol class', () => {
       expect(sharedReference).toHaveLength(128)
       const sharedData = (await fdp.connection.bee.downloadData(sharedReference)).json() as unknown as FileShareInfo
       expect(sharedData.meta).toBeDefined()
-      expect(sharedData.source_address).toHaveLength(42)
-      expect(isNaN(Number(sharedData.shared_time))).toBeFalsy()
-      expect(sharedData.shared_time.length).toBeLessThanOrEqual(10)
+      expect(sharedData.source_address).toHaveLength(40)
     })
   })
 })

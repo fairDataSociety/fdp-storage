@@ -127,9 +127,7 @@ export class PersonalStorage {
     )
 
     const data = stringToBytes(
-      JSON.stringify(
-        createPodShareInfo(name, podInfo.podAddress, this.accountData.username!, prepareEthAddress(wallet.address)),
-      ),
+      JSON.stringify(createPodShareInfo(name, podInfo.podAddress, prepareEthAddress(wallet.address))),
     )
 
     return (await uploadBytes(this.accountData.connection, data)).reference

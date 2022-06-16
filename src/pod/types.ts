@@ -68,7 +68,5 @@ export interface RawDirectoryMetadata {
 export interface PodShareInfo {
   pod_name: string
   pod_address: string
-  user_name: string
   user_address: string
-  shared_time: string
 }

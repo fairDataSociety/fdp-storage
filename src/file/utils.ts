@@ -8,7 +8,6 @@ import CryptoJS from 'crypto-js'
 import { assertString } from '../utils/type'
 import { RawFileMetadata } from '../pod/types'
 import { bytesToHex } from '../utils/hex'
-import { getUnixTimestamp } from '../utils/time'
 
 /**
  * Asserts that full path string is correct
@@ -118,11 +117,9 @@ export function referenceToBase64(reference: Reference): string {
 /**
  * Creates file share information structure
  */
-export function createFileShareInfo(meta: RawFileMetadata, podAddress: Utils.EthAddress, time?: number): FileShareInfo {
+export function createFileShareInfo(meta: RawFileMetadata, podAddress: Utils.EthAddress): FileShareInfo {
   return {
     meta,
-    source_address: '0x' + bytesToHex(podAddress),
-    dest_address: '',
-    shared_time: time ? time.toString() : getUnixTimestamp().toString(),
+    source_address: bytesToHex(podAddress),
   }
 }

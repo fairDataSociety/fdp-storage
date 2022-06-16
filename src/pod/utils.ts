@@ -7,7 +7,6 @@ import { EthAddress } from '@ethersphere/bee-js/dist/types/utils/eth'
 import { getRawDirectoryMetadataBytes } from '../directory/adapter'
 import { assertNumber, assertString, isNumber, isString } from '../utils/type'
 import { bytesToHex } from '../utils/hex'
-import { getUnixTimestamp } from '../utils/time'
 
 export const META_VERSION = 1
 export const MAX_PODS_COUNT = 65536
@@ -181,18 +180,10 @@ export function assertPods(value: unknown): asserts value is Pod[] {
 /**
  * Creates information for pod sharing
  */
-export function createPodShareInfo(
-  podName: string,
-  podAddress: EthAddress,
-  username: string,
-  userAddress: EthAddress,
-  sharedTime?: number,
-): PodShareInfo {
+export function createPodShareInfo(podName: string, podAddress: EthAddress, userAddress: EthAddress): PodShareInfo {
   return {
     pod_name: podName,
-    pod_address: '0x' + bytesToHex(podAddress),
-    user_name: username,
-    user_address: '0x' + bytesToHex(userAddress),
-    shared_time: sharedTime ? sharedTime.toString() : getUnixTimestamp().toString(),
+    pod_address: bytesToHex(podAddress),
+    user_address: bytesToHex(userAddress),
   }
 }

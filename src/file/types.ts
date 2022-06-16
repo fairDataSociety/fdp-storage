@@ -55,6 +55,4 @@ export interface Block {
 export interface FileShareInfo {
   meta: RawFileMetadata
   source_address: string
-  dest_address: string
-  shared_time: string
 }

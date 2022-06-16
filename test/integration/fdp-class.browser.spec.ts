@@ -432,11 +432,8 @@ describe('Fair Data Protocol class - in browser', () => {
 
       expect(sharedReference).toBeDefined()
       expect(sharedData.pod_name).toEqual(podName)
-      expect(sharedData.pod_address).toHaveLength(42)
-      expect(sharedData.user_name).toEqual(user.username)
-      expect(sharedData.user_address).toEqual(walletAddress.toLowerCase())
-      expect(isNaN(Number(sharedData.shared_time))).toBeFalsy()
-      expect(sharedData.shared_time.length).toBeLessThanOrEqual(10)
+      expect(sharedData.pod_address).toHaveLength(40)
+      expect(sharedData.user_address).toEqual(walletAddress.toLowerCase().replace('0x', ''))
     })
   })
 
