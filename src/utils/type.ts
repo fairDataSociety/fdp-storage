@@ -1,4 +1,5 @@
 import { Utils } from '@ethersphere/bee-js'
+
 export type { PublicKey } from '@fairdatasociety/fdp-contracts'
 
 /**

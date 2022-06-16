@@ -1,8 +1,16 @@
-import { Pod } from './types'
+import { Pod, PodShareInfo } from './types'
 import { assertActiveAccount } from '../account/utils'
 import { writeFeedData } from '../feed/api'
 import { AccountData } from '../account/account-data'
-import { assertPodName, assertPodNameAvailable, assertPodsLength, createPodShareInfo, podListToBytes } from './utils'
+import {
+  assertEncryptedReference,
+  assertPodName,
+  assertPodNameAvailable,
+  assertPodsLength,
+  createPodShareInfo,
+  getSharedInfo,
+  podListToBytes,
+} from './utils'
 import { Epoch, getFirstEpoch } from '../feed/lookup/epoch'
 import { getUnixTimestamp } from '../utils/time'
 import { prepareEthAddress } from '../utils/address'
@@ -12,6 +20,8 @@ import { createRootDirectory } from '../directory/handler'
 import { uploadBytes } from '../file/utils'
 import { stringToBytes } from '../utils/bytes'
 import { Reference } from '@ethersphere/bee-js'
+import { List } from './list'
+import { EncryptedReference } from '../utils/hex'
 
 export const POD_TOPIC = 'Pods'
 
@@ -23,16 +33,16 @@ export class PersonalStorage {
    *
    * @returns list of pods
    */
-  async list(): Promise<Pod[]> {
+  async list(): Promise<List> {
     assertActiveAccount(this.accountData)
 
-    return (
-      await getPodsList(
-        this.accountData.connection.bee,
-        prepareEthAddress(this.accountData.wallet!.address),
-        this.accountData.connection.options?.downloadOptions,
-      )
-    ).pods
+    const data = await getPodsList(
+      this.accountData.connection.bee,
+      prepareEthAddress(this.accountData.wallet!.address),
+      this.accountData.connection.options?.downloadOptions,
+    )
+
+    return data.podsList
   }
 
   /**
@@ -50,9 +60,9 @@ export class PersonalStorage {
       this.accountData.connection.options?.downloadOptions,
     )
 
-    const nextIndex = podsInfo.pods.length + 1
+    const nextIndex = podsInfo.podsList.getPods().length + 1
     assertPodsLength(nextIndex)
-    assertPodNameAvailable(podsInfo.pods, name)
+    assertPodNameAvailable(podsInfo.podsList.getPods(), name)
 
     let epoch: Epoch
     const currentTime = getUnixTimestamp()
@@ -64,8 +74,9 @@ export class PersonalStorage {
     }
 
     const newPod: Pod = { name, index: nextIndex }
-    podsInfo.pods.push(newPod)
-    const allPodsData = podListToBytes(podsInfo.pods)
+    const pods = podsInfo.podsList.getPods()
+    pods.push(newPod)
+    const allPodsData = podListToBytes(pods)
     const wallet = this.accountData.wallet!
     // create pod
     await writeFeedData(this.accountData.connection, POD_TOPIC, allPodsData, wallet.privateKey, epoch)
@@ -89,14 +100,14 @@ export class PersonalStorage {
       this.accountData.connection.options?.downloadOptions,
     )
 
-    assertPodsLength(podsInfo.pods.length)
-    const pod = podsInfo.pods.find(item => item.name === name)
+    assertPodsLength(podsInfo.podsList.getPods().length)
+    const pod = podsInfo.podsList.getPods().find(item => item.name === name)
 
     if (!pod) {
       throw new Error(`Pod "${name}" does not exist`)
     }
 
-    const podsFiltered = podsInfo.pods.filter(item => item.name !== name)
+    const podsFiltered = podsInfo.podsList.getPods().filter(item => item.name !== name)
     const allPodsData = podListToBytes(podsFiltered)
     const wallet = this.accountData.wallet!
     await writeFeedData(
@@ -131,5 +142,18 @@ export class PersonalStorage {
     )
 
     return (await uploadBytes(this.accountData.connection, data)).reference
+  }
+
+  /**
+   * Gets shared pod information
+   *
+   * @param reference swarm reference with shared pod information
+   *
+   * @returns shared pod information
+   */
+  async getSharedInfo(reference: string | EncryptedReference): Promise<PodShareInfo> {
+    assertEncryptedReference(reference)
+
+    return getSharedInfo(this.accountData.connection.bee, reference)
   }
 }
