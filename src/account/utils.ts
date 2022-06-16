@@ -134,10 +134,6 @@ export function assertActiveAccount(value: unknown): asserts value is AccountDat
   if (!data.wallet) {
     throw new Error('Active account not found')
   }
-
-  if (!data.username) {
-    throw new Error('Active username not found')
-  }
 }
 
 /**
