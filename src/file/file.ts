@@ -164,6 +164,6 @@ export class File {
     assertRawFileMetadata(meta)
     const data = stringToBytes(JSON.stringify(createFileShareInfo(meta, extendedInfo.podAddress)))
 
-    return (await uploadBytes(this.accountData.connection, data)).reference
+    return (await uploadBytes(connection, data)).reference
   }
 }
