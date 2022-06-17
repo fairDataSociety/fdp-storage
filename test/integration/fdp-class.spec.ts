@@ -2,6 +2,8 @@ import { FdpStorage } from '../../src'
 import { createFdp, generateRandomHexString, generateUser, GET_FEED_DATA_TIMEOUT, isBatchUsable } from '../utils'
 import { MAX_POD_NAME_LENGTH } from '../../src/pod/utils'
 import { createUserV1 } from '../../src/account/account'
+import { PodShareInfo } from '../../src/pod/types'
+import { FileShareInfo } from '../../src/file/types'
 
 async function topUpAddress(fdp: FdpStorage) {
   if (!fdp.account.wallet?.address) {
@@ -145,7 +147,7 @@ describe('Fair Data Protocol class', () => {
       expect(pods).toHaveLength(0)
     })
 
-    it('should create pods with fdp', async () => {
+    it('should create pods', async () => {
       const fdp = createFdp()
       const user = generateUser(fdp)
       await topUpAddress(fdp)
@@ -210,6 +212,23 @@ describe('Fair Data Protocol class', () => {
       await fdp.personalStorage.delete(podName1)
       list = await fdp.personalStorage.list()
       expect(list).toHaveLength(0)
+    })
+
+    it('should share a pod', async () => {
+      const fdp = createFdp()
+      const user = generateUser(fdp)
+      await topUpAddress(fdp)
+
+      await fdp.account.register(user.username, user.password)
+
+      const podName = generateRandomHexString()
+      await fdp.personalStorage.create(podName)
+      const sharedReference = await fdp.personalStorage.share(podName)
+      expect(sharedReference).toHaveLength(128)
+      const sharedData = (await fdp.connection.bee.downloadData(sharedReference)).json() as unknown as PodShareInfo
+      expect(sharedData.pod_name).toEqual(podName)
+      expect(sharedData.pod_address).toHaveLength(40)
+      expect(sharedData.user_address).toEqual(user.address.toLowerCase().replace('0x', ''))
     })
   })
 
@@ -338,6 +357,27 @@ describe('Fair Data Protocol class', () => {
       await fdp.file.delete(pod, fullFilenameSmallPath)
       const fdpList1 = await fdp.directory.read(pod, '/', true)
       expect(fdpList1.getFiles().length).toEqual(0)
+    })
+
+    it('should share a file', async () => {
+      const fdp = createFdp()
+      const user = generateUser(fdp)
+      const pod = generateRandomHexString()
+      const fileSizeSmall = 100
+      const contentSmall = generateRandomHexString(fileSizeSmall)
+      const filenameSmall = generateRandomHexString() + '.txt'
+      const fullFilenameSmallPath = '/' + filenameSmall
+      await topUpAddress(fdp)
+
+      await fdp.account.register(user.username, user.password)
+      await fdp.personalStorage.create(pod)
+      await fdp.file.uploadData(pod, fullFilenameSmallPath, contentSmall)
+
+      const sharedReference = await fdp.file.share(pod, fullFilenameSmallPath)
+      expect(sharedReference).toHaveLength(128)
+      const sharedData = (await fdp.connection.bee.downloadData(sharedReference)).json() as unknown as FileShareInfo
+      expect(sharedData.meta).toBeDefined()
+      expect(sharedData.source_address).toHaveLength(40)
     })
   })
 })

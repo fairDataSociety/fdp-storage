@@ -2,13 +2,16 @@ import { Pod } from './types'
 import { assertActiveAccount } from '../account/utils'
 import { writeFeedData } from '../feed/api'
 import { AccountData } from '../account/account-data'
-import { assertPodName, assertPodNameAvailable, assertPodsLength, podListToBytes } from './utils'
+import { assertPodName, assertPodNameAvailable, assertPodsLength, createPodShareInfo, podListToBytes } from './utils'
 import { Epoch, getFirstEpoch } from '../feed/lookup/epoch'
 import { getUnixTimestamp } from '../utils/time'
 import { prepareEthAddress } from '../utils/address'
-import { getPodsList } from './api'
+import { getExtendedPodsList, getPodsList } from './api'
 import { getWalletByIndex } from '../utils/wallet'
 import { createRootDirectory } from '../directory/handler'
+import { uploadBytes } from '../file/utils'
+import { stringToBytes } from '../utils/bytes'
+import { Reference } from '@ethersphere/bee-js'
 
 export const POD_TOPIC = 'Pods'
 
@@ -103,5 +106,30 @@ export class PersonalStorage {
       wallet.privateKey,
       podsInfo.lookupAnswer!.epoch.getNextEpoch(getUnixTimestamp()),
     )
+  }
+
+  /**
+   * Shares pod information
+   *
+   * @param name pod name
+   *
+   * @returns swarm reference of shared metadata about pod
+   */
+  async share(name: string): Promise<Reference> {
+    assertActiveAccount(this.accountData)
+    assertPodName(name)
+    const wallet = this.accountData.wallet!
+    const podInfo = await getExtendedPodsList(
+      this.accountData.connection.bee,
+      name,
+      wallet,
+      this.accountData.connection.options?.downloadOptions,
+    )
+
+    const data = stringToBytes(
+      JSON.stringify(createPodShareInfo(name, podInfo.podAddress, prepareEthAddress(wallet.address))),
+    )
+
+    return (await uploadBytes(this.accountData.connection, data)).reference
   }
 }

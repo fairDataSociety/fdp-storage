@@ -10,6 +10,9 @@ import { ENS } from '@fairdatasociety/fdp-contracts'
 import { Utils } from '@ethersphere/bee-js'
 
 export class AccountData {
+  /**
+   * Active FDP account wallet
+   */
   public wallet?: Wallet
 
   constructor(public readonly connection: Connection, public readonly ens: ENS) {}

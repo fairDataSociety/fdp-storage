@@ -1,4 +1,5 @@
 import { Reference } from '@ethersphere/bee-js'
+import { RawFileMetadata } from '../pod/types'
 
 /**
  * File upload options
@@ -46,4 +47,12 @@ export interface Block {
   size: number
   compressedSize: number
   reference: Reference
+}
+
+/**
+ * File share information
+ */
+export interface FileShareInfo {
+  meta: RawFileMetadata
+  source_address: string
 }
