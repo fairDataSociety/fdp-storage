@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0](https://www.github.com/fairDataSociety/fdp-storage/compare/v0.1.2...v0.2.0) (2022-06-17)
+
+
+### Features
+
+* implemented delete file and delete directory features ([#47](https://www.github.com/fairDataSociety/fdp-storage/issues/47)) ([257d651](https://www.github.com/fairDataSociety/fdp-storage/commit/257d651523991b988c423470e48e2a89dad68143))
+
 ### [0.1.2](https://www.github.com/fairDataSociety/fdp-storage/compare/v0.1.1...v0.1.2) (2022-06-07)
 
 
