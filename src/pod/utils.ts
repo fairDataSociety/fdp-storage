@@ -2,12 +2,20 @@ import { RawDirectoryMetadata, Pod, PodShareInfo, SharedPod } from './types'
 import { Bee, Data, ENCRYPTED_REFERENCE_HEX_LENGTH, Reference, Utils } from '@ethersphere/bee-js'
 import { stringToBytes } from '../utils/bytes'
 import { LookupAnswer } from '../feed/types'
-import { utils } from 'ethers'
+import { utils, Wallet } from 'ethers'
 import { getRawDirectoryMetadataBytes } from '../directory/adapter'
-import { assertNumber, assertString, isNumber, isObject, isString } from '../utils/type'
+import { assertNumber, assertString, isEthAddress, isNumber, isObject, isString } from '../utils/type'
 import { assertHexEthAddress, bytesToHex, EncryptedReference } from '../utils/hex'
 import { List } from './list'
 import { prepareEthAddress } from '../utils/address'
+import { getPodsList } from './api'
+import { Epoch, getFirstEpoch } from '../feed/lookup/epoch'
+import { getUnixTimestamp } from '../utils/time'
+import { writeFeedData } from '../feed/api'
+import { getWalletByIndex } from '../utils/wallet'
+import { createRootDirectory } from '../directory/handler'
+import { POD_TOPIC } from './personal-storage'
+import { Connection } from '../connection/connection'
 
 export const META_VERSION = 1
 export const MAX_PODS_COUNT = 65536
@@ -129,12 +137,28 @@ export function assertPodsLength(value: unknown): asserts value is number {
  * @param value list of pods
  * @param name name of pod
  */
-export function assertPodNameAvailable(value: unknown, name: string): asserts value is Pod[] {
+export function assertPodNameAvailable(name: string, value: unknown): asserts value is Pod[] {
   assertPods(value)
 
   value.forEach(pod => {
     if (pod.name === name) {
       throw new Error(`Pod with name "${name}" already exists`)
+    }
+  })
+}
+
+/**
+ * Verifies that name not exists in shared pods list
+ *
+ * @param value list of shared pods
+ * @param name name of pod
+ */
+export function assertSharedPodNameAvailable(name: string, value: unknown): asserts value is SharedPod[] {
+  assertSharedPods(value)
+
+  value.forEach(pod => {
+    if (pod.name === name) {
+      throw new Error(`Shared pod with name "${name}" already exists`)
     }
   })
 }
@@ -161,17 +185,27 @@ export function assertPodName(value: unknown): asserts value is string {
 
 /**
  * Converts pods list to bytes array
- *
- * @param list list of pods
  */
-export function podListToBytes(list: Pod[]): Uint8Array {
-  assertPods(list)
+export function podListToBytes(pods: Pod[], sharedPods: SharedPod[]): Uint8Array {
+  assertPods(pods)
+  assertSharedPods(sharedPods)
 
-  if (list.length === 0) {
+  if (pods.length === 0 && sharedPods.length === 0) {
     return new Uint8Array([0])
   }
 
-  return stringToBytes(list.map(pod => `${pod.name},${pod.index}`).join('\n') + '\n')
+  const allPods =
+    [...pods, ...sharedPods]
+      .map(pod => {
+        if (isPod(pod)) {
+          return `${pod.name},${pod.index}`
+        } else if (isSharedPod(pod)) {
+          return `${pod.name},${bytesToHex(pod.address)}`
+        }
+      })
+      .join('\n') + '\n'
+
+  return stringToBytes(allPods)
 }
 
 /**
@@ -184,6 +218,15 @@ export function isPod(value: unknown): value is Pod {
 }
 
 /**
+ * Shared pod guard
+ */
+export function isSharedPod(value: unknown): value is SharedPod {
+  const { name, address } = value as SharedPod
+
+  return typeof value === 'object' && value !== null && isString(name) && isEthAddress(bytesToHex(address))
+}
+
+/**
  * Asserts that pod is correct
  */
 export function assertPod(value: unknown): asserts value is Pod {
@@ -193,11 +236,29 @@ export function assertPod(value: unknown): asserts value is Pod {
 }
 
 /**
+ * Asserts that shared pod is correct
+ */
+export function assertSharedPod(value: unknown): asserts value is SharedPod {
+  if (!isSharedPod(value)) {
+    throw new Error('Invalid shared pod')
+  }
+}
+
+/**
  * Asserts that pods are correct
  */
 export function assertPods(value: unknown): asserts value is Pod[] {
   for (const pod of value as Pod[]) {
     assertPod(pod)
+  }
+}
+
+/**
+ * Asserts that shared pods are correct
+ */
+export function assertSharedPods(value: unknown): asserts value is SharedPod[] {
+  for (const pod of value as SharedPod[]) {
+    assertSharedPod(pod)
   }
 }
 
@@ -239,6 +300,12 @@ export function assertPodShareInfo(value: unknown): asserts value is PodShareInf
   }
 }
 
+/**
+ * Gets information about shared pod
+ *
+ * @param bee Bee instance
+ * @param reference reference to shared pod
+ */
 export async function getSharedInfo(bee: Bee, reference: string): Promise<PodShareInfo> {
   const data = (await bee.downloadData(reference)).json()
   assertPodShareInfo(data)
@@ -255,4 +322,60 @@ export function assertEncryptedReference(value: unknown): asserts value is Encry
   if (!(data.length === ENCRYPTED_REFERENCE_HEX_LENGTH && Utils.isHexString(data))) {
     throw new Error('Incorrect encrypted reference')
   }
+}
+
+/**
+ * Creates user's pod or add a shared pod to an account
+ *
+ * @param bee Bee instance
+ * @param connection Connection instance
+ * @param userWallet FDP account wallet
+ * @param pod pod information to create
+ */
+export async function createPod(
+  bee: Bee,
+  connection: Connection,
+  userWallet: Wallet,
+  pod: Pod | SharedPod,
+): Promise<Pod | SharedPod> {
+  pod.name = pod.name.trim()
+  assertPodName(pod.name)
+
+  const isSimplePod = isPod(pod)
+  const userAddress = prepareEthAddress(userWallet.address)
+  const podsInfo = await getPodsList(bee, userAddress, connection.options?.downloadOptions)
+
+  const nextIndex = podsInfo.podsList.getPods().length + 1
+  assertPodsLength(nextIndex)
+
+  const pods = podsInfo.podsList.getPods()
+  const sharedPods = podsInfo.podsList.getSharedPods()
+  assertPodNameAvailable(pod.name, pods)
+  assertSharedPodNameAvailable(pod.name, sharedPods)
+
+  let epoch: Epoch
+  const currentTime = getUnixTimestamp()
+
+  if (podsInfo.lookupAnswer) {
+    epoch = podsInfo.lookupAnswer.epoch.getNextEpoch(currentTime)
+  } else {
+    epoch = getFirstEpoch(currentTime)
+  }
+
+  if (isSimplePod) {
+    pod.index = nextIndex
+    pods.push(pod)
+  } else {
+    sharedPods.push(pod)
+  }
+
+  const allPodsData = podListToBytes(pods, sharedPods)
+  await writeFeedData(connection, POD_TOPIC, allPodsData, userWallet.privateKey, epoch)
+
+  if (isSimplePod) {
+    const podWallet = getWalletByIndex(userWallet.privateKey, nextIndex)
+    await createRootDirectory(connection, podWallet.privateKey)
+  }
+
+  return pod
 }

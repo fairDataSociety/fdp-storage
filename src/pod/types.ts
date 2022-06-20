@@ -1,5 +1,4 @@
-import { Utils } from '@ethersphere/bee-js'
-import { Reference } from '@ethersphere/bee-js'
+import { Utils, Reference } from '@ethersphere/bee-js'
 
 /**
  * Pod information
@@ -8,6 +7,7 @@ export interface Pod {
   name: string
   index: number
 }
+
 /**
  * Shared pod information
  */
@@ -76,4 +76,11 @@ export interface PodShareInfo {
   pod_name: string
   pod_address: string
   user_address: string
+}
+
+/**
+ * Pod receive options
+ */
+export interface PodReceiveOptions {
+  name: string
 }

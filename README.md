@@ -91,7 +91,8 @@ Getting list of pods
 
 ```js
 const pods = await fdp.personalStorage.list()
-console.log(pods) // prints list of user's pods
+console.log(pods.getPods()) // prints list of user's pods
+console.log(pods.getSharedPods()) // prints list of pods that a user has added to their account
 ```
 
 Sharing a pod
@@ -99,6 +100,18 @@ Sharing a pod
 ```js
 const shareReference = await fdp.personalStorage.share('my-new-pod')
 console.log(shareReference) // prints share reference of a pod
+```
+
+Getting information about shared pod
+
+```js
+await fdp.personalStorage.getSharedInfo(shareReference)
+```
+
+Saving shared pod under user's account
+
+```js
+await fdp.personalStorage.saveShared(shareReference)
 ```
 
 Creating a directory

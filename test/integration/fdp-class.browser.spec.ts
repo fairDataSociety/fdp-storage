@@ -494,6 +494,95 @@ describe('Fair Data Protocol class - in browser', () => {
       expect(sharedData.pod_address).toHaveLength(40)
       expect(sharedData.user_address).toEqual(walletAddress.toLowerCase().replace('0x', ''))
     })
+
+    it('should save shared pod', async () => {
+      const user = generateUser()
+      const user1 = generateUser()
+      const jsonUser = user as unknown as JSONObject
+      const jsonUser1 = user1 as unknown as JSONObject
+      const podName = generateRandomHexString()
+      const newPodName = generateRandomHexString()
+
+      const {
+        listBeforeSave,
+        podAfterCreate,
+        listAfterCreate,
+        savedPod,
+        savedPodCustom,
+        listAfterSaveCustom,
+        podAfterSaveCustom,
+      } = await page.evaluate(
+        async (user: TestUser, user1: TestUser, podName: string, newPodName: string) => {
+          const fdp = eval(await window.initFdp()) as FdpStorage
+          const fdp1 = eval(await window.initFdp()) as FdpStorage
+          fdp.account.createWallet()
+          fdp1.account.createWallet()
+          await window.topUpAddress(fdp)
+          await window.topUpAddress(fdp1)
+
+          await fdp.account.register(user.username, user.password)
+          await fdp1.account.register(user1.username, user1.password)
+          await fdp.personalStorage.create(podName)
+          const sharedReference = await fdp.personalStorage.share(podName)
+          const list0 = await fdp1.personalStorage.list()
+          const pod = await fdp1.personalStorage.saveShared(sharedReference)
+          const list = await fdp1.personalStorage.list()
+          const savedPod = list.getSharedPods()[0]
+          await window.shouldFail(
+            fdp1.personalStorage.saveShared(sharedReference),
+            `Shared pod with name "${podName}" already exists`,
+          )
+
+          const pod1 = await fdp1.personalStorage.saveShared(sharedReference, {
+            name: newPodName,
+          })
+
+          const list1 = await fdp1.personalStorage.list()
+          const savedPod1 = list1.getSharedPods()[1]
+
+          return {
+            listBeforeSave: {
+              pods: list0.getPods(),
+              sharedPods: list0.getSharedPods(),
+            },
+            podAfterCreate: pod,
+            listAfterCreate: {
+              pods: list.getPods(),
+              sharedPods: list.getSharedPods(),
+            },
+            savedPod,
+            savedPodCustom: pod1,
+            listAfterSaveCustom: {
+              pods: list1.getPods(),
+              sharedPods: list1.getSharedPods(),
+            },
+            podAfterSaveCustom: savedPod1,
+          }
+        },
+        jsonUser,
+        jsonUser1,
+        podName,
+        newPodName,
+      )
+
+      expect(listBeforeSave.pods).toHaveLength(0)
+      expect(listBeforeSave.sharedPods).toHaveLength(0)
+      expect(podAfterCreate.name).toEqual(podName)
+      expect(Object.keys(podAfterCreate.address)).toHaveLength(20)
+      expect(listAfterCreate.pods).toHaveLength(0)
+      expect(listAfterCreate.sharedPods).toHaveLength(1)
+      expect(savedPod.name).toEqual(podName)
+      expect(Object.keys(savedPod.address)).toHaveLength(20)
+      expect(savedPod.address).toStrictEqual(podAfterCreate.address)
+      expect(savedPodCustom.name).toEqual(newPodName)
+      expect(Object.keys(savedPodCustom.address)).toHaveLength(20)
+      expect(savedPodCustom.address).toStrictEqual(savedPod.address)
+      expect(listAfterSaveCustom.pods).toHaveLength(0)
+      expect(listAfterSaveCustom.sharedPods).toHaveLength(2)
+      expect(podAfterSaveCustom.name).toEqual(newPodName)
+      expect(Object.keys(podAfterSaveCustom.address)).toHaveLength(20)
+      expect(podAfterSaveCustom.address).toStrictEqual(savedPod.address)
+    })
   })
 
   describe('Directory', () => {
