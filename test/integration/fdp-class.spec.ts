@@ -246,6 +246,57 @@ describe('Fair Data Protocol class', () => {
       expect(sharedData.pod_address).toHaveLength(40)
       expect(sharedData.user_address).toEqual(user.address.toLowerCase().replace('0x', ''))
     })
+
+    it('should save shared pod', async () => {
+      const fdp = createFdp()
+      const fdp1 = createFdp()
+      const user = generateUser(fdp)
+      const user1 = generateUser(fdp1)
+      await topUpAddress(fdp)
+      await topUpAddress(fdp1)
+
+      await fdp.account.register(user.username, user.password)
+      await fdp1.account.register(user1.username, user1.password)
+      const podName = generateRandomHexString()
+      await fdp.personalStorage.create(podName)
+      const sharedReference = await fdp.personalStorage.share(podName)
+
+      const list0 = await fdp1.personalStorage.list()
+      expect(list0.getPods()).toHaveLength(0)
+      expect(list0.getSharedPods()).toHaveLength(0)
+      const pod = await fdp1.personalStorage.saveShared(sharedReference)
+
+      expect(pod.name).toEqual(podName)
+      expect(pod.address).toHaveLength(20)
+
+      const list = await fdp1.personalStorage.list()
+      expect(list.getPods()).toHaveLength(0)
+      expect(list.getSharedPods()).toHaveLength(1)
+      const savedPod = list.getSharedPods()[0]
+      expect(savedPod.name).toEqual(podName)
+      expect(savedPod.address).toHaveLength(20)
+      expect(savedPod.address).toStrictEqual(pod.address)
+
+      await expect(fdp1.personalStorage.saveShared(sharedReference)).rejects.toThrow(
+        `Shared pod with name "${podName}" already exists`,
+      )
+
+      const newPodName = generateRandomHexString()
+      const pod1 = await fdp1.personalStorage.saveShared(sharedReference, {
+        name: newPodName,
+      })
+
+      expect(pod1.name).toEqual(newPodName)
+      expect(pod1.address).toHaveLength(20)
+      expect(pod1.address).toStrictEqual(pod.address)
+      const list1 = await fdp1.personalStorage.list()
+      expect(list1.getPods()).toHaveLength(0)
+      expect(list1.getSharedPods()).toHaveLength(2)
+      const savedPod1 = list1.getSharedPods()[1]
+      expect(savedPod1.name).toEqual(newPodName)
+      expect(savedPod1.address).toHaveLength(20)
+      expect(savedPod1.address).toStrictEqual(pod.address)
+    })
   })
 
   describe('Directory', () => {
