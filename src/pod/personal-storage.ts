@@ -3,14 +3,13 @@ import { assertActiveAccount } from '../account/utils'
 import { writeFeedData } from '../feed/api'
 import { AccountData } from '../account/account-data'
 import {
-  assertEncryptedReference,
   assertPod,
   assertPodName,
+  assertPodShareInfo,
   assertPodsLength,
   assertSharedPod,
   createPod,
   createPodShareInfo,
-  getSharedInfo,
   podListToBytes,
 } from './utils'
 import { getUnixTimestamp } from '../utils/time'
@@ -20,7 +19,8 @@ import { uploadBytes } from '../file/utils'
 import { stringToBytes } from '../utils/bytes'
 import { Reference } from '@ethersphere/bee-js'
 import { List } from './list'
-import { EncryptedReference } from '../utils/hex'
+import { assertEncryptedReference, EncryptedReference } from '../utils/hex'
+import { getSharedInfo } from '../content-items/utils'
 
 export const POD_TOPIC = 'Pods'
 
@@ -136,7 +136,10 @@ export class PersonalStorage {
   async getSharedInfo(reference: string | EncryptedReference): Promise<PodShareInfo> {
     assertEncryptedReference(reference)
 
-    return getSharedInfo(this.accountData.connection.bee, reference)
+    const sharedInfo = await getSharedInfo(this.accountData.connection.bee, reference)
+    assertPodShareInfo(sharedInfo)
+
+    return sharedInfo
   }
 
   /**

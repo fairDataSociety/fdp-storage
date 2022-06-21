@@ -5,15 +5,17 @@ import { getExtendedPodsList } from '../pod/api'
 import { getUnixTimestamp } from '../utils/time'
 import { stringToBytes } from '../utils/bytes'
 import { AccountData } from '../account/account-data'
-import { extractPathInfo, uploadBytes, assertFullPathWithName, createFileShareInfo } from './utils'
+import { extractPathInfo, uploadBytes, assertFullPathWithName, createFileShareInfo, assertFileShareInfo } from './utils'
 import { writeFeedData } from '../feed/api'
 import { downloadData, generateBlockName } from './handler'
 import { blocksToManifest, getFileMetadataRawBytes } from './adapter'
-import { Blocks, DataUploadOptions } from './types'
+import { Blocks, DataUploadOptions, FileShareInfo } from './types'
 import { addEntryToDirectory, removeEntryFromDirectory } from '../content-items/handler'
 import { Data, Reference } from '@ethersphere/bee-js'
 import { getRawMetadata } from '../content-items/utils'
 import { assertRawFileMetadata } from '../directory/utils'
+import { assertEncryptedReference, EncryptedReference } from '../utils/hex'
+import { getSharedInfo } from '../content-items/utils'
 
 /**
  * Files management class
@@ -165,5 +167,22 @@ export class File {
     const data = stringToBytes(JSON.stringify(createFileShareInfo(meta, extendedInfo.podAddress)))
 
     return (await uploadBytes(connection, data)).reference
+  }
+
+  /**
+   * Gets shared file information
+   *
+   * @param reference swarm reference with shared file information
+   *
+   * @returns shared file information
+   */
+  async getSharedInfo(reference: string | EncryptedReference): Promise<FileShareInfo> {
+    assertActiveAccount(this.accountData)
+    assertEncryptedReference(reference)
+
+    const sharedInfo = await getSharedInfo(this.accountData.connection.bee, reference)
+    assertFileShareInfo(sharedInfo)
+
+    return sharedInfo
   }
 }

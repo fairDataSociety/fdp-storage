@@ -8,6 +8,7 @@ import { MAX_POD_NAME_LENGTH } from '../../src/pod/utils'
 import { createUserV1 } from '../../src/account/account'
 import { Wallet } from 'ethers'
 import { PodShareInfo } from '../../src/pod/types'
+import { FileShareInfo } from '../../src/file/types'
 
 jest.setTimeout(200000)
 describe('Fair Data Protocol class - in browser', () => {
@@ -798,6 +799,86 @@ describe('Fair Data Protocol class - in browser', () => {
 
       expect(fdpList.content.length).toEqual(1)
       expect(fdpListAfter.content.length).toEqual(0)
+    })
+
+    it('should share a file', async () => {
+      const user = generateUser()
+      const jsonUser = user as unknown as JSONObject
+
+      const pod = generateRandomHexString()
+      const fileSizeSmall = 100
+      const contentSmall = generateRandomHexString(fileSizeSmall)
+      const filenameSmall = generateRandomHexString() + '.txt'
+      const fullFilenameSmallPath = '/' + filenameSmall
+
+      const { sharedReference, sharedData } = await page.evaluate(
+        async (user: TestUser, pod: string, fullFilenameSmallPath: string, contentSmall: string) => {
+          const fdp = eval(await window.initFdp()) as FdpStorage
+          fdp.account.createWallet()
+          await window.topUpAddress(fdp)
+
+          await fdp.account.register(user.username, user.password)
+          await fdp.personalStorage.create(pod)
+          await fdp.file.uploadData(pod, fullFilenameSmallPath, contentSmall)
+
+          const sharedReference = await fdp.file.share(pod, fullFilenameSmallPath)
+          const sharedData = (await fdp.connection.bee.downloadData(sharedReference)).json() as unknown as FileShareInfo
+
+          return {
+            sharedReference,
+            sharedData,
+          }
+        },
+        jsonUser,
+        pod,
+        fullFilenameSmallPath,
+        contentSmall,
+      )
+
+      expect(sharedReference).toHaveLength(128)
+      expect(sharedData.meta).toBeDefined()
+      expect(sharedData.source_address).toHaveLength(40)
+    })
+
+    it('should receive information about shared file', async () => {
+      const user = generateUser()
+      const jsonUser = user as unknown as JSONObject
+
+      const pod = generateRandomHexString()
+      const fileSizeSmall = 100
+      const contentSmall = generateRandomHexString(fileSizeSmall)
+      const filenameSmall = generateRandomHexString() + '.txt'
+      const fullFilenameSmallPath = '/' + filenameSmall
+
+      const { sharedData } = await page.evaluate(
+        async (user: TestUser, pod: string, fullFilenameSmallPath: string, contentSmall: string) => {
+          const fdp = eval(await window.initFdp()) as FdpStorage
+          fdp.account.createWallet()
+          await window.topUpAddress(fdp)
+
+          await fdp.account.register(user.username, user.password)
+          await fdp.personalStorage.create(pod)
+          await fdp.file.uploadData(pod, fullFilenameSmallPath, contentSmall)
+
+          const sharedReference = await fdp.file.share(pod, fullFilenameSmallPath)
+          const sharedData = await fdp.file.getSharedInfo(sharedReference)
+
+          return {
+            sharedData,
+          }
+        },
+        jsonUser,
+        pod,
+        fullFilenameSmallPath,
+        contentSmall,
+      )
+
+      expect(sharedData.meta).toBeDefined()
+      expect(sharedData.meta.pod_name).toEqual(pod)
+      expect(sharedData.meta.file_path).toEqual('/')
+      expect(sharedData.meta.file_name).toEqual(filenameSmall)
+      expect(sharedData.meta.file_size).toEqual(fileSizeSmall)
+      expect(sharedData.source_address).toHaveLength(40)
     })
   })
 })

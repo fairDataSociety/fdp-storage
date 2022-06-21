@@ -446,5 +446,30 @@ describe('Fair Data Protocol class', () => {
       expect(sharedData.meta).toBeDefined()
       expect(sharedData.source_address).toHaveLength(40)
     })
+
+    it('should receive information about shared file', async () => {
+      const fdp = createFdp()
+      const user = generateUser(fdp)
+      const pod = generateRandomHexString()
+      const fileSizeSmall = 100
+      const contentSmall = generateRandomHexString(fileSizeSmall)
+      const filenameSmall = generateRandomHexString() + '.txt'
+      const fullFilenameSmallPath = '/' + filenameSmall
+      await topUpAddress(fdp)
+
+      await fdp.account.register(user.username, user.password)
+      await fdp.personalStorage.create(pod)
+      await fdp.file.uploadData(pod, fullFilenameSmallPath, contentSmall)
+
+      const sharedReference = await fdp.file.share(pod, fullFilenameSmallPath)
+      const sharedData = await fdp.file.getSharedInfo(sharedReference)
+
+      expect(sharedData.meta).toBeDefined()
+      expect(sharedData.meta.pod_name).toEqual(pod)
+      expect(sharedData.meta.file_path).toEqual('/')
+      expect(sharedData.meta.file_name).toEqual(filenameSmall)
+      expect(sharedData.meta.file_size).toEqual(fileSizeSmall)
+      expect(sharedData.source_address).toHaveLength(40)
+    })
   })
 })
