@@ -1,11 +1,11 @@
-import { RawDirectoryMetadata, Pod, PodShareInfo, SharedPod } from './types'
-import { Bee, Data, ENCRYPTED_REFERENCE_HEX_LENGTH, Reference, Utils } from '@ethersphere/bee-js'
+import { Pod, PodShareInfo, RawDirectoryMetadata, SharedPod } from './types'
+import { Bee, Data, Utils } from '@ethersphere/bee-js'
 import { stringToBytes } from '../utils/bytes'
 import { LookupAnswer } from '../feed/types'
 import { utils } from 'ethers'
 import { getRawDirectoryMetadataBytes } from '../directory/adapter'
 import { assertNumber, assertString, isEthAddress, isNumber, isObject, isString } from '../utils/type'
-import { assertHexEthAddress, bytesToHex, EncryptedReference } from '../utils/hex'
+import { assertHexEthAddress, bytesToHex } from '../utils/hex'
 import { List } from './list'
 import { prepareEthAddress } from '../utils/address'
 import { getPodsList } from './api'
@@ -297,30 +297,6 @@ export function isPodShareInfo(value: unknown): value is PodShareInfo {
 export function assertPodShareInfo(value: unknown): asserts value is PodShareInfo {
   if (!isPodShareInfo(value)) {
     throw new Error('Incorrect pod share info')
-  }
-}
-
-/**
- * Gets information about shared pod
- *
- * @param bee Bee instance
- * @param reference reference to shared pod
- */
-export async function getSharedInfo(bee: Bee, reference: string): Promise<PodShareInfo> {
-  const data = (await bee.downloadData(reference)).json()
-  assertPodShareInfo(data)
-
-  return data
-}
-
-/**
- * Verifies if encrypted reference is correct
- */
-export function assertEncryptedReference(value: unknown): asserts value is EncryptedReference {
-  const data = value as Reference
-
-  if (!(data.length === ENCRYPTED_REFERENCE_HEX_LENGTH && Utils.isHexString(data))) {
-    throw new Error('Incorrect encrypted reference')
   }
 }
 
