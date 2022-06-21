@@ -141,8 +141,10 @@ export class PersonalStorage {
   /**
    * Receive and save shared pod information to user's account
    *
-   * @param reference
-   * @param options
+   * @param reference swarm reference with shared pod information
+   * @param options options for receiving pod
+   *
+   * @returns shared pod information
    */
   async saveShared(reference: string | EncryptedReference, options?: PodReceiveOptions): Promise<SharedPod> {
     assertActiveAccount(this.accountData)
