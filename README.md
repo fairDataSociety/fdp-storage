@@ -132,6 +132,18 @@ const shareReference = await fdp.file.share('my-new-pod', '/my-dir/myfile.txt')
 console.log(shareReference) // prints share reference of a file
 ```
 
+Get information about shared file
+
+```js
+await fdp.file.getSharedInfo(shareReference)
+```
+
+Save shared file to a pod
+
+```js
+await fdp.file.saveShared('my-new-pod', '/', shareReference)
+```
+
 Getting list of files and directories with recursion or not
 
 ```js

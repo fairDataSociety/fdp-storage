@@ -7,7 +7,7 @@ import { FdpStorage } from '../../src'
 import { MAX_POD_NAME_LENGTH } from '../../src/pod/utils'
 import { createUserV1 } from '../../src/account/account'
 import { Wallet } from 'ethers'
-import { PodShareInfo } from '../../src/pod/types'
+import { PodShareInfo, RawFileMetadata } from '../../src/pod/types'
 import { FileShareInfo } from '../../src/file/types'
 
 jest.setTimeout(200000)
@@ -879,6 +879,99 @@ describe('Fair Data Protocol class - in browser', () => {
       expect(sharedData.meta.file_name).toEqual(filenameSmall)
       expect(sharedData.meta.file_size).toEqual(fileSizeSmall)
       expect(sharedData.source_address).toHaveLength(40)
+    })
+
+    it('should save shared file to a pod', async () => {
+      const user = generateUser()
+      const user1 = generateUser()
+      const jsonUser = user as unknown as JSONObject
+      const jsonUser1 = user1 as unknown as JSONObject
+
+      const pod = generateRandomHexString()
+      const pod1 = generateRandomHexString()
+      const fileSizeSmall = 100
+      const contentSmall = generateRandomHexString(fileSizeSmall)
+      const filenameSmall = generateRandomHexString() + '.txt'
+      const fullFilenameSmallPath = '/' + filenameSmall
+      const newFilePath = '/'
+      const customName = 'NewCustomName.txt'
+
+      const { sharedData, files, fileInfo, meta, data, sharedData1, data1, files1 } = await page.evaluate(
+        async (
+          user: TestUser,
+          user1: TestUser,
+          pod: string,
+          pod1: string,
+          fullFilenameSmallPath: string,
+          contentSmall: string,
+          newFilePath: string,
+          customName: string,
+        ) => {
+          const fdp = eval(await window.initFdp()) as FdpStorage
+          const fdp1 = eval(await window.initFdp()) as FdpStorage
+          fdp.account.createWallet()
+          fdp1.account.createWallet()
+          await window.topUpAddress(fdp)
+          await window.topUpAddress(fdp1)
+
+          await fdp.account.register(user.username, user.password)
+          await fdp1.account.register(user1.username, user1.password)
+          await fdp.personalStorage.create(pod)
+          await fdp1.personalStorage.create(pod1)
+          await fdp.file.uploadData(pod, fullFilenameSmallPath, contentSmall)
+          const sharedReference = await fdp.file.share(pod, fullFilenameSmallPath)
+          const sharedData = await fdp1.file.saveShared(pod1, newFilePath, sharedReference)
+
+          const list = await fdp1.directory.read(pod1, '/')
+          const files = list.getFiles()
+          const fileInfo = files[0]
+          const meta = fileInfo.raw as RawFileMetadata
+          const data = (await fdp1.file.downloadData(pod1, fullFilenameSmallPath)).text()
+
+          // checking saving with custom name
+          const sharedData1 = await fdp1.file.saveShared(pod1, newFilePath, sharedReference, { name: customName })
+          const data1 = (await fdp1.file.downloadData(pod1, '/' + customName)).text()
+          const list1 = await fdp1.directory.read(pod1, '/')
+          const files1 = list1.getFiles()
+
+          return {
+            sharedData,
+            files,
+            fileInfo,
+            meta,
+            data,
+            sharedData1,
+            data1,
+            files1,
+          }
+        },
+        jsonUser,
+        jsonUser1,
+        pod,
+        pod1,
+        fullFilenameSmallPath,
+        contentSmall,
+        newFilePath,
+        customName,
+      )
+
+      expect(sharedData.podName).toEqual(pod1)
+      expect(sharedData.filePath).toEqual(newFilePath)
+      expect(sharedData.fileName).toEqual(filenameSmall)
+      expect(sharedData.fileSize).toEqual(fileSizeSmall)
+      expect(files).toHaveLength(1)
+      expect(fileInfo.name).toEqual(filenameSmall)
+      expect(fileInfo.size).toEqual(fileSizeSmall)
+      expect(meta.file_name).toEqual(filenameSmall)
+      expect(meta.file_size).toEqual(fileSizeSmall)
+      expect(meta.pod_name).toEqual(pod1)
+      expect(data).toEqual(contentSmall)
+      expect(sharedData1.podName).toEqual(pod1)
+      expect(sharedData1.filePath).toEqual(newFilePath)
+      expect(sharedData1.fileName).toEqual(customName)
+      expect(sharedData1.fileSize).toEqual(fileSizeSmall)
+      expect(data1).toEqual(contentSmall)
+      expect(files1).toHaveLength(2)
     })
   })
 })
