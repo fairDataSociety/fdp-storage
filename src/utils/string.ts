@@ -1,4 +1,4 @@
-import CryptoJS from 'crypto-js'
+import CryptoJS from 'jscrypto'
 
 /**
  * Replace all occurrences of a string with another string

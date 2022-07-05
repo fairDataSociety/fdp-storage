@@ -5,7 +5,7 @@ import { uploadEncryptedMnemonic } from './mnemonic'
 import { assertChunkSizeLength, assertMnemonic, assertPassword, CHUNK_SIZE, createCredentialsTopic } from './utils'
 import { Connection } from '../connection/connection'
 import { getBatchId } from '../utils/batch'
-import CryptoJS from 'crypto-js'
+import CryptoJS from 'jscrypto'
 
 /**
  * Created and encrypted user account to upload to the network

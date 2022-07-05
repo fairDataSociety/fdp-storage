@@ -1,6 +1,6 @@
 import { RawDirectoryMetadata, RawFileMetadata } from '../pod/types'
 import { Reference } from '@ethersphere/bee-js'
-import CryptoJS from 'crypto-js'
+import CryptoJS from 'jscrypto'
 import { ContentItem } from './content-item'
 
 /**

@@ -1,4 +1,4 @@
-import CryptoJS from 'crypto-js'
+import CryptoJS from 'jscrypto'
 import { bytesToWordArray, decodeBase64Url, encodeBase64Url } from './utils'
 import { Utils } from '@ethersphere/bee-js'
 

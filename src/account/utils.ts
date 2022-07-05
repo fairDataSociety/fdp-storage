@@ -3,7 +3,7 @@ import { bmtHash } from '../chunk/bmt'
 import { makeSpan, stringToBytes, wrapBytesWithHelpers } from '../utils/bytes'
 import { AccountData } from './account-data'
 import { isValidMnemonic } from 'ethers/lib/utils'
-import CryptoJS from 'crypto-js'
+import CryptoJS from 'jscrypto'
 import { replaceAll } from '../utils/string'
 import { assertString } from '../utils/type'
 
