@@ -1,9 +1,17 @@
 import { FdpStorage } from '../../src'
-import { createFdp, generateRandomHexString, generateUser, GET_FEED_DATA_TIMEOUT, isBatchUsable } from '../utils'
+import {
+  createFdp,
+  createUsableBatch,
+  generateRandomHexString,
+  generateUser,
+  GET_FEED_DATA_TIMEOUT,
+  isUsableBatchExists,
+} from '../utils'
 import { MAX_POD_NAME_LENGTH } from '../../src/pod/utils'
 import { createUserV1 } from '../../src/account/account'
 import { PodShareInfo } from '../../src/pod/types'
 import { FileShareInfo } from '../../src/file/types'
+import { utils } from 'ethers'
 
 async function topUpAddress(fdp: FdpStorage) {
   if (!fdp.account.wallet?.address) {
@@ -15,7 +23,7 @@ async function topUpAddress(fdp: FdpStorage) {
     {
       from: account,
       to: fdp.account.wallet!.address,
-      value: '10000000000000000', // 0.01 ETH
+      value: utils.hexlify(utils.parseEther('0.01')),
     },
   ])
 
@@ -24,6 +32,10 @@ async function topUpAddress(fdp: FdpStorage) {
 
 jest.setTimeout(200000)
 describe('Fair Data Protocol class', () => {
+  beforeAll(async () => {
+    await createUsableBatch()
+  })
+
   it('should strip trailing slash', () => {
     const fdp = new FdpStorage('http://localhost:1633/', 'http://localhost:1635/', {
       downloadOptions: {
@@ -37,7 +49,7 @@ describe('Fair Data Protocol class', () => {
   it('check default batch usability', async () => {
     const fdp = createFdp()
 
-    expect(await isBatchUsable(fdp.connection.beeDebug)).toBe(true)
+    expect(await isUsableBatchExists(fdp.connection.beeDebug)).toBe(true)
   })
 
   describe('Registration', () => {

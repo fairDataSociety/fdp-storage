@@ -49,7 +49,7 @@ describe('Fair Data Protocol class - in browser', () => {
               {
                 from: account,
                 to: fdp.account.wallet.address,
-                value: '10000000000000000', // 0.01 ETH
+                value: '0x2386f26fc10000', // 0.01 ETH
               },
             ])
 
