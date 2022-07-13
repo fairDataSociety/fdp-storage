@@ -3,8 +3,9 @@ import { FdpStorage } from './fdp-storage'
 import { AccountData } from './account/account-data'
 import { PersonalStorage } from './pod/personal-storage'
 import { Directory } from './directory/directory'
+import FdpContracts from '@fairdatasociety/fdp-contracts'
 
-export { FdpStorage, AccountData, PersonalStorage, Directory }
+export { FdpStorage, AccountData, PersonalStorage, Directory, FdpContracts }
 
 // for require-like imports
 declare global {
@@ -15,6 +16,7 @@ declare global {
       AccountData: typeof import('./account/account-data').AccountData
       PersonalStorage: typeof import('./pod/personal-storage').PersonalStorage
       Directory: typeof import('./directory/directory').Directory
+      FdpContracts: typeof FdpContracts
     }
   }
 }
