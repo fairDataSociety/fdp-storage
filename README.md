@@ -1,3 +1,5 @@
+[![Release Github](https://github.com/fairDataSociety/fdp-storage/actions/workflows/release_github.yaml/badge.svg?branch=master)](https://github.com/fairDataSociety/fdp-storage/actions/workflows/release_github.yaml)
+
 # Fair Data Protocol Storage
 
 > Typescript implementation of https://github.com/fairDataSociety/fairOS-dfs
