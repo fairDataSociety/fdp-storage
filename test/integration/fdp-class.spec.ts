@@ -11,7 +11,6 @@ import { MAX_POD_NAME_LENGTH } from '../../src/pod/utils'
 import { createUserV1 } from '../../src/account/account'
 import { PodShareInfo } from '../../src/pod/types'
 import { FileShareInfo } from '../../src/file/types'
-import { utils } from 'ethers'
 
 async function topUpAddress(fdp: FdpStorage) {
   if (!fdp.account.wallet?.address) {
@@ -23,7 +22,7 @@ async function topUpAddress(fdp: FdpStorage) {
     {
       from: account,
       to: fdp.account.wallet!.address,
-      value: utils.hexlify(utils.parseEther('0.01')),
+      value: '0x2386f26fc10000', // 0.01 ETH
     },
   ])
 
