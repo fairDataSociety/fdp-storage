@@ -1,5 +1,14 @@
 import { join } from 'path'
-import { beeDebugUrl, beeUrl, createFdp, fdpOptions, generateRandomHexString, generateUser, TestUser } from '../utils'
+import {
+  beeDebugUrl,
+  beeUrl,
+  createFdp,
+  createUsableBatch,
+  fdpOptions,
+  generateRandomHexString,
+  generateUser,
+  TestUser,
+} from '../utils'
 import '../../src/index'
 import '../index'
 import { JSONArray, JSONObject } from 'puppeteer'
@@ -15,6 +24,7 @@ describe('Fair Data Protocol class - in browser', () => {
   const BEE_DEBUG_URL = beeDebugUrl()
 
   beforeAll(async () => {
+    await createUsableBatch()
     await jestPuppeteer.resetPage()
     const testPage = join(__dirname, '..', 'testpage', 'testpage.html')
     await page.goto(`file://${testPage}`)
@@ -49,7 +59,7 @@ describe('Fair Data Protocol class - in browser', () => {
               {
                 from: account,
                 to: fdp.account.wallet.address,
-                value: '10000000000000000', // 0.01 ETH
+                value: '0x2386f26fc10000', // 0.01 ETH
               },
             ])
 

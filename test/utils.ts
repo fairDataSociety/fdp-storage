@@ -1,9 +1,8 @@
 import crypto from 'crypto'
 import { BeeDebug, Utils } from '@ethersphere/bee-js'
-import { getBatchId } from '../src/utils/batch'
 import { FdpStorage } from '../src'
 import { Wallet } from 'ethers'
-import { ENVIRONMENT_CONFIGS, Environments } from '@fairdatasociety/fdp-contracts'
+import { Environments, getEnvironmentConfig } from '@fairdatasociety/fdp-contracts'
 
 export interface TestUser {
   username: string
@@ -56,22 +55,6 @@ export function beeDebugUrl(): string {
 }
 
 /**
- * Returns an url for testing the FairOS-dfs by API
- */
-export function fairosJsUrl(): string {
-  return process.env.BEE_FAIROS_API_URL || 'http://127.0.0.1:9090/v1/'
-}
-
-/**
- * Converts string to Ethereum address in form of bytes
- *
- * @param address Ethereum address for preparation
- */
-export function prepareEthAddress(address: string): Utils.EthAddress {
-  return Utils.makeEthAddress(address)
-}
-
-/**
  * Convert 32 bytes array of numbers to Utils.Bytes<32>
  */
 export function numbersToSegment(numbers: number[]): Utils.Bytes<32> {
@@ -83,27 +66,6 @@ export function numbersToSegment(numbers: number[]): Utils.Bytes<32> {
 }
 
 /**
- * Checks default postage batch is usable
- *
- * @param beeDebug
- */
-export async function isBatchUsable(beeDebug: BeeDebug): Promise<boolean> {
-  const batchId = await getBatchId(beeDebug)
-  const batch = await beeDebug.getPostageBatch(batchId)
-
-  return batch.usable
-}
-
-/**
- * Converts bytes to string
- *
- * @param data
- */
-export function bytesToString(data: Uint8Array): string {
-  return new TextDecoder().decode(data)
-}
-
-/**
  * Options for FDP initialization
  */
 export const fdpOptions = {
@@ -111,9 +73,8 @@ export const fdpOptions = {
     timeout: GET_FEED_DATA_TIMEOUT,
   },
   ensOptions: {
-    ...ENVIRONMENT_CONFIGS[Environments.LOCALHOST],
+    ...getEnvironmentConfig(Environments.LOCALHOST),
     performChecks: true,
-    rpcUrl: 'http://127.0.0.1:9546/',
   },
 }
 
@@ -122,4 +83,40 @@ export const fdpOptions = {
  */
 export function createFdp(): FdpStorage {
   return new FdpStorage(beeUrl(), beeDebugUrl(), fdpOptions)
+}
+
+/**
+ * Sleeps for passed time in milliseconds
+ */
+export async function sleep(milliseconds: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, milliseconds))
+}
+
+/**
+ * Checks if usable batch is present
+ */
+export async function isUsableBatchExists(beeDebug?: BeeDebug): Promise<boolean> {
+  beeDebug = beeDebug ? beeDebug : new BeeDebug(beeDebugUrl())
+  const allBatch = await beeDebug.getAllPostageBatch()
+
+  return Boolean(allBatch.find(item => item.usable))
+}
+
+/**
+ * Creates and awaits for a usable batch
+ */
+export async function createUsableBatch(): Promise<void> {
+  if (await isUsableBatchExists()) {
+    return
+  }
+
+  const beeDebug = new BeeDebug(beeDebugUrl())
+  await beeDebug.createPostageBatch('10000000', 24)
+  for (let i = 0; i < 100; i++) {
+    if (await isUsableBatchExists()) {
+      break
+    }
+
+    await sleep(3000)
+  }
 }
