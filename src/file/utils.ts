@@ -5,9 +5,10 @@ import { PathInfo } from '../pod/utils'
 import { Blocks, FileShareInfo, RawBlocks } from './types'
 import { rawBlocksToBlocks } from './adapter'
 import CryptoJS from 'crypto-js'
-import { assertString } from '../utils/type'
+import { assertString, isObject } from '../utils/type'
 import { RawFileMetadata } from '../pod/types'
 import { bytesToHex } from '../utils/hex'
+import { isRawFileMetadata } from '../directory/utils'
 
 /**
  * Asserts that full path string is correct
@@ -121,5 +122,23 @@ export function createFileShareInfo(meta: RawFileMetadata, podAddress: Utils.Eth
   return {
     meta,
     source_address: bytesToHex(podAddress),
+  }
+}
+
+/**
+ * Checks that value is file share info
+ */
+export function isFileShareInfo(value: unknown): value is FileShareInfo {
+  const data = value as FileShareInfo
+
+  return isObject(value) && isRawFileMetadata(data.meta) && Utils.isHexEthAddress(data.source_address)
+}
+
+/**
+ * Verifies if file share info is correct
+ */
+export function assertFileShareInfo(value: unknown): asserts value is FileShareInfo {
+  if (!isFileShareInfo(value)) {
+    throw new Error('Incorrect file share info')
   }
 }

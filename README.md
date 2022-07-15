@@ -80,7 +80,8 @@ Getting list of pods
 
 ```js
 const pods = await fdp.personalStorage.list()
-console.log(pods) // prints list of user's pods
+console.log(pods.getPods()) // prints list of user's pods
+console.log(pods.getSharedPods()) // prints list of pods that a user has added to their account
 ```
 
 Sharing a pod
@@ -88,6 +89,18 @@ Sharing a pod
 ```js
 const shareReference = await fdp.personalStorage.share('my-new-pod')
 console.log(shareReference) // prints share reference of a pod
+```
+
+Getting information about shared pod
+
+```js
+await fdp.personalStorage.getSharedInfo(shareReference)
+```
+
+Saving shared pod under user's account
+
+```js
+await fdp.personalStorage.saveShared(shareReference)
 ```
 
 Creating a directory
@@ -119,6 +132,18 @@ Sharing a file from a pod
 ```js
 const shareReference = await fdp.file.share('my-new-pod', '/my-dir/myfile.txt')
 console.log(shareReference) // prints share reference of a file
+```
+
+Get information about shared file
+
+```js
+await fdp.file.getSharedInfo(shareReference)
+```
+
+Save shared file to a pod
+
+```js
+await fdp.file.saveShared('my-new-pod', '/', shareReference)
 ```
 
 Getting list of files and directories with recursion or not

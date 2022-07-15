@@ -56,3 +56,10 @@ export interface FileShareInfo {
   meta: RawFileMetadata
   source_address: string
 }
+
+/**
+ * File receive options
+ */
+export interface FileReceiveOptions {
+  name: string
+}

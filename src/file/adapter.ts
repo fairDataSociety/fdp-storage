@@ -75,7 +75,7 @@ export function blocksToManifest(blocks: Blocks): string {
 export function rawFileMetadataToFileMetadata(data: RawFileMetadata): FileMetadata {
   return {
     version: data.version,
-    userAddress: prepareEthAddress(Uint8Array.from(data.user_address)),
+    podAddress: prepareEthAddress(Uint8Array.from(data.user_address)),
     podName: data.pod_name,
     filePath: data.file_path,
     fileName: data.file_name,
@@ -96,7 +96,7 @@ export function rawFileMetadataToFileMetadata(data: RawFileMetadata): FileMetada
 export function fileMetadataToRawFileMetadata(data: FileMetadata): RawFileMetadata {
   return {
     version: data.version,
-    user_address: Array.from(data.userAddress),
+    user_address: Array.from(data.podAddress),
     pod_name: data.podName,
     file_path: data.filePath,
     file_name: data.fileName,

@@ -5,15 +5,17 @@ import { getExtendedPodsList } from '../pod/api'
 import { getUnixTimestamp } from '../utils/time'
 import { stringToBytes } from '../utils/bytes'
 import { AccountData } from '../account/account-data'
-import { extractPathInfo, uploadBytes, assertFullPathWithName, createFileShareInfo } from './utils'
+import { extractPathInfo, uploadBytes, assertFullPathWithName, createFileShareInfo, assertFileShareInfo } from './utils'
 import { writeFeedData } from '../feed/api'
 import { downloadData, generateBlockName } from './handler'
-import { blocksToManifest, getFileMetadataRawBytes } from './adapter'
-import { Blocks, DataUploadOptions } from './types'
+import { blocksToManifest, getFileMetadataRawBytes, rawFileMetadataToFileMetadata } from './adapter'
+import { Blocks, DataUploadOptions, FileReceiveOptions, FileShareInfo } from './types'
 import { addEntryToDirectory, removeEntryFromDirectory } from '../content-items/handler'
 import { Data, Reference } from '@ethersphere/bee-js'
 import { getRawMetadata } from '../content-items/utils'
-import { assertRawFileMetadata } from '../directory/utils'
+import { assertRawFileMetadata, combine } from '../directory/utils'
+import { assertEncryptedReference, EncryptedReference } from '../utils/hex'
+import { getSharedInfo } from '../content-items/utils'
 
 /**
  * Files management class
@@ -99,7 +101,7 @@ export class File {
     const blocksReference = (await uploadBytes(connection, manifestBytes)).reference
     const meta: FileMetadata = {
       version: META_VERSION,
-      userAddress: extendedInfo.podAddress,
+      podAddress: extendedInfo.podAddress,
       podName,
       filePath: pathInfo.path,
       fileName: pathInfo.filename,
@@ -165,5 +167,64 @@ export class File {
     const data = stringToBytes(JSON.stringify(createFileShareInfo(meta, extendedInfo.podAddress)))
 
     return (await uploadBytes(connection, data)).reference
+  }
+
+  /**
+   * Gets shared file information
+   *
+   * @param reference swarm reference with shared file information
+   *
+   * @returns shared file information
+   */
+  async getSharedInfo(reference: string | EncryptedReference): Promise<FileShareInfo> {
+    assertActiveAccount(this.accountData)
+    assertEncryptedReference(reference)
+
+    const sharedInfo = await getSharedInfo(this.accountData.connection.bee, reference)
+    assertFileShareInfo(sharedInfo)
+
+    return sharedInfo
+  }
+
+  /**
+   * Saves shared file to a personal account
+   *
+   * @param podName pod where file is stored
+   * @param parentPath parent path of the file
+   * @param reference swarm reference with shared file information
+   * @param options save options
+   *
+   * @returns saved file metadata
+   */
+  async saveShared(
+    podName: string,
+    parentPath: string,
+    reference: string | EncryptedReference,
+    options?: FileReceiveOptions,
+  ): Promise<FileMetadata> {
+    assertPodName(podName)
+    const sharedInfo = await this.getSharedInfo(reference)
+    const connection = this.accountData.connection
+    const extendedInfo = await getExtendedPodsList(
+      connection.bee,
+      podName,
+      this.accountData.wallet!,
+      connection.options?.downloadOptions,
+    )
+    const now = getUnixTimestamp()
+    const meta = rawFileMetadataToFileMetadata(sharedInfo.meta)
+    const fileName = options?.name ?? sharedInfo.meta.file_name
+    meta.fileName = fileName
+    meta.accessTime = now
+    meta.modificationTime = now
+    meta.creationTime = now
+    meta.filePath = parentPath
+    meta.podName = podName
+    meta.podAddress = extendedInfo.podAddress
+    const fullPath = combine(parentPath, fileName)
+    await addEntryToDirectory(connection, extendedInfo.podWallet, parentPath, fileName, true)
+    await writeFeedData(connection, fullPath, getFileMetadataRawBytes(meta), extendedInfo.podWallet.privateKey)
+
+    return meta
   }
 }
