@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/fairDataSociety/fdp-storage/compare/v0.2.0...v0.2.1) (2022-07-15)
+
+
+### Bug Fixes
+
+* github release new version ([c9b92c2](https://github.com/fairDataSociety/fdp-storage/commit/c9b92c229fffb90d6e1d8f42a4d4a328fed2d1af))
+
 ## [0.2.0](https://www.github.com/fairDataSociety/fdp-storage/compare/v0.1.2...v0.2.0) (2022-06-17)
 
 
