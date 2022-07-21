@@ -73,11 +73,15 @@ export const fdpOptions = {
     timeout: GET_FEED_DATA_TIMEOUT,
   },
   ensOptions: {
-    ...getEnvironmentConfig(Environments.LOCALHOST),
-    performChecks: true,
-  },
+    rpcUrl: 'http://127.0.0.1:9545/',
+    contractAddresses: {
+      ensRegistry: `0x7414e38377D6DAf6045626EC8a8ABB8a1BC4B97a`,
+      fdsRegistrar: `0xB9bdBAEc07751F6d54d19A6B9995708873F3DE18`,
+      publicResolver: `0x4339316e04CFfB5961D1c41fEF8E44bfA2A7fBd1`,
+    },
+    performChecks: false,
 }
-
+}
 /**
  * Creates FDP instance with default configuration for testing
  */

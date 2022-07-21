@@ -109,6 +109,7 @@ export class AccountData {
 
       return wallet
     } catch (e) {
+      console.log(e)
       throw new Error('Incorrect password')
     }
   }
@@ -130,14 +131,16 @@ export class AccountData {
     }
 
     try {
+      const seed = utils.mnemonicToSeed(wallet.mnemonic.phrase)
+
       await uploadPortableAccount(
         this.connection,
         username,
         password,
         Utils.hexToBytes(removeZeroFromHex(wallet.privateKey)),
+        seed,
       )
       await this.ens.registerUsername(username, wallet.address, wallet.publicKey)
-
       return wallet
     } catch (e) {
       const error = e as Error
