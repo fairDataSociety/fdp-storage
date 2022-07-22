@@ -1,8 +1,8 @@
 import { Bee, PrivateKeyBytes, Reference, Utils } from '@ethersphere/bee-js'
-import { Wallet } from 'ethers'
+import { utils, Wallet } from 'ethers'
 import { decryptBytes, encryptText, encryptBytes, IV_LENGTH } from './encryption'
 import { uploadEncryptedMnemonic } from './mnemonic'
-import { assertChunkSizeLength, assertMnemonic, assertPassword, CHUNK_SIZE, createCredentialsTopic } from './utils'
+import { assertChunkSizeLength, assertMnemonic, assertPassword, CHUNK_SIZE, SEED_SIZE, createCredentialsTopic } from './utils'
 import { Connection } from '../connection/connection'
 import { getBatchId } from '../utils/batch'
 import CryptoJS from 'crypto-js'
@@ -14,6 +14,14 @@ interface UserAccount {
   wallet: Wallet
   mnemonic: string
   encryptedMnemonic: string
+}
+
+/**
+ * X
+ */
+ export interface UserAccountAndSeed {
+  wallet: Wallet
+  seed: Uint8Array
 }
 
 /**
@@ -87,15 +95,15 @@ export async function uploadPortableAccount(
   username: string,
   password: string,
   privateKey: PrivateKeyBytes,
+  seed: string,
 ): Promise<Reference> {
-  const paddedData = CryptoJS.lib.WordArray.random(CHUNK_SIZE - privateKey.length - IV_LENGTH)
-  const privateKeyWords = CryptoJS.enc.Hex.parse(Utils.bytesToHex(privateKey))
-  const chunkData = privateKeyWords.concat(paddedData)
+  const paddedData = CryptoJS.lib.WordArray.random(CHUNK_SIZE - SEED_SIZE - IV_LENGTH)
+  const seedKeyWords = CryptoJS.enc.Hex.parse(seed.slice(2))
+  const chunkData = seedKeyWords.concat(paddedData)
   const encryptedBytes = encryptBytes(password, chunkData)
   assertChunkSizeLength(encryptedBytes.length)
   const topic = createCredentialsTopic(username, password)
   const socWriter = connection.bee.makeSOCWriter(privateKey)
-
   return socWriter.upload(await getBatchId(connection.beeDebug), topic, encryptedBytes)
 }
 
@@ -114,11 +122,12 @@ export async function downloadPortableAccount(
   address: Utils.EthAddress,
   username: string,
   password: string,
-): Promise<Wallet> {
+): Promise<UserAccountAndSeed> {
   const topic = createCredentialsTopic(username, password)
   const socReader = bee.makeSOCReader(address)
   const encryptedData = (await socReader.download(topic)).payload()
-  const privateKey = decryptBytes(password, encryptedData).slice(0, 32)
-
-  return new Wallet(privateKey)
+  const seed = decryptBytes(password, encryptedData).slice(0, SEED_SIZE)
+  const node = utils.HDNode.fromSeed(seed).derivePath(`m/44'/60'/0'/0/0`)
+  const wallet = new Wallet(node.privateKey)
+  return { wallet, seed }
 }

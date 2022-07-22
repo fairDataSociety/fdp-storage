@@ -1,4 +1,5 @@
 import { Pod } from './types'
+import { utils } from 'ethers'
 import { assertActiveAccount } from '../account/utils'
 import { writeFeedData } from '../feed/api'
 import { AccountData } from '../account/account-data'
@@ -67,9 +68,11 @@ export class PersonalStorage {
     podsInfo.pods.push(newPod)
     const allPodsData = podListToBytes(podsInfo.pods)
     const wallet = this.accountData.wallet!
+    
     // create pod
     await writeFeedData(this.accountData.connection, POD_TOPIC, allPodsData, wallet.privateKey, epoch)
-    const podWallet = getWalletByIndex(wallet.privateKey, nextIndex)
+    const seed = this.accountData.seed
+    const podWallet = getWalletByIndex(seed, nextIndex)
     await createRootDirectory(this.accountData.connection, podWallet.privateKey)
 
     return newPod

@@ -6,8 +6,8 @@ import { utils } from 'ethers'
  * @param privateKey private key of Ethereum wallet
  * @param index wallet index
  */
-export function getWalletByIndex(privateKey: string, index: number): utils.HDNode {
-  const node = utils.HDNode.fromSeed(privateKey)
+export function getWalletByIndex(seed: Uint8Array, index: number): utils.HDNode {
+  const node = utils.HDNode.fromSeed(seed)
 
   return node.derivePath(`m/44'/60'/0'/0/${index}`)
 }

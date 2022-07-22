@@ -14,6 +14,7 @@ export class AccountData {
    * Active FDP account wallet
    */
   public wallet?: Wallet
+  public seed?: Uint8Array
 
   constructor(public readonly connection: Connection, public readonly ens: ENS) {}
 
@@ -22,7 +23,8 @@ export class AccountData {
    *
    * @param wallet BIP-039 + BIP-044 Wallet
    */
-  setActiveAccount(wallet: Wallet): void {
+  setActiveAccount(wallet: Wallet, seed?: Uint8Array): void {
+    this.seed = seed || new Uint8Array()
     this.wallet = wallet.connect(this.ens.provider)
     this.ens.connect(this.wallet)
   }
@@ -36,7 +38,7 @@ export class AccountData {
     }
 
     const wallet = Wallet.createRandom()
-    this.setActiveAccount(wallet)
+    this.setActiveAccount(wallet, Utils.hexToBytes(utils.mnemonicToSeed(wallet.mnemonic.phrase).slice(2)))
 
     return wallet
   }
@@ -76,11 +78,11 @@ export class AccountData {
    * @param password password from version 1 account
    * @param options migration options with address or mnemonic from version 1 account
    */
-  async migrate(username: string, password: string, options: AddressOptions | MnemonicOptions): Promise<Wallet> {
+  async migrate(username: string, password: string, options: MnemonicOptions): Promise<Wallet> {
     assertUsername(username)
     assertPassword(password)
 
-    this.setActiveAccount(await this.exportWallet(username, password, options))
+    this.setActiveAccount(await this.exportWallet(username, password, options), Utils.hexToBytes(utils.mnemonicToSeed(options.mnemonic).slice(2)))
 
     return this.register(username, password)
   }
@@ -104,10 +106,10 @@ export class AccountData {
     const publicKey = await this.ens.getPublicKey(username)
     try {
       const address = prepareEthAddress(utils.computeAddress(publicKey))
-      const wallet = await downloadPortableAccount(this.connection.bee, address, username, password)
-      this.setActiveAccount(wallet)
+      const acc = await downloadPortableAccount(this.connection.bee, address, username, password)
+      this.setActiveAccount(acc.wallet, acc.seed)
 
-      return wallet
+      return acc.wallet
     } catch (e) {
       throw new Error('Incorrect password')
     }
@@ -127,17 +129,19 @@ export class AccountData {
 
     if (!wallet) {
       throw new Error('Before registration, an active account must be set')
-    }
+    } 
 
     try {
-      await uploadPortableAccount(
+      const seed = utils.mnemonicToSeed(wallet.mnemonic.phrase)
+
+      const ref = await uploadPortableAccount(
         this.connection,
         username,
         password,
         Utils.hexToBytes(removeZeroFromHex(wallet.privateKey)),
+        seed,
       )
       await this.ens.registerUsername(username, wallet.address, wallet.publicKey)
-
       return wallet
     } catch (e) {
       const error = e as Error
