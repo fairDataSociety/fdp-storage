@@ -8,6 +8,7 @@ import { Wallet } from 'ethers'
 import { prepareEthAddress } from '../utils/address'
 import { getWalletByIndex } from '../utils/wallet'
 import { List } from './list'
+import { utils } from 'ethers'
 
 /**
  * Gets pods list with lookup answer
@@ -52,8 +53,8 @@ export async function getExtendedPodsList(
   if (!pod) {
     throw new Error(`Pod "${podName}" does not exist`)
   }
-
-  const podWallet = getWalletByIndex(wallet.privateKey, pod.index)
+  const seed = utils.mnemonicToSeed(wallet.mnemonic.phrase)
+  const podWallet = getWalletByIndex(seed, pod.index)
 
   return {
     pod,

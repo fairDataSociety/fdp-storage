@@ -1,4 +1,5 @@
 import { Pod, PodReceiveOptions, PodShareInfo, SharedPod } from './types'
+import { utils } from 'ethers'
 import { assertActiveAccount } from '../account/utils'
 import { writeFeedData } from '../feed/api'
 import { AccountData } from '../account/account-data'
