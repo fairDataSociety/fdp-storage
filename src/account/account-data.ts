@@ -8,6 +8,7 @@ import { Connection } from '../connection/connection'
 import { AddressOptions, isAddressOptions, isMnemonicOptions, MnemonicOptions } from './types'
 import { ENS } from '@fairdatasociety/fdp-contracts'
 import { Utils } from '@ethersphere/bee-js'
+import { SiweMessage } from 'siwe'
 
 export class AccountData {
   /**
@@ -82,7 +83,10 @@ export class AccountData {
     assertUsername(username)
     assertPassword(password)
 
-    this.setActiveAccount(await this.exportWallet(username, password, options), Utils.hexToBytes(utils.mnemonicToSeed(options.mnemonic).slice(2)))
+    this.setActiveAccount(
+      await this.exportWallet(username, password, options),
+      Utils.hexToBytes(utils.mnemonicToSeed(options.mnemonic).slice(2)),
+    )
 
     return this.register(username, password)
   }
@@ -116,6 +120,28 @@ export class AccountData {
   }
 
   /**
+   * Signs with SIWE
+   *
+   * @returns BIP-039 + BIP-044 Wallet
+   */
+  async signWithSIWE(domain: string, origin: string): Promise<string | undefined> {
+    if (this.wallet === null) return ''
+    const statement = `Signing this message with fdp-storage`
+    const message = new SiweMessage({
+      domain,
+      address: await this.wallet?.getAddress(),
+      statement,
+      uri: origin,
+      version: '1',
+      chainId: 1,
+    })
+
+    const buildMesssage = message.prepareMessage()
+
+    return this.wallet?.signMessage(buildMesssage)
+  }
+
+  /**
    * Creates new FDP account and gives back user account with swarm reference
    *
    * @param username FDP username
@@ -129,7 +155,7 @@ export class AccountData {
 
     if (!wallet) {
       throw new Error('Before registration, an active account must be set')
-    } 
+    }
 
     try {
       const seed = utils.mnemonicToSeed(wallet.mnemonic.phrase)
