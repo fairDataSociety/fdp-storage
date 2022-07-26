@@ -17,4 +17,8 @@ export interface Options {
    * ENS domain for usernames
    */
   ensDomain?: string
+  /**
+   * Sign In With Ethereum
+   */
+  siweRpcUrl?: string
 }

@@ -122,10 +122,11 @@ export class AccountData {
   /**
    * Signs with SIWE
    *
-   * @returns BIP-039 + BIP-044 Wallet
+   * @returns A SIWE message
    */
-  async signWithSIWE(domain: string, origin: string): Promise<string | undefined> {
+  async signWithSIWE(domain: string, origin: string, chainId: number): Promise<string | undefined> {
     if (this.wallet === null) return ''
+    const res = await fetch(`${this.connection.options?.siweRpcUrl}/nonce`)
     const statement = `Signing this message with fdp-storage`
     const message = new SiweMessage({
       domain,
@@ -133,7 +134,8 @@ export class AccountData {
       statement,
       uri: origin,
       version: '1',
-      chainId: 1,
+      chainId,
+      nonce: await res.text(),
     })
 
     const buildMesssage = message.prepareMessage()
