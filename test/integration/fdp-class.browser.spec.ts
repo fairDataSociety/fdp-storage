@@ -15,7 +15,6 @@ import { JSONArray, JSONObject } from 'puppeteer'
 import { FdpStorage } from '../../src'
 import { MAX_POD_NAME_LENGTH } from '../../src/pod/utils'
 import { createUserV1 } from '../../src/account/account'
-import { Wallet } from 'ethers'
 import { PodShareInfo } from '../../src/pod/types'
 
 jest.setTimeout(200000)
@@ -116,10 +115,7 @@ describe('Fair Data Protocol class - in browser', () => {
       const createdUsers = await page.evaluate(async users => {
         const fdp = eval(await window.initFdp()) as FdpStorage
 
-        await window.shouldFail(
-          fdp.account.register('username', 'password'),
-          'Before registration, an active account must be set',
-        )
+        await window.shouldFail(fdp.account.register('username', 'password'), 'Account wallet not found')
 
         const result = []
         for (const user of users) {
@@ -129,7 +125,7 @@ describe('Fair Data Protocol class - in browser', () => {
           await window.topUpAddress(fdp)
           const data = await fdp.account.register(user.username, user.password)
           result.push({
-            address: data.address,
+            reference: data,
           })
 
           await fdp.account.login(user.username, user.password)
@@ -139,7 +135,7 @@ describe('Fair Data Protocol class - in browser', () => {
       }, usersList)
 
       for (const createdUser of createdUsers) {
-        expect(createdUser.address).toBeDefined()
+        expect(createdUser).toBeDefined()
       }
     })
 
@@ -157,22 +153,34 @@ describe('Fair Data Protocol class - in browser', () => {
     it('should migrate v1 user to v2', async () => {
       const fdp = createFdp()
       const user = generateUser()
+      const user2 = generateUser()
       const jsonUser = user as unknown as JSONObject
+      const jsonUser2 = user2 as unknown as JSONObject
       await createUserV1(fdp.connection, user.username, user.password, user.mnemonic)
 
-      const result = await page.evaluate(async (user: TestUser) => {
-        const fdp = eval(await window.initFdp()) as FdpStorage
-        fdp.account.setActiveAccount(Wallet.fromMnemonic(user.mnemonic))
-        await window.topUpAddress(fdp)
+      const result = await page.evaluate(
+        async (user: TestUser, user2: TestUser) => {
+          const fdp = eval(await window.initFdp()) as FdpStorage
+          const fdp2 = eval(await window.initFdp()) as FdpStorage
+          fdp.account.setAccountFromMnemonic(user.mnemonic)
+          fdp2.account.setAccountFromMnemonic(user2.mnemonic)
+          await window.topUpAddress(fdp)
+          await window.topUpAddress(fdp2)
 
-        await fdp.account.migrate(user.username, user.password, {
-          mnemonic: user.mnemonic,
-        })
-        const loggedWallet = await fdp.account.login(user.username, user.password)
-        await window.shouldFail(fdp.account.register(user.username, user.password), 'User account already uploaded')
+          await fdp.account.migrate(user.username, user.password, {
+            mnemonic: user.mnemonic,
+          })
+          const loggedWallet = await fdp.account.login(user.username, user.password)
+          await window.shouldFail(
+            fdp2.account.register(user.username, user.password),
+            `ENS: Username ${user.username} is not available`,
+          )
 
-        return { address: loggedWallet.address }
-      }, jsonUser)
+          return { address: loggedWallet.address }
+        },
+        jsonUser,
+        jsonUser2,
+      )
 
       expect(result.address).toEqual(user.address)
     })
@@ -194,16 +202,16 @@ describe('Fair Data Protocol class - in browser', () => {
         result.createdWallet = { address: wallet.address }
         await window.topUpAddress(fdp)
 
-        let data = await fdp.account.register(user.username, user.password)
-        result.result1 = { address: data.address }
+        const data = await fdp.account.register(user.username, user.password)
+        result.result1 = { address: data }
 
-        data = await fdp1.account.login(user.username, user.password)
-        result.result2 = { address: data.address }
+        const data2 = await fdp1.account.login(user.username, user.password)
+        result.result2 = { address: data2.address }
 
         return result
       }, jsonUser)
 
-      expect(answer.result1.address).toEqual(answer.createdWallet.address)
+      expect(answer.result1.address).toBeDefined()
       expect(answer.result2.address).toEqual(answer.createdWallet.address)
     })
 

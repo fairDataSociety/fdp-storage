@@ -1,5 +1,5 @@
 import { FileMetadata } from '../pod/types'
-import { assertActiveAccount } from '../account/utils'
+import { assertAccount } from '../account/utils'
 import { assertPodName, META_VERSION } from '../pod/utils'
 import { getExtendedPodsList } from '../pod/api'
 import { getUnixTimestamp } from '../utils/time'
@@ -14,6 +14,7 @@ import { addEntryToDirectory, removeEntryFromDirectory } from '../content-items/
 import { Data, Reference } from '@ethersphere/bee-js'
 import { getRawMetadata } from '../content-items/utils'
 import { assertRawFileMetadata } from '../directory/utils'
+import { prepareEthAddress } from '../utils/address'
 
 /**
  * Files management class
@@ -33,14 +34,15 @@ export class File {
    * @param fullPath full path of the file
    */
   async downloadData(podName: string, fullPath: string): Promise<Data> {
-    assertActiveAccount(this.accountData)
+    assertAccount(this.accountData)
     assertPodName(podName)
     assertFullPathWithName(fullPath)
     assertPodName(podName)
     const extendedInfo = await getExtendedPodsList(
       this.accountData.connection.bee,
       podName,
-      this.accountData.wallet!,
+      prepareEthAddress(this.accountData.wallet!.address),
+      this.accountData.seed!,
       this.accountData.connection.options?.downloadOptions,
     )
 
@@ -67,7 +69,7 @@ export class File {
     options?: DataUploadOptions,
   ): Promise<FileMetadata> {
     options = { ...this.defaultUploadOptions, ...options }
-    assertActiveAccount(this.accountData)
+    assertAccount(this.accountData)
     assertPodName(podName)
     assertFullPathWithName(fullPath)
     assertPodName(podName)
@@ -76,7 +78,8 @@ export class File {
     const extendedInfo = await getExtendedPodsList(
       connection.bee,
       podName,
-      this.accountData.wallet!,
+      prepareEthAddress(this.accountData.wallet!.address),
+      this.accountData.seed!,
       connection.options?.downloadOptions,
     )
 
@@ -126,7 +129,7 @@ export class File {
    * @param fullPath full path of the file
    */
   async delete(podName: string, fullPath: string): Promise<void> {
-    assertActiveAccount(this.accountData)
+    assertAccount(this.accountData)
     assertFullPathWithName(fullPath)
     assertPodName(podName)
     const pathInfo = extractPathInfo(fullPath)
@@ -134,7 +137,8 @@ export class File {
     const extendedInfo = await getExtendedPodsList(
       connection.bee,
       podName,
-      this.accountData.wallet!,
+      prepareEthAddress(this.accountData.wallet!.address),
+      this.accountData.seed!,
       connection.options?.downloadOptions,
     )
 
@@ -148,7 +152,7 @@ export class File {
    * @param fullPath full path of the file
    */
   async share(podName: string, fullPath: string): Promise<Reference> {
-    assertActiveAccount(this.accountData)
+    assertAccount(this.accountData)
     assertFullPathWithName(fullPath)
     assertPodName(podName)
 
@@ -156,7 +160,8 @@ export class File {
     const extendedInfo = await getExtendedPodsList(
       connection.bee,
       podName,
-      this.accountData.wallet!,
+      prepareEthAddress(this.accountData.wallet!.address),
+      this.accountData.seed!,
       connection.options?.downloadOptions,
     )
 

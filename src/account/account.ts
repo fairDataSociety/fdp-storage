@@ -2,13 +2,21 @@ import { Bee, PrivateKeyBytes, Reference, Utils } from '@ethersphere/bee-js'
 import { utils, Wallet } from 'ethers'
 import { decryptBytes, encryptText, encryptBytes, IV_LENGTH } from './encryption'
 import { uploadEncryptedMnemonic } from './mnemonic'
-import { assertChunkSizeLength, assertMnemonic, assertPassword, CHUNK_SIZE, SEED_SIZE, createCredentialsTopic } from './utils'
+import {
+  assertChunkSizeLength,
+  assertMnemonic,
+  assertPassword,
+  CHUNK_SIZE,
+  SEED_SIZE,
+  createCredentialsTopic,
+} from './utils'
 import { Connection } from '../connection/connection'
 import { getBatchId } from '../utils/batch'
 import CryptoJS from 'crypto-js'
 
 /**
  * Created and encrypted user account to upload to the network
+ * @deprecated interface for v1 accounts
  */
 interface UserAccount {
   wallet: Wallet
@@ -17,9 +25,18 @@ interface UserAccount {
 }
 
 /**
- * X
+ * Account and mnemonic phrase
+ * @deprecated interface for v1 accounts
  */
- export interface UserAccountAndSeed {
+export interface UserAccountWithMnemonic {
+  wallet: Wallet
+  mnemonic: string
+}
+
+/**
+ * User account with seed phrase
+ */
+export interface UserAccountWithSeed {
   wallet: Wallet
   seed: Uint8Array
 }
@@ -84,9 +101,10 @@ export async function createUserV1(
  * Uploads portable account (version 2)
  *
  * @param connection connection information for data uploading
- * @param username FDP username
- * @param password FDP password
- * @param privateKey account's wallet private key
+ * @param username FDP username for topic creation
+ * @param password FDP password for encrypting SOC data
+ * @param privateKey account's wallet private key for signing SOC
+ * @param seed account's seed for storing in SOC
  *
  * @returns swarm reference to encrypted Ethereum wallet
  */
@@ -95,15 +113,15 @@ export async function uploadPortableAccount(
   username: string,
   password: string,
   privateKey: PrivateKeyBytes,
-  seed: string,
+  seed: CryptoJS.lib.WordArray,
 ): Promise<Reference> {
   const paddedData = CryptoJS.lib.WordArray.random(CHUNK_SIZE - SEED_SIZE - IV_LENGTH)
-  const seedKeyWords = CryptoJS.enc.Hex.parse(seed.slice(2))
-  const chunkData = seedKeyWords.concat(paddedData)
+  const chunkData = seed.concat(paddedData)
   const encryptedBytes = encryptBytes(password, chunkData)
   assertChunkSizeLength(encryptedBytes.length)
   const topic = createCredentialsTopic(username, password)
   const socWriter = connection.bee.makeSOCWriter(privateKey)
+
   return socWriter.upload(await getBatchId(connection.beeDebug), topic, encryptedBytes)
 }
 
@@ -122,12 +140,13 @@ export async function downloadPortableAccount(
   address: Utils.EthAddress,
   username: string,
   password: string,
-): Promise<UserAccountAndSeed> {
+): Promise<UserAccountWithSeed> {
   const topic = createCredentialsTopic(username, password)
   const socReader = bee.makeSOCReader(address)
   const encryptedData = (await socReader.download(topic)).payload()
   const seed = decryptBytes(password, encryptedData).slice(0, SEED_SIZE)
   const node = utils.HDNode.fromSeed(seed).derivePath(`m/44'/60'/0'/0/0`)
   const wallet = new Wallet(node.privateKey)
+
   return { wallet, seed }
 }
