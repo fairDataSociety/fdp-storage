@@ -12,6 +12,7 @@ export const MAX_CHUNK_LENGTH = 4096
 export const AUTH_VERSION = 'FDP-login-v1.0'
 export const CHUNK_SIZE = 4096
 export const SEED_SIZE = 64
+export const HD_PATH = `m/44'/60'/0'/0/0`
 
 /**
  * Encode input data to Base64Url with Go lang compatible paddings

@@ -9,6 +9,7 @@ import {
   CHUNK_SIZE,
   SEED_SIZE,
   createCredentialsTopic,
+  HD_PATH,
 } from './utils'
 import { Connection } from '../connection/connection'
 import { getBatchId } from '../utils/batch'
@@ -145,7 +146,7 @@ export async function downloadPortableAccount(
   const socReader = bee.makeSOCReader(address)
   const encryptedData = (await socReader.download(topic)).payload()
   const seed = decryptBytes(password, encryptedData).slice(0, SEED_SIZE)
-  const node = utils.HDNode.fromSeed(seed).derivePath(`m/44'/60'/0'/0/0`)
+  const node = utils.HDNode.fromSeed(seed).derivePath(HD_PATH)
   const wallet = new Wallet(node.privateKey)
 
   return { wallet, seed }

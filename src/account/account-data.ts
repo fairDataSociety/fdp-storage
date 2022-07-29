@@ -1,5 +1,12 @@
 import { utils, Wallet } from 'ethers'
-import { assertMnemonic, assertPassword, assertRegistrationAccount, assertUsername, removeZeroFromHex } from './utils'
+import {
+  assertMnemonic,
+  assertPassword,
+  assertRegistrationAccount,
+  assertUsername,
+  HD_PATH,
+  removeZeroFromHex,
+} from './utils'
 import { prepareEthAddress } from '../utils/address'
 import { getEncryptedMnemonic } from './mnemonic'
 import { decryptText } from './encryption'
@@ -34,7 +41,7 @@ export class AccountData {
    */
   private connectWalletWithENS(seed: Uint8Array) {
     this.seed = seed
-    this.wallet = utils.HDNode.fromSeed(seed).derivePath(`m/44'/60'/0'/0/0`)
+    this.wallet = utils.HDNode.fromSeed(seed).derivePath(HD_PATH)
     this.ens.connect(new Wallet(this.wallet!.privateKey).connect(this.ens.provider))
   }
 
