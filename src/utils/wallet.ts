@@ -3,7 +3,7 @@ import { utils } from 'ethers'
 /**
  * Get Hierarchal Deterministic Wallet from private key by index
  *
- * @param privateKey private key of Ethereum wallet
+ * @param seed data for wallet creation
  * @param index wallet index
  */
 export function getWalletByIndex(seed: Uint8Array, index: number): utils.HDNode {
