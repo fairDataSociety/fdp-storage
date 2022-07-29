@@ -4,7 +4,6 @@ import { LookupAnswer } from '../feed/types'
 import { getFeedData } from '../feed/api'
 import { POD_TOPIC } from './personal-storage'
 import { ExtendedPodInfo, extractPods, PodsInfo } from './utils'
-import { Wallet } from 'ethers'
 import { prepareEthAddress } from '../utils/address'
 import { getWalletByIndex } from '../utils/wallet'
 import { List } from './list'
@@ -44,7 +43,8 @@ export async function getPodsList(bee: Bee, address: EthAddress, options?: Reque
 export async function getExtendedPodsList(
   bee: Bee,
   podName: string,
-  wallet: Wallet,
+  address: EthAddress,
+  seed: Uint8Array,
   downloadOptions?: RequestOptions,
 ): Promise<ExtendedPodInfo> {
   const podsInfo = await getPodsList(bee, prepareEthAddress(wallet.address), downloadOptions)
@@ -53,7 +53,7 @@ export async function getExtendedPodsList(
   if (!pod) {
     throw new Error(`Pod "${podName}" does not exist`)
   }
-  const seed = utils.mnemonicToSeed(wallet.mnemonic.phrase)
+
   const podWallet = getWalletByIndex(seed, pod.index)
 
   return {

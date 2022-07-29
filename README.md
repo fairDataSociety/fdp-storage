@@ -10,11 +10,10 @@
 
 - [Install](#install)
   - [npm](#npm)
-  - [Use in Node.js](#use-in-nodejs)
-  - [Use in a browser with browserify, webpack or any other bundler](#use-in-a-browser-with-browserify-webpack-or-any-other-bundler)
-  - [Use in a browser Using a script tag](#use-in-a-browser-using-a-script-tag)
+  - [yarn](#yarn)
+  - [Use in Node.js](#use-in-nodejs-and-browser)
+  - [Use in a browser using a script tag](#use-in-a-browser-using-a-script-tag)
 - [Usage](#usage)
-- [API](#api)
 - [Contribute](#contribute)
   - [Setup](#setup)
   - [Test](#test)
@@ -42,7 +41,7 @@
 const FDP = require('@fairdatasociety/fdp-storage');
 ```
 
-### Use in a browser Using a script tag
+### Use in a browser using a script tag
 
 Loading this module through a script tag will make the `fdp` object available in the global namespace.
 
@@ -59,7 +58,7 @@ import { FdpStorage } from '@fairdatasociety/fdp-storage'
 
 const fdp = new FdpStorage('http://localhost:1633', 'http://localhost:1635')
 const wallet = fdp.account.createWallet() // after creating a wallet, the user must top up its balance before registration
-const account = await fdp.account.register('myusername', 'mypassword')
+await fdp.account.register('myusername', 'mypassword')
 ```
 
 Login with FDP account

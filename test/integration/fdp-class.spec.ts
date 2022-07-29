@@ -74,17 +74,15 @@ describe('Fair Data Protocol class', () => {
     it('should register users', async () => {
       const fdp = createFdp()
 
-      await expect(fdp.account.register('user', 'password')).rejects.toThrow(
-        'Before registration, an active account must be set',
-      )
+      await expect(fdp.account.register('user', 'password')).rejects.toThrow('Account wallet not found')
 
       for (let i = 0; i < 2; i++) {
         const fdp = createFdp()
 
         const user = generateUser(fdp)
         await topUpAddress(fdp)
-        const createdUser = await fdp.account.register(user.username, user.password)
-        expect(createdUser.address).toEqual(user.address)
+        const reference = await fdp.account.register(user.username, user.password)
+        expect(reference).toBeDefined()
       }
     })
 
@@ -99,17 +97,22 @@ describe('Fair Data Protocol class', () => {
 
     it('should migrate v1 user to v2', async () => {
       const fdp = createFdp()
+      const fdp2 = createFdp()
 
       const user = generateUser(fdp)
+      generateUser(fdp2)
       await topUpAddress(fdp)
+      await topUpAddress(fdp2)
       await createUserV1(fdp.connection, user.username, user.password, user.mnemonic)
       await fdp.account.migrate(user.username, user.password, {
         mnemonic: user.mnemonic,
       })
       const loggedWallet = await fdp.account.login(user.username, user.password)
-      await expect(fdp.account.register(user.username, user.password)).rejects.toThrow('User account already uploaded')
-
       expect(loggedWallet.address).toEqual(user.address)
+
+      await expect(fdp2.account.register(user.username, user.password)).rejects.toThrow(
+        `ENS: Username ${user.username} is not available`,
+      )
     })
   })
 
@@ -120,8 +123,8 @@ describe('Fair Data Protocol class', () => {
       const user = generateUser(fdp)
       await topUpAddress(fdp)
 
-      const wallet = await fdp.account.register(user.username, user.password)
-      expect(wallet.address).toEqual(user.address)
+      const data = await fdp.account.register(user.username, user.password)
+      expect(data).toBeDefined()
 
       const wallet1 = await fdp1.account.login(user.username, user.password)
       expect(wallet1.address).toEqual(user.address)
