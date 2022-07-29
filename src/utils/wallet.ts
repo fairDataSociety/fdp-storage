@@ -1,7 +1,7 @@
 import { utils } from 'ethers'
 
 /**
- * Get Hierarchal Deterministic Wallet from private key by index
+ * Get Hierarchal Deterministic Wallet from seed by index
  *
  * @param seed data for wallet creation
  * @param index wallet index
