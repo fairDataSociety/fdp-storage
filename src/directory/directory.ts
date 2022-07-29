@@ -1,11 +1,12 @@
 import { getExtendedPodsList } from '../pod/api'
 import { AccountData } from '../account/account-data'
 import { createDirectory, readDirectory } from './handler'
-import { assertActiveAccount } from '../account/utils'
+import { assertAccount } from '../account/utils'
 import { DirectoryItem } from '../content-items/directory-item'
 import { removeEntryFromDirectory } from '../content-items/handler'
 import { extractPathInfo } from '../file/utils'
 import { assertPodName } from '../pod/utils'
+import { prepareEthAddress } from '../utils/address'
 
 /**
  * Directory related class
@@ -21,12 +22,13 @@ export class Directory {
    * @param isRecursive search with recursion or not
    */
   async read(podName: string, path: string, isRecursive?: boolean): Promise<DirectoryItem> {
-    assertActiveAccount(this.accountData)
+    assertAccount(this.accountData)
     assertPodName(podName)
     const extendedInfo = await getExtendedPodsList(
       this.accountData.connection.bee,
       podName,
-      this.accountData.wallet!,
+      prepareEthAddress(this.accountData.wallet!.address),
+      this.accountData.seed!,
       this.accountData.connection.options?.downloadOptions,
     )
 
@@ -46,13 +48,14 @@ export class Directory {
    * @param fullPath path for a directory
    */
   async create(podName: string, fullPath: string): Promise<void> {
-    assertActiveAccount(this.accountData)
+    assertAccount(this.accountData)
     assertPodName(podName)
     const downloadOptions = this.accountData.connection.options?.downloadOptions
     const extendedInfo = await getExtendedPodsList(
       this.accountData.connection.bee,
       podName,
-      this.accountData.wallet!,
+      prepareEthAddress(this.accountData.wallet!.address),
+      this.accountData.seed!,
       downloadOptions,
     )
 
@@ -66,12 +69,18 @@ export class Directory {
    * @param fullPath path for a directory
    */
   async delete(podName: string, fullPath: string): Promise<void> {
-    assertActiveAccount(this.accountData)
+    assertAccount(this.accountData)
     assertPodName(podName)
     const pathInfo = extractPathInfo(fullPath)
     const connection = this.accountData.connection
     const downloadOptions = connection.options?.downloadOptions
-    const extendedInfo = await getExtendedPodsList(connection.bee, podName, this.accountData.wallet!, downloadOptions)
+    const extendedInfo = await getExtendedPodsList(
+      connection.bee,
+      podName,
+      prepareEthAddress(this.accountData.wallet!.address),
+      this.accountData.seed!,
+      downloadOptions,
+    )
 
     await removeEntryFromDirectory(
       connection,

@@ -24,6 +24,7 @@ export async function getFeedData(
   options?: RequestOptions,
 ): Promise<LookupAnswer> {
   const topicHash = bmtHashString(topic)
+
   return lookup(0, async (epoch: Epoch, time: number): Promise<Data> => {
     const tempId = getId(topicHash, time, epoch.level)
     const chunkReference = bytesToHex(Utils.keccak256Hash(tempId.buffer, address.buffer))

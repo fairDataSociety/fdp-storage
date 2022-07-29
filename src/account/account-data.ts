@@ -1,32 +1,71 @@
-import { Wallet, utils } from 'ethers'
-import { assertMnemonic, assertPassword, assertUsername, removeZeroFromHex } from './utils'
+import { utils, Wallet } from 'ethers'
+import {
+  assertMnemonic,
+  assertPassword,
+  assertRegistrationAccount,
+  assertUsername,
+  HD_PATH,
+  removeZeroFromHex,
+} from './utils'
 import { prepareEthAddress } from '../utils/address'
 import { getEncryptedMnemonic } from './mnemonic'
 import { decryptText } from './encryption'
-import { uploadPortableAccount, downloadPortableAccount } from './account'
+import { downloadPortableAccount, uploadPortableAccount, UserAccountWithMnemonic } from './account'
 import { Connection } from '../connection/connection'
 import { AddressOptions, isAddressOptions, isMnemonicOptions, MnemonicOptions } from './types'
-import { ENS } from '@fairdatasociety/fdp-contracts'
-import { Utils } from '@ethersphere/bee-js'
+import { ENS, PublicKey } from '@fairdatasociety/fdp-contracts'
+import { Reference, Utils } from '@ethersphere/bee-js'
+import CryptoJS from 'crypto-js'
+import { bytesToHex } from '../utils/hex'
 
 export class AccountData {
   /**
    * Active FDP account wallet
    */
-  public wallet?: Wallet
+  public wallet?: utils.HDNode
+
+  /**
+   * Active FDP account's seed for entity creation
+   */
   public seed?: Uint8Array
+
+  /**
+   * Public key for FDP account creation
+   */
+  public publicKey?: PublicKey
 
   constructor(public readonly connection: Connection, public readonly ens: ENS) {}
 
   /**
-   * Sets the current account's wallet to interact with the data
-   *
-   * @param wallet BIP-039 + BIP-044 Wallet
+   * Connects wallet with ENS
    */
-  setActiveAccount(wallet: Wallet, seed?: Uint8Array): void {
-    this.seed = seed || new Uint8Array()
-    this.wallet = wallet.connect(this.ens.provider)
-    this.ens.connect(this.wallet)
+  private connectWalletWithENS(seed: Uint8Array) {
+    this.seed = seed
+    this.wallet = utils.HDNode.fromSeed(seed).derivePath(HD_PATH)
+    this.ens.connect(new Wallet(this.wallet!.privateKey).connect(this.ens.provider))
+  }
+
+  /**
+   * Sets FDP account from seed
+   *
+   * With the help of the seed, account data can be managed, but cannot register a new account
+   *
+   * @param seed data extracted from mnemonic phrase or from uploaded account
+   */
+  setAccountFromSeed(seed: Uint8Array): void {
+    // correct public key can't be extracted from seed
+    this.publicKey = undefined
+    this.connectWalletWithENS(seed)
+  }
+
+  /**
+   * Sets FDP account from mnemonic phrase
+   *
+   * @param mnemonic phrase from BIP-039/BIP-044 wallet
+   */
+  setAccountFromMnemonic(mnemonic: string): void {
+    this.publicKey = Wallet.fromMnemonic(mnemonic).publicKey
+    this.connectWalletWithENS(Utils.hexToBytes(removeZeroFromHex(utils.mnemonicToSeed(mnemonic))))
   }
 
   /**
@@ -38,7 +77,7 @@ export class AccountData {
     }
 
     const wallet = Wallet.createRandom()
-    this.setActiveAccount(wallet, Utils.hexToBytes(utils.mnemonicToSeed(wallet.mnemonic.phrase).slice(2)))
+    this.setAccountFromMnemonic(wallet.mnemonic.phrase)
 
     return wallet
   }
@@ -52,7 +91,11 @@ export class AccountData {
    * @param password password from version 1 account
    * @param options migration options with address or mnemonic from version 1 account
    */
-  async exportWallet(username: string, password: string, options: AddressOptions | MnemonicOptions): Promise<Wallet> {
+  async exportWallet(
+    username: string,
+    password: string,
+    options: AddressOptions | MnemonicOptions,
+  ): Promise<UserAccountWithMnemonic> {
     assertUsername(username)
     assertPassword(password)
 
@@ -66,7 +109,9 @@ export class AccountData {
 
     assertMnemonic(mnemonic)
 
-    return Wallet.fromMnemonic(mnemonic)
+    const wallet = Wallet.fromMnemonic(mnemonic)
+
+    return { wallet, mnemonic }
   }
 
   /**
@@ -78,11 +123,12 @@ export class AccountData {
    * @param password password from version 1 account
    * @param options migration options with address or mnemonic from version 1 account
    */
-  async migrate(username: string, password: string, options: MnemonicOptions): Promise<Wallet> {
+  async migrate(username: string, password: string, options: AddressOptions | MnemonicOptions): Promise<Reference> {
     assertUsername(username)
     assertPassword(password)
 
-    this.setActiveAccount(await this.exportWallet(username, password, options), Utils.hexToBytes(utils.mnemonicToSeed(options.mnemonic).slice(2)))
+    const exported = await this.exportWallet(username, password, options)
+    this.setAccountFromMnemonic(exported.mnemonic)
 
     return this.register(username, password)
   }
@@ -106,10 +152,10 @@ export class AccountData {
     const publicKey = await this.ens.getPublicKey(username)
     try {
       const address = prepareEthAddress(utils.computeAddress(publicKey))
-      const acc = await downloadPortableAccount(this.connection.bee, address, username, password)
-      this.setActiveAccount(acc.wallet, acc.seed)
+      const account = await downloadPortableAccount(this.connection.bee, address, username, password)
+      this.setAccountFromSeed(account.seed)
 
-      return acc.wallet
+      return account.wallet
     } catch (e) {
       throw new Error('Incorrect password')
     }
@@ -121,32 +167,28 @@ export class AccountData {
    * @param username FDP username
    * @param password FDP password
    */
-  async register(username: string, password: string): Promise<Wallet> {
+  async register(username: string, password: string): Promise<Reference> {
     assertUsername(username)
     assertPassword(password)
+    assertRegistrationAccount(this)
 
-    const wallet = this.wallet
-
-    if (!wallet) {
-      throw new Error('Before registration, an active account must be set')
-    } 
+    const wallet = this.wallet!
 
     try {
-      const seed = utils.mnemonicToSeed(wallet.mnemonic.phrase)
+      const seed = CryptoJS.enc.Hex.parse(removeZeroFromHex(bytesToHex(this.seed!)))
+      await this.ens.registerUsername(username, wallet.address, this.publicKey!)
 
-      const ref = await uploadPortableAccount(
+      return await uploadPortableAccount(
         this.connection,
         username,
         password,
         Utils.hexToBytes(removeZeroFromHex(wallet.privateKey)),
         seed,
       )
-      await this.ens.registerUsername(username, wallet.address, wallet.publicKey)
-      return wallet
     } catch (e) {
       const error = e as Error
 
-      if (error.message.startsWith('Conflict: chunk already exists')) {
+      if (error.message?.startsWith('Conflict: chunk already exists')) {
         throw new Error('User account already uploaded')
       } else {
         throw e

@@ -1,6 +1,5 @@
 import { Pod } from './types'
-import { utils } from 'ethers'
-import { assertActiveAccount } from '../account/utils'
+import { assertAccount } from '../account/utils'
 import { writeFeedData } from '../feed/api'
 import { AccountData } from '../account/account-data'
 import { assertPodName, assertPodNameAvailable, assertPodsLength, createPodShareInfo, podListToBytes } from './utils'
@@ -25,7 +24,7 @@ export class PersonalStorage {
    * @returns list of pods
    */
   async list(): Promise<Pod[]> {
-    assertActiveAccount(this.accountData)
+    assertAccount(this.accountData)
 
     return (
       await getPodsList(
@@ -42,7 +41,7 @@ export class PersonalStorage {
    * @param name pod name
    */
   async create(name: string): Promise<Pod> {
-    assertActiveAccount(this.accountData)
+    assertAccount(this.accountData)
     name = name.trim()
     assertPodName(name)
     const podsInfo = await getPodsList(
@@ -68,11 +67,10 @@ export class PersonalStorage {
     podsInfo.pods.push(newPod)
     const allPodsData = podListToBytes(podsInfo.pods)
     const wallet = this.accountData.wallet!
-    
+
     // create pod
     await writeFeedData(this.accountData.connection, POD_TOPIC, allPodsData, wallet.privateKey, epoch)
-    const seed = this.accountData.seed
-    const podWallet = getWalletByIndex(seed, nextIndex)
+    const podWallet = getWalletByIndex(this.accountData.seed!, nextIndex)
     await createRootDirectory(this.accountData.connection, podWallet.privateKey)
 
     return newPod
@@ -84,7 +82,7 @@ export class PersonalStorage {
    * @param name pod name
    */
   async delete(name: string): Promise<void> {
-    assertActiveAccount(this.accountData)
+    assertAccount(this.accountData)
     name = name.trim()
     const podsInfo = await getPodsList(
       this.accountData.connection.bee,
@@ -119,19 +117,18 @@ export class PersonalStorage {
    * @returns swarm reference of shared metadata about pod
    */
   async share(name: string): Promise<Reference> {
-    assertActiveAccount(this.accountData)
+    assertAccount(this.accountData)
     assertPodName(name)
-    const wallet = this.accountData.wallet!
+    const address = prepareEthAddress(this.accountData.wallet!.address)
     const podInfo = await getExtendedPodsList(
       this.accountData.connection.bee,
       name,
-      wallet,
+      address,
+      this.accountData.seed!,
       this.accountData.connection.options?.downloadOptions,
     )
 
-    const data = stringToBytes(
-      JSON.stringify(createPodShareInfo(name, podInfo.podAddress, prepareEthAddress(wallet.address))),
-    )
+    const data = stringToBytes(JSON.stringify(createPodShareInfo(name, podInfo.podAddress, address)))
 
     return (await uploadBytes(this.accountData.connection, data)).reference
   }
