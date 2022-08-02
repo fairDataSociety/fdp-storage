@@ -2,7 +2,7 @@ import { RawDirectoryMetadata, Pod, PodShareInfo, SharedPod } from './types'
 import { Bee, Data, ENCRYPTED_REFERENCE_HEX_LENGTH, Reference, Utils } from '@ethersphere/bee-js'
 import { stringToBytes } from '../utils/bytes'
 import { LookupAnswer } from '../feed/types'
-import { utils, Wallet } from 'ethers'
+import { utils } from 'ethers'
 import { getRawDirectoryMetadataBytes } from '../directory/adapter'
 import { assertNumber, assertString, isEthAddress, isNumber, isObject, isString } from '../utils/type'
 import { assertHexEthAddress, bytesToHex, EncryptedReference } from '../utils/hex'
@@ -330,12 +330,14 @@ export function assertEncryptedReference(value: unknown): asserts value is Encry
  * @param bee Bee instance
  * @param connection Connection instance
  * @param userWallet FDP account wallet
+ * @param seed FDP account seed
  * @param pod pod information to create
  */
 export async function createPod(
   bee: Bee,
   connection: Connection,
-  userWallet: Wallet,
+  userWallet: utils.HDNode,
+  seed: Uint8Array,
   pod: Pod | SharedPod,
 ): Promise<Pod | SharedPod> {
   pod.name = pod.name.trim()
@@ -373,7 +375,7 @@ export async function createPod(
   await writeFeedData(connection, POD_TOPIC, allPodsData, userWallet.privateKey, epoch)
 
   if (isSimplePod) {
-    const podWallet = getWalletByIndex(userWallet.privateKey, nextIndex)
+    const podWallet = getWalletByIndex(seed, nextIndex)
     await createRootDirectory(connection, podWallet.privateKey)
   }
 

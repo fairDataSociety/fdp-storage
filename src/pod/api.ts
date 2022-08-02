@@ -36,7 +36,8 @@ export async function getPodsList(bee: Bee, address: EthAddress, options?: Reque
  *
  * @param bee Bee instance
  * @param podName pod to find
- * @param wallet Ethereum wallet owns the FDP account
+ * @param address wallet address owns the FDP account
+ * @param seed seed of wallet owns the FDP account
  * @param downloadOptions request options
  */
 export async function getExtendedPodsList(
@@ -46,7 +47,7 @@ export async function getExtendedPodsList(
   seed: Uint8Array,
   downloadOptions?: RequestOptions,
 ): Promise<ExtendedPodInfo> {
-  const podsInfo = await getPodsList(bee, prepareEthAddress(wallet.address), downloadOptions)
+  const podsInfo = await getPodsList(bee, address, downloadOptions)
   const pod = podsInfo.podsList.getPods().find(item => item.name === podName)
 
   if (!pod) {

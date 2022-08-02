@@ -1,5 +1,5 @@
 import { Pod, PodReceiveOptions, PodShareInfo, SharedPod } from './types'
-import { assertActiveAccount } from '../account/utils'
+import { assertAccount } from '../account/utils'
 import { writeFeedData } from '../feed/api'
 import { AccountData } from '../account/account-data'
 import {
@@ -50,12 +50,13 @@ export class PersonalStorage {
    * @param name pod name
    */
   async create(name: string): Promise<Pod> {
-    assertActiveAccount(this.accountData)
+    assertAccount(this.accountData)
 
     const pod = await createPod(
       this.accountData.connection.bee,
       this.accountData.connection,
       this.accountData.wallet!,
+      this.accountData.seed!,
       {
         name,
         index: 0,
@@ -147,14 +148,16 @@ export class PersonalStorage {
    * @returns shared pod information
    */
   async saveShared(reference: string | EncryptedReference, options?: PodReceiveOptions): Promise<SharedPod> {
-    assertActiveAccount(this.accountData)
+    assertAccount(this.accountData)
     assertEncryptedReference(reference)
+
     const data = await this.getSharedInfo(reference)
 
     const pod = await createPod(
       this.accountData.connection.bee,
       this.accountData.connection,
       this.accountData.wallet!,
+      this.accountData.seed!,
       {
         name: options?.name ?? data.pod_name,
         address: prepareEthAddress(data.pod_address),
