@@ -13,6 +13,7 @@
   - [yarn](#yarn)
   - [Use in Node.js](#use-in-nodejs-and-browser)
   - [Use in a browser using a script tag](#use-in-a-browser-using-a-script-tag)
+  - [Use in React Native](#use-in-react-native)
 - [Usage](#usage)
 - [Contribute](#contribute)
   - [Setup](#setup)
@@ -47,6 +48,17 @@ Loading this module through a script tag will make the `fdp` object available in
 
 ```html
 <script src="https://unpkg.com/@fairdatasociety/fdp-storage/dist/index.browser.min.js"></script>
+```
+
+### Use in React Native
+
+FDP Storage is ready to work with React Native. But a few shims need to be added to the initialization script of your project to make the library components work.
+
+```js
+import 'react-native-url-polyfill/auto' // for bee-js. URL polyfill
+import 'react-native-get-random-values' // for ethers.js cryptography
+import '@ethersproject/shims' // commong shims for ethers.js
+import 'text-encoding' // for fdp-storage to make TextEncoding work
 ```
 
 ## Usage
@@ -92,13 +104,13 @@ console.log(shareReference) // prints share reference of a pod
 Creating a directory
 
 ```js
-await fdp.directory.create('my-new-pod', 'my-dir')
+await fdp.directory.create('my-new-pod', '/my-dir')
 ```
 
 Deleting a directory
 
 ```js
-await fdp.directory.delete('my-new-pod', 'my-dir')
+await fdp.directory.delete('my-new-pod', '/my-dir')
 ```
 
 Uploading data as a file into a pod
