@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/fairDataSociety/fdp-storage/compare/v0.2.1...v0.3.0) (2022-08-02)
+
+
+### Features
+
+* react native support added ([#101](https://github.com/fairDataSociety/fdp-storage/issues/101)) ([789c5c6](https://github.com/fairDataSociety/fdp-storage/commit/789c5c602367017ab317d7262fcc5e6d69fa0f5d))
+
 ## [0.2.1](https://github.com/fairDataSociety/fdp-storage/compare/v0.2.0...v0.2.1) (2022-07-15)
 
 
