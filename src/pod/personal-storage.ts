@@ -1,18 +1,16 @@
 import { Pod, PodReceiveOptions, PodShareInfo, SharedPod } from './types'
-import { utils } from 'ethers'
-import { assertAccount } from '../account/utils'
-import { Pod } from './types'
 import { assertAccount } from '../account/utils'
 import { writeFeedData } from '../feed/api'
 import { AccountData } from '../account/account-data'
 import {
+  assertEncryptedReference,
   assertPod,
   assertPodName,
-  assertPodShareInfo,
   assertPodsLength,
   assertSharedPod,
   createPod,
   createPodShareInfo,
+  getSharedInfo,
   podListToBytes,
 } from './utils'
 import { getUnixTimestamp } from '../utils/time'
@@ -22,8 +20,7 @@ import { uploadBytes } from '../file/utils'
 import { stringToBytes } from '../utils/bytes'
 import { Reference } from '@ethersphere/bee-js'
 import { List } from './list'
-import { assertEncryptedReference, EncryptedReference } from '../utils/hex'
-import { getSharedInfo } from '../content-items/utils'
+import { EncryptedReference } from '../utils/hex'
 
 export const POD_TOPIC = 'Pods'
 
@@ -59,6 +56,7 @@ export class PersonalStorage {
       this.accountData.connection.bee,
       this.accountData.connection,
       this.accountData.wallet!,
+      this.accountData.seed!,
       {
         name,
         index: 0,
@@ -138,10 +136,7 @@ export class PersonalStorage {
   async getSharedInfo(reference: string | EncryptedReference): Promise<PodShareInfo> {
     assertEncryptedReference(reference)
 
-    const sharedInfo = await getSharedInfo(this.accountData.connection.bee, reference)
-    assertPodShareInfo(sharedInfo)
-
-    return sharedInfo
+    return getSharedInfo(this.accountData.connection.bee, reference)
   }
 
   /**
@@ -153,14 +148,16 @@ export class PersonalStorage {
    * @returns shared pod information
    */
   async saveShared(reference: string | EncryptedReference, options?: PodReceiveOptions): Promise<SharedPod> {
-    assertActiveAccount(this.accountData)
+    assertAccount(this.accountData)
     assertEncryptedReference(reference)
+
     const data = await this.getSharedInfo(reference)
 
     const pod = await createPod(
       this.accountData.connection.bee,
       this.accountData.connection,
       this.accountData.wallet!,
+      this.accountData.seed!,
       {
         name: options?.name ?? data.pod_name,
         address: prepareEthAddress(data.pod_address),

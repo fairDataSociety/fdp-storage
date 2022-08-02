@@ -7,7 +7,6 @@ import { ExtendedPodInfo, extractPods, PodsInfo } from './utils'
 import { prepareEthAddress } from '../utils/address'
 import { getWalletByIndex } from '../utils/wallet'
 import { List } from './list'
-import { utils } from 'ethers'
 
 /**
  * Gets pods list with lookup answer
@@ -37,7 +36,8 @@ export async function getPodsList(bee: Bee, address: EthAddress, options?: Reque
  *
  * @param bee Bee instance
  * @param podName pod to find
- * @param wallet Ethereum wallet owns the FDP account
+ * @param address wallet address owns the FDP account
+ * @param seed seed of wallet owns the FDP account
  * @param downloadOptions request options
  */
 export async function getExtendedPodsList(

@@ -40,7 +40,7 @@ export interface RawFileMetadata {
  */
 export interface FileMetadata {
   version: number
-  podAddress: Utils.EthAddress
+  userAddress: Utils.EthAddress
   podName: string
   filePath: string
   fileName: string
