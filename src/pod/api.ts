@@ -1,12 +1,12 @@
 import { Bee, RequestOptions } from '@ethersphere/bee-js'
 import { EthAddress } from '@ethersphere/bee-js/dist/types/utils/eth'
 import { LookupAnswer } from '../feed/types'
-import { Pod } from './types'
 import { getFeedData } from '../feed/api'
 import { POD_TOPIC } from './personal-storage'
 import { ExtendedPodInfo, extractPods, PodsInfo } from './utils'
 import { prepareEthAddress } from '../utils/address'
 import { getWalletByIndex } from '../utils/wallet'
+import { List } from './list'
 
 /**
  * Gets pods list with lookup answer
@@ -17,17 +17,16 @@ import { getWalletByIndex } from '../utils/wallet'
  */
 export async function getPodsList(bee: Bee, address: EthAddress, options?: RequestOptions): Promise<PodsInfo> {
   let lookupAnswer: LookupAnswer | undefined
-  let pods: Pod[]
+  let podsList = new List([], [])
 
   try {
     lookupAnswer = await getFeedData(bee, POD_TOPIC, address, options)
-    pods = extractPods(lookupAnswer.data.chunkContent())
-  } catch (e) {
-    pods = []
-  }
+    podsList = extractPods(lookupAnswer.data.chunkContent())
+    // eslint-disable-next-line no-empty
+  } catch (e) {}
 
   return {
-    pods,
+    podsList,
     lookupAnswer,
   }
 }
@@ -37,7 +36,8 @@ export async function getPodsList(bee: Bee, address: EthAddress, options?: Reque
  *
  * @param bee Bee instance
  * @param podName pod to find
- * @param wallet Ethereum wallet owns the FDP account
+ * @param address wallet address owns the FDP account
+ * @param seed seed of wallet owns the FDP account
  * @param downloadOptions request options
  */
 export async function getExtendedPodsList(
@@ -48,7 +48,7 @@ export async function getExtendedPodsList(
   downloadOptions?: RequestOptions,
 ): Promise<ExtendedPodInfo> {
   const podsInfo = await getPodsList(bee, address, downloadOptions)
-  const pod = podsInfo.pods.find(item => item.name === podName)
+  const pod = podsInfo.podsList.getPods().find(item => item.name === podName)
 
   if (!pod) {
     throw new Error(`Pod "${podName}" does not exist`)

@@ -1,5 +1,7 @@
 import { Utils } from '@ethersphere/bee-js'
+
 export type { PublicKey } from '@fairdatasociety/fdp-contracts'
+export const ETH_ADDR_HEX_LENGTH = 40
 
 /**
  * Asserts that the given value is a number
@@ -20,10 +22,10 @@ export function assertString(value: unknown): asserts value is string {
 }
 
 /**
- * Checks that value is a valid Ethereum address
+ * Checks that value is a valid Ethereum address string (without 0x prefix)
  */
 export function isEthAddress(value: unknown): value is Utils.EthAddress {
-  return Utils.isHexString(value) && value.length === 20
+  return Utils.isHexString(value) && value.length === ETH_ADDR_HEX_LENGTH
 }
 
 /**
