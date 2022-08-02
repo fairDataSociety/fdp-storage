@@ -1,6 +1,6 @@
 import crypto from 'crypto'
 
-const isNode = typeof process !== 'undefined' && process.versions !== null && process.versions.node !== null
+const isNode = typeof process !== 'undefined' && process.versions && process.versions.node !== null
 
 const getRandomValuesNode = <T extends ArrayBufferView | null>(array: T): T => {
   if (!(array instanceof Uint8Array || array instanceof Uint32Array)) {
