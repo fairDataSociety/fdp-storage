@@ -17,14 +17,6 @@ export interface SharedPod {
 }
 
 /**
- * Shared pod information
- */
-export interface SharedPod {
-  name: string
-  address: Utils.EthAddress
-}
-
-/**
  * Information about a file in FairOS raw format
  */
 export interface RawFileMetadata {

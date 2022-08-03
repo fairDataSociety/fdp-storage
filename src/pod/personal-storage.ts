@@ -21,6 +21,7 @@ import { Reference } from '@ethersphere/bee-js'
 import { List } from './list'
 import { assertEncryptedReference, EncryptedReference } from '../utils/hex'
 import { getSharedInfo } from '../content-items/utils'
+import { EncryptedReference } from '../utils/hex'
 
 export const POD_TOPIC = 'Pods'
 

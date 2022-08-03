@@ -47,7 +47,7 @@ export async function getExtendedPodsList(
   seed: Uint8Array,
   downloadOptions?: RequestOptions,
 ): Promise<ExtendedPodInfo> {
-  const podsInfo = await getPodsList(bee, prepareEthAddress(wallet.address), downloadOptions)
+  const podsInfo = await getPodsList(bee, address, downloadOptions)
   const pod = podsInfo.podsList.getPods().find(item => item.name === podName)
 
   if (!pod) {
