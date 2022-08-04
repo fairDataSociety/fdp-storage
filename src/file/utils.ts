@@ -6,9 +6,10 @@ import { Blocks, FileShareInfo, RawBlocks } from './types'
 import { rawBlocksToBlocks } from './adapter'
 import CryptoJS from 'crypto-js'
 import { assertString, isObject } from '../utils/type'
-import { RawFileMetadata } from '../pod/types'
+import { FileMetadata, RawFileMetadata } from '../pod/types'
 import { bytesToHex, EncryptedReference } from '../utils/hex'
 import { isRawFileMetadata } from '../directory/utils'
+import { getUnixTimestamp } from '../utils/time'
 
 /**
  * Asserts that full path string is correct
@@ -155,4 +156,34 @@ export async function getSharedFileInfo(bee: Bee, reference: EncryptedReference)
   assertFileShareInfo(data)
 
   return data
+}
+
+/**
+ * Updates shared metadata with new params
+ *
+ * @param meta shared metadata
+ * @param podName pod name
+ * @param filePath parent path of file
+ * @param fileName file name
+ * @param podAddress pod address
+ */
+export function updateFileMetadata(
+  meta: FileMetadata,
+  podName: string,
+  filePath: string,
+  fileName: string,
+  podAddress: Utils.EthAddress,
+): FileMetadata {
+  const now = getUnixTimestamp()
+
+  return {
+    ...meta,
+    podName,
+    filePath,
+    fileName,
+    podAddress,
+    accessTime: now,
+    modificationTime: now,
+    creationTime: now,
+  }
 }

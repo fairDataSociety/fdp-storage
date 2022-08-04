@@ -4,7 +4,14 @@ import { assertPodName, getExtendedPodsListByAccountData, META_VERSION } from '.
 import { getUnixTimestamp } from '../utils/time'
 import { stringToBytes } from '../utils/bytes'
 import { AccountData } from '../account/account-data'
-import { assertFullPathWithName, createFileShareInfo, extractPathInfo, getSharedFileInfo, uploadBytes } from './utils'
+import {
+  assertFullPathWithName,
+  createFileShareInfo,
+  extractPathInfo,
+  getSharedFileInfo,
+  updateFileMetadata,
+  uploadBytes,
+} from './utils'
 import { writeFeedData } from '../feed/api'
 import { downloadData, generateBlockName } from './handler'
 import { blocksToManifest, getFileMetadataRawBytes, rawFileMetadataToFileMetadata } from './adapter'
@@ -185,16 +192,9 @@ export class File {
     const sharedInfo = await this.getSharedInfo(reference)
     const connection = this.accountData.connection
     const extendedInfo = await getExtendedPodsListByAccountData(this.accountData, podName)
-    const now = getUnixTimestamp()
-    const meta = rawFileMetadataToFileMetadata(sharedInfo.meta)
+    let meta = rawFileMetadataToFileMetadata(sharedInfo.meta)
     const fileName = options?.name ?? sharedInfo.meta.file_name
-    meta.fileName = fileName
-    meta.accessTime = now
-    meta.modificationTime = now
-    meta.creationTime = now
-    meta.filePath = parentPath
-    meta.podName = podName
-    meta.podAddress = extendedInfo.podAddress
+    meta = updateFileMetadata(meta, podName, parentPath, fileName, extendedInfo.podAddress)
     const fullPath = combine(parentPath, fileName)
     await addEntryToDirectory(connection, extendedInfo.podWallet, parentPath, fileName, true)
     await writeFeedData(connection, fullPath, getFileMetadataRawBytes(meta), extendedInfo.podWallet.privateKey)
