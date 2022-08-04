@@ -4,8 +4,7 @@ import { assertAccount } from '../account/utils'
 import { DirectoryItem } from '../content-items/directory-item'
 import { removeEntryFromDirectory } from '../content-items/handler'
 import { extractPathInfo } from '../file/utils'
-import { assertPodName } from '../pod/utils'
-import { getExtendedPodsListByAccountData } from '../pod/helper'
+import { assertPodName, getExtendedPodsListByAccountData } from '../pod/utils'
 
 /**
  * Directory related class

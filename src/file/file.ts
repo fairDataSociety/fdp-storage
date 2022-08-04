@@ -1,20 +1,19 @@
 import { FileMetadata } from '../pod/types'
 import { assertAccount } from '../account/utils'
-import { assertPodName, META_VERSION } from '../pod/utils'
+import { assertPodName, getExtendedPodsListByAccountData, META_VERSION } from '../pod/utils'
 import { getUnixTimestamp } from '../utils/time'
 import { stringToBytes } from '../utils/bytes'
 import { AccountData } from '../account/account-data'
-import { assertFileShareInfo, assertFullPathWithName, createFileShareInfo, extractPathInfo, uploadBytes } from './utils'
+import { assertFullPathWithName, createFileShareInfo, extractPathInfo, getSharedFileInfo, uploadBytes } from './utils'
 import { writeFeedData } from '../feed/api'
 import { downloadData, generateBlockName } from './handler'
 import { blocksToManifest, getFileMetadataRawBytes, rawFileMetadataToFileMetadata } from './adapter'
 import { Blocks, DataUploadOptions, FileReceiveOptions, FileShareInfo } from './types'
 import { addEntryToDirectory, removeEntryFromDirectory } from '../content-items/handler'
 import { Data, Reference } from '@ethersphere/bee-js'
-import { getRawMetadata, getSharedInfo } from '../content-items/utils'
+import { getRawMetadata } from '../content-items/utils'
 import { assertRawFileMetadata, combine } from '../directory/utils'
 import { assertEncryptedReference, EncryptedReference } from '../utils/hex'
-import { getExtendedPodsListByAccountData } from '../pod/helper'
 
 /**
  * Files management class
@@ -163,10 +162,7 @@ export class File {
     assertAccount(this.accountData)
     assertEncryptedReference(reference)
 
-    const sharedInfo = await getSharedInfo(this.accountData.connection.bee, reference)
-    assertFileShareInfo(sharedInfo)
-
-    return sharedInfo
+    return getSharedFileInfo(this.accountData.connection.bee, reference)
   }
 
   /**

@@ -7,7 +7,7 @@ import { rawBlocksToBlocks } from './adapter'
 import CryptoJS from 'crypto-js'
 import { assertString, isObject } from '../utils/type'
 import { RawFileMetadata } from '../pod/types'
-import { bytesToHex } from '../utils/hex'
+import { bytesToHex, EncryptedReference } from '../utils/hex'
 import { isRawFileMetadata } from '../directory/utils'
 
 /**
@@ -141,4 +141,18 @@ export function assertFileShareInfo(value: unknown): asserts value is FileShareI
   if (!isFileShareInfo(value)) {
     throw new Error('Incorrect file share info')
   }
+}
+
+/**
+ * Gets shared information about file
+ *
+ * @param bee Bee instance
+ * @param reference reference to shared information
+ */
+export async function getSharedFileInfo(bee: Bee, reference: EncryptedReference): Promise<FileShareInfo> {
+  const data = (await bee.downloadData(reference)).json()
+
+  assertFileShareInfo(data)
+
+  return data
 }

@@ -1,14 +1,14 @@
-import { RawDirectoryMetadata, Pod, PodShareInfo, SharedPod } from './types'
+import { Pod, PodShareInfo, RawDirectoryMetadata, SharedPod } from './types'
 import { Bee, Data, Utils } from '@ethersphere/bee-js'
 import { stringToBytes } from '../utils/bytes'
 import { LookupAnswer } from '../feed/types'
 import { utils } from 'ethers'
 import { getRawDirectoryMetadataBytes } from '../directory/adapter'
 import { assertNumber, assertString, isEthAddress, isNumber, isObject, isString } from '../utils/type'
-import { assertHexEthAddress, bytesToHex } from '../utils/hex'
+import { assertHexEthAddress, bytesToHex, EncryptedReference } from '../utils/hex'
 import { List } from './list'
 import { prepareEthAddress } from '../utils/address'
-import { getPodsList } from './api'
+import { getExtendedPodsList, getPodsList } from './api'
 import { Epoch, getFirstEpoch } from '../feed/lookup/epoch'
 import { getUnixTimestamp } from '../utils/time'
 import { writeFeedData } from '../feed/api'
@@ -16,6 +16,7 @@ import { getWalletByIndex } from '../utils/wallet'
 import { createRootDirectory } from '../directory/handler'
 import { POD_TOPIC } from './personal-storage'
 import { Connection } from '../connection/connection'
+import { AccountData } from '../account/account-data'
 
 export const META_VERSION = 1
 export const MAX_PODS_COUNT = 65536
@@ -356,4 +357,37 @@ export async function createPod(
   }
 
   return pod
+}
+
+/**
+ * Gets extended information about pods using AccountData instance and pod name
+ *
+ * @param accountData AccountData instance
+ * @param podName pod name
+ */
+export async function getExtendedPodsListByAccountData(
+  accountData: AccountData,
+  podName: string,
+): Promise<ExtendedPodInfo> {
+  return getExtendedPodsList(
+    accountData.connection.bee,
+    podName,
+    prepareEthAddress(accountData.wallet!.address),
+    accountData.seed!,
+    accountData.connection.options?.downloadOptions,
+  )
+}
+
+/**
+ * Gets shared information about pod
+ *
+ * @param bee Bee instance
+ * @param reference reference to shared information
+ */
+export async function getSharedPodInfo(bee: Bee, reference: EncryptedReference): Promise<PodShareInfo> {
+  const data = (await bee.downloadData(reference)).json()
+
+  assertPodShareInfo(data)
+
+  return data
 }
