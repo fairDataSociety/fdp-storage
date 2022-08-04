@@ -169,7 +169,7 @@ export class File {
    * Saves shared file to a personal account
    *
    * @param podName pod where file is stored
-   * @param parentPath parent path of the file
+   * @param parentPath the path to the file to save
    * @param reference swarm reference with shared file information
    * @param options save options
    *
