@@ -1,5 +1,5 @@
-import { RawDirectoryMetadata, Pod, PodShareInfo, SharedPod } from './types'
-import { Bee, Data, ENCRYPTED_REFERENCE_HEX_LENGTH, Reference, Utils } from '@ethersphere/bee-js'
+import { Pod, PodShareInfo, RawDirectoryMetadata, SharedPod } from './types'
+import { Bee, Data, Utils } from '@ethersphere/bee-js'
 import { stringToBytes } from '../utils/bytes'
 import { LookupAnswer } from '../feed/types'
 import { utils } from 'ethers'
@@ -8,7 +8,7 @@ import { assertNumber, assertString, isEthAddress, isNumber, isObject, isString 
 import { assertHexEthAddress, bytesToHex, EncryptedReference } from '../utils/hex'
 import { List } from './list'
 import { prepareEthAddress } from '../utils/address'
-import { getPodsList } from './api'
+import { getExtendedPodsList, getPodsList } from './api'
 import { Epoch, getFirstEpoch } from '../feed/lookup/epoch'
 import { getUnixTimestamp } from '../utils/time'
 import { writeFeedData } from '../feed/api'
@@ -16,6 +16,7 @@ import { getWalletByIndex } from '../utils/wallet'
 import { createRootDirectory } from '../directory/handler'
 import { POD_TOPIC } from './personal-storage'
 import { Connection } from '../connection/connection'
+import { AccountData } from '../account/account-data'
 
 export const META_VERSION = 1
 export const MAX_PODS_COUNT = 65536
@@ -301,30 +302,6 @@ export function assertPodShareInfo(value: unknown): asserts value is PodShareInf
 }
 
 /**
- * Gets information about shared pod
- *
- * @param bee Bee instance
- * @param reference reference to shared pod
- */
-export async function getSharedInfo(bee: Bee, reference: string): Promise<PodShareInfo> {
-  const data = (await bee.downloadData(reference)).json()
-  assertPodShareInfo(data)
-
-  return data
-}
-
-/**
- * Verifies if encrypted reference is correct
- */
-export function assertEncryptedReference(value: unknown): asserts value is EncryptedReference {
-  const data = value as Reference
-
-  if (!(data.length === ENCRYPTED_REFERENCE_HEX_LENGTH && Utils.isHexString(data))) {
-    throw new Error('Incorrect encrypted reference')
-  }
-}
-
-/**
  * Creates user's pod or add a shared pod to an account
  *
  * @param bee Bee instance
@@ -380,4 +357,37 @@ export async function createPod(
   }
 
   return pod
+}
+
+/**
+ * Gets extended information about pods using AccountData instance and pod name
+ *
+ * @param accountData AccountData instance
+ * @param podName pod name
+ */
+export async function getExtendedPodsListByAccountData(
+  accountData: AccountData,
+  podName: string,
+): Promise<ExtendedPodInfo> {
+  return getExtendedPodsList(
+    accountData.connection.bee,
+    podName,
+    prepareEthAddress(accountData.wallet!.address),
+    accountData.seed!,
+    accountData.connection.options?.downloadOptions,
+  )
+}
+
+/**
+ * Gets shared information about pod
+ *
+ * @param bee Bee instance
+ * @param reference reference to shared information
+ */
+export async function getSharedPodInfo(bee: Bee, reference: EncryptedReference): Promise<PodShareInfo> {
+  const data = (await bee.downloadData(reference)).json()
+
+  assertPodShareInfo(data)
+
+  return data
 }

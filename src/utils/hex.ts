@@ -1,4 +1,4 @@
-import { ENCRYPTED_REFERENCE_HEX_LENGTH, FlavoredType, Utils } from '@ethersphere/bee-js'
+import { ENCRYPTED_REFERENCE_HEX_LENGTH, FlavoredType, Reference, Utils } from '@ethersphere/bee-js'
 
 export type EncryptedReference = Utils.HexString<typeof ENCRYPTED_REFERENCE_HEX_LENGTH>
 export type HexEthAddress = HexString<40>
@@ -41,5 +41,16 @@ export function assertHexEthAddress(value: unknown): asserts value is HexEthAddr
 
   if (!isHexEthAddress(data)) {
     throw new Error('Expected a number')
+  }
+}
+
+/**
+ * Verifies if encrypted reference is correct
+ */
+export function assertEncryptedReference(value: unknown): asserts value is EncryptedReference {
+  const data = value as Reference
+
+  if (!(data.length === ENCRYPTED_REFERENCE_HEX_LENGTH && Utils.isHexString(data))) {
+    throw new Error('Incorrect encrypted reference')
   }
 }

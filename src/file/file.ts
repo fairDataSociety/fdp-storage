@@ -1,20 +1,26 @@
 import { FileMetadata } from '../pod/types'
 import { assertAccount } from '../account/utils'
-import { assertPodName, META_VERSION } from '../pod/utils'
-import { getExtendedPodsList } from '../pod/api'
+import { assertPodName, getExtendedPodsListByAccountData, META_VERSION } from '../pod/utils'
 import { getUnixTimestamp } from '../utils/time'
 import { stringToBytes } from '../utils/bytes'
 import { AccountData } from '../account/account-data'
-import { extractPathInfo, uploadBytes, assertFullPathWithName, createFileShareInfo } from './utils'
+import {
+  assertFullPathWithName,
+  createFileShareInfo,
+  extractPathInfo,
+  getSharedFileInfo,
+  updateFileMetadata,
+  uploadBytes,
+} from './utils'
 import { writeFeedData } from '../feed/api'
 import { downloadData, generateBlockName } from './handler'
-import { blocksToManifest, getFileMetadataRawBytes } from './adapter'
-import { Blocks, DataUploadOptions } from './types'
+import { blocksToManifest, getFileMetadataRawBytes, rawFileMetadataToFileMetadata } from './adapter'
+import { Blocks, DataUploadOptions, FileReceiveOptions, FileShareInfo } from './types'
 import { addEntryToDirectory, removeEntryFromDirectory } from '../content-items/handler'
 import { Data, Reference } from '@ethersphere/bee-js'
 import { getRawMetadata } from '../content-items/utils'
-import { assertRawFileMetadata } from '../directory/utils'
-import { prepareEthAddress } from '../utils/address'
+import { assertRawFileMetadata, combine } from '../directory/utils'
+import { assertEncryptedReference, EncryptedReference } from '../utils/hex'
 
 /**
  * Files management class
@@ -38,18 +44,11 @@ export class File {
     assertPodName(podName)
     assertFullPathWithName(fullPath)
     assertPodName(podName)
-    const extendedInfo = await getExtendedPodsList(
-      this.accountData.connection.bee,
-      podName,
-      prepareEthAddress(this.accountData.wallet!.address),
-      this.accountData.seed!,
-      this.accountData.connection.options?.downloadOptions,
-    )
 
     return downloadData(
       this.accountData.connection.bee,
       fullPath,
-      extendedInfo.podAddress,
+      (await getExtendedPodsListByAccountData(this.accountData, podName)).podAddress,
       this.accountData.connection.options?.downloadOptions,
     )
   }
@@ -75,13 +74,7 @@ export class File {
     assertPodName(podName)
     data = typeof data === 'string' ? stringToBytes(data) : data
     const connection = this.accountData.connection
-    const extendedInfo = await getExtendedPodsList(
-      connection.bee,
-      podName,
-      prepareEthAddress(this.accountData.wallet!.address),
-      this.accountData.seed!,
-      connection.options?.downloadOptions,
-    )
+    const extendedInfo = await getExtendedPodsListByAccountData(this.accountData, podName)
 
     const pathInfo = extractPathInfo(fullPath)
     const now = getUnixTimestamp()
@@ -102,7 +95,7 @@ export class File {
     const blocksReference = (await uploadBytes(connection, manifestBytes)).reference
     const meta: FileMetadata = {
       version: META_VERSION,
-      userAddress: extendedInfo.podAddress,
+      podAddress: extendedInfo.podAddress,
       podName,
       filePath: pathInfo.path,
       fileName: pathInfo.filename,
@@ -133,16 +126,15 @@ export class File {
     assertFullPathWithName(fullPath)
     assertPodName(podName)
     const pathInfo = extractPathInfo(fullPath)
-    const connection = this.accountData.connection
-    const extendedInfo = await getExtendedPodsList(
-      connection.bee,
-      podName,
-      prepareEthAddress(this.accountData.wallet!.address),
-      this.accountData.seed!,
-      connection.options?.downloadOptions,
+    await removeEntryFromDirectory(
+      this.accountData.connection,
+      (
+        await getExtendedPodsListByAccountData(this.accountData, podName)
+      ).podWallet,
+      pathInfo.path,
+      pathInfo.filename,
+      true,
     )
-
-    await removeEntryFromDirectory(connection, extendedInfo.podWallet, pathInfo.path, pathInfo.filename, true)
   }
 
   /**
@@ -157,18 +149,56 @@ export class File {
     assertPodName(podName)
 
     const connection = this.accountData.connection
-    const extendedInfo = await getExtendedPodsList(
-      connection.bee,
-      podName,
-      prepareEthAddress(this.accountData.wallet!.address),
-      this.accountData.seed!,
-      connection.options?.downloadOptions,
-    )
+    const extendedInfo = await getExtendedPodsListByAccountData(this.accountData, podName)
 
     const meta = (await getRawMetadata(connection.bee, fullPath, extendedInfo.podAddress)).metadata
     assertRawFileMetadata(meta)
     const data = stringToBytes(JSON.stringify(createFileShareInfo(meta, extendedInfo.podAddress)))
 
     return (await uploadBytes(connection, data)).reference
+  }
+
+  /**
+   * Gets shared file information
+   *
+   * @param reference swarm reference with shared file information
+   *
+   * @returns shared file information
+   */
+  async getSharedInfo(reference: string | EncryptedReference): Promise<FileShareInfo> {
+    assertAccount(this.accountData)
+    assertEncryptedReference(reference)
+
+    return getSharedFileInfo(this.accountData.connection.bee, reference)
+  }
+
+  /**
+   * Saves shared file to a personal account
+   *
+   * @param podName pod where file is stored
+   * @param parentPath the path to the file to save
+   * @param reference swarm reference with shared file information
+   * @param options save options
+   *
+   * @returns saved file metadata
+   */
+  async saveShared(
+    podName: string,
+    parentPath: string,
+    reference: string | EncryptedReference,
+    options?: FileReceiveOptions,
+  ): Promise<FileMetadata> {
+    assertPodName(podName)
+    const sharedInfo = await this.getSharedInfo(reference)
+    const connection = this.accountData.connection
+    const extendedInfo = await getExtendedPodsListByAccountData(this.accountData, podName)
+    let meta = rawFileMetadataToFileMetadata(sharedInfo.meta)
+    const fileName = options?.name ?? sharedInfo.meta.file_name
+    meta = updateFileMetadata(meta, podName, parentPath, fileName, extendedInfo.podAddress)
+    const fullPath = combine(parentPath, fileName)
+    await addEntryToDirectory(connection, extendedInfo.podWallet, parentPath, fileName, true)
+    await writeFeedData(connection, fullPath, getFileMetadataRawBytes(meta), extendedInfo.podWallet.privateKey)
+
+    return meta
   }
 }
