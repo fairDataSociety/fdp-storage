@@ -255,34 +255,24 @@ describe('Fair Data Protocol class - in browser', () => {
 
   describe('Pods', () => {
     it('should get empty pods list', async () => {
-      const user = generateUser()
-      const jsonUser = user as unknown as JSONObject
-      const answer = await page.evaluate(async (user: TestUser) => {
+      const answer = await page.evaluate(async () => {
         const fdp = eval(await window.initFdp()) as FdpStorage
         fdp.account.createWallet()
-        await window.topUpAddress(fdp)
-
-        await fdp.account.register(user.username, user.password)
 
         return (await fdp.personalStorage.list()).getPods()
-      }, jsonUser)
+      })
 
       expect(answer).toEqual([])
     })
 
     it('should create pods', async () => {
-      const user = generateUser()
-      const jsonUser = user as unknown as JSONObject
       const longPodName = generateRandomHexString(MAX_POD_NAME_LENGTH + 1)
       const commaPodName = generateRandomHexString() + ', ' + generateRandomHexString()
 
       const result = await page.evaluate(
-        async (user: TestUser, longPodName: string, commaPodName: string) => {
+        async (longPodName: string, commaPodName: string) => {
           const fdp = eval(await window.initFdp()) as FdpStorage
           fdp.account.createWallet()
-          await window.topUpAddress(fdp)
-
-          await fdp.account.register(user.username, user.password)
 
           await window.shouldFail(fdp.personalStorage.create(longPodName), 'Pod name is too long')
           await window.shouldFail(fdp.personalStorage.create(commaPodName), 'Pod name cannot contain commas')
@@ -290,7 +280,6 @@ describe('Fair Data Protocol class - in browser', () => {
 
           return (await fdp.personalStorage.list()).getPods()
         },
-        jsonUser,
         longPodName,
         commaPodName,
       )
@@ -305,38 +294,33 @@ describe('Fair Data Protocol class - in browser', () => {
         { name: generateRandomHexString(), index: 5 },
       ]
 
-      const result1 = await page.evaluate(
-        async (user: TestUser, examples: JSONArray) => {
-          const fdp = eval(await window.initFdp()) as FdpStorage
-          const iterations = []
-          await fdp.account.login(user.username, user.password)
-          for (let i = 0; examples.length > i; i++) {
-            const example = examples[i] as unknown as { name: string; index: number }
-            const out = await fdp.personalStorage.create(example.name)
-            const list = await fdp.personalStorage.list()
+      const result1 = await page.evaluate(async (examples: JSONArray) => {
+        const fdp = eval(await window.initFdp()) as FdpStorage
+        const iterations = []
+        for (let i = 0; examples.length > i; i++) {
+          const example = examples[i] as unknown as { name: string; index: number }
+          const out = await fdp.personalStorage.create(example.name)
+          const list = await fdp.personalStorage.list()
 
-            iterations.push({
-              result: out,
-              example,
-              list,
-            })
-          }
+          iterations.push({
+            result: out,
+            example,
+            list,
+          })
+        }
 
-          const failPod = examples[0] as unknown as { name: string; index: number }
-          await window.shouldFail(
-            fdp.personalStorage.create(failPod.name),
-            `Pod with name "${failPod.name}" already exists`,
-          )
+        const failPod = examples[0] as unknown as { name: string; index: number }
+        await window.shouldFail(
+          fdp.personalStorage.create(failPod.name),
+          `Pod with name "${failPod.name}" already exists`,
+        )
 
-          return iterations as unknown as {
-            result: JSONObject
-            example: { name: string; index: number }
-            list: JSONArray
-          }[]
-        },
-        jsonUser,
-        examples as unknown as JSONArray,
-      )
+        return iterations as unknown as {
+          result: JSONObject
+          example: { name: string; index: number }
+          list: JSONArray
+        }[]
+      }, examples as unknown as JSONArray)
 
       expect(result1).toHaveLength(examples.length)
 
@@ -347,27 +331,14 @@ describe('Fair Data Protocol class - in browser', () => {
     })
 
     it('should delete pods', async () => {
-      const user = generateUser()
-      const jsonUser = user as unknown as JSONObject
-
-      await page.evaluate(async (user: TestUser) => {
-        const fdp = eval(await window.initFdp()) as FdpStorage
-        fdp.account.createWallet()
-        await window.topUpAddress(fdp)
-
-        await fdp.account.register(user.username, user.password)
-        await fdp.account.login(user.username, user.password)
-      }, jsonUser)
-
       const podName = generateRandomHexString()
       const podName1 = generateRandomHexString()
       const notExistsPod = generateRandomHexString()
 
       let list = await page.evaluate(
-        async (user: TestUser, podName: string, podName1: string, notExistsPod: string) => {
+        async (podName: string, podName1: string, notExistsPod: string) => {
           const fdp = eval(await window.initFdp()) as FdpStorage
 
-          await fdp.account.login(user.username, user.password)
           await fdp.personalStorage.create(podName)
           await fdp.personalStorage.create(podName1)
 
@@ -375,7 +346,6 @@ describe('Fair Data Protocol class - in browser', () => {
 
           return (await fdp.personalStorage.list()).getPods()
         },
-        jsonUser,
         podName,
         podName1,
         notExistsPod,
@@ -383,71 +353,43 @@ describe('Fair Data Protocol class - in browser', () => {
 
       expect(list).toHaveLength(2)
 
-      list = await page.evaluate(
-        async (user: TestUser, podName: string) => {
-          const fdp = eval(await window.initFdp()) as FdpStorage
+      list = await page.evaluate(async (user: TestUser, podName: string) => {
+        const fdp = eval(await window.initFdp()) as FdpStorage
 
-          await fdp.account.login(user.username, user.password)
-          await fdp.personalStorage.delete(podName)
+        await fdp.personalStorage.delete(podName)
 
-          return (await fdp.personalStorage.list()).getPods()
-        },
-        jsonUser,
-        podName,
-      )
+        return (await fdp.personalStorage.list()).getPods()
+      }, podName)
 
       expect(list).toHaveLength(1)
 
-      list = await page.evaluate(
-        async (user: TestUser, podName: string) => {
-          const fdp = eval(await window.initFdp()) as FdpStorage
+      list = await page.evaluate(async (user: TestUser, podName: string) => {
+        const fdp = eval(await window.initFdp()) as FdpStorage
 
-          await fdp.account.login(user.username, user.password)
-          await fdp.personalStorage.delete(podName)
+        await fdp.personalStorage.delete(podName)
 
-          return (await fdp.personalStorage.list()).getPods()
-        },
-        jsonUser,
-        podName1,
-      )
+        return (await fdp.personalStorage.list()).getPods()
+      }, podName1)
 
       expect(list).toHaveLength(0)
     })
 
     it('should share a pod', async () => {
-      const user = generateUser()
-      const jsonUser = user as unknown as JSONObject
-
-      const walletAddress = await page.evaluate(async (user: TestUser) => {
-        const fdp = eval(await window.initFdp()) as FdpStorage
-        const wallet = fdp.account.createWallet()
-        await window.topUpAddress(fdp)
-
-        await fdp.account.register(user.username, user.password)
-        await fdp.account.login(user.username, user.password)
-
-        return wallet.address
-      }, jsonUser)
-
       const podName = generateRandomHexString()
 
-      const { sharedReference, sharedData } = await page.evaluate(
-        async (user: TestUser, podName: string) => {
-          const fdp = eval(await window.initFdp()) as FdpStorage
+      const { sharedReference, sharedData, walletAddress } = await page.evaluate(async (podName: string) => {
+        const fdp = eval(await window.initFdp()) as FdpStorage
 
-          await fdp.account.login(user.username, user.password)
-          await fdp.personalStorage.create(podName)
-          const sharedReference = await fdp.personalStorage.share(podName)
-          const sharedData = (await fdp.connection.bee.downloadData(sharedReference)).json() as unknown as PodShareInfo
+        await fdp.personalStorage.create(podName)
+        const sharedReference = await fdp.personalStorage.share(podName)
+        const sharedData = (await fdp.connection.bee.downloadData(sharedReference)).json() as unknown as PodShareInfo
 
-          return {
-            sharedReference,
-            sharedData,
-          }
-        },
-        jsonUser,
-        podName,
-      )
+        return {
+          sharedReference,
+          sharedData,
+          walletAddress: fdp.account.wallet!.address,
+        }
+      }, podName)
 
       expect(sharedReference).toBeDefined()
       expect(sharedData.pod_name).toEqual(podName)
@@ -456,39 +398,21 @@ describe('Fair Data Protocol class - in browser', () => {
     })
 
     it('should receive shared pod info', async () => {
-      const user = generateUser()
-      const jsonUser = user as unknown as JSONObject
-
-      const walletAddress = await page.evaluate(async (user: TestUser) => {
-        const fdp = eval(await window.initFdp()) as FdpStorage
-        const wallet = fdp.account.createWallet()
-        await window.topUpAddress(fdp)
-
-        await fdp.account.register(user.username, user.password)
-        await fdp.account.login(user.username, user.password)
-
-        return wallet.address
-      }, jsonUser)
-
       const podName = generateRandomHexString()
 
-      const { sharedReference, sharedData } = await page.evaluate(
-        async (user: TestUser, podName: string) => {
-          const fdp = eval(await window.initFdp()) as FdpStorage
+      const { sharedReference, sharedData, walletAddress } = await page.evaluate(async (podName: string) => {
+        const fdp = eval(await window.initFdp()) as FdpStorage
 
-          await fdp.account.login(user.username, user.password)
-          await fdp.personalStorage.create(podName)
-          const sharedReference = await fdp.personalStorage.share(podName)
-          const sharedData = await fdp.personalStorage.getSharedInfo(sharedReference)
+        await fdp.personalStorage.create(podName)
+        const sharedReference = await fdp.personalStorage.share(podName)
+        const sharedData = await fdp.personalStorage.getSharedInfo(sharedReference)
 
-          return {
-            sharedReference,
-            sharedData,
-          }
-        },
-        jsonUser,
-        podName,
-      )
+        return {
+          sharedReference,
+          sharedData,
+          walletAddress: fdp.account.wallet!.address,
+        }
+      }, podName)
 
       expect(sharedReference).toBeDefined()
       expect(sharedData.pod_name).toEqual(podName)
@@ -497,10 +421,6 @@ describe('Fair Data Protocol class - in browser', () => {
     })
 
     it('should save shared pod', async () => {
-      const user = generateUser()
-      const user1 = generateUser()
-      const jsonUser = user as unknown as JSONObject
-      const jsonUser1 = user1 as unknown as JSONObject
       const podName = generateRandomHexString()
       const newPodName = generateRandomHexString()
 
@@ -513,16 +433,12 @@ describe('Fair Data Protocol class - in browser', () => {
         listAfterSaveCustom,
         podAfterSaveCustom,
       } = await page.evaluate(
-        async (user: TestUser, user1: TestUser, podName: string, newPodName: string) => {
+        async (podName: string, newPodName: string) => {
           const fdp = eval(await window.initFdp()) as FdpStorage
           const fdp1 = eval(await window.initFdp()) as FdpStorage
           fdp.account.createWallet()
           fdp1.account.createWallet()
-          await window.topUpAddress(fdp)
-          await window.topUpAddress(fdp1)
 
-          await fdp.account.register(user.username, user.password)
-          await fdp1.account.register(user1.username, user1.password)
           await fdp.personalStorage.create(podName)
           const sharedReference = await fdp.personalStorage.share(podName)
           const list0 = await fdp1.personalStorage.list()
@@ -560,8 +476,6 @@ describe('Fair Data Protocol class - in browser', () => {
             podAfterSaveCustom: savedPod1,
           }
         },
-        jsonUser,
-        jsonUser1,
         podName,
         newPodName,
       )
@@ -588,8 +502,6 @@ describe('Fair Data Protocol class - in browser', () => {
 
   describe('Directory', () => {
     it('should create new directory', async () => {
-      const user = generateUser()
-      const jsonUser = user as unknown as JSONObject
       const pod = generateRandomHexString()
       const directoryName = generateRandomHexString()
       const directoryFull = '/' + directoryName
@@ -597,12 +509,10 @@ describe('Fair Data Protocol class - in browser', () => {
       const directoryFull1 = '/' + directoryName + '/' + directoryName1
 
       const { list, directoryInfo, directoryInfo1, subDirectoriesLength } = await page.evaluate(
-        async (user: TestUser, pod: string, directoryFull: string, directoryFull1: string) => {
+        async (pod: string, directoryFull: string, directoryFull1: string) => {
           const fdp = eval(await window.initFdp()) as FdpStorage
           fdp.account.createWallet()
-          await window.topUpAddress(fdp)
 
-          await fdp.account.register(user.username, user.password)
           await fdp.personalStorage.create(pod)
           await window.shouldFail(fdp.directory.create(pod, directoryFull1), 'Parent directory does not exist')
 
@@ -629,7 +539,6 @@ describe('Fair Data Protocol class - in browser', () => {
             subDirectoriesLength,
           }
         },
-        jsonUser,
         pod,
         directoryFull,
         directoryFull1,
@@ -642,19 +551,15 @@ describe('Fair Data Protocol class - in browser', () => {
     })
 
     it('should delete a directory', async () => {
-      const user = generateUser()
-      const jsonUser = user as unknown as JSONObject
       const pod = generateRandomHexString()
       const directoryName = generateRandomHexString()
       const directoryFull = '/' + directoryName
 
       const { list, listAfter } = await page.evaluate(
-        async (user: TestUser, pod: string, directoryFull: string) => {
+        async (pod: string, directoryFull: string) => {
           const fdp = eval(await window.initFdp()) as FdpStorage
           fdp.account.createWallet()
-          await window.topUpAddress(fdp)
 
-          await fdp.account.register(user.username, user.password)
           await fdp.personalStorage.create(pod)
           await fdp.directory.create(pod, directoryFull)
           const list = await fdp.directory.read(pod, '/', true)
@@ -667,7 +572,6 @@ describe('Fair Data Protocol class - in browser', () => {
             listAfter,
           }
         },
-        jsonUser,
         pod,
         directoryFull,
       )
@@ -679,9 +583,6 @@ describe('Fair Data Protocol class - in browser', () => {
 
   describe('File', () => {
     it('should upload small text data as a file', async () => {
-      const user = generateUser()
-      const jsonUser = user as unknown as JSONObject
-
       const pod = generateRandomHexString()
       const fileSizeSmall = 100
       const contentSmall = generateRandomHexString(fileSizeSmall)
@@ -689,12 +590,10 @@ describe('Fair Data Protocol class - in browser', () => {
       const fullFilenameSmallPath = '/' + filenameSmall
 
       const { dataSmall, fdpList, fileInfoSmall } = await page.evaluate(
-        async (user: TestUser, pod: string, fullFilenameSmallPath: string, contentSmall: string) => {
+        async (pod: string, fullFilenameSmallPath: string, contentSmall: string) => {
           const fdp = eval(await window.initFdp()) as FdpStorage
           fdp.account.createWallet()
-          await window.topUpAddress(fdp)
 
-          await fdp.account.register(user.username, user.password)
           await fdp.personalStorage.create(pod)
           await fdp.file.uploadData(pod, fullFilenameSmallPath, contentSmall)
           await window.shouldFail(
@@ -712,7 +611,6 @@ describe('Fair Data Protocol class - in browser', () => {
             fileInfoSmall,
           }
         },
-        jsonUser,
         pod,
         fullFilenameSmallPath,
         contentSmall,
@@ -725,8 +623,6 @@ describe('Fair Data Protocol class - in browser', () => {
     })
 
     it('should upload big text data as a file', async () => {
-      const user = generateUser()
-      const jsonUser = user as unknown as JSONObject
       const pod = generateRandomHexString()
       const incorrectPod = generateRandomHexString()
       const fileSizeBig = 5000005
@@ -737,7 +633,6 @@ describe('Fair Data Protocol class - in browser', () => {
 
       const { dataBig, fdpList, fileInfoBig } = await page.evaluate(
         async (
-          user: TestUser,
           pod: string,
           fullFilenameBigPath: string,
           contentBig: string,
@@ -746,9 +641,7 @@ describe('Fair Data Protocol class - in browser', () => {
         ) => {
           const fdp = eval(await window.initFdp()) as FdpStorage
           fdp.account.createWallet()
-          await window.topUpAddress(fdp)
 
-          await fdp.account.register(user.username, user.password)
           await fdp.personalStorage.create(pod)
           await window.shouldFail(
             fdp.file.uploadData(incorrectPod, fullFilenameBigPath, contentBig),
@@ -766,7 +659,6 @@ describe('Fair Data Protocol class - in browser', () => {
             fileInfoBig,
           }
         },
-        jsonUser,
         pod,
         fullFilenameBigPath,
         contentBig,
@@ -781,9 +673,6 @@ describe('Fair Data Protocol class - in browser', () => {
     })
 
     it('should delete a file', async () => {
-      const user = generateUser()
-      const jsonUser = user as unknown as JSONObject
-
       const pod = generateRandomHexString()
       const fileSizeSmall = 100
       const contentSmall = generateRandomHexString(fileSizeSmall)
@@ -791,12 +680,10 @@ describe('Fair Data Protocol class - in browser', () => {
       const fullFilenameSmallPath = '/' + filenameSmall
 
       const { fdpList, fdpListAfter } = await page.evaluate(
-        async (user: TestUser, pod: string, fullFilenameSmallPath: string, contentSmall: string) => {
+        async (pod: string, fullFilenameSmallPath: string, contentSmall: string) => {
           const fdp = eval(await window.initFdp()) as FdpStorage
           fdp.account.createWallet()
-          await window.topUpAddress(fdp)
 
-          await fdp.account.register(user.username, user.password)
           await fdp.personalStorage.create(pod)
           await fdp.file.uploadData(pod, fullFilenameSmallPath, contentSmall)
 
@@ -809,7 +696,6 @@ describe('Fair Data Protocol class - in browser', () => {
             fdpListAfter,
           }
         },
-        jsonUser,
         pod,
         fullFilenameSmallPath,
         contentSmall,
@@ -820,9 +706,6 @@ describe('Fair Data Protocol class - in browser', () => {
     })
 
     it('should share a file', async () => {
-      const user = generateUser()
-      const jsonUser = user as unknown as JSONObject
-
       const pod = generateRandomHexString()
       const fileSizeSmall = 100
       const contentSmall = generateRandomHexString(fileSizeSmall)
@@ -830,12 +713,10 @@ describe('Fair Data Protocol class - in browser', () => {
       const fullFilenameSmallPath = '/' + filenameSmall
 
       const { sharedReference, sharedData } = await page.evaluate(
-        async (user: TestUser, pod: string, fullFilenameSmallPath: string, contentSmall: string) => {
+        async (pod: string, fullFilenameSmallPath: string, contentSmall: string) => {
           const fdp = eval(await window.initFdp()) as FdpStorage
           fdp.account.createWallet()
-          await window.topUpAddress(fdp)
 
-          await fdp.account.register(user.username, user.password)
           await fdp.personalStorage.create(pod)
           await fdp.file.uploadData(pod, fullFilenameSmallPath, contentSmall)
 
@@ -847,7 +728,6 @@ describe('Fair Data Protocol class - in browser', () => {
             sharedData,
           }
         },
-        jsonUser,
         pod,
         fullFilenameSmallPath,
         contentSmall,
@@ -859,9 +739,6 @@ describe('Fair Data Protocol class - in browser', () => {
     })
 
     it('should receive information about shared file', async () => {
-      const user = generateUser()
-      const jsonUser = user as unknown as JSONObject
-
       const pod = generateRandomHexString()
       const fileSizeSmall = 100
       const contentSmall = generateRandomHexString(fileSizeSmall)
@@ -869,12 +746,10 @@ describe('Fair Data Protocol class - in browser', () => {
       const fullFilenameSmallPath = '/' + filenameSmall
 
       const { sharedData } = await page.evaluate(
-        async (user: TestUser, pod: string, fullFilenameSmallPath: string, contentSmall: string) => {
+        async (pod: string, fullFilenameSmallPath: string, contentSmall: string) => {
           const fdp = eval(await window.initFdp()) as FdpStorage
           fdp.account.createWallet()
-          await window.topUpAddress(fdp)
 
-          await fdp.account.register(user.username, user.password)
           await fdp.personalStorage.create(pod)
           await fdp.file.uploadData(pod, fullFilenameSmallPath, contentSmall)
 
@@ -885,7 +760,6 @@ describe('Fair Data Protocol class - in browser', () => {
             sharedData,
           }
         },
-        jsonUser,
         pod,
         fullFilenameSmallPath,
         contentSmall,
@@ -900,11 +774,6 @@ describe('Fair Data Protocol class - in browser', () => {
     })
 
     it('should save shared file to a pod', async () => {
-      const user = generateUser()
-      const user1 = generateUser()
-      const jsonUser = user as unknown as JSONObject
-      const jsonUser1 = user1 as unknown as JSONObject
-
       const pod = generateRandomHexString()
       const pod1 = generateRandomHexString()
       const fileSizeSmall = 100
@@ -916,8 +785,6 @@ describe('Fair Data Protocol class - in browser', () => {
 
       const { sharedData, files, fileInfo, meta, data, sharedData1, data1, files1 } = await page.evaluate(
         async (
-          user: TestUser,
-          user1: TestUser,
           pod: string,
           pod1: string,
           fullFilenameSmallPath: string,
@@ -929,11 +796,7 @@ describe('Fair Data Protocol class - in browser', () => {
           const fdp1 = eval(await window.initFdp()) as FdpStorage
           fdp.account.createWallet()
           fdp1.account.createWallet()
-          await window.topUpAddress(fdp)
-          await window.topUpAddress(fdp1)
 
-          await fdp.account.register(user.username, user.password)
-          await fdp1.account.register(user1.username, user1.password)
           await fdp.personalStorage.create(pod)
           await fdp1.personalStorage.create(pod1)
           await fdp.file.uploadData(pod, fullFilenameSmallPath, contentSmall)
@@ -963,8 +826,6 @@ describe('Fair Data Protocol class - in browser', () => {
             files1,
           }
         },
-        jsonUser,
-        jsonUser1,
         pod,
         pod1,
         fullFilenameSmallPath,
