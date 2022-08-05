@@ -269,16 +269,19 @@ describe('Fair Data Protocol class - in browser', () => {
       const longPodName = generateRandomHexString(MAX_POD_NAME_LENGTH + 1)
       const commaPodName = generateRandomHexString() + ', ' + generateRandomHexString()
 
-      const result = await page.evaluate(
+      const { result, mnemonic } = await page.evaluate(
         async (longPodName: string, commaPodName: string) => {
           const fdp = eval(await window.initFdp()) as FdpStorage
-          fdp.account.createWallet()
+          const wallet = fdp.account.createWallet()
 
           await window.shouldFail(fdp.personalStorage.create(longPodName), 'Pod name is too long')
           await window.shouldFail(fdp.personalStorage.create(commaPodName), 'Pod name cannot contain commas')
           await window.shouldFail(fdp.personalStorage.create(''), 'Pod name is too short')
 
-          return (await fdp.personalStorage.list()).getPods()
+          return {
+            result: (await fdp.personalStorage.list()).getPods(),
+            mnemonic: wallet.mnemonic!.phrase,
+          }
         },
         longPodName,
         commaPodName,
@@ -294,33 +297,39 @@ describe('Fair Data Protocol class - in browser', () => {
         { name: generateRandomHexString(), index: 5 },
       ]
 
-      const result1 = await page.evaluate(async (examples: JSONArray) => {
-        const fdp = eval(await window.initFdp()) as FdpStorage
-        const iterations = []
-        for (let i = 0; examples.length > i; i++) {
-          const example = examples[i] as unknown as { name: string; index: number }
-          const out = await fdp.personalStorage.create(example.name)
-          const list = await fdp.personalStorage.list()
+      const result1 = await page.evaluate(
+        async (examples: JSONArray, mnemonic: string) => {
+          const fdp = eval(await window.initFdp()) as FdpStorage
+          fdp.account.setAccountFromMnemonic(mnemonic)
 
-          iterations.push({
-            result: out,
-            example,
-            list,
-          })
-        }
+          const iterations = []
+          for (let i = 0; examples.length > i; i++) {
+            const example = examples[i] as unknown as { name: string; index: number }
+            const out = await fdp.personalStorage.create(example.name)
+            const list = await fdp.personalStorage.list()
 
-        const failPod = examples[0] as unknown as { name: string; index: number }
-        await window.shouldFail(
-          fdp.personalStorage.create(failPod.name),
-          `Pod with name "${failPod.name}" already exists`,
-        )
+            iterations.push({
+              result: out,
+              example,
+              list,
+            })
+          }
 
-        return iterations as unknown as {
-          result: JSONObject
-          example: { name: string; index: number }
-          list: JSONArray
-        }[]
-      }, examples as unknown as JSONArray)
+          const failPod = examples[0] as unknown as { name: string; index: number }
+          await window.shouldFail(
+            fdp.personalStorage.create(failPod.name),
+            `Pod with name "${failPod.name}" already exists`,
+          )
+
+          return iterations as unknown as {
+            result: JSONObject
+            example: { name: string; index: number }
+            list: JSONArray
+          }[]
+        },
+        examples as unknown as JSONArray,
+        mnemonic,
+      )
 
       expect(result1).toHaveLength(examples.length)
 
@@ -335,16 +344,20 @@ describe('Fair Data Protocol class - in browser', () => {
       const podName1 = generateRandomHexString()
       const notExistsPod = generateRandomHexString()
 
-      let list = await page.evaluate(
+      const { list, mnemonic } = await page.evaluate(
         async (podName: string, podName1: string, notExistsPod: string) => {
           const fdp = eval(await window.initFdp()) as FdpStorage
+          const wallet = fdp.account.createWallet()
 
           await fdp.personalStorage.create(podName)
           await fdp.personalStorage.create(podName1)
 
           await window.shouldFail(fdp.personalStorage.delete(notExistsPod), `Pod "${notExistsPod}" does not exist`)
 
-          return (await fdp.personalStorage.list()).getPods()
+          return {
+            list: (await fdp.personalStorage.list()).getPods(),
+            mnemonic: wallet.mnemonic.phrase,
+          }
         },
         podName,
         podName1,
@@ -353,25 +366,35 @@ describe('Fair Data Protocol class - in browser', () => {
 
       expect(list).toHaveLength(2)
 
-      list = await page.evaluate(async (user: TestUser, podName: string) => {
-        const fdp = eval(await window.initFdp()) as FdpStorage
+      const list2 = await page.evaluate(
+        async (podName: string, mnemonic: string) => {
+          const fdp = eval(await window.initFdp()) as FdpStorage
+          fdp.account.setAccountFromMnemonic(mnemonic)
 
-        await fdp.personalStorage.delete(podName)
+          await fdp.personalStorage.delete(podName)
 
-        return (await fdp.personalStorage.list()).getPods()
-      }, podName)
+          return (await fdp.personalStorage.list()).getPods()
+        },
+        podName,
+        mnemonic,
+      )
 
-      expect(list).toHaveLength(1)
+      expect(list2).toHaveLength(1)
 
-      list = await page.evaluate(async (user: TestUser, podName: string) => {
-        const fdp = eval(await window.initFdp()) as FdpStorage
+      const list3 = await page.evaluate(
+        async (podName: string, mnemonic: string) => {
+          const fdp = eval(await window.initFdp()) as FdpStorage
+          fdp.account.setAccountFromMnemonic(mnemonic)
 
-        await fdp.personalStorage.delete(podName)
+          await fdp.personalStorage.delete(podName)
 
-        return (await fdp.personalStorage.list()).getPods()
-      }, podName1)
+          return (await fdp.personalStorage.list()).getPods()
+        },
+        podName1,
+        mnemonic,
+      )
 
-      expect(list).toHaveLength(0)
+      expect(list3).toHaveLength(0)
     })
 
     it('should share a pod', async () => {
@@ -379,6 +402,7 @@ describe('Fair Data Protocol class - in browser', () => {
 
       const { sharedReference, sharedData, walletAddress } = await page.evaluate(async (podName: string) => {
         const fdp = eval(await window.initFdp()) as FdpStorage
+        const wallet = fdp.account.createWallet()
 
         await fdp.personalStorage.create(podName)
         const sharedReference = await fdp.personalStorage.share(podName)
@@ -387,7 +411,7 @@ describe('Fair Data Protocol class - in browser', () => {
         return {
           sharedReference,
           sharedData,
-          walletAddress: fdp.account.wallet!.address,
+          walletAddress: wallet.address,
         }
       }, podName)
 
@@ -402,6 +426,7 @@ describe('Fair Data Protocol class - in browser', () => {
 
       const { sharedReference, sharedData, walletAddress } = await page.evaluate(async (podName: string) => {
         const fdp = eval(await window.initFdp()) as FdpStorage
+        const wallet = fdp.account.createWallet()
 
         await fdp.personalStorage.create(podName)
         const sharedReference = await fdp.personalStorage.share(podName)
@@ -410,7 +435,7 @@ describe('Fair Data Protocol class - in browser', () => {
         return {
           sharedReference,
           sharedData,
-          walletAddress: fdp.account.wallet!.address,
+          walletAddress: wallet.address,
         }
       }, podName)
 
