@@ -153,22 +153,16 @@ describe('Fair Data Protocol class', () => {
   describe('Pods', () => {
     it('should get empty pods list', async () => {
       const fdp = createFdp()
-      const user = generateUser(fdp)
-      await topUpAddress(fdp)
+      generateUser(fdp)
 
-      await fdp.account.register(user.username, user.password)
       const pods = (await fdp.personalStorage.list()).getPods()
       expect(pods).toHaveLength(0)
     })
 
     it('should create pods', async () => {
       const fdp = createFdp()
-      const user = generateUser(fdp)
-      await topUpAddress(fdp)
+      generateUser(fdp)
 
-      await fdp.account.register(user.username, user.password)
-      // login isn't required in general, but here it required as it reproduces user workflow after registration
-      await fdp.account.login(user.username, user.password)
       let list = (await fdp.personalStorage.list()).getPods()
       expect(list).toHaveLength(0)
 
@@ -204,10 +198,7 @@ describe('Fair Data Protocol class', () => {
 
     it('should delete pods', async () => {
       const fdp = createFdp()
-      const user = generateUser(fdp)
-      await topUpAddress(fdp)
-
-      await fdp.account.register(user.username, user.password)
+      generateUser(fdp)
 
       const podName = generateRandomHexString()
       const podName1 = generateRandomHexString()
@@ -231,9 +222,6 @@ describe('Fair Data Protocol class', () => {
     it('should share a pod', async () => {
       const fdp = createFdp()
       const user = generateUser(fdp)
-      await topUpAddress(fdp)
-
-      await fdp.account.register(user.username, user.password)
 
       const podName = generateRandomHexString()
       await fdp.personalStorage.create(podName)
@@ -248,9 +236,7 @@ describe('Fair Data Protocol class', () => {
     it('should receive shared pod info', async () => {
       const fdp = createFdp()
       const user = generateUser(fdp)
-      await topUpAddress(fdp)
 
-      await fdp.account.register(user.username, user.password)
       const podName = generateRandomHexString()
       await fdp.personalStorage.create(podName)
       const sharedReference = await fdp.personalStorage.share(podName)
@@ -264,13 +250,9 @@ describe('Fair Data Protocol class', () => {
     it('should save shared pod', async () => {
       const fdp = createFdp()
       const fdp1 = createFdp()
-      const user = generateUser(fdp)
-      const user1 = generateUser(fdp1)
-      await topUpAddress(fdp)
-      await topUpAddress(fdp1)
+      generateUser(fdp)
+      generateUser(fdp1)
 
-      await fdp.account.register(user.username, user.password)
-      await fdp1.account.register(user1.username, user1.password)
       const podName = generateRandomHexString()
       await fdp.personalStorage.create(podName)
       const sharedReference = await fdp.personalStorage.share(podName)
@@ -316,15 +298,13 @@ describe('Fair Data Protocol class', () => {
   describe('Directory', () => {
     it('should create new directory', async () => {
       const fdp = createFdp()
-      const user = generateUser(fdp)
+      generateUser(fdp)
       const pod = generateRandomHexString()
       const directoryName = generateRandomHexString()
       const directoryFull = '/' + directoryName
       const directoryName1 = generateRandomHexString()
       const directoryFull1 = '/' + directoryName + '/' + directoryName1
-      await topUpAddress(fdp)
 
-      await fdp.account.register(user.username, user.password)
       await fdp.personalStorage.create(pod)
       await expect(fdp.directory.create(pod, directoryFull1)).rejects.toThrow('Parent directory does not exist')
       await fdp.directory.create(pod, directoryFull)
@@ -346,13 +326,11 @@ describe('Fair Data Protocol class', () => {
 
     it('should delete a directory', async () => {
       const fdp = createFdp()
-      const user = generateUser(fdp)
+      generateUser(fdp)
       const pod = generateRandomHexString()
       const directoryName = generateRandomHexString()
       const directoryFull = '/' + directoryName
-      await topUpAddress(fdp)
 
-      await fdp.account.register(user.username, user.password)
       await fdp.personalStorage.create(pod)
       await fdp.directory.create(pod, directoryFull)
       const list = await fdp.directory.read(pod, '/', true)
@@ -367,15 +345,13 @@ describe('Fair Data Protocol class', () => {
   describe('File', () => {
     it('should upload small text data as a file', async () => {
       const fdp = createFdp()
-      const user = generateUser(fdp)
+      generateUser(fdp)
       const pod = generateRandomHexString()
       const fileSizeSmall = 100
       const contentSmall = generateRandomHexString(fileSizeSmall)
       const filenameSmall = generateRandomHexString() + '.txt'
       const fullFilenameSmallPath = '/' + filenameSmall
-      await topUpAddress(fdp)
 
-      await fdp.account.register(user.username, user.password)
       await fdp.personalStorage.create(pod)
       await fdp.file.uploadData(pod, fullFilenameSmallPath, contentSmall)
       await expect(fdp.file.uploadData(pod, fullFilenameSmallPath, contentSmall)).rejects.toThrow(
@@ -392,7 +368,7 @@ describe('Fair Data Protocol class', () => {
 
     it('should upload big text data as a file', async () => {
       const fdp = createFdp()
-      const user = generateUser(fdp)
+      generateUser(fdp)
       const pod = generateRandomHexString()
       const incorrectPod = generateRandomHexString()
       const fileSizeBig = 5000005
@@ -400,9 +376,7 @@ describe('Fair Data Protocol class', () => {
       const filenameBig = generateRandomHexString() + '.txt'
       const fullFilenameBigPath = '/' + filenameBig
       const incorrectFullPath = fullFilenameBigPath + generateRandomHexString()
-      await topUpAddress(fdp)
 
-      await fdp.account.register(user.username, user.password)
       await fdp.personalStorage.create(pod)
       await expect(fdp.file.uploadData(incorrectPod, fullFilenameBigPath, contentBig)).rejects.toThrow(
         `Pod "${incorrectPod}" does not exist`,
@@ -420,15 +394,13 @@ describe('Fair Data Protocol class', () => {
 
     it('should delete a file', async () => {
       const fdp = createFdp()
-      const user = generateUser(fdp)
+      generateUser(fdp)
       const pod = generateRandomHexString()
       const fileSizeSmall = 100
       const contentSmall = generateRandomHexString(fileSizeSmall)
       const filenameSmall = generateRandomHexString() + '.txt'
       const fullFilenameSmallPath = '/' + filenameSmall
-      await topUpAddress(fdp)
 
-      await fdp.account.register(user.username, user.password)
       await fdp.personalStorage.create(pod)
       await fdp.file.uploadData(pod, fullFilenameSmallPath, contentSmall)
 
@@ -442,15 +414,13 @@ describe('Fair Data Protocol class', () => {
 
     it('should share a file', async () => {
       const fdp = createFdp()
-      const user = generateUser(fdp)
+      generateUser(fdp)
       const pod = generateRandomHexString()
       const fileSizeSmall = 100
       const contentSmall = generateRandomHexString(fileSizeSmall)
       const filenameSmall = generateRandomHexString() + '.txt'
       const fullFilenameSmallPath = '/' + filenameSmall
-      await topUpAddress(fdp)
 
-      await fdp.account.register(user.username, user.password)
       await fdp.personalStorage.create(pod)
       await fdp.file.uploadData(pod, fullFilenameSmallPath, contentSmall)
 
@@ -463,15 +433,13 @@ describe('Fair Data Protocol class', () => {
 
     it('should receive information about shared file', async () => {
       const fdp = createFdp()
-      const user = generateUser(fdp)
+      generateUser(fdp)
       const pod = generateRandomHexString()
       const fileSizeSmall = 100
       const contentSmall = generateRandomHexString(fileSizeSmall)
       const filenameSmall = generateRandomHexString() + '.txt'
       const fullFilenameSmallPath = '/' + filenameSmall
-      await topUpAddress(fdp)
 
-      await fdp.account.register(user.username, user.password)
       await fdp.personalStorage.create(pod)
       await fdp.file.uploadData(pod, fullFilenameSmallPath, contentSmall)
 
@@ -489,19 +457,15 @@ describe('Fair Data Protocol class', () => {
     it('should save shared file to a pod', async () => {
       const fdp = createFdp()
       const fdp1 = createFdp()
-      const user = generateUser(fdp)
-      const user1 = generateUser(fdp1)
+      generateUser(fdp)
+      generateUser(fdp1)
       const pod = generateRandomHexString()
       const pod1 = generateRandomHexString()
       const fileSizeSmall = 100
       const contentSmall = generateRandomHexString(fileSizeSmall)
       const filenameSmall = generateRandomHexString() + '.txt'
       const fullFilenameSmallPath = '/' + filenameSmall
-      await topUpAddress(fdp)
-      await topUpAddress(fdp1)
 
-      await fdp.account.register(user.username, user.password)
-      await fdp1.account.register(user1.username, user1.password)
       await fdp.personalStorage.create(pod)
       await fdp1.personalStorage.create(pod1)
       await fdp.file.uploadData(pod, fullFilenameSmallPath, contentSmall)
