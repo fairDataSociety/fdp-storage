@@ -147,7 +147,10 @@ describe('Fair Data Protocol class - in browser', () => {
         await window.topUpAddress(fdp)
 
         await fdp.account.register(user.username, user.password)
-        await window.shouldFail(fdp.account.register(user.username, user.password), 'User account already uploaded')
+        await window.shouldFail(
+          fdp.account.register(user.username, user.password),
+          `ENS: Username ${user.username} is not available`,
+        )
       }, generateUser() as unknown as JSONObject)
     })
 
