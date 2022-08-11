@@ -92,7 +92,9 @@ describe('Fair Data Protocol class', () => {
       await topUpAddress(fdp)
 
       await fdp.account.register(user.username, user.password)
-      await expect(fdp.account.register(user.username, user.password)).rejects.toThrow('User account already uploaded')
+      await expect(fdp.account.register(user.username, user.password)).rejects.toThrow(
+        `ENS: Username ${user.username} is not available`,
+      )
     })
 
     it('should migrate v1 user to v2', async () => {
