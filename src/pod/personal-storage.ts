@@ -146,6 +146,8 @@ export class PersonalStorage {
   /**
    * Gets shared pod information
    *
+   * Can be executed without authentication
+   *
    * @param reference swarm reference with shared pod information
    *
    * @returns shared pod information

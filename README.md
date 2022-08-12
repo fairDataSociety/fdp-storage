@@ -158,7 +158,7 @@ const shareReference = await fdp.personalStorage.share('my-new-pod')
 console.log(shareReference) // prints share reference of a pod
 ```
 
-Getting information about shared pod
+Getting information about shared pod. Can work with or without authentication.
 
 ```js
 await fdp.personalStorage.getSharedInfo(shareReference)
@@ -235,6 +235,20 @@ Save shared file to a pod
 
 ```js
 await fdp.file.saveShared('my-new-pod', '/', shareReference)
+```
+
+Download shared file. Can work with or without authentication.
+
+```js
+const data = await fdp.file.downloadShared(shareReference)
+console.log(data.text()) // print content as a text
+```
+
+Download file from a shared pod. Can work with or without authentication.
+
+```js
+const data = await fdp.file.downloadFromSharedPod(podShareReference, '/myfile.txt')
+console.log(data.text()) // print content as a text
 ```
 
 Getting list of files and directories with recursion or not
