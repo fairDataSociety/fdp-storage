@@ -102,7 +102,6 @@ export class File {
     assertAccount(this.accountData)
     assertFullPathWithName(fullPath)
     assertPodName(podName)
-
     const connection = this.accountData.connection
     const { podAddress, pod } = await getExtendedPodsListByAccountData(this.accountData, podName)
     const meta = (await getRawMetadata(connection.bee, fullPath, podAddress, pod.password)).metadata
@@ -144,7 +143,6 @@ export class File {
     options?: FileReceiveOptions,
   ): Promise<FileMetadata> {
     assertPodName(podName)
-
     const sharedInfo = await this.getSharedInfo(reference)
     const connection = this.accountData.connection
     const { podWallet, pod } = await getExtendedPodsListByAccountData(this.accountData, podName)
@@ -187,7 +185,6 @@ export class File {
    */
   async downloadFromSharedPod(podReference: string | EncryptedReference, fullPath: string): Promise<Data> {
     assertEncryptedReference(podReference)
-
     const info = await getSharedPodInfo(this.accountData.connection.bee, podReference)
     const data = await downloadData(
       this.accountData.connection.bee,
