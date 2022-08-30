@@ -12,7 +12,6 @@ import {
   HD_PATH,
 } from './utils'
 import { Connection } from '../connection/connection'
-import { getBatchId } from '../utils/batch'
 import CryptoJS from 'crypto-js'
 
 /**
@@ -123,7 +122,7 @@ export async function uploadPortableAccount(
   const topic = createCredentialsTopic(username, password)
   const socWriter = connection.bee.makeSOCWriter(privateKey)
 
-  return socWriter.upload(await getBatchId(connection.beeDebug), topic, encryptedBytes)
+  return socWriter.upload(connection.postageBatchId, topic, encryptedBytes)
 }
 
 /**

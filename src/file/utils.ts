@@ -1,6 +1,5 @@
 import { Connection } from '../connection/connection'
 import { Bee, Reference, RequestOptions, UploadResult, Utils } from '@ethersphere/bee-js'
-import { getBatchId } from '../utils/batch'
 import { PathInfo } from '../pod/utils'
 import { Blocks, FileShareInfo, RawBlocks } from './types'
 import { rawBlocksToBlocks } from './adapter'
@@ -53,7 +52,7 @@ export function assertFullPathWithName(value: unknown): asserts value is string 
  * @param data data to upload
  */
 export async function uploadBytes(connection: Connection, data: Uint8Array): Promise<UploadResult> {
-  return connection.bee.uploadData(await getBatchId(connection.beeDebug), data, {
+  return connection.bee.uploadData(connection.postageBatchId, data, {
     pin: true,
     encrypt: true,
   })

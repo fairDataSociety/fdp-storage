@@ -1,12 +1,13 @@
 import { join } from 'path'
 import {
-  beeDebugUrl,
   beeUrl,
   createFdp,
   createUsableBatch,
   fdpOptions,
   generateRandomHexString,
   generateUser,
+  getCachedBatchId,
+  setCachedBatchId,
   TestUser,
 } from '../utils'
 import '../../src/index'
@@ -17,14 +18,16 @@ import { MAX_POD_NAME_LENGTH } from '../../src/pod/utils'
 import { createUserV1 } from '../../src/account/account'
 import { PodShareInfo, RawFileMetadata } from '../../src/pod/types'
 import { FileShareInfo } from '../../src/file/types'
+import { BatchId } from '@ethersphere/bee-js'
 
 jest.setTimeout(200000)
 describe('Fair Data Protocol class - in browser', () => {
   const BEE_URL = beeUrl()
-  const BEE_DEBUG_URL = beeDebugUrl()
+  let batchId: BatchId
 
   beforeAll(async () => {
-    await createUsableBatch()
+    batchId = await createUsableBatch()
+    setCachedBatchId(batchId)
     await jestPuppeteer.resetPage()
     const testPage = join(__dirname, '..', 'testpage', 'testpage.html')
     await page.goto(`file://${testPage}`)
@@ -55,7 +58,7 @@ describe('Fair Data Protocol class - in browser', () => {
             }
 
             const account = (await fdp.ens.provider.listAccounts())[0]
-            await fdp.ens.provider.send('eth_sendTransaction', [
+            const txHash = await fdp.ens.provider.send('eth_sendTransaction', [
               {
                 from: account,
                 to: fdp.account.wallet.address,
@@ -63,25 +66,23 @@ describe('Fair Data Protocol class - in browser', () => {
               },
             ])
 
-            await fdp.ens.provider.send('evm_mine', [1])
+            await fdp.ens.provider.waitForTransaction(txHash)
         }
 
-        new window.fdp.FdpStorage('${BEE_URL}', '${BEE_DEBUG_URL}', ${JSON.stringify(fdpOptions)})`,
+        new window.fdp.FdpStorage('${BEE_URL}', '${batchId}', ${JSON.stringify(fdpOptions)})`,
     )
   })
 
   it('should strip trailing slash', async () => {
-    const urls = await page.evaluate(async () => {
-      const fdp = new window.fdp.FdpStorage('http://localhost:1633/', 'http://localhost:1635/')
+    const urls = await page.evaluate(async (batchId: BatchId) => {
+      const fdp = new window.fdp.FdpStorage('http://localhost:1633/', batchId)
 
       return {
         beeUrl: fdp.connection.bee.url,
-        beeDebugUrl: fdp.connection.beeDebug.url,
       }
-    })
+    }, getCachedBatchId())
 
     expect(urls.beeUrl).toBe('http://localhost:1633')
-    expect(urls.beeDebugUrl).toBe('http://localhost:1635')
   })
 
   describe('Registration', () => {

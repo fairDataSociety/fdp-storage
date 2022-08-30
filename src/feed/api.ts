@@ -4,7 +4,6 @@ import { getId } from './handler'
 import { lookup } from './lookup/linear'
 import { Epoch, HIGHEST_LEVEL } from './lookup/epoch'
 import { bytesToHex } from '../utils/hex'
-import { getBatchId } from '../utils/batch'
 import { getUnixTimestamp } from '../utils/time'
 import { LookupAnswer } from './types'
 import { Connection } from '../connection/connection'
@@ -57,5 +56,5 @@ export async function writeFeedData(
   const id = getId(topicHash, epoch.time, epoch.level)
   const socWriter = connection.bee.makeSOCWriter(privateKey)
 
-  return socWriter.upload(await getBatchId(connection.beeDebug), id, data)
+  return socWriter.upload(connection.postageBatchId, id, data)
 }

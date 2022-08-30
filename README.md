@@ -18,6 +18,8 @@
 - [Contribute](#contribute)
   - [Setup](#setup)
   - [Test](#test)
+  - [Compile code](#compile-code)
+  - [System environment](#system-environment)
 - [License](#license)
 
 ## Install
@@ -25,13 +27,13 @@
 ### npm
 
 ```sh
-> npm install @fairdatasociety/fdp-storage --save
+npm install @fairdatasociety/fdp-storage
 ```
 
 ### yarn
 
 ```sh
-> yarn add @fairdatasociety/fdp-storage
+yarn add @fairdatasociety/fdp-storage
 ```
 
 ### Use in Node.js and browser
@@ -68,7 +70,8 @@ Creating FDP account
 ```js
 import { FdpStorage } from '@fairdatasociety/fdp-storage'
 
-const fdp = new FdpStorage('http://localhost:1633', 'http://localhost:1635')
+const batchId = 'GET_BATCH_ID_FROM_YOUR_NODE' // fill it with batch id from your Bee node
+const fdp = new FdpStorage('http://localhost:1633', batchId)
 const wallet = fdp.account.createWallet() // after creating a wallet, the user must top up its balance before registration
 await fdp.account.register('myusername', 'mypassword')
 ```
@@ -257,6 +260,14 @@ In order to compile NodeJS code run
 or for Browsers
 
 `npm run compile:browser`
+
+### System environment
+
+With specific system environment variables you can alter the behaviour of the tests.
+
+* `BEE_API_URL` - API URL of Bee client
+* `BEE_DEBUG_API_URL` - Debug API URL of Bee client
+* `BEE_BATCH_ID` - Batch ID for data uploading
 
 ## Maintainers
 
