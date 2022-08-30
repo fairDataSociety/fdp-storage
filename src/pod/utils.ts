@@ -20,7 +20,7 @@ import { AccountData } from '../account/account-data'
 
 export const META_VERSION = 1
 export const MAX_PODS_COUNT = 65536
-export const MAX_POD_NAME_LENGTH = 25
+export const MAX_POD_NAME_LENGTH = 64
 
 /**
  * Information about pods list
