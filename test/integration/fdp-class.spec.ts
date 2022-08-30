@@ -1,4 +1,4 @@
-import { FdpStorage } from '../../src'
+import { FdpContracts, FdpStorage } from '../../src'
 import {
   createFdp,
   createUsableBatch,
@@ -49,6 +49,11 @@ describe('Fair Data Protocol class', () => {
 
   it('check default batch usability', async () => {
     expect(await isUsableBatchExists()).toBe(true)
+  })
+
+  it('fdp-contracts is not empty', async () => {
+    expect(FdpContracts).toBeDefined()
+    expect(FdpContracts.ENS).toBeDefined()
   })
 
   describe('Registration', () => {
