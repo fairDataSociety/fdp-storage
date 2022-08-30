@@ -1,4 +1,4 @@
-import { Bee, BeeDebug } from '@ethersphere/bee-js'
+import { BatchId, Bee } from '@ethersphere/bee-js'
 import { AccountData } from './account/account-data'
 import { PersonalStorage } from './pod/personal-storage'
 import { Connection } from './connection/connection'
@@ -15,8 +15,8 @@ export class FdpStorage {
   public readonly file: File
   public readonly ens: ENS
 
-  constructor(beeUrl: string, beeDebugUrl: string, options?: Options) {
-    this.connection = new Connection(new Bee(beeUrl), new BeeDebug(beeDebugUrl), options)
+  constructor(beeUrl: string, postageBatchId: BatchId, options?: Options) {
+    this.connection = new Connection(new Bee(beeUrl), postageBatchId, options)
     this.ens = new ENS(options?.ensOptions, null, options?.ensDomain)
     this.account = new AccountData(this.connection, this.ens)
     this.personalStorage = new PersonalStorage(this.account)
