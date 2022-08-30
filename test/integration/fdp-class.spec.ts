@@ -18,7 +18,7 @@ async function topUpAddress(fdp: FdpStorage) {
   }
 
   const account = (await fdp.ens.provider.listAccounts())[0]
-  await fdp.ens.provider.send('eth_sendTransaction', [
+  const txHash = await fdp.ens.provider.send('eth_sendTransaction', [
     {
       from: account,
       to: fdp.account.wallet!.address,
@@ -26,7 +26,7 @@ async function topUpAddress(fdp: FdpStorage) {
     },
   ])
 
-  await fdp.ens.provider.send('evm_mine', [1])
+  await fdp.ens.provider.waitForTransaction(txHash)
 }
 
 jest.setTimeout(200000)

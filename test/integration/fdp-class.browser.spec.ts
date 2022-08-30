@@ -55,7 +55,7 @@ describe('Fair Data Protocol class - in browser', () => {
             }
 
             const account = (await fdp.ens.provider.listAccounts())[0]
-            await fdp.ens.provider.send('eth_sendTransaction', [
+            const txHash = await fdp.ens.provider.send('eth_sendTransaction', [
               {
                 from: account,
                 to: fdp.account.wallet.address,
@@ -63,7 +63,7 @@ describe('Fair Data Protocol class - in browser', () => {
               },
             ])
 
-            await fdp.ens.provider.send('evm_mine', [1])
+            await fdp.ens.provider.waitForTransaction(txHash)
         }
 
         new window.fdp.FdpStorage('${BEE_URL}', '${BEE_DEBUG_URL}', ${JSON.stringify(fdpOptions)})`,
