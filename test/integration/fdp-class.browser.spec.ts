@@ -74,13 +74,13 @@ describe('Fair Data Protocol class - in browser', () => {
   })
 
   it('should strip trailing slash', async () => {
-    const urls = await page.evaluate(async () => {
-      const fdp = new window.fdp.FdpStorage('http://localhost:1633/', getCachedBatchId())
+    const urls = await page.evaluate(async (batchId: BatchId) => {
+      const fdp = new window.fdp.FdpStorage('http://localhost:1633/', batchId)
 
       return {
         beeUrl: fdp.connection.bee.url,
       }
-    })
+    }, getCachedBatchId())
 
     expect(urls.beeUrl).toBe('http://localhost:1633')
   })
