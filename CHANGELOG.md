@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.5.0](https://github.com/fairDataSociety/fdp-storage/compare/v0.4.0...v0.5.0) (2022-08-30)
+
+
+### ⚠ BREAKING CHANGES
+
+* beeDebug param replaced with postageBatchId (#132)
+
+### Features
+
+* beeDebug param replaced with postageBatchId ([#132](https://github.com/fairDataSociety/fdp-storage/issues/132)) ([3725d2c](https://github.com/fairDataSociety/fdp-storage/commit/3725d2c6add8c542648e7302907d68004005e331))
+
+
+### Bug Fixes
+
+* exposing fdp-contracts ([#133](https://github.com/fairDataSociety/fdp-storage/issues/133)) ([1d7af19](https://github.com/fairDataSociety/fdp-storage/commit/1d7af1944e23e4887882c70730d3e81ce2cd9f35))
+
 ## [0.4.0](https://github.com/fairDataSociety/fdp-storage/compare/v0.3.0...v0.4.0) (2022-08-11)
 
 
