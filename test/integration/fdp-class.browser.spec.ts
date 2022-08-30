@@ -85,6 +85,20 @@ describe('Fair Data Protocol class - in browser', () => {
     expect(urls.beeUrl).toBe('http://localhost:1633')
   })
 
+  it('fdp-contracts is not empty', async () => {
+    const result = await page.evaluate(async () => {
+      const fdpContracts = window.fdp.FdpContracts
+
+      return {
+        isFdpContractsEmpty: !Boolean(fdpContracts),
+        isENSEmpty: !Boolean(fdpContracts.ENS),
+      }
+    })
+
+    expect(result.isFdpContractsEmpty).toBe(false)
+    expect(result.isENSEmpty).toBe(false)
+  })
+
   describe('Registration', () => {
     it('should create account wallet', async () => {
       const result = await page.evaluate(async () => {
