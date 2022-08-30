@@ -263,7 +263,7 @@ or for Browsers
 
 ### System environment
 
-With specific system environment variables you can alter the behaviour of the CLI
+With specific system environment variables you can alter the behaviour of the tests.
 
 * `BEE_API_URL` - API URL of Bee client
 * `BEE_DEBUG_API_URL` - Debug API URL of Bee client
