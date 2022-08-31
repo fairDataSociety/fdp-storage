@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.1](https://github.com/fairDataSociety/fdp-storage/compare/v0.5.0...v0.5.1) (2022-08-31)
+
+
+### Bug Fixes
+
+* raise pod name limit ([#139](https://github.com/fairDataSociety/fdp-storage/issues/139)) ([e50c8a2](https://github.com/fairDataSociety/fdp-storage/commit/e50c8a210d4880854cd149877db2f99b7f58bb47))
+
 ## [0.5.0](https://github.com/fairDataSociety/fdp-storage/compare/v0.4.0...v0.5.0) (2022-08-30)
 
 
