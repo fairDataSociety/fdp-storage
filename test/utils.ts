@@ -1,8 +1,9 @@
 import crypto from 'crypto'
 import { BATCH_ID_HEX_LENGTH, BatchId, BeeDebug, Utils } from '@ethersphere/bee-js'
 import { FdpStorage } from '../src'
-import { Wallet } from 'ethers'
-import { Environments, getEnvironmentConfig } from '@fairdatasociety/fdp-contracts'
+import { utils, Wallet } from 'ethers'
+import { ENS, Environments, getEnvironmentConfig } from '@fairdatasociety/fdp-contracts'
+import axios from 'axios'
 
 export interface TestUser {
   username: string
@@ -14,9 +15,9 @@ export interface TestUser {
 export const USERNAME_LENGTH = 16
 export const PASSWORD_LENGTH = 6
 export const GET_FEED_DATA_TIMEOUT = 1000
-export const defaultBatchId = '0000000000000000000000000000000000000000000000000000000000000000'
+export const DEFAULT_BATCH_ID = '0000000000000000000000000000000000000000000000000000000000000000'
 
-let cachedBatchId = defaultBatchId
+let cachedBatchId = DEFAULT_BATCH_ID
 
 /**
  * Generate new user info
@@ -180,4 +181,57 @@ export function getCachedBatchId(): BatchId {
   assertBatchId(cachedBatchId)
 
   return cachedBatchId
+}
+
+export function fairOSUrl(): string {
+  return process.env.FAIROS_API_URL || 'http://localhost:9090/'
+}
+
+/**
+ * Waits until FairOS API return message about readiness
+ */
+export async function waitFairOS(): Promise<void> {
+  const url = fairOSUrl()
+  for (let i = 0; i <= 100; i++) {
+    let text
+    try {
+      text = await (await axios.get(url)).data
+      // eslint-disable-next-line no-empty
+    } catch (e) {}
+
+    if (text === 'OK\n') {
+      return
+    } else if (text) {
+      throw new Error('Incorrect FairOS API answer')
+    }
+
+    await sleep(1000)
+  }
+}
+
+/**
+ * Top up balance for address in fdp instance
+ */
+export async function topUpFdp(fdp: FdpStorage): Promise<void> {
+  if (!fdp.account.wallet?.address) {
+    throw new Error('Address is not defined')
+  }
+
+  await topUpAddress(fdp.ens, fdp.account.wallet?.address)
+}
+
+/**
+ * Top up balance for address
+ */
+export async function topUpAddress(ens: ENS, address: string, amountInEther = '0.01'): Promise<void> {
+  const account = (await ens.provider.listAccounts())[0]
+  const txHash = await ens.provider.send('eth_sendTransaction', [
+    {
+      from: account,
+      to: address,
+      value: utils.hexlify(utils.parseEther(amountInEther)),
+    },
+  ])
+
+  await ens.provider.waitForTransaction(txHash)
 }
