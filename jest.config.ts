@@ -55,6 +55,11 @@ export default async (): Promise<Config.InitialOptions> => {
         preset: 'jest-puppeteer',
       },
       {
+        displayName: 'node:fairos',
+        testEnvironment: 'node',
+        testRegex: 'test/integration/.*\\.fairos\\.spec\\.ts',
+      },
+      {
         displayName: 'node:integration',
         testEnvironment: 'node',
         testRegex: 'test/integration/((?!\\.browser).)*\\.spec\\.ts',
