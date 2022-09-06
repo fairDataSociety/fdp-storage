@@ -45,6 +45,7 @@
     "test:integration": "npm run compile:browser && jest --verbose --selectProjects=node:integration dom:integration --config=jest.config.ts",
     "test:unit": "jest --verbose --selectProjects=node:unit --config=jest.config.ts ",
     "test:node": "jest --verbose --selectProjects=node:unit node:integration --config=jest.config.ts",
+    "test:fairos": "jest --verbose --selectProjects=node:fairos --config=jest.config.ts",
     "test:browser": "npm run test:integration:browser",
     "check:types": "tsc --project tsconfig.test.json",
     "lint": "eslint --fix \"src/**/*.ts\" \"test/**/*.ts\" && prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
