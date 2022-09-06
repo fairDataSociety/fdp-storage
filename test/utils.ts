@@ -194,7 +194,7 @@ export function getCachedBatchId(): BatchId {
  * Returns FairOS API URL
  */
 export function fairOSUrl(): string {
-  return process.env.FAIROS_API_URL || 'http://localhost:9090/'
+  return process.env.FAIROS_API_URL || 'http://127.0.0.1:9090/'
 }
 
 /**
@@ -215,8 +215,10 @@ export async function waitFairOS(): Promise<void> {
       throw new Error('Incorrect FairOS API answer')
     }
 
-    await sleep(1000)
+    await sleep(3000)
   }
+
+  throw new Error('FairOS API is not ready')
 }
 
 /**
