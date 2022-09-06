@@ -78,7 +78,7 @@ jobs:
         run: npm install -g @fairdatasociety/fdp-play
 
       - name: Run fdp-play
-        run: fdp-play start -d --bee-version $BEE_VERSION
+        run: fdp-play start -d --fairos --bee-version $BEE_VERSION
 
       ## Try getting the node modules from cache, if failed npm ci
       - uses: actions/cache@v2
