@@ -183,6 +183,9 @@ export function getCachedBatchId(): BatchId {
   return cachedBatchId
 }
 
+/**
+ * Returns FairOS API URL
+ */
 export function fairOSUrl(): string {
   return process.env.FAIROS_API_URL || 'http://localhost:9090/'
 }

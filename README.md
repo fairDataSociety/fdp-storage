@@ -268,6 +268,7 @@ With specific system environment variables you can alter the behaviour of the te
 * `BEE_API_URL` - API URL of Bee client
 * `BEE_DEBUG_API_URL` - Debug API URL of Bee client
 * `BEE_BATCH_ID` - Batch ID for data uploading
+* `FAIROS_API_URL` - FairOS API URL
 
 ## Maintainers
 
