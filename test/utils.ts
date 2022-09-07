@@ -187,7 +187,7 @@ export function getCachedBatchId(): BatchId {
  * Returns FairOS API URL
  */
 export function fairOSUrl(): string {
-  return process.env.FAIROS_API_URL || 'http://127.0.0.1:9090/'
+  return process.env.FAIROS_API_URL || 'http://127.0.0.1:9090'
 }
 
 /**
@@ -198,7 +198,7 @@ export async function waitFairOS(): Promise<void> {
   for (let i = 0; i <= 100; i++) {
     let text
     try {
-      text = await (await axios.get(url)).data
+      text = (await axios.get(url)).data
       // eslint-disable-next-line no-empty
     } catch (e) {}
 
