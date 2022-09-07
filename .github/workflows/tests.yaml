@@ -99,7 +99,7 @@ jobs:
         if: steps.cache-npm.outputs.cache-hit != 'true'
         run: npm ci
 
-      - name: Run unit and integration tests for node
+      - name: Run unit and integration tests for FairOS
         run: npm run test:fairos -- --detectOpenHandles
 
   browser:
