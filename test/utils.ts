@@ -202,13 +202,18 @@ export function fairOSUrl(): string {
  */
 export async function waitFairOS(): Promise<void> {
   const url = fairOSUrl()
+  console.log('fairOSUrl', url)
   for (let i = 0; i <= 100; i++) {
     let text
     try {
       text = await (await axios.get(url)).data
       // eslint-disable-next-line no-empty
-    } catch (e) {}
+    } catch (e) {
+      console.log('waitFairOS error')
+      console.log(e)
+    }
 
+    console.log('waitFairOS text', text)
     if (text === 'OK\n') {
       return
     } else if (text) {
