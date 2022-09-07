@@ -14,13 +14,10 @@ import { Wallet, utils } from 'ethers'
 jest.setTimeout(200000)
 describe('Fair Data Protocol with FairOS-dfs', () => {
   beforeAll(async () => {
-    console.log('Creating usable batch...')
     const batchId = await createUsableBatch()
-    console.log('Batch created!')
     setCachedBatchId(batchId)
-    console.log('Wait fairos...')
+
     await waitFairOS()
-    console.log('Fairos is ready')
   })
 
   it('check default batch usability', async () => {
