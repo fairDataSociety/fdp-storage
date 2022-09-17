@@ -92,6 +92,9 @@ jobs:
       #   run: |
       #     mv dfs_v0.9.2_linux_amd64 dfs
       #     chmod +x dfs
+      - name: Sleep for 30 seconds
+        run: sleep 30s
+        shell: bash
       - name: Run fairos
         run: |
           curl -s 'http://localhost:1635/stamps' 
