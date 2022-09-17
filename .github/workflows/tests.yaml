@@ -92,25 +92,24 @@ jobs:
         run: |
           mv dfs_v0.9.2_linux_amd64 dfs
           chmod +x dfs
-      - name: Sleep for 30 seconds
-        run: sleep 30s
+      - name: Sleep for 10 seconds
+        run: sleep 10s
         shell: bash
       - name: withdraw
         run: |
           curl -X POST 'http://localhost:1635/chequebook/withdraw?amount=1000000000000000'
-      - name: Sleep for 10 seconds
-        run: sleep 10s
+      - name: Sleep for 5 seconds
+        run: sleep 5s
         shell: bash
       - name: Run stamps
         run: |
           curl -X POST 'localhost:1635/stamps/10000000/26'
-      - name: Sleep for 10 seconds
-        run: sleep 10s
+      - name: Sleep for 5 seconds
+        run: sleep 5s
         shell: bash
-      - name: Run stamps
+      - name: Run fairOS-dfs
         run: |
-          curl -s 'http://localhost:1635/stamps' | jq '.stamps| .[0] | .batchID'
-          export BATCH=$(curl -s 'http://fdp-play-queen:1635/stamps' | jq '.stamps| .[0] | .batchID') 
+          export BATCH=$(curl -s 'http://localhost:1635/stamps' | jq '.stamps| .[0] | .batchID') 
           echo $BATCH
           ./dfs server --network play --rpc http://localhost:9545 --beeApi http://localhost:1633 --postageBlockId $BATCH &
 
