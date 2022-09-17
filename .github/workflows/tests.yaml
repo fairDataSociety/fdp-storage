@@ -109,9 +109,9 @@ jobs:
         shell: bash
       - name: Run fairOS-dfs
         run: |
-          export BATCH=$(curl -s 'http://localhost:1635/stamps' | jq '.stamps| .[0] | .batchID') 
+          export BATCH=$(curl -s 'http://192.168.29.21:1635/stamps' | jq '.stamps| .[0] | .batchID' | tr -d '"')
           echo $BATCH
-          ./dfs server --network play --rpc http://localhost:9545 --beeApi http://localhost:1633 --postageBlockId $BATCH &
+          ./dfs server --network=play --rpc=http://localhost:9545 --beeApi=http://localhost:1633 --postageBlockId=$BATCH &
 
       # Try getting the node modules from cache, if failed npm ci
       - uses: actions/cache@v2
