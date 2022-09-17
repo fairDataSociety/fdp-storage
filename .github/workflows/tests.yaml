@@ -94,7 +94,6 @@ jobs:
       #     chmod +x dfs
       - name: Run fairos
         run: |
-          curl -s 'http://fdp-play-queen:1635/stamps' 
           curl -s 'http://localhost:1635/stamps' 
           # export BATCH=$(curl -s 'http://fdp-play-queen:1635/stamps' | jq '.stamps| .[0] | .batchID') 
           # echo $BATCH
