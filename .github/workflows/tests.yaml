@@ -85,13 +85,13 @@ jobs:
       - name: Run fdp-play
         run: fdp-play start -d --bee-version $BEE_VERSION
 
-      # - name: Download fairos
-      #   run: wget https://github.com/asabya/fairOS-dfs/releases/download/v0.9.2/dfs_v0.9.2_linux_amd64
+      - name: Download fairos
+        run: wget https://github.com/asabya/fairOS-dfs/releases/download/v0.9.2/dfs_v0.9.2_linux_amd64
       
-      # - name: Install fairos
-      #   run: |
-      #     mv dfs_v0.9.2_linux_amd64 dfs
-      #     chmod +x dfs
+      - name: Install fairos
+        run: |
+          mv dfs_v0.9.2_linux_amd64 dfs
+          chmod +x dfs
       - name: Sleep for 30 seconds
         run: sleep 30s
         shell: bash
@@ -110,26 +110,26 @@ jobs:
       - name: Run stamps
         run: |
           curl -s 'http://localhost:1635/stamps' | jq '.stamps| .[0] | .batchID'
-          # export BATCH=$(curl -s 'http://fdp-play-queen:1635/stamps' | jq '.stamps| .[0] | .batchID') 
-          # echo $BATCH
-          # ./dfs server --network play --rpc http://fdp-play-blockchain:9545 --beeApi http://fdp-play-queen:1633 --postageBlockId $BATCH &
+          export BATCH=$(curl -s 'http://fdp-play-queen:1635/stamps' | jq '.stamps| .[0] | .batchID') 
+          echo $BATCH
+          ./dfs server --network play --rpc http://localhost:9545 --beeApi http://localhost:1633 --postageBlockId $BATCH &
 
-      ## Try getting the node modules from cache, if failed npm ci
-      # - uses: actions/cache@v2
-      #   id: cache-npm
-      #   with:
-      #     path: node_modules
-      #     key: ${{ runner.os }}-node-${{ matrix.node }}-${{ hashFiles('**/package-lock.json') }}
-      #     restore-keys: |
-      #       ${{ runner.OS }}-node-${{ matrix.node }}-${{ env.cache-name }}-
-      #       ${{ runner.OS }}-node-${{ matrix.node }}-
+      # Try getting the node modules from cache, if failed npm ci
+      - uses: actions/cache@v2
+        id: cache-npm
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ matrix.node }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.OS }}-node-${{ matrix.node }}-${{ env.cache-name }}-
+            ${{ runner.OS }}-node-${{ matrix.node }}-
 
-      # - name: Install npm deps
-      #   if: steps.cache-npm.outputs.cache-hit != 'true'
-      #   run: npm ci
+      - name: Install npm deps
+        if: steps.cache-npm.outputs.cache-hit != 'true'
+        run: npm ci
 
-      # - name: Run unit and integration tests for FairOS
-      #   run: npm run test:fairos -- --detectOpenHandles
+      - name: Run unit and integration tests for FairOS
+        run: npm run test:fairos -- --detectOpenHandles
 
   # browser:
   #   runs-on: ubuntu-latest
