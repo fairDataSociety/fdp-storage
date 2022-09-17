@@ -97,7 +97,7 @@ jobs:
         shell: bash
       - name: withdraw
         run: |
-          curl -s 'http://localhost:1635/chequebook/withdraw?amount=1000000000000000'
+          curl -X POST 'http://localhost:1635/chequebook/withdraw?amount=1000000000000000'
       - name: Sleep for 10 seconds
         run: sleep 10s
         shell: bash
@@ -109,7 +109,7 @@ jobs:
         shell: bash
       - name: Run stamps
         run: |
-          curl -s 'http://localhost:1635/stamps' 
+          curl -s 'http://localhost:1635/stamps' | jq '.stamps| .[0] | .batchID'
           # export BATCH=$(curl -s 'http://fdp-play-queen:1635/stamps' | jq '.stamps| .[0] | .batchID') 
           # echo $BATCH
           # ./dfs server --network play --rpc http://fdp-play-blockchain:9545 --beeApi http://fdp-play-queen:1633 --postageBlockId $BATCH &
