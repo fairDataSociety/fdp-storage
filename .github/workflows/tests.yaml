@@ -95,7 +95,19 @@ jobs:
       - name: Sleep for 30 seconds
         run: sleep 30s
         shell: bash
-      - name: Run fairos
+      - name: withdraw
+        run: |
+          curl -s 'http://localhost:1635/chequebook/withdraw?amount=1000000000000000'
+      - name: Sleep for 10 seconds
+        run: sleep 10s
+        shell: bash
+      - name: Run stamps
+        run: |
+          curl -X POST 'localhost:1635/stamps/10000000/26'
+      - name: Sleep for 10 seconds
+        run: sleep 10s
+        shell: bash
+      - name: Run stamps
         run: |
           curl -s 'http://localhost:1635/stamps' 
           # export BATCH=$(curl -s 'http://fdp-play-queen:1635/stamps' | jq '.stamps| .[0] | .batchID') 
