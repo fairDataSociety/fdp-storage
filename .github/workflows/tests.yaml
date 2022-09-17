@@ -94,9 +94,9 @@ jobs:
           chmod +x dfs
       - name: Run fairos
         run: |
-          export BATCH=$(curl -s 'http://localhost:1635/stamps' | jq '.stamps| .[0] | .batchID') 
+          export BATCH=$(curl -s 'http://fdp-play-queen:1635/stamps' | jq '.stamps| .[0] | .batchID') 
           echo $BATCH
-          ./dfs server --network play --rpc http://localhost:9545 --beeApi http://localhost:1633 --postageBlockId $BATCH &
+          ./dfs server --network play --rpc http://fdp-play-blockchain:9545 --beeApi http://fdp-play-queen:1633 --postageBlockId $BATCH &
 
       ## Try getting the node modules from cache, if failed npm ci
       - uses: actions/cache@v2
