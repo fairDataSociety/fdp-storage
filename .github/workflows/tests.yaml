@@ -94,6 +94,7 @@ jobs:
           chmod +x dfs
       - name: Run fairos
         run: |
+          curl -s 'http://fdp-play-queen:1635/stamps' | jq '.stamps| .[0] | .batchID'
           export BATCH=$(curl -s 'http://fdp-play-queen:1635/stamps' | jq '.stamps| .[0] | .batchID') 
           echo $BATCH
           ./dfs server --network play --rpc http://fdp-play-blockchain:9545 --beeApi http://fdp-play-queen:1633 --postageBlockId $BATCH &
