@@ -83,7 +83,19 @@ jobs:
         run: npm install -g @fairdatasociety/fdp-play
 
       - name: Run fdp-play
-        run: fdp-play start -d --fairos --bee-version $BEE_VERSION
+        run: fdp-play start -d --bee-version $BEE_VERSION
+
+      - name: Download fairos
+        run: wget https://github.com/asabya/fairOS-dfs/releases/download/v0.9.2/dfs_v0.9.2_linux_amd64
+      
+      - name: Install fairos
+        run: |
+          mv dfs_v0.9.2_linux_amd64 dfs
+          chmod +x dfs
+      - name: Run fairos
+        run: |
+          export BATCH=$(curl -s 'http://localhost:1635/stamps' | jq '.stamps| .[0] | .batchID') 
+          ./dfs server --network play --rpc http://localhost:9545 --beeApi http://localhost:1633 --postageBlockId $BATCH &
 
       ## Try getting the node modules from cache, if failed npm ci
       - uses: actions/cache@v2
