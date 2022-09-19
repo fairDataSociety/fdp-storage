@@ -1,11 +1,13 @@
 import CryptoJS from 'crypto-js'
-import { bytesToWordArray, decodeBase64Url, encodeBase64Url } from './utils'
+import { bytesToWordArray, decodeBase64Url, encodeBase64Url } from '../account/utils'
 import { Utils } from '@ethersphere/bee-js'
 
 export const IV_LENGTH = 16
 
 /**
  * Decrypts text with password
+ *
+ * @deprecated method for v1 accounts
  *
  * @param password string to decrypt text
  * @param text text to be decrypted
@@ -48,6 +50,8 @@ export function decrypt(password: string, data: CryptoJS.lib.WordArray): CryptoJ
 
 /**
  * Encrypts text with password
+ *
+ * @deprecated method for v1 accounts
  *
  * @param password string to encrypt text
  * @param text text to be encrypted

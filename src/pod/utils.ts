@@ -4,8 +4,8 @@ import { stringToBytes } from '../utils/bytes'
 import { LookupAnswer } from '../feed/types'
 import { utils } from 'ethers'
 import { getRawDirectoryMetadataBytes } from '../directory/adapter'
-import { assertNumber, assertString, isEthAddress, isNumber, isObject, isString } from '../utils/type'
-import { assertHexEthAddress, bytesToHex, EncryptedReference } from '../utils/hex'
+import { assertArray, assertNumber, assertString, isEthAddress, isNumber, isObject, isString } from '../utils/type'
+import { bytesToHex, EncryptedReference } from '../utils/hex'
 import { List } from './list'
 import { prepareEthAddress } from '../utils/address'
 import { getExtendedPodsList, getPodsList } from './api'
@@ -54,42 +54,7 @@ export interface PathInfo {
  * @param data raw data with pod information
  */
 export function extractPods(data: Data): List {
-  const pods: Pod[] = []
-  const sharedPods: SharedPod[] = []
-
-  data
-    .text()
-    .split('\n')
-    .filter(item => Boolean(item.trim()))
-    .map(item => {
-      const parts = item.split(',')
-
-      if (parts.length !== 2) {
-        throw new Error('Pod information: incorrect length')
-      }
-
-      const isShared = Number.isNaN(Number(parts[1]))
-      const name = parts[0]
-      assertPodName(name)
-
-      if (isShared) {
-        const address = parts[1]
-        assertHexEthAddress(address)
-        sharedPods.push({
-          name,
-          address: prepareEthAddress(address),
-        })
-      } else {
-        const index = Number(parts[1])
-        assertNumber(index)
-        pods.push({
-          name,
-          index,
-        })
-      }
-    })
-
-  return new List(pods, sharedPods)
+  return List.fromJSON(data.text())
 }
 
 /**
@@ -195,18 +160,12 @@ export function podListToBytes(pods: Pod[], sharedPods: SharedPod[]): Uint8Array
     return new Uint8Array([0])
   }
 
-  const allPods =
-    [...pods, ...sharedPods]
-      .map(pod => {
-        if (isPod(pod)) {
-          return `${pod.name},${pod.index}`
-        } else if (isSharedPod(pod)) {
-          return `${pod.name},${bytesToHex(pod.address)}`
-        }
-      })
-      .join('\n') + '\n'
-
-  return stringToBytes(allPods)
+  return stringToBytes(
+    JSON.stringify({
+      pods,
+      sharedPods,
+    }),
+  )
 }
 
 /**
@@ -237,12 +196,36 @@ export function assertPod(value: unknown): asserts value is Pod {
 }
 
 /**
+ * Asserts that pods list is correct
+ */
+export function assertPodList(value: unknown): asserts value is Pod[] {
+  assertArray(value)
+  value.forEach(value => {
+    if (!isPod(value)) {
+      throw new Error('Invalid item in pods list')
+    }
+  })
+}
+
+/**
  * Asserts that shared pod is correct
  */
 export function assertSharedPod(value: unknown): asserts value is SharedPod {
   if (!isSharedPod(value)) {
     throw new Error('Invalid shared pod')
   }
+}
+
+/**
+ * Asserts that shared pods list is correct
+ */
+export function assertSharedPodList(value: unknown): asserts value is Pod[] {
+  assertArray(value)
+  value.forEach(value => {
+    if (!isSharedPod(value)) {
+      throw new Error('Invalid item in shared pods list')
+    }
+  })
 }
 
 /**

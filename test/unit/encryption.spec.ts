@@ -1,4 +1,4 @@
-import { decryptText, encryptText } from '../../src/account/encryption'
+import { decryptText, encryptText } from '../../src/utils/encryption'
 import CryptoJS from 'crypto-js'
 import { generateRandomHexString } from '../utils'
 

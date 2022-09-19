@@ -1,6 +1,6 @@
 import { Bee, PrivateKeyBytes, Reference, Utils } from '@ethersphere/bee-js'
 import { utils, Wallet } from 'ethers'
-import { decryptBytes, encryptText, encryptBytes, IV_LENGTH } from './encryption'
+import { decryptBytes, encryptText, encryptBytes, IV_LENGTH } from '../utils/encryption'
 import { uploadEncryptedMnemonic } from './mnemonic'
 import {
   assertChunkSizeLength,

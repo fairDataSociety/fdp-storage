@@ -10,7 +10,7 @@ import {
 } from './utils'
 import { prepareEthAddress } from '../utils/address'
 import { getEncryptedMnemonic } from './mnemonic'
-import { decryptText } from './encryption'
+import { decryptText } from '../utils/encryption'
 import { downloadPortableAccount, uploadPortableAccount, UserAccountWithMnemonic } from './account'
 import { Connection } from '../connection/connection'
 import { AddressOptions, isAddressOptions, isMnemonicOptions, MnemonicOptions } from './types'

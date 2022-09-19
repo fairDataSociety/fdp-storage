@@ -13,6 +13,15 @@ export function assertNumber(value: unknown): asserts value is number {
 }
 
 /**
+ * Asserts that the given value is an array
+ */
+export function assertArray(value: unknown): asserts value is [] {
+  if (!Array.isArray(value)) {
+    throw new Error('Expected an array')
+  }
+}
+
+/**
  * Asserts that the given value is a string
  */
 export function assertString(value: unknown): asserts value is string {
