@@ -20,7 +20,7 @@ import { PodShareInfo, RawFileMetadata } from '../../src/pod/types'
 import { FileShareInfo } from '../../src/file/types'
 import { BatchId } from '@ethersphere/bee-js'
 
-jest.setTimeout(200000)
+jest.setTimeout(400000)
 describe('Fair Data Protocol class - in browser', () => {
   const BEE_URL = beeUrl()
   let batchId: BatchId

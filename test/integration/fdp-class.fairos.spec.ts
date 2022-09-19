@@ -11,7 +11,7 @@ import {
 import { FairOSApi } from '../utils/fairos-api'
 import { Wallet, utils } from 'ethers'
 
-jest.setTimeout(200000)
+jest.setTimeout(400000)
 describe('Fair Data Protocol with FairOS-dfs', () => {
   beforeAll(async () => {
     const batchId = await createUsableBatch()

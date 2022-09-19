@@ -25,7 +25,7 @@ import { getWalletByIndex, mnemonicToSeed, prepareEthAddress } from '../../src/u
 import { assertEncryptedReference, bytesToHex } from '../../src/utils/hex'
 import { base64toReference } from '../../src/file/utils'
 
-jest.setTimeout(200000)
+jest.setTimeout(400000)
 describe('Fair Data Protocol class', () => {
   beforeAll(async () => {
     const batchId = await createUsableBatch()
