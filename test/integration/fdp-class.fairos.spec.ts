@@ -1,6 +1,7 @@
 import {
   createFdp,
   createUsableBatch,
+  generateRandomHexString,
   generateUser,
   isUsableBatchExists,
   setCachedBatchId,
@@ -61,5 +62,68 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
 
     const data = await fdp.account.login(user.username, user.password)
     expect(data.address).toEqual(user.address)
+  })
+
+  it('should create pods in fdp and list them in fairos', async () => {
+    const fairos = new FairOSApi()
+    const fdp = createFdp()
+    const user = generateUser(fdp)
+    const podName1 = generateRandomHexString()
+    const podName2 = generateRandomHexString()
+    await topUpFdp(fdp)
+    await fdp.account.register(user.username, user.password)
+    await fdp.personalStorage.create(podName1)
+    await fairos.login(user.username, user.password)
+    const response = await fairos.podLs()
+    expect(response.status).toEqual(200)
+    expect(response.data).toStrictEqual({
+      pod_name: [podName1],
+      shared_pod_name: [],
+    })
+
+    await fdp.personalStorage.create(podName2)
+    const response2 = await fairos.podLs()
+    expect(response2.status).toEqual(200)
+    expect(response2.data).toStrictEqual({
+      pod_name: [podName1, podName2],
+      shared_pod_name: [],
+    })
+  })
+
+  it('should create pods in fairos and list them in fdp', async () => {
+    const fairos = new FairOSApi()
+    const fdp = createFdp()
+    const user = generateUser()
+    const podName1 = generateRandomHexString()
+    const podName2 = generateRandomHexString()
+    const podName3 = generateRandomHexString()
+    await topUpAddress(fdp.ens, user.address)
+
+    await fairos.register(user.username, user.password, user.mnemonic)
+    const createResponse = await fairos.podNew(podName1, user.password)
+    expect(createResponse.status).toEqual(201)
+    expect(createResponse.data).toStrictEqual({ message: 'pod created successfully' })
+
+    await fdp.account.login(user.username, user.password)
+    const fdpResponse = await fdp.personalStorage.list()
+    expect(fdpResponse).toEqual({ pods: [{ name: podName1, index: 1 }], sharedPods: [] })
+
+    await fairos.podNew(podName2, user.password)
+    const fdpResponse2 = await fdp.personalStorage.list()
+    expect(fdpResponse2).toEqual({
+      pods: [
+        { name: podName1, index: 1 },
+        { name: podName2, index: 2 },
+      ],
+      sharedPods: [],
+    })
+
+    await fdp.personalStorage.create(podName3)
+    const response2 = await fairos.podLs()
+    expect(response2.status).toEqual(200)
+    expect(response2.data).toStrictEqual({
+      pod_name: [podName1, podName2, podName3],
+      shared_pod_name: [],
+    })
   })
 })
