@@ -17,7 +17,7 @@ import { downloadData, generateBlockName } from './handler'
 import { blocksToManifest, getFileMetadataRawBytes, rawFileMetadataToFileMetadata } from './adapter'
 import { Blocks, DataUploadOptions, FileReceiveOptions, FileShareInfo } from './types'
 import { addEntryToDirectory, removeEntryFromDirectory } from '../content-items/handler'
-import { Data, Reference } from '@ethersphere/bee-js'
+import { Bee, BeeError, Data, KyRequestOptions, Reference, RequestOptions } from '@ethersphere/bee-js'
 import { getRawMetadata } from '../content-items/utils'
 import { assertRawFileMetadata, combine } from '../directory/utils'
 import { assertEncryptedReference, EncryptedReference } from '../utils/hex'
@@ -67,6 +67,12 @@ export class File {
     data: Uint8Array | string,
     options?: DataUploadOptions,
   ): Promise<FileMetadata> {
+    // @ts-ignore
+    const cloneGetKy = Bee.prototype.getKy
+
+    // @ts-ignore
+    Bee.prototype.getKy = this.fetchPolyfill(this.accountData.connection.bee.url)
+
     options = { ...this.defaultUploadOptions, ...options }
     assertAccount(this.accountData)
     assertPodName(podName)
@@ -112,6 +118,8 @@ export class File {
     await addEntryToDirectory(connection, extendedInfo.podWallet, pathInfo.path, pathInfo.filename, true)
     await writeFeedData(connection, fullPath, getFileMetadataRawBytes(meta), extendedInfo.podWallet.privateKey)
 
+    // @ts-ignore
+    Bee.prototype.getKy = cloneGetKy
     return meta
   }
 
@@ -200,5 +208,28 @@ export class File {
     await writeFeedData(connection, fullPath, getFileMetadataRawBytes(meta), extendedInfo.podWallet.privateKey)
 
     return meta
+  }
+
+  /**
+   * fetch polyfill for ky and bee-js
+   * @param options Options that affects the request behavior
+   */
+  fetchPolyfill(beeUrl: string) {
+    return (options: RequestOptions = {}): any => {
+      return async (url: any, kyOpts: KyRequestOptions): Promise<any> => {
+        const _url = `${beeUrl}/${url}`
+        kyOpts.responseType = 'json'
+        console.log(_url, kyOpts, options)
+        const res = await fetch(_url, {
+          ...kyOpts,
+          ...options,
+          headers: Object(kyOpts.headers),
+        })
+        return {
+          data: undefined,
+          ...res,
+        } // KyResponse type
+      }
+    }
   }
 }
