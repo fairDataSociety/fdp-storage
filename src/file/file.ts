@@ -219,7 +219,6 @@ export class File {
       return async (url: any, kyOpts: KyRequestOptions): Promise<any> => {
         const _url = `${beeUrl}/${url}`
         kyOpts.responseType = 'json'
-        console.log(_url, kyOpts, options)
         const res = await fetch(_url, {
           ...kyOpts,
           ...options,
