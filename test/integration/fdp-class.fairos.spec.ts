@@ -64,16 +64,24 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
     expect(data.address).toEqual(user.address)
   })
 
+  it('import account to fairos', async () => {
+    const fairos = new FairOSApi()
+    const fdp = createFdp()
+    const user = generateUser(fdp)
+    const response = await fairos.registerV1(user.username, user.password, user.mnemonic)
+    expect(response.status).toEqual(201)
+    expect(response.data.address).toEqual(user.address)
+  })
+
   it('should create pods in fdp and list them in fairos', async () => {
     const fairos = new FairOSApi()
     const fdp = createFdp()
     const user = generateUser(fdp)
     const podName1 = generateRandomHexString()
     const podName2 = generateRandomHexString()
-    await topUpFdp(fdp)
-    await fdp.account.register(user.username, user.password)
+    await fdp.account.setAccountFromMnemonic(user.mnemonic)
     await fdp.personalStorage.create(podName1)
-    await fairos.login(user.username, user.password)
+    await fairos.registerV1(user.username, user.password, user.mnemonic)
     const response = await fairos.podLs()
     expect(response.status).toEqual(200)
     expect(response.data).toStrictEqual({
@@ -97,14 +105,13 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
     const podName1 = generateRandomHexString()
     const podName2 = generateRandomHexString()
     const podName3 = generateRandomHexString()
-    await topUpAddress(fdp.ens, user.address)
 
-    await fairos.register(user.username, user.password, user.mnemonic)
+    await fairos.registerV1(user.username, user.password, user.mnemonic)
     const createResponse = await fairos.podNew(podName1, user.password)
     expect(createResponse.status).toEqual(201)
     expect(createResponse.data).toStrictEqual({ message: 'pod created successfully' })
 
-    await fdp.account.login(user.username, user.password)
+    await fdp.account.setAccountFromMnemonic(user.mnemonic)
     const fdpResponse = await fdp.personalStorage.list()
     expect(fdpResponse).toEqual({ pods: [{ name: podName1, index: 1 }], sharedPods: [] })
 
@@ -127,5 +134,51 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
     expect(pods).toContain(podName1)
     expect(pods).toContain(podName2)
     expect(pods).toContain(podName3)
+  })
+
+  it('should create directories in fdp and list them in fairos', async () => {
+    const fairos = new FairOSApi()
+    const fdp = createFdp()
+    const user = generateUser(fdp)
+    const podName1 = generateRandomHexString()
+    const directoryName1 = generateRandomHexString()
+    const fullDirectoryName1 = '/' + directoryName1
+    const subDirectoryName1 = generateRandomHexString()
+    const fullSubDirectoryName1 = fullDirectoryName1 + '/' + subDirectoryName1
+    const directoryName2 = generateRandomHexString()
+    const fullDirectoryName2 = '/' + directoryName2
+
+    await fdp.account.setAccountFromMnemonic(user.mnemonic)
+    await fdp.personalStorage.create(podName1)
+    await fdp.directory.create(podName1, fullDirectoryName1)
+    await fairos.registerV1(user.username, user.password, user.mnemonic)
+    await fairos.podOpen(podName1, user.password)
+    const response = await fairos.dirLs(podName1)
+    expect(response.status).toEqual(200)
+    expect(response.data?.dirs).toHaveLength(1)
+    const dir1 = response.data.dirs[0]
+    expect(dir1.name).toEqual(directoryName1)
+    expect(dir1.content_type).toEqual('inode/directory')
+    expect(dir1.creation_time).toBeDefined()
+    expect(dir1.modification_time).toBeDefined()
+    expect(dir1.access_time).toBeDefined()
+
+    await fdp.directory.create(podName1, fullSubDirectoryName1)
+    await fdp.directory.create(podName1, fullDirectoryName2)
+    const response2 = await fairos.dirLs(podName1)
+    expect(response2.data?.dirs).toHaveLength(2)
+    const dirs2 = response2.data?.dirs
+    expect(dirs2[0].name).toEqual(directoryName1)
+    expect(dirs2[1].name).toEqual(directoryName2)
+
+    const data3 = (await fairos.dirLs(podName1, fullDirectoryName1)).data
+    const dirs3 = data3.dirs
+    const dir3 = dirs3[0]
+    expect(dirs3).toHaveLength(1)
+    expect(dir3.name).toEqual(subDirectoryName1)
+    expect(dir3.content_type).toEqual('inode/directory')
+    expect(dir3.creation_time).toBeDefined()
+    expect(dir3.modification_time).toBeDefined()
+    expect(dir3.access_time).toBeDefined()
   })
 })

@@ -24,6 +24,37 @@ export class FairOSApi {
   }
 
   /**
+   * Register new V1 user
+   */
+  async registerV1(username: string, password: string, mnemonic?: string): Promise<AxiosResponse> {
+    const url = this.getV1Url('user/signup')
+
+    return this.handleCookies(
+      await axios.post(url, {
+        user_name: username,
+        password,
+        mnemonic,
+      }),
+    )
+  }
+
+  /**
+   * Gets user stat
+   */
+  async stat(username: string): Promise<AxiosResponse> {
+    const url = this.getV1Url('user/stat')
+
+    return axios.get(url, {
+      params: {
+        user_name: username,
+      },
+      headers: {
+        Cookie: this.cookies,
+      },
+    })
+  }
+
+  /**
    * Login with username and password
    */
   async login(username: string, password: string): Promise<AxiosResponse> {
@@ -86,5 +117,45 @@ export class FairOSApi {
         },
       },
     )
+  }
+
+  /**
+   * Opens a pod
+   *
+   * @param name pod name
+   * @param password account password
+   */
+  async podOpen(name: string, password: string): Promise<AxiosResponse> {
+    const url = this.getV1Url('pod/open')
+
+    return axios.post(
+      url,
+      {
+        pod_name: name,
+        password,
+      },
+      {
+        headers: {
+          Cookie: this.cookies,
+        },
+      },
+    )
+  }
+
+  /**
+   * Gets directories list
+   */
+  async dirLs(podName: string, dirPath = '/'): Promise<AxiosResponse> {
+    const url = this.getV1Url('dir/ls')
+
+    return axios.get(url, {
+      params: {
+        dir_path: dirPath,
+        pod_name: podName,
+      },
+      headers: {
+        Cookie: this.cookies,
+      },
+    })
   }
 }
