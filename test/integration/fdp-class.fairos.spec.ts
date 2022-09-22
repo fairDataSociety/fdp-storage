@@ -221,4 +221,74 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
     expect(response3).toHaveLength(3)
     expect(response3[2].name).toEqual(directoryName3)
   })
+
+  it('should upload file with fdp and it should available via fairos', async () => {
+    const fairos = new FairOSApi()
+    const fdp = createFdp()
+    const user = generateUser(fdp)
+    const podName1 = generateRandomHexString()
+    const fileSizeBig = 5000015
+    const contentBig = generateRandomHexString(fileSizeBig)
+    const filenameBig = generateRandomHexString() + '.txt'
+    const fullFilenameBigPath = '/' + filenameBig
+
+    await fdp.account.setAccountFromMnemonic(user.mnemonic)
+    await fdp.personalStorage.create(podName1)
+    await fdp.file.uploadData(podName1, fullFilenameBigPath, contentBig)
+
+    await fairos.registerV1(user.username, user.password, user.mnemonic)
+    await fairos.podOpen(podName1, user.password)
+    const response1 = await fairos.dirLs(podName1)
+    const files = response1.data.files
+    expect(response1.status).toEqual(200)
+    expect(files).toHaveLength(1)
+    expect(Number(files[0].size)).toEqual(fileSizeBig)
+    expect(files[0].name).toEqual(filenameBig)
+
+    const response2 = await fairos.fileDownload(podName1, fullFilenameBigPath)
+    expect(response2.status).toEqual(200)
+    expect(response2.data).toEqual(contentBig)
+  })
+
+  it('should upload file with fairos and it should available via fdp', async () => {
+    const fairos = new FairOSApi()
+    const fdp = createFdp()
+    const user = generateUser(fdp)
+    const podName1 = generateRandomHexString()
+    const fileSizeBig = 5000015
+    const contentBig = generateRandomHexString(fileSizeBig)
+    const contentBig1 = generateRandomHexString(fileSizeBig)
+    const filenameBig = generateRandomHexString() + '.txt'
+    const filenameBig1 = generateRandomHexString() + '.txt'
+    const fullFilenameBigPath = '/' + filenameBig
+    const fullFilenameBigPath1 = '/' + filenameBig1
+
+    await fdp.account.setAccountFromMnemonic(user.mnemonic)
+    await fairos.registerV1(user.username, user.password, user.mnemonic)
+    await fairos.podNew(podName1, user.password)
+    const response1 = await fairos.fileUpload(podName1, '/', contentBig, filenameBig)
+    const data1 = response1.data.Responses
+    expect(response1.status).toEqual(200)
+    expect(data1).toStrictEqual([
+      {
+        file_name: filenameBig,
+        message: 'uploaded successfully',
+      },
+    ])
+
+    const file1 = await fdp.file.downloadData(podName1, fullFilenameBigPath)
+    expect(file1.text()).toEqual(contentBig)
+
+    // test mixed uploading
+    await fdp.file.uploadData(podName1, fullFilenameBigPath1, contentBig1)
+    // re-open pod because fairos can't download file without this action - https://github.com/fairDataSociety/fairOS-dfs/issues/278
+    await fairos.podClose(podName1)
+    await fairos.podOpen(podName1, user.password)
+    const response2 = await fairos.dirLs(podName1)
+    const files2 = response2.data.files
+    expect(files2).toHaveLength(2)
+    // download file uploaded from fdp
+    const data2 = (await fairos.fileDownload(podName1, fullFilenameBigPath1)).data
+    expect(data2).toEqual(contentBig1)
+  })
 })
