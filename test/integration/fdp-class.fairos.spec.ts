@@ -181,4 +181,44 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
     expect(dir3.modification_time).toBeDefined()
     expect(dir3.access_time).toBeDefined()
   })
+
+  it('should create directories in fairos and list them in fdp', async () => {
+    const fairos = new FairOSApi()
+    const fdp = createFdp()
+    const user = generateUser(fdp)
+    const podName1 = generateRandomHexString()
+    const directoryName1 = generateRandomHexString()
+    const fullDirectoryName1 = '/' + directoryName1
+    const subDirectoryName1 = generateRandomHexString()
+    const fullSubDirectoryName1 = fullDirectoryName1 + '/' + subDirectoryName1
+    const directoryName2 = generateRandomHexString()
+    const fullDirectoryName2 = '/' + directoryName2
+    const directoryName3 = generateRandomHexString()
+    const fullDirectoryName3 = '/' + directoryName3
+
+    await fdp.account.setAccountFromMnemonic(user.mnemonic)
+    await fairos.registerV1(user.username, user.password, user.mnemonic)
+    await fairos.podNew(podName1, user.password)
+    await fairos.dirMkdir(podName1, fullDirectoryName1, user.password)
+    const response = await fdp.directory.read(podName1, '/')
+    expect(response.getDirectories()).toHaveLength(1)
+    const dir1 = response.getDirectories()[0]
+    expect(dir1.name).toEqual(directoryName1)
+
+    await fairos.dirMkdir(podName1, fullSubDirectoryName1, user.password)
+    await fairos.dirMkdir(podName1, fullDirectoryName2, user.password)
+    const response2 = await fdp.directory.read(podName1, '/', true)
+    expect(response2.getDirectories()).toHaveLength(2)
+    const dir2 = response2.getDirectories()[0].getDirectories()
+    expect(dir2).toHaveLength(1)
+    expect(response2.getDirectories()[1].getDirectories()).toHaveLength(0)
+    expect(response2.getDirectories()[1].name).toEqual(directoryName2)
+    expect(dir2[0].name).toEqual(subDirectoryName1)
+
+    // test mixed clients directory creation in the same account
+    await fdp.directory.create(podName1, fullDirectoryName3)
+    const response3 = (await fairos.dirLs(podName1)).data?.dirs
+    expect(response3).toHaveLength(3)
+    expect(response3[2].name).toEqual(directoryName3)
+  })
 })

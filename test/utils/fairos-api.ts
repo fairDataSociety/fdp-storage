@@ -158,4 +158,29 @@ export class FairOSApi {
       },
     })
   }
+
+  /**
+   * Make a directory
+   *
+   * @param podName pod name
+   * @param directoryPath directory path
+   * @param password account password
+   */
+  async dirMkdir(podName: string, directoryPath: string, password: string): Promise<AxiosResponse> {
+    const url = this.getV1Url('dir/mkdir')
+
+    return axios.post(
+      url,
+      {
+        pod_name: podName,
+        dir_path: directoryPath,
+        password,
+      },
+      {
+        headers: {
+          Cookie: this.cookies,
+        },
+      },
+    )
+  }
 }
