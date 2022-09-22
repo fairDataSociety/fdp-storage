@@ -1,9 +1,10 @@
 import axios, { AxiosResponse } from 'axios'
+import FormData from 'form-data'
 
 export class FairOSApi {
   public withCredentials = true
 
-  private cookies = ''
+  public cookies = ''
 
   constructor(private apiUrlV1 = 'http://localhost:9090/v1/', private apiUrlV2 = 'http://localhost:9090/v2/') {}
 
@@ -143,6 +144,27 @@ export class FairOSApi {
   }
 
   /**
+   * Closes a pod
+   *
+   * @param name pod name
+   */
+  async podClose(name: string): Promise<AxiosResponse> {
+    const url = this.getV1Url('pod/close')
+
+    return axios.post(
+      url,
+      {
+        pod_name: name,
+      },
+      {
+        headers: {
+          Cookie: this.cookies,
+        },
+      },
+    )
+  }
+
+  /**
    * Gets directories list
    */
   async dirLs(podName: string, dirPath = '/'): Promise<AxiosResponse> {
@@ -182,5 +204,60 @@ export class FairOSApi {
         },
       },
     )
+  }
+
+  /**
+   * Downloads a file
+   *
+   * @param podName pod name
+   * @param filePath directory path
+   */
+  async fileDownload(podName: string, filePath: string): Promise<AxiosResponse> {
+    const url = this.getV1Url('file/download')
+
+    return axios.post(
+      url,
+      {},
+      {
+        params: {
+          pod_name: podName,
+          file_path: filePath,
+        },
+        headers: {
+          Cookie: this.cookies,
+        },
+      },
+    )
+  }
+
+  /**
+   * Uploads a file
+   *
+   * @param podName pod name
+   * @param dirPath directory path
+   * @param content file content
+   * @param fileName filename
+   * @param blockSize block size of a file
+   */
+  async fileUpload(
+    podName: string,
+    dirPath: string,
+    content: string,
+    fileName: string,
+    blockSize = '1Mb',
+  ): Promise<AxiosResponse> {
+    const url = this.getV1Url('file/upload')
+    const form = new FormData()
+    form.append('files', content, { filename: fileName })
+    form.append('block_size', blockSize)
+    form.append('pod_name', podName)
+    form.append('dir_path', dirPath)
+
+    return axios.post(url, form, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+        Cookie: this.cookies,
+      },
+    })
   }
 }
