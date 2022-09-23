@@ -242,6 +242,23 @@ export class FairOSApi {
   }
 
   /**
+   * Gets information about shared file
+   */
+  async fileReceiveInfo(podName: string, sharingReference: string): Promise<AxiosResponse> {
+    const url = this.getV1Url('file/receiveinfo')
+
+    return axios.get(url, {
+      params: {
+        pod_name: podName,
+        sharing_ref: sharingReference,
+      },
+      headers: {
+        Cookie: this.cookies,
+      },
+    })
+  }
+
+  /**
    * Make a directory
    *
    * @param podName pod name
