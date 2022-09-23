@@ -349,7 +349,7 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
       const fdpResponse3 = await fdp.directory.read(podName1, '/', true)
       expect(fdpResponse3.getDirectories()).toHaveLength(0)
       const fairosDirs = await fairos.dirLs(podName1)
-      expect(fairosDirs).toBeUndefined()
+      expect(fairosDirs.data).toEqual({})
     })
   })
 
