@@ -121,6 +121,66 @@ export class FairOSApi {
   }
 
   /**
+   * Deletes a pod
+   *
+   * @param name pod name
+   * @param password account password
+   */
+  async podDelete(name: string, password: string): Promise<AxiosResponse> {
+    const url = this.getV1Url('pod/delete')
+
+    return axios.delete(url, {
+      data: {
+        pod_name: name,
+        password,
+      },
+      headers: {
+        Cookie: this.cookies,
+      },
+    })
+  }
+
+  /**
+   * Deletes a file
+   *
+   * @param name pod name
+   * @param filePath file path
+   */
+  async fileDelete(name: string, filePath: string): Promise<AxiosResponse> {
+    const url = this.getV1Url('file/delete')
+
+    return axios.delete(url, {
+      data: {
+        pod_name: name,
+        file_path: filePath,
+      },
+      headers: {
+        Cookie: this.cookies,
+      },
+    })
+  }
+
+  /**
+   * Deletes a directory
+   *
+   * @param name pod name
+   * @param directoryPath directory path
+   */
+  async dirRmdir(name: string, directoryPath: string): Promise<AxiosResponse> {
+    const url = this.getV1Url('dir/rmdir')
+
+    return axios.delete(url, {
+      data: {
+        pod_name: name,
+        dir_path: directoryPath,
+      },
+      headers: {
+        Cookie: this.cookies,
+      },
+    })
+  }
+
+  /**
    * Opens a pod
    *
    * @param name pod name
