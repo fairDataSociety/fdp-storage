@@ -1,0 +1,18 @@
+import './shim/crypto';
+import { FdpStorage } from './fdp-storage';
+import { AccountData } from './account/account-data';
+import { PersonalStorage } from './pod/personal-storage';
+import { Directory } from './directory/directory';
+import * as FdpContracts from '@fairdatasociety/fdp-contracts';
+export { FdpStorage, AccountData, PersonalStorage, Directory, FdpContracts };
+declare global {
+    interface Window {
+        fdp: {
+            FdpStorage: typeof import('./fdp-storage').FdpStorage;
+            AccountData: typeof import('./account/account-data').AccountData;
+            PersonalStorage: typeof import('./pod/personal-storage').PersonalStorage;
+            Directory: typeof import('./directory/directory').Directory;
+            FdpContracts: typeof FdpContracts;
+        };
+    }
+}
