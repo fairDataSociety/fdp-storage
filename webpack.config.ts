@@ -1,10 +1,15 @@
 /* eslint-disable no-console */
 import Path from 'path'
 import TerserPlugin from 'terser-webpack-plugin'
-import { Configuration, DefinePlugin, NormalModuleReplacementPlugin, WebpackPluginInstance } from 'webpack'
+import { Configuration, DefinePlugin, NormalModuleReplacementPlugin, ProvidePlugin, WebpackPluginInstance } from 'webpack'
 import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer'
 import { getBrowserPathMapping } from './jest.config'
 import PackageJson from './package.json'
+const stdLibBrowser = require('node-stdlib-browser');
+const {
+  NodeProtocolUrlPlugin,
+} = require('node-stdlib-browser/helpers/webpack/plugin');
+
 
 interface WebpackEnvParams {
   target: 'web' | 'node'
@@ -27,7 +32,17 @@ const base = async (env?: Partial<WebpackEnvParams>): Promise<Configuration> => 
       'process.env.ENV': env?.mode || 'development',
       'process.env.IS_WEBPACK_BUILD': 'true',
     }),
+    new NodeProtocolUrlPlugin(),
+    new ProvidePlugin({
+      path: stdLibBrowser.path,
+      fs: stdLibBrowser.fs,
+      stream: stdLibBrowser.stream,
+      crypto: stdLibBrowser.crypto,
+      process: stdLibBrowser.process,
+      Buffer: [stdLibBrowser.buffer, 'Buffer']
+    })
   ]
+
 
   if (target === 'web') {
     const browserPathMapping = await getBrowserPathMapping()
@@ -53,6 +68,7 @@ const base = async (env?: Partial<WebpackEnvParams>): Promise<Configuration> => 
   }
 
   return {
+    
     bail: Boolean(isProduction),
     mode: env?.mode || 'development',
     devtool: isProduction ? 'source-map' : 'cheap-module-source-map',
@@ -68,6 +84,12 @@ const base = async (env?: Partial<WebpackEnvParams>): Promise<Configuration> => 
     module: {
       rules: [
         {
+          test: /\.m?js$/,
+          resolve: {
+            fullySpecified: false
+          }
+        },
+        {
           test: /\.(ts|js)$/,
           // include: entry,
           use: {
@@ -77,13 +99,8 @@ const base = async (env?: Partial<WebpackEnvParams>): Promise<Configuration> => 
       ],
     },
     resolve: {
+      alias: stdLibBrowser,
       extensions: ['.ts', '.js'],
-      fallback: {
-        path: false,
-        fs: false,
-        stream: false,
-        crypto: false,
-      },
     },
     optimization: {
       minimize: isProduction,
