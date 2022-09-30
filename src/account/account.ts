@@ -1,6 +1,6 @@
 import { Bee, PrivateKeyBytes, Reference, Utils } from '@ethersphere/bee-js'
 import { utils, Wallet } from 'ethers'
-import { decryptBytes, encryptText, encryptBytes, IV_LENGTH } from '../utils/encryption'
+import { encryptText, IV_LENGTH, decryptBytes, encryptBytes } from '../utils/encryption'
 import { uploadEncryptedMnemonic } from './mnemonic'
 import {
   assertChunkSizeLength,
@@ -10,6 +10,7 @@ import {
   SEED_SIZE,
   createCredentialsTopic,
   HD_PATH,
+  wordArrayToBytes,
 } from './utils'
 import { Connection } from '../connection/connection'
 import CryptoJS from 'crypto-js'
@@ -117,7 +118,7 @@ export async function uploadPortableAccount(
 ): Promise<Reference> {
   const paddedData = CryptoJS.lib.WordArray.random(CHUNK_SIZE - SEED_SIZE - IV_LENGTH)
   const chunkData = seed.concat(paddedData)
-  const encryptedBytes = encryptBytes(password, chunkData)
+  const encryptedBytes = encryptBytes(password, wordArrayToBytes(chunkData))
   assertChunkSizeLength(encryptedBytes.length)
   const topic = createCredentialsTopic(username, password)
   const socWriter = connection.bee.makeSOCWriter(privateKey)

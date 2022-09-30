@@ -6,6 +6,9 @@ import { RawDirectoryMetadata, RawFileMetadata } from '../pod/types'
 import { getFeedData } from '../feed/api'
 import { isRawDirectoryMetadata, isRawFileMetadata } from '../directory/utils'
 import { RawMetadataWithEpoch } from './types'
+import { decryptBytes, PodPasswordBytes } from '../utils/encryption'
+import { bytesToHex } from '../utils/hex'
+import { bytesToString } from '../utils/bytes'
 
 /**
  * Directory item guard
@@ -27,16 +30,18 @@ export function isFileItem(value: unknown): value is DirectoryItem {
  * @param bee Bee client
  * @param path path with information
  * @param address Ethereum address of the pod which owns the path
+ * @param podPassword bytes for data encryption from pod metadata
  * @param downloadOptions options for downloading
  */
 export async function getRawMetadata(
   bee: Bee,
   path: string,
   address: EthAddress,
+  podPassword: PodPasswordBytes,
   downloadOptions?: RequestOptions,
 ): Promise<RawMetadataWithEpoch> {
   const feedData = await getFeedData(bee, path, address, downloadOptions)
-  const data = feedData.data.chunkContent().json()
+  const data = JSON.parse(bytesToString(decryptBytes(bytesToHex(podPassword), feedData.data.chunkContent())))
   let metadata
 
   if (isRawDirectoryMetadata(data)) {

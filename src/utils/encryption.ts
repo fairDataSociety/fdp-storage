@@ -1,8 +1,14 @@
 import CryptoJS from 'crypto-js'
-import { bytesToWordArray, decodeBase64Url, encodeBase64Url } from '../account/utils'
-import { Utils } from '@ethersphere/bee-js'
+import { bytesToWordArray, decodeBase64Url, encodeBase64Url, wordArrayToBytes } from '../account/utils'
+import { PrivateKeyBytes, Utils } from '@ethersphere/bee-js'
+import { bytesToHex } from './hex'
 
 export const IV_LENGTH = 16
+export const POD_PASSWORD_LENGTH = 32
+/**
+ * Bytes for encryption pod data
+ */
+export declare type PodPasswordBytes = Utils.Bytes<32>
 
 /**
  * Decrypts text with password
@@ -14,16 +20,6 @@ export const IV_LENGTH = 16
  */
 export function decryptText(password: string, text: string): string {
   return decrypt(password, decodeBase64Url(text)).toString(CryptoJS.enc.Utf8)
-}
-
-/**
- * Decrypts bytes with password
- *
- * @param password string to decrypt bytes
- * @param data bytes to be decrypted
- */
-export function decryptBytes(password: string, data: Uint8Array): Uint8Array {
-  return Utils.hexToBytes(CryptoJS.enc.Hex.stringify(decrypt(password, bytesToWordArray(data))))
 }
 
 /**
@@ -62,21 +58,6 @@ export function encryptText(password: string, text: string, customIv?: CryptoJS.
 }
 
 /**
- * Encrypt bytes with password
- *
- * @param password string for text encryption
- * @param data bytes to be encrypted
- * @param customIv initial vector for AES. In case of absence, a random vector will be created
- */
-export function encryptBytes(
-  password: string,
-  data: CryptoJS.lib.WordArray,
-  customIv?: CryptoJS.lib.WordArray,
-): Uint8Array {
-  return Utils.hexToBytes(CryptoJS.enc.Hex.stringify(encrypt(password, data, customIv)))
-}
-
-/**
  * Encrypt WordArray with password
  *
  * @param password string for text encryption
@@ -98,4 +79,24 @@ export function encrypt(
   })
 
   return iv.concat(cipherParams.ciphertext)
+}
+
+/**
+ * Encrypt bytes with password
+ */
+export function encryptBytes(password: PrivateKeyBytes | string, data: Uint8Array, customIv?: Uint8Array): Uint8Array {
+  return wordArrayToBytes(
+    encrypt(
+      typeof password === 'string' ? password : bytesToHex(password),
+      bytesToWordArray(data),
+      customIv ? bytesToWordArray(customIv) : customIv,
+    ),
+  )
+}
+
+/**
+ * Decrypt bytes with password
+ */
+export function decryptBytes(password: string, data: Uint8Array): Uint8Array {
+  return wordArrayToBytes(decrypt(password, bytesToWordArray(data)))
 }

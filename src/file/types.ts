@@ -54,7 +54,6 @@ export interface Block {
  */
 export interface FileShareInfo {
   meta: RawFileMetadata
-  source_address: string
 }
 
 /**

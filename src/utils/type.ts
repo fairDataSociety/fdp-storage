@@ -1,4 +1,5 @@
 import { Utils } from '@ethersphere/bee-js'
+import { POD_PASSWORD_LENGTH, PodPasswordBytes } from './encryption'
 
 export type { PublicKey } from '@fairdatasociety/fdp-contracts'
 export const ETH_ADDR_HEX_LENGTH = 40
@@ -57,4 +58,20 @@ export function isNumber(value: unknown): value is number {
 // eslint-disable-next-line @typescript-eslint/ban-types
 export function isObject(value: unknown): value is object {
   return typeof value === 'object'
+}
+
+/**
+ * Checks that value is a pod password
+ */
+export function isPodPassword(value: PodPasswordBytes): value is PodPasswordBytes {
+  return typeof value === 'object' && ArrayBuffer.isView(value) && value.length === POD_PASSWORD_LENGTH
+}
+
+/**
+ * Asserts that the given value is a pod password
+ */
+export function assertPodPasswordBytes(value: PodPasswordBytes): asserts value is PodPasswordBytes {
+  if (!isPodPassword(value)) {
+    throw new Error('Expected a pod password bytes')
+  }
 }

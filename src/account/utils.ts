@@ -6,6 +6,7 @@ import { isValidMnemonic } from 'ethers/lib/utils'
 import CryptoJS from 'crypto-js'
 import { replaceAll } from '../utils/string'
 import { assertString } from '../utils/type'
+import { bytesToHex } from '../utils/hex'
 
 export const MNEMONIC_LENGTH = 12
 export const MAX_CHUNK_LENGTH = 4096
@@ -211,5 +212,12 @@ export function assertChunkSizeLength(value: unknown): asserts value is number {
  * Converts bytes to CryptoJS WordArray
  */
 export function bytesToWordArray(data: Uint8Array): CryptoJS.lib.WordArray {
-  return CryptoJS.enc.Hex.parse(Utils.bytesToHex(data))
+  return CryptoJS.enc.Hex.parse(bytesToHex(data))
+}
+
+/**
+ * Converts word array to bytes
+ */
+export function wordArrayToBytes(data: CryptoJS.lib.WordArray): Uint8Array {
+  return Utils.hexToBytes(CryptoJS.enc.Hex.stringify(data))
 }

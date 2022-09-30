@@ -1,18 +1,43 @@
 import { Utils, Reference } from '@ethersphere/bee-js'
+import { PodPasswordBytes } from '../utils/encryption'
+import { HexString } from '../utils/hex'
+
+/**
+ * Pod name only
+ */
+export interface PodName {
+  name: string
+}
 
 /**
  * Pod information
  */
-export interface Pod {
-  name: string
+export interface Pod extends PodName {
+  password: PodPasswordBytes
   index: number
+}
+
+/**
+ * Pod information for json serialization
+ */
+export interface JsonPod extends PodName {
+  password: HexString
+  index: number
+}
+
+/**
+ * Shared pod information for json serialization
+ */
+export interface SharedJsonPod extends PodName {
+  password: HexString
+  address: HexString
 }
 
 /**
  * Shared pod information
  */
-export interface SharedPod {
-  name: string
+export interface SharedPod extends PodName {
+  password: PodPasswordBytes
   address: Utils.EthAddress
 }
 
@@ -33,6 +58,7 @@ export interface RawFileMetadata {
   access_time: number
   modification_time: number
   file_inode_reference: string
+  shared_password: HexString
 }
 
 /**
@@ -52,6 +78,7 @@ export interface FileMetadata {
   accessTime: number
   modificationTime: number
   blocksReference: Reference
+  sharedPassword: HexString
 }
 
 /**
@@ -76,6 +103,7 @@ export interface PodShareInfo {
   pod_name: string
   pod_address: string
   user_address: string
+  password: HexString
 }
 
 /**

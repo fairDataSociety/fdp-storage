@@ -5,6 +5,7 @@ import {
   generateRandomHexString,
   generateUser,
   GET_FEED_DATA_TIMEOUT,
+  getBee,
   getCachedBatchId,
   isUsableBatchExists,
   setCachedBatchId,
@@ -13,6 +14,15 @@ import { MAX_POD_NAME_LENGTH } from '../../src/pod/utils'
 import { createUserV1 } from '../../src/account/account'
 import { PodShareInfo, RawFileMetadata } from '../../src/pod/types'
 import { FileShareInfo } from '../../src/file/types'
+import { getFeedData } from '../../src/feed/api'
+import { POD_TOPIC } from '../../src/pod/personal-storage'
+import { decryptBytes } from '../../src/utils/encryption'
+import { Wallet } from 'ethers'
+import { removeZeroFromHex } from '../../src/account/utils'
+import { bytesToString } from '../../src/utils/bytes'
+import { getWalletByIndex, mnemonicToSeed, prepareEthAddress } from '../../src/utils/wallet'
+import { bytesToHex } from '../../src/utils/hex'
+import { base64toReference } from '../../src/file/utils'
 
 async function topUpAddress(fdp: FdpStorage) {
   if (!fdp.account.wallet?.address) {
@@ -212,11 +222,14 @@ describe('Fair Data Protocol class', () => {
       for (let i = 0; examples.length > i; i++) {
         const example = examples[i]
         const result = await fdp.personalStorage.create(example.name)
-        expect(result).toEqual(example)
+        expect(result.name).toEqual(example.name)
+        expect(result.index).toEqual(example.index)
+        expect(result.password).toBeDefined()
 
         list = (await fdp.personalStorage.list()).getPods()
         expect(list).toHaveLength(i + 1)
-        expect(list[i]).toEqual(example)
+        expect(list[i].name).toEqual(example.name)
+        expect(list[i].index).toEqual(example.index)
       }
 
       const failPod = examples[0]
@@ -457,7 +470,6 @@ describe('Fair Data Protocol class', () => {
       expect(sharedReference).toHaveLength(128)
       const sharedData = (await fdp.connection.bee.downloadData(sharedReference)).json() as unknown as FileShareInfo
       expect(sharedData.meta).toBeDefined()
-      expect(sharedData.source_address).toHaveLength(40)
     })
 
     it('should receive information about shared file', async () => {
@@ -480,7 +492,6 @@ describe('Fair Data Protocol class', () => {
       expect(sharedData.meta.file_path).toEqual('/')
       expect(sharedData.meta.file_name).toEqual(filenameSmall)
       expect(sharedData.meta.file_size).toEqual(fileSizeSmall)
-      expect(sharedData.source_address).toHaveLength(40)
     })
 
     it('should save shared file to a pod', async () => {
@@ -535,6 +546,101 @@ describe('Fair Data Protocol class', () => {
       const list1 = await fdp1.directory.read(pod1, '/')
       const files1 = list1.getFiles()
       expect(files1).toHaveLength(2)
+    })
+  })
+
+  describe('Encryption', () => {
+    it('should be encrypted metadata and file data', async () => {
+      const bee = getBee()
+      const fdp = createFdp()
+      const user = generateUser(fdp)
+      const pod = generateRandomHexString()
+      const directoryName = generateRandomHexString()
+      const fullDirectory = '/' + directoryName
+      const fileSizeSmall = 100
+      const contentSmall = generateRandomHexString(fileSizeSmall)
+      const filenameSmall = generateRandomHexString() + '.txt'
+      const fullFilenameSmallPath = '/' + filenameSmall
+
+      const privateKey = removeZeroFromHex(Wallet.fromMnemonic(user.mnemonic).privateKey)
+      const seed = mnemonicToSeed(user.mnemonic)
+
+      // check pod metadata
+      const pod1 = await fdp.personalStorage.create(pod)
+      const podData = await getFeedData(bee, POD_TOPIC, prepareEthAddress(user.address))
+      const encryptedText1 = podData.data.chunkContent().text()
+      const encryptedBytes1 = podData.data.chunkContent()
+      // data decrypts with wallet for the pod. Data inside the pod will be encrypted with a password stored in the pod
+      const decryptedText1 = bytesToString(decryptBytes(privateKey, encryptedBytes1))
+      expect(encryptedText1).not.toContain(pod)
+      expect(decryptedText1).toContain(pod)
+      // HDNode with index 1 is for first pod
+      const node1 = getWalletByIndex(seed, 1)
+      const rootDirectoryData = await getFeedData(bee, '/', prepareEthAddress(node1.address))
+      const encryptedText2 = rootDirectoryData.data.chunkContent().text()
+      const encryptedBytes2 = rootDirectoryData.data.chunkContent()
+      // data decrypts with password stored in the pod
+      const decryptedText2 = bytesToString(decryptBytes(bytesToHex(pod1.password), encryptedBytes2))
+      // check some keywords from root directory of the pod metadata
+      const metaWords1 = ['Meta', 'Version', 'CreationTime', 'FileOrDirNames']
+      for (const metaWord of metaWords1) {
+        expect(encryptedText2).not.toContain(metaWord)
+        expect(decryptedText2).toContain(metaWord)
+      }
+
+      // check directory metadata
+      await fdp.directory.create(pod, fullDirectory)
+      const fullDirectoryData = await getFeedData(bee, fullDirectory, prepareEthAddress(node1.address))
+      const encryptedText3 = fullDirectoryData.data.chunkContent().text()
+      const encryptedBytes3 = fullDirectoryData.data.chunkContent()
+      const decryptedText3 = bytesToString(decryptBytes(bytesToHex(pod1.password), encryptedBytes3))
+      expect(decryptedText3).toContain(directoryName)
+      for (const metaWord of metaWords1) {
+        expect(encryptedText3).not.toContain(metaWord)
+        expect(decryptedText3).toContain(metaWord)
+      }
+
+      await fdp.file.uploadData(pod, fullFilenameSmallPath, contentSmall)
+      const fileManifestData = await getFeedData(bee, fullFilenameSmallPath, prepareEthAddress(node1.address))
+      const encryptedText4 = fileManifestData.data.chunkContent().text()
+      const encryptedBytes4 = fileManifestData.data.chunkContent()
+      const decryptedText4 = bytesToString(decryptBytes(bytesToHex(pod1.password), encryptedBytes4))
+      const metaWords2 = [
+        pod,
+        filenameSmall,
+        'version',
+        'user_address',
+        'pod_name',
+        'file_path',
+        'file_name',
+        'file_size',
+        'file_inode_reference',
+      ]
+      for (const metaWord of metaWords2) {
+        expect(encryptedText4).not.toContain(metaWord)
+        expect(decryptedText4).toContain(metaWord)
+      }
+
+      // check file metadata
+      const metaObject = JSON.parse(decryptedText4)
+      const blocksReference = base64toReference(metaObject.file_inode_reference)
+      const encryptedData5 = await bee.downloadData(blocksReference)
+      const encryptedText5 = encryptedData5.text()
+      const decryptedText5 = bytesToString(decryptBytes(bytesToHex(pod1.password), encryptedData5))
+      const metaWords3 = ['Blocks', 'Name', 'Size', 'CompressedSize', 'Reference']
+      for (const metaWord of metaWords3) {
+        expect(encryptedText5).not.toContain(metaWord)
+        expect(decryptedText5).toContain(metaWord)
+      }
+
+      // check file block
+      const blocks = JSON.parse(decryptedText5)
+      const blockReference = base64toReference(blocks.Blocks[0].Reference.R)
+      const encryptedData6 = await bee.downloadData(blockReference)
+      const encryptedText6 = encryptedData6.text()
+      const decryptedText6 = bytesToString(decryptBytes(bytesToHex(pod1.password), encryptedData6))
+      expect(encryptedText6).not.toEqual(contentSmall)
+      expect(decryptedText6).toEqual(contentSmall)
     })
   })
 })

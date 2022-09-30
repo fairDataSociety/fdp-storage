@@ -133,6 +133,15 @@ export function stringToBytes(data: string): Uint8Array {
   return new TextEncoder().encode(data)
 }
 
+/**
+ * Converts bytes array to string
+ *
+ * @param data bytes data
+ */
+export function bytesToString(data: Uint8Array): string {
+  return new TextDecoder().decode(data)
+}
+
 export function assertFlexBytes<Min extends number, Max extends number = Min>(
   b: unknown,
   min: Min,

@@ -1,5 +1,5 @@
-import { Pod, SharedPod } from './types'
-import { assertPodList, assertSharedPodList } from './utils'
+import { JsonPod, Pod, SharedJsonPod, SharedPod } from './types'
+import { assertPodList, assertSharedPodList, jsonPodToPod, sharedJsonPodToSharedPod } from './utils'
 
 /**
  * List of created and shared pods
@@ -28,9 +28,11 @@ export class List {
    */
   static fromJSON(json: string): List {
     const object = JSON.parse(json)
-    assertPodList(object.pods)
-    assertSharedPodList(object.sharedPods)
+    const pods = object.pods.map((item: JsonPod) => jsonPodToPod(item))
+    const sharedPods = object.sharedPods.map((item: SharedJsonPod) => sharedJsonPodToSharedPod(item))
+    assertPodList(pods)
+    assertSharedPodList(sharedPods)
 
-    return new List(object.pods, object.sharedPods)
+    return new List(pods, sharedPods)
   }
 }
