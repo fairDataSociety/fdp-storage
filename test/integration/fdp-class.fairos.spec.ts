@@ -64,15 +64,6 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
       const data = await fdp.account.login(user.username, user.password)
       expect(data.address).toEqual(user.address)
     })
-
-    it('import account to fairos', async () => {
-      const fairos = new FairOSApi()
-      const fdp = createFdp()
-      const user = generateUser(fdp)
-      const response = await fairos.registerV1(user.username, user.password, user.mnemonic)
-      expect(response.status).toEqual(201)
-      expect(response.data.address).toEqual(user.address)
-    })
   })
 
   describe('Pod', () => {
@@ -82,7 +73,7 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
       const user = generateUser(fdp)
       const podName1 = generateRandomHexString()
       const podName2 = generateRandomHexString()
-      await fdp.account.setAccountFromMnemonic(user.mnemonic)
+      fdp.account.setAccountFromMnemonic(user.mnemonic)
       await fdp.personalStorage.create(podName1)
       await fairos.registerV1(user.username, user.password, user.mnemonic)
       const response = await fairos.podLs()
@@ -114,7 +105,7 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
       expect(createResponse.status).toEqual(201)
       expect(createResponse.data).toStrictEqual({ message: 'pod created successfully' })
 
-      await fdp.account.setAccountFromMnemonic(user.mnemonic)
+      fdp.account.setAccountFromMnemonic(user.mnemonic)
       const fdpResponse = await fdp.personalStorage.list()
       expect(fdpResponse).toEqual({ pods: [{ name: podName1, index: 1 }], sharedPods: [] })
 
@@ -141,7 +132,7 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
       const fdp = createFdp()
       const user = generateUser(fdp)
       const podName1 = generateRandomHexString()
-      await fdp.account.setAccountFromMnemonic(user.mnemonic)
+      fdp.account.setAccountFromMnemonic(user.mnemonic)
       await fdp.personalStorage.create(podName1)
       await fairos.registerV1(user.username, user.password, user.mnemonic)
       const response = await fairos.podLs()
@@ -175,7 +166,7 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
       expect(createResponse2.status).toEqual(201)
       expect(createResponse2.data).toStrictEqual({ message: 'pod created successfully' })
 
-      await fdp.account.setAccountFromMnemonic(user.mnemonic)
+      fdp.account.setAccountFromMnemonic(user.mnemonic)
       const fdpResponse = await fdp.personalStorage.list()
       expect(fdpResponse).toEqual({
         pods: [
@@ -220,7 +211,7 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
       const directoryName2 = generateRandomHexString()
       const fullDirectoryName2 = '/' + directoryName2
 
-      await fdp.account.setAccountFromMnemonic(user.mnemonic)
+      fdp.account.setAccountFromMnemonic(user.mnemonic)
       await fdp.personalStorage.create(podName1)
       await fdp.directory.create(podName1, fullDirectoryName1)
       await fairos.registerV1(user.username, user.password, user.mnemonic)
@@ -268,7 +259,7 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
       const directoryName3 = generateRandomHexString()
       const fullDirectoryName3 = '/' + directoryName3
 
-      await fdp.account.setAccountFromMnemonic(user.mnemonic)
+      fdp.account.setAccountFromMnemonic(user.mnemonic)
       await fairos.registerV1(user.username, user.password, user.mnemonic)
       await fairos.podNew(podName1, user.password)
       await fairos.dirMkdir(podName1, fullDirectoryName1, user.password)
@@ -301,7 +292,7 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
       const podName1 = generateRandomHexString()
       const directoryName1 = generateRandomHexString()
       const fullDirectoryName1 = '/' + directoryName1
-      await fdp.account.setAccountFromMnemonic(user.mnemonic)
+      fdp.account.setAccountFromMnemonic(user.mnemonic)
       await fdp.personalStorage.create(podName1)
       await fdp.directory.create(podName1, fullDirectoryName1)
       await fairos.registerV1(user.username, user.password, user.mnemonic)
@@ -331,7 +322,7 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
       await fairos.podNew(podName1, user.password)
       await fairos.dirMkdir(podName1, fullDirectoryName1, user.password)
 
-      await fdp.account.setAccountFromMnemonic(user.mnemonic)
+      fdp.account.setAccountFromMnemonic(user.mnemonic)
       const fdpResponse = await fdp.directory.read(podName1, '/', true)
       expect(fdpResponse.getDirectories()).toHaveLength(1)
       const dir1 = fdpResponse.getDirectories()[0]
@@ -361,7 +352,7 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
       const filenameBig = generateRandomHexString() + '.txt'
       const fullFilenameBigPath = '/' + filenameBig
 
-      await fdp.account.setAccountFromMnemonic(user.mnemonic)
+      fdp.account.setAccountFromMnemonic(user.mnemonic)
       await fdp.personalStorage.create(podName1)
       await fdp.file.uploadData(podName1, fullFilenameBigPath, contentBig)
 
@@ -392,7 +383,7 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
       const fullFilenameBigPath = '/' + filenameBig
       const fullFilenameBigPath1 = '/' + filenameBig1
 
-      await fdp.account.setAccountFromMnemonic(user.mnemonic)
+      fdp.account.setAccountFromMnemonic(user.mnemonic)
       await fairos.registerV1(user.username, user.password, user.mnemonic)
       await fairos.podNew(podName1, user.password)
       const response1 = await fairos.fileUpload(podName1, '/', contentBig, filenameBig)
@@ -431,7 +422,7 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
       const filenameBig = generateRandomHexString() + '.txt'
       const fullFilenameBigPath = '/' + filenameBig
 
-      await fdp.account.setAccountFromMnemonic(user.mnemonic)
+      fdp.account.setAccountFromMnemonic(user.mnemonic)
       await fdp.personalStorage.create(podName1)
       await fdp.file.uploadData(podName1, fullFilenameBigPath, contentBig)
       await fairos.registerV1(user.username, user.password, user.mnemonic)
@@ -466,7 +457,7 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
       await fairos.fileUpload(podName1, '/', contentBig, filenameBig)
       await fairos.fileUpload(podName1, '/', contentBig2, filenameBig2)
 
-      await fdp.account.setAccountFromMnemonic(user.mnemonic)
+      fdp.account.setAccountFromMnemonic(user.mnemonic)
       const fdpResponse = await fdp.directory.read(podName1, '/', true)
       expect(fdpResponse.getFiles()).toHaveLength(2)
       expect(fdpResponse.getFiles()[0].name).toEqual(filenameBig)
