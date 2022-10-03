@@ -14,7 +14,7 @@ import { downloadPortableAccount, uploadPortableAccount, UserAccountWithMnemonic
 import { Connection } from '../connection/connection'
 import { AddressOptions, isAddressOptions, isMnemonicOptions, MnemonicOptions } from './types'
 import { ENS, PublicKey } from '@fairdatasociety/fdp-contracts'
-import { Reference, Utils } from '@ethersphere/bee-js'
+import { PrivateKeyBytes, Reference, Utils } from '@ethersphere/bee-js'
 import CryptoJS from 'crypto-js'
 import { bytesToHex } from '../utils/hex'
 
@@ -178,8 +178,7 @@ export class AccountData {
       const seed = CryptoJS.enc.Hex.parse(removeZeroFromHex(bytesToHex(this.seed!)))
       await this.ens.registerUsername(username, wallet.address, this.publicKey!)
 
-      return await uploadPortableAccount(
-        this.connection,
+      return await this.uploadPortableAccount(
         username,
         password,
         Utils.hexToBytes(removeZeroFromHex(wallet.privateKey)),
@@ -194,5 +193,22 @@ export class AccountData {
         throw e
       }
     }
+  }
+
+  /**
+   * Uploads portable account without registration in ENS
+   *
+   * @param username FDP username
+   * @param password FDP password
+   * @param privateKey account private key for data uploading to SWARM
+   * @param seed account seed to be uploaded in SWARM
+   */
+  async uploadPortableAccount(
+    username: string,
+    password: string,
+    privateKey: PrivateKeyBytes,
+    seed: CryptoJS.lib.WordArray,
+  ): Promise<Reference> {
+    return await uploadPortableAccount(this.connection, username, password, privateKey, seed)
   }
 }

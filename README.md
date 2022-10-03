@@ -184,6 +184,12 @@ Deleting a pod
 await fdp.personalStorage.delete('my-new-pod')
 ```
 
+Re-uploading a portable account in SWARM
+
+```js
+await fdp.personalStorage.uploadPortableAccount('username', 'password', privateKeyBytes, seedBytes)
+```
+
 ### Migrate from v1 to v2 account
 
 Export old wallet with mnemonic
