@@ -166,15 +166,15 @@ describe('Fair Data Protocol class', () => {
       expect(data).toBeDefined()
 
       fdp1.account.setAccountFromMnemonic(userFake.mnemonic)
-      const resul1 = await fdp1.account.isPublicKeyEqual(user.username)
-      expect(resul1).toEqual(false)
+      const result1 = await fdp1.account.isPublicKeyEqual(user.username)
+      expect(result1).toEqual(false)
       await expect(fdp1.account.reuploadPortableAccount(user.username, user.password)).rejects.toThrow(
         'Public key from the account is not equal to the key from ENS',
       )
 
       fdp1.account.setAccountFromMnemonic(user.mnemonic)
-      const resul2 = await fdp1.account.isPublicKeyEqual(user.username)
-      expect(resul2).toEqual(true)
+      const result2 = await fdp1.account.isPublicKeyEqual(user.username)
+      expect(result2).toEqual(true)
       await fdp1.account.reuploadPortableAccount(user.username, user.password)
     })
   })
