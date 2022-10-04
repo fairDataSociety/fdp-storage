@@ -40,7 +40,7 @@ describe('encryption', () => {
     })
 
     it('encryptText and decryptText', () => {
-      const examples = []
+      const examples: { text: string; password: string }[] = []
 
       // examples with content length from 1 to 200 and password in range 3-10
       for (let i = 1; i <= 200; i++) {
