@@ -1,6 +1,6 @@
 import { JsonPod, Pod, PodName, PodShareInfo, RawDirectoryMetadata, SharedJsonPod, SharedPod } from './types'
 import { Bee, Data, Utils } from '@ethersphere/bee-js'
-import { bytesToString, stringToBytes } from '../utils/bytes'
+import { bytesToString, stringToBytes, wordArrayToBytes } from '../utils/bytes'
 import { LookupAnswer } from '../feed/types'
 import { utils } from 'ethers'
 import { getRawDirectoryMetadataBytes } from '../directory/adapter'
@@ -28,7 +28,6 @@ import { Connection } from '../connection/connection'
 import { AccountData } from '../account/account-data'
 import { decryptBytes, POD_PASSWORD_LENGTH, PodPasswordBytes } from '../utils/encryption'
 import CryptoJS from 'crypto-js'
-import { wordArrayToBytes } from '../account/utils'
 
 export const META_VERSION = 2
 export const MAX_PODS_COUNT = 65536

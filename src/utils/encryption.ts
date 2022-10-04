@@ -1,7 +1,8 @@
 import CryptoJS from 'crypto-js'
-import { bytesToWordArray, decodeBase64Url, encodeBase64Url, wordArrayToBytes } from '../account/utils'
+import { decodeBase64Url, encodeBase64Url } from '../account/utils'
 import { PrivateKeyBytes, Utils } from '@ethersphere/bee-js'
 import { bytesToHex } from './hex'
+import { bytesToWordArray, wordArrayToBytes } from './bytes'
 
 export const IV_LENGTH = 16
 export const POD_PASSWORD_LENGTH = 32

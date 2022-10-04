@@ -10,10 +10,10 @@ import {
   SEED_SIZE,
   createCredentialsTopic,
   HD_PATH,
-  wordArrayToBytes,
 } from './utils'
 import { Connection } from '../connection/connection'
 import CryptoJS from 'crypto-js'
+import { wordArrayToBytes } from '../utils/bytes'
 
 /**
  * Created and encrypted user account to upload to the network
