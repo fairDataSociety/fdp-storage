@@ -66,7 +66,9 @@ export async function readDirectory(
       const currentMetadata = DirectoryItem.fromRawDirectoryMetadata(data)
 
       if (isRecursive) {
-        currentMetadata.content = (await readDirectory(bee, item, address, podPassword, isRecursive)).content
+        currentMetadata.content = (
+          await readDirectory(bee, item, address, podPassword, isRecursive, downloadOptions)
+        ).content
       }
 
       resultDirectoryItem.content.push(currentMetadata)

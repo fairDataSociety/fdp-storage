@@ -2,13 +2,12 @@ import { Connection } from '../connection/connection'
 import { utils } from 'ethers'
 import { Reference, RequestOptions } from '@ethersphere/bee-js'
 import { getUnixTimestamp } from '../utils/time'
-import { getFeedData, writeFeedData } from '../feed/api'
+import { writeFeedData } from '../feed/api'
 import { getRawDirectoryMetadataBytes } from '../directory/adapter'
 import { DIRECTORY_TOKEN, FILE_TOKEN } from '../file/handler'
-import { LookupAnswer } from '../feed/types'
 import { assertRawDirectoryMetadata, combine } from '../directory/utils'
 import { RawDirectoryMetadata } from '../pod/types'
-import { getRawMetadata } from './utils'
+import { assertItemIsNotExists, getRawMetadata } from './utils'
 import { RawMetadataWithEpoch } from './types'
 import { prepareEthAddress } from '../utils/wallet'
 import { PodPasswordBytes } from '../utils/encryption'
@@ -44,15 +43,7 @@ export async function addEntryToDirectory(
   const address = prepareEthAddress(wallet.address)
   const itemText = isFile ? 'File' : 'Directory'
   const fullPath = combine(parentPath, entryPath)
-  let pathData: LookupAnswer | undefined
-  try {
-    pathData = await getFeedData(connection.bee, fullPath, address, downloadOptions)
-    // eslint-disable-next-line no-empty
-  } catch (e) {}
-
-  if (pathData) {
-    throw new Error(`${itemText} "${fullPath}" already uploaded to the network`)
-  }
+  await assertItemIsNotExists(itemText, connection.bee, fullPath, address, downloadOptions)
 
   let parentData: RawDirectoryMetadata | undefined
   let metadataWithEpoch: RawMetadataWithEpoch | undefined

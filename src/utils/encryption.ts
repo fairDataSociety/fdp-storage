@@ -2,7 +2,8 @@ import CryptoJS from 'crypto-js'
 import { decodeBase64Url, encodeBase64Url } from '../account/utils'
 import { PrivateKeyBytes, Utils } from '@ethersphere/bee-js'
 import { bytesToHex } from './hex'
-import { bytesToWordArray, wordArrayToBytes } from './bytes'
+import { bytesToString, bytesToWordArray, wordArrayToBytes } from './bytes'
+import { isArrayBufferView, isString } from './type'
 
 export const IV_LENGTH = 16
 export const POD_PASSWORD_LENGTH = 32
@@ -100,4 +101,24 @@ export function encryptBytes(password: PrivateKeyBytes | string, data: Uint8Arra
  */
 export function decryptBytes(password: string, data: Uint8Array): Uint8Array {
   return wordArrayToBytes(decrypt(password, bytesToWordArray(data)))
+}
+
+/**
+ * Decrypt data and converts it from JSON string to object
+ *
+ * @param password password in form of string or bytes
+ * @param data array of bytes for decrypting
+ */
+export function decryptJson(password: string | Uint8Array, data: Uint8Array): unknown {
+  let passwordString
+
+  if (isArrayBufferView(password)) {
+    passwordString = bytesToHex(password)
+  } else if (isString(password)) {
+    passwordString = password
+  } else {
+    throw new Error('Incorrect password type')
+  }
+
+  return JSON.parse(bytesToString(decryptBytes(passwordString, data)))
 }

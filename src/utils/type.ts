@@ -75,3 +75,10 @@ export function assertPodPasswordBytes(value: PodPasswordBytes): asserts value i
     throw new Error('Expected a pod password bytes')
   }
 }
+
+/**
+ * Checks that value is an array buffer view
+ */
+export function isArrayBufferView(value: unknown): value is ArrayBufferView {
+  return ArrayBuffer.isView(value)
+}

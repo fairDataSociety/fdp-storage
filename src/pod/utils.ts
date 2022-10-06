@@ -1,4 +1,13 @@
-import { JsonPod, Pod, PodName, PodShareInfo, RawDirectoryMetadata, SharedJsonPod, SharedPod } from './types'
+import {
+  JsonPod,
+  Pod,
+  PodName,
+  PodShareInfo,
+  PodsMetadata,
+  RawDirectoryMetadata,
+  JsonSharedPod,
+  SharedPod,
+} from './types'
 import { Bee, Data, Utils } from '@ethersphere/bee-js'
 import { bytesToString, stringToBytes, wordArrayToBytes } from '../utils/bytes'
 import { LookupAnswer } from '../feed/types'
@@ -171,7 +180,7 @@ export function podToJsonPod(pod: Pod): JsonPod {
 /**
  * Converts SharedPod to JsonSharedPod
  */
-export function sharedPodToJsonSharedPod(pod: SharedPod): SharedJsonPod {
+export function sharedPodToJsonSharedPod(pod: SharedPod): JsonSharedPod {
   return { ...pod, password: bytesToHex(pod.password), address: bytesToHex(pod.address) }
 }
 
@@ -188,7 +197,7 @@ export function jsonPodToPod(pod: JsonPod): Pod {
 /**
  * Converts JsonPod to Pod
  */
-export function sharedJsonPodToSharedPod(pod: SharedJsonPod): SharedPod {
+export function jsonSharedPodToSharedPod(pod: JsonSharedPod): SharedPod {
   const password = Utils.hexToBytes(pod.password) as PodPasswordBytes
   const address = Utils.hexToBytes(pod.address) as Utils.EthAddress
   assertPodPasswordBytes(password)
@@ -234,6 +243,15 @@ export function isPod(value: unknown): value is Pod {
 }
 
 /**
+ * Json pod guard
+ */
+export function isJsonPod(value: unknown): value is JsonPod {
+  const { index, password } = value as JsonPod
+
+  return typeof value === 'object' && value !== null && isNumber(index) && Utils.isHexString(password)
+}
+
+/**
  * Shared pod guard
  */
 export function isSharedPod(value: unknown): value is SharedPod {
@@ -250,6 +268,15 @@ export function isSharedPod(value: unknown): value is SharedPod {
 }
 
 /**
+ * Json shared pod guard
+ */
+export function isJsonSharedPod(value: unknown): value is JsonSharedPod {
+  const { address, password } = value as JsonSharedPod
+
+  return typeof value === 'object' && value !== null && isEthAddress(address) && Utils.isHexString(password)
+}
+
+/**
  * Asserts that pod name type is correct
  */
 export function assertPodNameType(value: unknown): asserts value is PodName {
@@ -263,20 +290,17 @@ export function assertPodNameType(value: unknown): asserts value is PodName {
  */
 export function assertPod(value: unknown): asserts value is Pod {
   if (!isPod(value)) {
-    throw new Error('Invalid pod')
+    throw new Error(`Invalid pod: ${JSON.stringify(value)}`)
   }
 }
 
 /**
- * Asserts that pods list is correct
+ * Asserts that json pod is correct
  */
-export function assertPodList(value: unknown): asserts value is Pod[] {
-  assertArray(value)
-  value.forEach(value => {
-    if (!isPod(value)) {
-      throw new Error('Invalid item in pods list')
-    }
-  })
+export function assertJsonPod(value: unknown): asserts value is JsonPod {
+  if (!isJsonPod(value)) {
+    throw new Error(`Invalid json pod: ${JSON.stringify(value)}`)
+  }
 }
 
 /**
@@ -284,28 +308,45 @@ export function assertPodList(value: unknown): asserts value is Pod[] {
  */
 export function assertSharedPod(value: unknown): asserts value is SharedPod {
   if (!isSharedPod(value)) {
-    throw new Error('Invalid shared pod')
+    throw new Error(`Invalid shared pod: ${JSON.stringify(value)}`)
   }
 }
 
 /**
- * Asserts that shared pods list is correct
+ * Asserts that json shared pod is correct
  */
-export function assertSharedPodList(value: unknown): asserts value is SharedPod[] {
-  assertArray(value)
-  value.forEach(value => {
-    if (!isSharedPod(value)) {
-      throw new Error('Invalid item in shared pods list')
-    }
-  })
+export function assertJsonSharedPod(value: unknown): asserts value is JsonSharedPod {
+  if (!isJsonSharedPod(value)) {
+    throw new Error(`Invalid json shared pod: ${JSON.stringify(value)}`)
+  }
+}
+
+/**
+ * Asserts that pods are correct
+ */
+export function assertPodsMetadata(value: unknown): asserts value is PodsMetadata {
+  const data = value as PodsMetadata
+  assertJsonPods(data.pods)
+  assertJsonSharedPods(data.sharedPods)
 }
 
 /**
  * Asserts that pods are correct
  */
 export function assertPods(value: unknown): asserts value is Pod[] {
+  assertArray(value)
   for (const pod of value as Pod[]) {
     assertPod(pod)
+  }
+}
+
+/**
+ * Asserts that json pods are correct
+ */
+export function assertJsonPods(value: unknown): asserts value is JsonPod[] {
+  assertArray(value)
+  for (const pod of value as JsonPod[]) {
+    assertJsonPod(pod)
   }
 }
 
@@ -313,8 +354,19 @@ export function assertPods(value: unknown): asserts value is Pod[] {
  * Asserts that shared pods are correct
  */
 export function assertSharedPods(value: unknown): asserts value is SharedPod[] {
+  assertArray(value)
   for (const pod of value as SharedPod[]) {
     assertSharedPod(pod)
+  }
+}
+
+/**
+ * Asserts that json shared pods are correct
+ */
+export function assertJsonSharedPods(value: unknown): asserts value is JsonSharedPod[] {
+  assertArray(value)
+  for (const pod of value as JsonSharedPod[]) {
+    assertJsonSharedPod(pod)
   }
 }
 
@@ -354,7 +406,7 @@ export function isPodShareInfo(value: unknown): value is PodShareInfo {
  */
 export function assertPodShareInfo(value: unknown): asserts value is PodShareInfo {
   if (!isPodShareInfo(value)) {
-    throw new Error('Incorrect pod share info')
+    throw new Error(`Incorrect pod share info: ${JSON.stringify(value)}`)
   }
 }
 

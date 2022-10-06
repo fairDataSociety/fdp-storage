@@ -1,16 +1,15 @@
 import { Connection } from '../connection/connection'
 import { Bee, Reference, RequestOptions, UploadResult, Utils } from '@ethersphere/bee-js'
 import { PathInfo } from '../pod/utils'
-import { Blocks, FileShareInfo, RawBlocks } from './types'
+import { Blocks, FileShareInfo, RawBlock, RawBlocks } from './types'
 import { rawBlocksToBlocks } from './adapter'
 import CryptoJS from 'crypto-js'
-import { assertString, isObject } from '../utils/type'
+import { assertArray, assertString, isNumber, isObject, isString } from '../utils/type'
 import { FileMetadata, RawFileMetadata } from '../pod/types'
-import { bytesToHex, EncryptedReference } from '../utils/hex'
+import { EncryptedReference } from '../utils/hex'
 import { isRawFileMetadata } from '../directory/utils'
 import { getUnixTimestamp } from '../utils/time'
-import { decryptBytes, PodPasswordBytes } from '../utils/encryption'
-import { bytesToString } from '../utils/bytes'
+import { decryptJson, PodPasswordBytes } from '../utils/encryption'
 
 /**
  * Asserts that full path string is correct
@@ -97,8 +96,8 @@ export async function downloadBlocksManifest(
   downloadOptions?: RequestOptions,
 ): Promise<Blocks> {
   const encryptedData = await bee.downloadData(reference, downloadOptions)
-  const decryptedString = bytesToString(decryptBytes(bytesToHex(podPassword), encryptedData))
-  const rawBlocks = JSON.parse(decryptedString) as unknown as RawBlocks
+  const rawBlocks = decryptJson(podPassword, encryptedData)
+  assertRawBlocks(rawBlocks)
 
   return rawBlocksToBlocks(rawBlocks)
 }
@@ -137,6 +136,34 @@ export function isFileShareInfo(value: unknown): value is FileShareInfo {
   const data = value as FileShareInfo
 
   return isObject(value) && isRawFileMetadata(data.meta)
+}
+
+/**
+ * Checks that value is file raw block
+ */
+export function isRawBlock(value: unknown): value is RawBlock {
+  const data = value as RawBlock
+
+  return (
+    isObject(value) &&
+    isString(data.Name) &&
+    isNumber(data.Size) &&
+    isNumber(data.CompressedSize) &&
+    isString(data.Reference?.R)
+  )
+}
+
+/**
+ * Asserts that file raw blocks are correct
+ */
+export function assertRawBlocks(value: unknown): asserts value is RawBlocks {
+  const data = value as RawBlocks
+  assertArray(data.Blocks)
+  for (const block of value as RawBlocks[]) {
+    if (!isRawBlock(block)) {
+      throw new Error('Incorrect file raw block')
+    }
+  }
 }
 
 /**
