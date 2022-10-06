@@ -154,6 +154,29 @@ describe('Fair Data Protocol class', () => {
       await expect(fdp.account.login(user.username, generateUser().password)).rejects.toThrow('Incorrect password')
       await expect(fdp.account.login(user.username, '')).rejects.toThrow('Incorrect password')
     })
+
+    it('should re-upload an account', async () => {
+      const fdp = createFdp()
+      const fdp1 = createFdp()
+      const user = generateUser(fdp)
+      const userFake = generateUser()
+      await topUpAddress(fdp)
+
+      const data = await fdp.account.register(user.username, user.password)
+      expect(data).toBeDefined()
+
+      fdp1.account.setAccountFromMnemonic(userFake.mnemonic)
+      const result1 = await fdp1.account.isPublicKeyEqual(user.username)
+      expect(result1).toEqual(false)
+      await expect(fdp1.account.reuploadPortableAccount(user.username, user.password)).rejects.toThrow(
+        'Public key from the account is not equal to the key from ENS',
+      )
+
+      fdp1.account.setAccountFromMnemonic(user.mnemonic)
+      const result2 = await fdp1.account.isPublicKeyEqual(user.username)
+      expect(result2).toEqual(true)
+      await fdp1.account.reuploadPortableAccount(user.username, user.password)
+    })
   })
 
   describe('Pods', () => {

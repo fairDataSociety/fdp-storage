@@ -4,6 +4,7 @@ import {
   assertPassword,
   assertRegistrationAccount,
   assertUsername,
+  CHUNK_ALREADY_EXISTS_ERROR,
   HD_PATH,
   removeZeroFromHex,
 } from './utils'
@@ -188,9 +189,57 @@ export class AccountData {
     } catch (e) {
       const error = e as Error
 
-      if (error.message?.startsWith('Conflict: chunk already exists')) {
+      if (error.message?.startsWith(CHUNK_ALREADY_EXISTS_ERROR)) {
         throw new Error('User account already uploaded')
       } else {
+        throw e
+      }
+    }
+  }
+
+  /**
+   * Checks whether the public key associated with the username in ENS is identical with the wallet's public key
+   *
+   * @param username FDP username
+   */
+  async isPublicKeyEqual(username: string): Promise<boolean> {
+    assertRegistrationAccount(this)
+
+    try {
+      return (await this.ens.getPublicKey(username)) === this.publicKey
+    } catch (e) {
+      return false
+    }
+  }
+
+  /**
+   * Re-uploads portable account without registration in ENS
+   *
+   * @param username FDP username
+   * @param password FDP password
+   */
+  async reuploadPortableAccount(username: string, password: string): Promise<void> {
+    assertRegistrationAccount(this)
+
+    const wallet = this.wallet!
+    const seed = CryptoJS.enc.Hex.parse(removeZeroFromHex(bytesToHex(this.seed!)))
+
+    if (!(await this.isPublicKeyEqual(username))) {
+      throw new Error('Public key from the account is not equal to the key from ENS')
+    }
+
+    try {
+      await uploadPortableAccount(
+        this.connection,
+        username,
+        password,
+        Utils.hexToBytes(removeZeroFromHex(wallet.privateKey)),
+        seed,
+      )
+    } catch (e) {
+      const error = e as Error
+
+      if (!error.message?.startsWith(CHUNK_ALREADY_EXISTS_ERROR)) {
         throw e
       }
     }

@@ -184,6 +184,18 @@ Deleting a pod
 await fdp.personalStorage.delete('my-new-pod')
 ```
 
+Re-uploading a portable account to SWARM
+
+```js
+await fdp.personalStorage.reuploadPortableAccount('username', 'password')
+```
+
+Checks whether the public key associated with the username in ENS is identical with the wallet's public key
+
+```js
+await fdp.personalStorage.isPublicKeyEqual('username')
+```
+
 ### Migrate from v1 to v2 account
 
 Export old wallet with mnemonic
