@@ -9,7 +9,6 @@ import {
   assertSharedPod,
   createPod,
   createPodShareInfo,
-  getRandomPodPassword,
   getSharedPodInfo,
   podListToBytes,
 } from './utils'
@@ -17,7 +16,7 @@ import { getUnixTimestamp } from '../utils/time'
 import { getExtendedPodsList, getPodsList } from './api'
 import { uploadBytes } from '../file/utils'
 import { stringToBytes } from '../utils/bytes'
-import { Reference } from '@ethersphere/bee-js'
+import { Reference, Utils } from '@ethersphere/bee-js'
 import { List } from './list'
 import { assertEncryptedReference, EncryptedReference } from '../utils/hex'
 import { prepareEthAddress, preparePrivateKey } from '../utils/wallet'
@@ -164,7 +163,7 @@ export class PersonalStorage {
       {
         name: options?.name ?? data.pod_name,
         address: prepareEthAddress(data.pod_address),
-        password: getRandomPodPassword(),
+        password: Utils.hexToBytes(data.password),
       },
     )
 

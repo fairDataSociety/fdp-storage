@@ -24,7 +24,7 @@ import {
   isPodPassword,
   isString,
 } from '../utils/type'
-import { bytesToHex, EncryptedReference } from '../utils/hex'
+import { bytesToHex, EncryptedReference, isHexEthAddress } from '../utils/hex'
 import { List } from './list'
 import { getExtendedPodsList, getPodsList } from './api'
 import { Epoch, getFirstEpoch } from '../feed/lookup/epoch'
@@ -396,8 +396,8 @@ export function isPodShareInfo(value: unknown): value is PodShareInfo {
   return (
     isObject(value) &&
     isString(data.pod_name) &&
-    Utils.isHexEthAddress(data.pod_address) &&
-    Utils.isHexEthAddress(data.user_address)
+    isHexEthAddress(data.pod_address) &&
+    isHexEthAddress(data.user_address)
   )
 }
 
