@@ -159,7 +159,7 @@ export function isRawBlock(value: unknown): value is RawBlock {
 export function assertRawBlocks(value: unknown): asserts value is RawBlocks {
   const data = value as RawBlocks
   assertArray(data.Blocks)
-  for (const block of value as RawBlocks[]) {
+  for (const block of data.Blocks) {
     if (!isRawBlock(block)) {
       throw new Error('Incorrect file raw block')
     }
