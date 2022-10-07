@@ -154,7 +154,7 @@ describe('Fair Data Protocol class', () => {
       const fdp1 = createFdp()
       const user = generateUser(fdp)
       const userFake = generateUser()
-      await topUpAddress(fdp)
+      await topUpFdp(fdp)
 
       const data = await fdp.account.register(user.username, user.password)
       expect(data).toBeDefined()
