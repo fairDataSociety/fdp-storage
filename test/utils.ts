@@ -15,9 +15,8 @@ export interface TestUser {
 export const USERNAME_LENGTH = 16
 export const PASSWORD_LENGTH = 6
 export const GET_FEED_DATA_TIMEOUT = 1000
-export const DEFAULT_BATCH_ID = '0000000000000000000000000000000000000000000000000000000000000000'
 
-let cachedBatchId = DEFAULT_BATCH_ID
+let cachedBatchId = ''
 
 /**
  * Generate new user info
@@ -203,19 +202,19 @@ export function fairOSUrl(): string {
 export async function waitFairOS(): Promise<void> {
   const url = fairOSUrl()
   for (let i = 0; i <= 100; i++) {
-    let text
+    let status
     try {
-      text = (await axios.get(url)).data
+      status = (await axios.get(url)).status
       // eslint-disable-next-line no-empty
     } catch (e) {}
 
-    if (text === 'OK\n') {
+    if (status === 200) {
       return
-    } else if (text) {
+    } else if (status) {
       throw new Error('Incorrect FairOS API answer')
     }
 
-    await sleep(3000)
+    await sleep(1000)
   }
 
   throw new Error('FairOS API is not ready')
