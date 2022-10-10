@@ -86,10 +86,10 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
       await fdp.personalStorage.create(podName2)
       const response2 = await fairos.podLs()
       expect(response2.status).toEqual(200)
-      expect(response2.data).toStrictEqual({
-        pod_name: [podName1, podName2],
-        shared_pod_name: [],
-      })
+      // sometimes pods have different order
+      expect(response2.data.pod_name).toContain(podName1)
+      expect(response2.data.pod_name).toContain(podName2)
+      expect(response2.data.shared_pod_name).toEqual([])
     })
 
     it('should create pods in fairos and list them in fdp', async () => {

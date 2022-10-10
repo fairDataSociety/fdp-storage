@@ -6,22 +6,31 @@ export class FairOSApi {
 
   public cookies = ''
 
-  constructor(private apiUrlV1 = 'http://localhost:9090/v1/', private apiUrlV2 = 'http://localhost:9090/v2/') {}
+  constructor(private apiUrlV1 = 'http://localhost:9090/') {
+    axios.interceptors.request.use(config => {
+      const url = config?.url
+
+      if (this.cookies && config.headers && url?.indexOf('user/signup') === -1 && url?.indexOf('user/login') === -1) {
+        config.headers.Cookie = this.cookies
+      }
+
+      return config
+    })
+    axios.interceptors.response.use(response => {
+      if (this.withCredentials && response.headers['set-cookie']) {
+        this.cookies = response.headers['set-cookie']?.[0] as string
+      }
+
+      return response
+    })
+  }
 
   private getV2Url(method: string) {
-    return `${this.apiUrlV2}${method}`
+    return `${this.apiUrlV1}v2/${method}`
   }
 
   private getV1Url(method: string) {
-    return `${this.apiUrlV1}${method}`
-  }
-
-  private handleCookies(response: AxiosResponse): AxiosResponse {
-    if (this.withCredentials) {
-      this.cookies = response.headers['set-cookie']?.[0] as string
-    }
-
-    return response
+    return `${this.apiUrlV1}v1/${method}`
   }
 
   /**
@@ -30,13 +39,11 @@ export class FairOSApi {
   async registerV1(username: string, password: string, mnemonic?: string): Promise<AxiosResponse> {
     const url = this.getV1Url('user/signup')
 
-    return this.handleCookies(
-      await axios.post(url, {
-        user_name: username,
-        password,
-        mnemonic,
-      }),
-    )
+    return await axios.post(url, {
+      user_name: username,
+      password,
+      mnemonic,
+    })
   }
 
   /**
@@ -49,9 +56,6 @@ export class FairOSApi {
       params: {
         user_name: username,
       },
-      headers: {
-        Cookie: this.cookies,
-      },
     })
   }
 
@@ -61,12 +65,10 @@ export class FairOSApi {
   async login(username: string, password: string): Promise<AxiosResponse> {
     const url = this.getV2Url('user/login')
 
-    return this.handleCookies(
-      await axios.post(url, {
-        user_name: username,
-        password,
-      }),
-    )
+    return await axios.post(url, {
+      user_name: username,
+      password,
+    })
   }
 
   /**
@@ -75,13 +77,11 @@ export class FairOSApi {
   async register(username: string, password: string, mnemonic: string): Promise<AxiosResponse> {
     const url = this.getV2Url('user/signup')
 
-    return this.handleCookies(
-      await axios.post(url, {
-        user_name: username,
-        password,
-        mnemonic,
-      }),
-    )
+    return await axios.post(url, {
+      user_name: username,
+      password,
+      mnemonic,
+    })
   }
 
   /**
@@ -90,11 +90,7 @@ export class FairOSApi {
   async podLs(): Promise<AxiosResponse> {
     const url = this.getV1Url('pod/ls')
 
-    return axios.get(url, {
-      headers: {
-        Cookie: this.cookies,
-      },
-    })
+    return axios.get(url)
   }
 
   /**
@@ -106,18 +102,10 @@ export class FairOSApi {
   async podNew(name: string, password: string): Promise<AxiosResponse> {
     const url = this.getV1Url('pod/new')
 
-    return axios.post(
-      url,
-      {
-        pod_name: name,
-        password,
-      },
-      {
-        headers: {
-          Cookie: this.cookies,
-        },
-      },
-    )
+    return axios.post(url, {
+      pod_name: name,
+      password,
+    })
   }
 
   /**
@@ -133,9 +121,6 @@ export class FairOSApi {
       data: {
         pod_name: name,
         password,
-      },
-      headers: {
-        Cookie: this.cookies,
       },
     })
   }
@@ -154,9 +139,6 @@ export class FairOSApi {
         pod_name: name,
         file_path: filePath,
       },
-      headers: {
-        Cookie: this.cookies,
-      },
     })
   }
 
@@ -174,9 +156,6 @@ export class FairOSApi {
         pod_name: name,
         dir_path: directoryPath,
       },
-      headers: {
-        Cookie: this.cookies,
-      },
     })
   }
 
@@ -189,18 +168,10 @@ export class FairOSApi {
   async podOpen(name: string, password: string): Promise<AxiosResponse> {
     const url = this.getV1Url('pod/open')
 
-    return axios.post(
-      url,
-      {
-        pod_name: name,
-        password,
-      },
-      {
-        headers: {
-          Cookie: this.cookies,
-        },
-      },
-    )
+    return axios.post(url, {
+      pod_name: name,
+      password,
+    })
   }
 
   /**
@@ -211,17 +182,9 @@ export class FairOSApi {
   async podClose(name: string): Promise<AxiosResponse> {
     const url = this.getV1Url('pod/close')
 
-    return axios.post(
-      url,
-      {
-        pod_name: name,
-      },
-      {
-        headers: {
-          Cookie: this.cookies,
-        },
-      },
-    )
+    return axios.post(url, {
+      pod_name: name,
+    })
   }
 
   /**
@@ -234,9 +197,6 @@ export class FairOSApi {
       params: {
         dir_path: dirPath,
         pod_name: podName,
-      },
-      headers: {
-        Cookie: this.cookies,
       },
     })
   }
@@ -252,9 +212,6 @@ export class FairOSApi {
         pod_name: podName,
         sharing_ref: sharingReference,
       },
-      headers: {
-        Cookie: this.cookies,
-      },
     })
   }
 
@@ -268,19 +225,11 @@ export class FairOSApi {
   async dirMkdir(podName: string, directoryPath: string, password: string): Promise<AxiosResponse> {
     const url = this.getV1Url('dir/mkdir')
 
-    return axios.post(
-      url,
-      {
-        pod_name: podName,
-        dir_path: directoryPath,
-        password,
-      },
-      {
-        headers: {
-          Cookie: this.cookies,
-        },
-      },
-    )
+    return axios.post(url, {
+      pod_name: podName,
+      dir_path: directoryPath,
+      password,
+    })
   }
 
   /**
@@ -299,9 +248,6 @@ export class FairOSApi {
         params: {
           pod_name: podName,
           file_path: filePath,
-        },
-        headers: {
-          Cookie: this.cookies,
         },
       },
     )
@@ -333,7 +279,6 @@ export class FairOSApi {
     return axios.post(url, form, {
       headers: {
         'Content-Type': 'multipart/form-data',
-        Cookie: this.cookies,
       },
     })
   }
