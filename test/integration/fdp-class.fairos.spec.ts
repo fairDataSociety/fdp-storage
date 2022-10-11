@@ -1,28 +1,11 @@
-import {
-  createFdp,
-  createUsableBatch,
-  generateRandomHexString,
-  generateUser,
-  isUsableBatchExists,
-  setCachedBatchId,
-  topUpAddress,
-  topUpFdp,
-  waitFairOS,
-} from '../utils'
+import { createFdp, generateRandomHexString, generateUser, topUpAddress, topUpFdp, waitFairOS } from '../utils'
 import { FairOSApi } from '../utils/fairos-api'
 import { Wallet, utils } from 'ethers'
 
 jest.setTimeout(400000)
 describe('Fair Data Protocol with FairOS-dfs', () => {
   beforeAll(async () => {
-    const batchId = await createUsableBatch()
-    setCachedBatchId(batchId)
-
     await waitFairOS()
-  })
-
-  it('check default batch usability', async () => {
-    expect(await isUsableBatchExists()).toBe(true)
   })
 
   describe('Account', () => {
