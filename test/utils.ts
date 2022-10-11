@@ -16,8 +16,6 @@ export const USERNAME_LENGTH = 16
 export const PASSWORD_LENGTH = 6
 export const GET_FEED_DATA_TIMEOUT = 1000
 
-let cachedBatchId = ''
-
 /**
  * Generate new user info
  *
@@ -79,8 +77,7 @@ export function assertBatchId(value: unknown): asserts value is BatchId {
  * Returns an url for testing the Bee Debug API
  */
 export function batchId(): BatchId {
-  const envBatchId = process.env.BEE_BATCH_ID
-  const result = envBatchId || cachedBatchId
+  const result = process.env.BEE_BATCH_ID || process.env.CACHED_BEE_BATCH_ID
   assertBatchId(result)
 
   return result
@@ -171,22 +168,6 @@ export async function createUsableBatch(): Promise<BatchId> {
   }
 
   return getUsableBatch(beeDebug)
-}
-
-/**
- * Sets cached batch id
- */
-export function setCachedBatchId(batchId: BatchId): void {
-  cachedBatchId = batchId
-}
-
-/**
- * Sets cached batch id
- */
-export function getCachedBatchId(): BatchId {
-  assertBatchId(cachedBatchId)
-
-  return cachedBatchId
 }
 
 /**
