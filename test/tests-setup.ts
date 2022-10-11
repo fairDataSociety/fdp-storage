@@ -1,5 +1,6 @@
-import { createUsableBatch, setCachedBatchId } from './utils'
+import { createUsableBatch } from './utils'
 
 export default async function testsSetup(): Promise<void> {
-  setCachedBatchId(await createUsableBatch())
+  // internal env param for caching batch id
+  process.env.CACHED_BEE_BATCH_ID = await createUsableBatch()
 }
