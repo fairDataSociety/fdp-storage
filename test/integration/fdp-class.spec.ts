@@ -1,14 +1,11 @@
 import { FdpContracts, FdpStorage } from '../../src'
 import {
   createFdp,
-  createUsableBatch,
   generateRandomHexString,
   generateUser,
   GET_FEED_DATA_TIMEOUT,
   getBee,
   getCachedBatchId,
-  isUsableBatchExists,
-  setCachedBatchId,
   topUpFdp,
 } from '../utils'
 import { MAX_POD_NAME_LENGTH } from '../../src/pod/utils'
@@ -27,11 +24,6 @@ import { base64toReference } from '../../src/file/utils'
 
 jest.setTimeout(400000)
 describe('Fair Data Protocol class', () => {
-  beforeAll(async () => {
-    const batchId = await createUsableBatch()
-    setCachedBatchId(batchId)
-  })
-
   it('should strip trailing slash', () => {
     const fdp = new FdpStorage('http://localhost:1633/', getCachedBatchId(), {
       downloadOptions: {
@@ -39,10 +31,6 @@ describe('Fair Data Protocol class', () => {
       },
     })
     expect(fdp.connection.bee.url).toEqual('http://localhost:1633')
-  })
-
-  it('check default batch usability', async () => {
-    expect(await isUsableBatchExists()).toBe(true)
   })
 
   it('fdp-contracts is not empty', async () => {

@@ -29,6 +29,9 @@ export async function getBrowserPathMapping(): Promise<{ [aliasNodeReference: st
 
 export default async (): Promise<Config.InitialOptions> => {
   return {
+    // Setup the prerequisites for the tests to run
+    globalSetup: './tests-setup.ts',
+
     // The directory where Jest should output its coverage files
     coverageDirectory: 'coverage',
 
