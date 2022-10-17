@@ -71,7 +71,7 @@ const fdp = new FdpStorage('https://localhost:1633', batchId)
 fdp.connection.bee.uploadData = async (batchId, data) => {
   return (await fetch(fdp.connection.bee.url + '/bytes', {
     method: 'POST',
-    headers:{
+    headers: {
       'swarm-postage-batch-id': batchId,
       'swarm-encrypt': true,
       'swarm-pin': true,
