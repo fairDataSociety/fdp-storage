@@ -2,7 +2,17 @@
 
 # Fair Data Protocol Storage
 
-> Typescript implementation of https://github.com/fairDataSociety/fairOS-dfs
+**FDP Storage** is a serverless web3 filesystem for organizing users' personal data implement in Typescript.
+
+Such data is stored using certain structures that allow the data created in one dApp to be interpreted in another dApp. The current implementation allows to create and manage pods (similar to disks in file systems), directories, and files.
+
+The library requires the [Bee](https://github.com/ethersphere/bee) endpoint of the node to interact with the data. If you plan to do write operations, you will need to specify [postage batch id](https://docs.ethswarm.org/docs/access-the-swarm/keep-your-data-alive). The library can work both with nodes connected to the mainnet network and with local nodes. To run a local test node, you can use [FDP Play](https://github.com/fairDataSociety/fdp-play).
+
+As an account for FDP Storage, it can act as a local account based on the [BIP-44](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki) mnemonic phrase or an account saved in a [smart contract](https://github.com/fairDataSociety/fdp-contracts). To store an account in a smart contract, you may need to top up your wallet address. To test account registration in a test environment, you can also use [FDP Play](https://github.com/fairDataSociety/fdp-play).
+
+The library can work in the browser, in Node.js and in mobile applications using [React Native](https://reactnative.dev/). There is an implementation of FDP Storage in Golang: https://github.com/fairDataSociety/fairOS-dfs
+
+Project development plans and details of how each of the parts works can be found in [FIPs](https://github.com/fairDataSociety/FIPs). In this repository, you can create your proposal, which will be considered and taken into account in further development.
 
 **Warning: This project is in beta state. There might (and most probably will) be changes in the future to its API and working. Also, no guarantees can be made about its stability, efficiency, and security at this stage.**
 
