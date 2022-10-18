@@ -63,6 +63,24 @@ import '@ethersproject/shims' // commong shims for ethers.js
 import 'text-encoding' // for fdp-storage to make TextEncoding work
 ```
 
+After creating instance of `FdpStorage` replace `bee-js` upload method to the new one because of bug [#757](https://github.com/ethersphere/bee-js/issues/757).
+
+```js
+const fdp = new FdpStorage('https://localhost:1633', batchId)
+
+fdp.connection.bee.uploadData = async (batchId, data) => {
+  return (await fetch(fdp.connection.bee.url + '/bytes', {
+    method: 'POST',
+    headers: {
+      'swarm-postage-batch-id': batchId,
+      'swarm-encrypt': true,
+      'swarm-pin': true,
+    },
+    body: data
+  })).json()
+}
+```
+
 ## Usage
 
 Creating FDP account
