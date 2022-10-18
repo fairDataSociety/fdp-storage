@@ -195,7 +195,7 @@ export function jsonPodToPod(pod: JsonPod): Pod {
 }
 
 /**
- * Converts JsonPod to Pod
+ * Converts JsonSharedPod to SharedPod
  */
 export function jsonSharedPodToSharedPod(pod: JsonSharedPod): SharedPod {
   const password = Utils.hexToBytes(pod.password) as PodPasswordBytes
