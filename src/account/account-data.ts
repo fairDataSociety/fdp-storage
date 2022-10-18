@@ -8,9 +8,8 @@ import {
   HD_PATH,
   removeZeroFromHex,
 } from './utils'
-import { prepareEthAddress } from '../utils/address'
 import { getEncryptedMnemonic } from './mnemonic'
-import { decryptText } from './encryption'
+import { decryptText } from '../utils/encryption'
 import { downloadPortableAccount, uploadPortableAccount, UserAccountWithMnemonic } from './account'
 import { Connection } from '../connection/connection'
 import { AddressOptions, isAddressOptions, isMnemonicOptions, MnemonicOptions } from './types'
@@ -18,6 +17,7 @@ import { ENS, PublicKey } from '@fairdatasociety/fdp-contracts'
 import { Reference, Utils } from '@ethersphere/bee-js'
 import CryptoJS from 'crypto-js'
 import { bytesToHex } from '../utils/hex'
+import { mnemonicToSeed, prepareEthAddress, privateKeyToBytes } from '../utils/wallet'
 
 export class AccountData {
   /**
@@ -66,7 +66,7 @@ export class AccountData {
    */
   setAccountFromMnemonic(mnemonic: string): void {
     this.publicKey = Wallet.fromMnemonic(mnemonic).publicKey
-    this.connectWalletWithENS(Utils.hexToBytes(removeZeroFromHex(utils.mnemonicToSeed(mnemonic))))
+    this.connectWalletWithENS(mnemonicToSeed(mnemonic))
   }
 
   /**
@@ -183,7 +183,7 @@ export class AccountData {
         this.connection,
         username,
         password,
-        Utils.hexToBytes(removeZeroFromHex(wallet.privateKey)),
+        privateKeyToBytes(wallet.privateKey),
         seed,
       )
     } catch (e) {

@@ -353,7 +353,8 @@ describe('Fair Data Protocol class - in browser', () => {
 
       for (let i = 0; result1.length > i; i++) {
         const item = result1[i]
-        expect(item.result).toEqual(item.example)
+        expect(item.result.name).toEqual(item.example.name)
+        expect(item.result.index).toEqual(item.example.index)
       }
     })
 
@@ -778,7 +779,6 @@ describe('Fair Data Protocol class - in browser', () => {
 
       expect(sharedReference).toHaveLength(128)
       expect(sharedData.meta).toBeDefined()
-      expect(sharedData.source_address).toHaveLength(40)
     })
 
     it('should receive information about shared file', async () => {
@@ -813,7 +813,6 @@ describe('Fair Data Protocol class - in browser', () => {
       expect(sharedData.meta.file_path).toEqual('/')
       expect(sharedData.meta.file_name).toEqual(filenameSmall)
       expect(sharedData.meta.file_size).toEqual(fileSizeSmall)
-      expect(sharedData.source_address).toHaveLength(40)
     })
 
     it('should save shared file to a pod', async () => {

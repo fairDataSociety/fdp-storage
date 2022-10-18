@@ -7,6 +7,7 @@ import { bytesToHex } from '../utils/hex'
 import { getUnixTimestamp } from '../utils/time'
 import { LookupAnswer } from './types'
 import { Connection } from '../connection/connection'
+import { encryptBytes, PodPasswordBytes } from '../utils/encryption'
 
 /**
  * Finds and downloads the latest feed content
@@ -33,7 +34,32 @@ export async function getFeedData(
 }
 
 /**
- * Writes data to feed using `topic` and `epoch` as a key and signed data with `privateKey` as a value
+ * Writes data with encryption to feed using `topic` and `epoch` as a key and signed data with `privateKey` as a value
+ *
+ * @param connection connection information for data uploading
+ * @param topic key for data
+ * @param data data to upload
+ * @param privateKey private key to sign data
+ * @param podPassword bytes for data encryption from pod metadata
+ * @param epoch feed epoch
+ */
+export async function writeFeedData(
+  connection: Connection,
+  topic: string,
+  data: Uint8Array,
+  privateKey: string | Uint8Array,
+  podPassword: PodPasswordBytes,
+  epoch?: Epoch,
+): Promise<Reference> {
+  data = encryptBytes(podPassword, data)
+
+  return writeFeedDataRaw(connection, topic, data, privateKey, epoch)
+}
+
+/**
+ * Writes data without encryption to feed using `topic` and `epoch` as a key and signed data with `privateKey` as a value
+ *
+ * @deprecated required for deprecated methods
  *
  * @param connection connection information for data uploading
  * @param topic key for data
@@ -41,7 +67,7 @@ export async function getFeedData(
  * @param privateKey private key to sign data
  * @param epoch feed epoch
  */
-export async function writeFeedData(
+export async function writeFeedDataRaw(
   connection: Connection,
   topic: string,
   data: Uint8Array,

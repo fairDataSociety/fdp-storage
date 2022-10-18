@@ -1,6 +1,6 @@
 import { writeFeedData } from '../feed/api'
 import { EthAddress } from '@ethersphere/bee-js/dist/types/utils/eth'
-import { Bee, Reference, RequestOptions } from '@ethersphere/bee-js'
+import { Bee, PrivateKeyBytes, Reference, RequestOptions } from '@ethersphere/bee-js'
 import {
   assertDirectoryName,
   assertPartsLength,
@@ -19,6 +19,8 @@ import { addEntryToDirectory } from '../content-items/handler'
 import { DirectoryItem } from '../content-items/directory-item'
 import { FileItem } from '../content-items/file-item'
 import { getRawMetadata } from '../content-items/utils'
+import { PodPasswordBytes } from '../utils/encryption'
+import { preparePrivateKey } from '../utils/wallet'
 
 export const MAX_DIRECTORY_NAME_LENGTH = 100
 
@@ -28,6 +30,7 @@ export const MAX_DIRECTORY_NAME_LENGTH = 100
  * @param bee Bee instance
  * @param path path to start searching from
  * @param address Ethereum address of the pod which owns the path
+ * @param podPassword bytes for data encryption from pod metadata
  * @param isRecursive search with recursion or not
  * @param downloadOptions options for downloading
  */
@@ -35,10 +38,11 @@ export async function readDirectory(
   bee: Bee,
   path: string,
   address: EthAddress,
+  podPassword: PodPasswordBytes,
   isRecursive?: boolean,
   downloadOptions?: RequestOptions,
 ): Promise<DirectoryItem> {
-  const parentRawDirectoryMetadata = (await getRawMetadata(bee, path, address)).metadata
+  const parentRawDirectoryMetadata = (await getRawMetadata(bee, path, address, podPassword, downloadOptions)).metadata
   assertRawDirectoryMetadata(parentRawDirectoryMetadata)
   const resultDirectoryItem = DirectoryItem.fromRawDirectoryMetadata(parentRawDirectoryMetadata)
 
@@ -52,17 +56,19 @@ export async function readDirectory(
 
     if (isFile) {
       item = combine(path, item.substring(FILE_TOKEN.length))
-      const data = (await getRawMetadata(bee, item, address, downloadOptions)).metadata
+      const data = (await getRawMetadata(bee, item, address, podPassword, downloadOptions)).metadata
       assertRawFileMetadata(data)
       resultDirectoryItem.content.push(FileItem.fromRawFileMetadata(data))
     } else if (isDirectory) {
       item = combine(path, item.substring(DIRECTORY_TOKEN.length))
-      const data = (await getRawMetadata(bee, item, address, downloadOptions)).metadata
+      const data = (await getRawMetadata(bee, item, address, podPassword, downloadOptions)).metadata
       assertRawDirectoryMetadata(data)
       const currentMetadata = DirectoryItem.fromRawDirectoryMetadata(data)
 
       if (isRecursive) {
-        currentMetadata.content = (await readDirectory(bee, item, address, isRecursive)).content
+        currentMetadata.content = (
+          await readDirectory(bee, item, address, podPassword, isRecursive, downloadOptions)
+        ).content
       }
 
       resultDirectoryItem.content.push(currentMetadata)
@@ -78,28 +84,35 @@ export async function readDirectory(
  * @param connection Bee connection
  * @param path parent path
  * @param name name of the directory
- * @param privateKey private key of the pod
+ * @param podPassword bytes for data encryption from pod metadata
+ * @param privateKey private key for uploading data to the network
  */
 async function createDirectoryInfo(
   connection: Connection,
   path: string,
   name: string,
-  privateKey: string | Uint8Array,
+  podPassword: PodPasswordBytes,
+  privateKey: PrivateKeyBytes,
 ): Promise<Reference> {
   const now = getUnixTimestamp()
   const metadata = createRawDirectoryMetadata(META_VERSION, path, name, now, now, now)
 
-  return writeFeedData(connection, combine(path, name), metadata, privateKey)
+  return writeFeedData(connection, combine(path, name), metadata, privateKey, podPassword)
 }
 
 /**
  * Creates root directory for the pod that tied to the private key
  *
  * @param connection Bee connection
- * @param privateKey private key of the pod
+ * @param podPassword bytes for data encryption
+ * @param privateKey private key for uploading data to the network
  */
-export async function createRootDirectory(connection: Connection, privateKey: string | Uint8Array): Promise<Reference> {
-  return createDirectoryInfo(connection, '', '/', privateKey)
+export async function createRootDirectory(
+  connection: Connection,
+  podPassword: PodPasswordBytes,
+  privateKey: PrivateKeyBytes,
+): Promise<Reference> {
+  return createDirectoryInfo(connection, '', '/', podPassword, privateKey)
 }
 
 /**
@@ -108,12 +121,14 @@ export async function createRootDirectory(connection: Connection, privateKey: st
  * @param connection Bee connection
  * @param fullPath path to the directory
  * @param podWallet pod wallet
+ * @param podPassword bytes for decrypting pod content
  * @param downloadOptions options for downloading
  */
 export async function createDirectory(
   connection: Connection,
   fullPath: string,
   podWallet: utils.HDNode,
+  podPassword: PodPasswordBytes,
   downloadOptions?: RequestOptions,
 ): Promise<void> {
   const parts = getPathParts(fullPath)
@@ -121,7 +136,8 @@ export async function createDirectory(
   const name = parts[parts.length - 1]
   assertDirectoryName(name)
 
+  const privateKey = preparePrivateKey(podWallet.privateKey)
   const parentPath = getPathFromParts(parts, 1)
-  await addEntryToDirectory(connection, podWallet, parentPath, name, false, downloadOptions)
-  await createDirectoryInfo(connection, parentPath, name, podWallet.privateKey)
+  await addEntryToDirectory(connection, podWallet, podPassword, parentPath, name, false, downloadOptions)
+  await createDirectoryInfo(connection, parentPath, name, podPassword, privateKey)
 }

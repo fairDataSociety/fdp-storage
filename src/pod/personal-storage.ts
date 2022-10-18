@@ -13,13 +13,13 @@ import {
   podListToBytes,
 } from './utils'
 import { getUnixTimestamp } from '../utils/time'
-import { prepareEthAddress } from '../utils/address'
 import { getExtendedPodsList, getPodsList } from './api'
 import { uploadBytes } from '../file/utils'
 import { stringToBytes } from '../utils/bytes'
-import { Reference } from '@ethersphere/bee-js'
+import { Reference, Utils } from '@ethersphere/bee-js'
 import { List } from './list'
 import { assertEncryptedReference, EncryptedReference } from '../utils/hex'
+import { prepareEthAddress, preparePrivateKey } from '../utils/wallet'
 
 export const POD_TOPIC = 'Pods'
 
@@ -36,7 +36,7 @@ export class PersonalStorage {
 
     const data = await getPodsList(
       this.accountData.connection.bee,
-      prepareEthAddress(this.accountData.wallet!.address),
+      this.accountData.wallet!,
       this.accountData.connection.options?.downloadOptions,
     )
 
@@ -58,7 +58,6 @@ export class PersonalStorage {
       this.accountData.seed!,
       {
         name,
-        index: 0,
       },
     )
 
@@ -77,7 +76,7 @@ export class PersonalStorage {
     name = name.trim()
     const podsInfo = await getPodsList(
       this.accountData.connection.bee,
-      prepareEthAddress(this.accountData.wallet!.address),
+      this.accountData.wallet!,
       this.accountData.connection.options?.downloadOptions,
     )
 
@@ -97,6 +96,7 @@ export class PersonalStorage {
       POD_TOPIC,
       allPodsData,
       wallet.privateKey,
+      preparePrivateKey(wallet.privateKey),
       podsInfo.lookupAnswer!.epoch.getNextEpoch(getUnixTimestamp()),
     )
   }
@@ -111,16 +111,19 @@ export class PersonalStorage {
   async share(name: string): Promise<Reference> {
     assertAccount(this.accountData)
     assertPodName(name)
-    const address = prepareEthAddress(this.accountData.wallet!.address)
+    const wallet = this.accountData.wallet!
+    const address = prepareEthAddress(wallet.address)
     const podInfo = await getExtendedPodsList(
       this.accountData.connection.bee,
       name,
-      address,
+      wallet,
       this.accountData.seed!,
       this.accountData.connection.options?.downloadOptions,
     )
 
-    const data = stringToBytes(JSON.stringify(createPodShareInfo(name, podInfo.podAddress, address)))
+    const data = stringToBytes(
+      JSON.stringify(createPodShareInfo(name, podInfo.podAddress, address, podInfo.pod.password)),
+    )
 
     return (await uploadBytes(this.accountData.connection, data)).reference
   }
@@ -160,6 +163,7 @@ export class PersonalStorage {
       {
         name: options?.name ?? data.pod_name,
         address: prepareEthAddress(data.pod_address),
+        password: Utils.hexToBytes(data.password),
       },
     )
 

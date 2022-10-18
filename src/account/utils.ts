@@ -206,10 +206,3 @@ export function assertChunkSizeLength(value: unknown): asserts value is number {
     throw new Error('Chunk size is not correct')
   }
 }
-
-/**
- * Converts bytes to CryptoJS WordArray
- */
-export function bytesToWordArray(data: Uint8Array): CryptoJS.lib.WordArray {
-  return CryptoJS.enc.Hex.parse(Utils.bytesToHex(data))
-}

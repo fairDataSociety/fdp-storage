@@ -1,22 +1,23 @@
 import { Connection } from '../connection/connection'
 import { utils } from 'ethers'
 import { Reference, RequestOptions } from '@ethersphere/bee-js'
-import { prepareEthAddress } from '../utils/address'
 import { getUnixTimestamp } from '../utils/time'
-import { getFeedData, writeFeedData } from '../feed/api'
+import { writeFeedData } from '../feed/api'
 import { getRawDirectoryMetadataBytes } from '../directory/adapter'
 import { DIRECTORY_TOKEN, FILE_TOKEN } from '../file/handler'
-import { LookupAnswer } from '../feed/types'
 import { assertRawDirectoryMetadata, combine } from '../directory/utils'
 import { RawDirectoryMetadata } from '../pod/types'
-import { getRawMetadata } from './utils'
+import { assertItemIsNotExists, getRawMetadata } from './utils'
 import { RawMetadataWithEpoch } from './types'
+import { prepareEthAddress } from '../utils/wallet'
+import { PodPasswordBytes } from '../utils/encryption'
 
 /**
  * Add child file or directory to a defined parent directory
  *
  * @param connection connection information for data management
  * @param wallet wallet of the pod
+ * @param podPassword bytes for data encryption from pod metadata
  * @param parentPath parent path
  * @param entryPath entry path
  * @param isFile define if entry is file or directory
@@ -25,6 +26,7 @@ import { RawMetadataWithEpoch } from './types'
 export async function addEntryToDirectory(
   connection: Connection,
   wallet: utils.HDNode,
+  podPassword: PodPasswordBytes,
   parentPath: string,
   entryPath: string,
   isFile: boolean,
@@ -38,27 +40,15 @@ export async function addEntryToDirectory(
     throw new Error('Incorrect entry path')
   }
 
+  const address = prepareEthAddress(wallet.address)
   const itemText = isFile ? 'File' : 'Directory'
   const fullPath = combine(parentPath, entryPath)
-  let pathData: LookupAnswer | undefined
-  try {
-    pathData = await getFeedData(connection.bee, fullPath, prepareEthAddress(wallet.address), downloadOptions)
-    // eslint-disable-next-line no-empty
-  } catch (e) {}
-
-  if (pathData) {
-    throw new Error(`${itemText} "${fullPath}" already uploaded to the network`)
-  }
+  await assertItemIsNotExists(itemText, connection.bee, fullPath, address, downloadOptions)
 
   let parentData: RawDirectoryMetadata | undefined
   let metadataWithEpoch: RawMetadataWithEpoch | undefined
   try {
-    metadataWithEpoch = await getRawMetadata(
-      connection.bee,
-      parentPath,
-      prepareEthAddress(wallet.address),
-      downloadOptions,
-    )
+    metadataWithEpoch = await getRawMetadata(connection.bee, parentPath, address, podPassword, downloadOptions)
     assertRawDirectoryMetadata(metadataWithEpoch.metadata)
     parentData = metadataWithEpoch.metadata
   } catch (e) {
@@ -80,6 +70,7 @@ export async function addEntryToDirectory(
     parentPath,
     getRawDirectoryMetadataBytes(parentData),
     wallet.privateKey,
+    podPassword,
     metadataWithEpoch.epoch.getNextEpoch(getUnixTimestamp()),
   )
 }
@@ -88,7 +79,8 @@ export async function addEntryToDirectory(
  * Removes file or directory from the parent directory
  *
  * @param connection connection information for data management
- * @param wallet wallet of the pod
+ * @param wallet wallet of the pod for downloading and uploading metadata
+ * @param podPassword bytes for data encryption from pod metadata
  * @param parentPath parent path of the entry
  * @param entryPath full path of the entry
  * @param isFile define if entry is file or directory
@@ -97,6 +89,7 @@ export async function addEntryToDirectory(
 export async function removeEntryFromDirectory(
   connection: Connection,
   wallet: utils.HDNode,
+  podPassword: PodPasswordBytes,
   parentPath: string,
   entryPath: string,
   isFile: boolean,
@@ -106,6 +99,7 @@ export async function removeEntryFromDirectory(
     connection.bee,
     parentPath,
     prepareEthAddress(wallet.address),
+    podPassword,
     downloadOptions,
   )
   const parentData = metadataWithEpoch.metadata
@@ -121,6 +115,7 @@ export async function removeEntryFromDirectory(
     parentPath,
     getRawDirectoryMetadataBytes(parentData),
     wallet.privateKey,
+    podPassword,
     metadataWithEpoch.epoch.getNextEpoch(getUnixTimestamp()),
   )
 }

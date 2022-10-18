@@ -1,8 +1,8 @@
 import { Block, Blocks, RawBlock, RawBlocks } from './types'
 import { FileMetadata, RawFileMetadata } from '../pod/types'
-import { prepareEthAddress } from '../utils/address'
 import { base64toReference, referenceToBase64 } from './utils'
 import { stringToBytes } from '../utils/bytes'
+import { prepareEthAddress } from '../utils/wallet'
 
 /**
  * Converts FairOS block format to FDS block format
@@ -87,6 +87,7 @@ export function rawFileMetadataToFileMetadata(data: RawFileMetadata): FileMetada
     accessTime: data.access_time,
     modificationTime: data.modification_time,
     blocksReference: base64toReference(data.file_inode_reference),
+    sharedPassword: data.shared_password,
   }
 }
 
@@ -108,6 +109,7 @@ export function fileMetadataToRawFileMetadata(data: FileMetadata): RawFileMetada
     access_time: data.accessTime,
     modification_time: data.modificationTime,
     file_inode_reference: referenceToBase64(data.blocksReference),
+    shared_password: data.sharedPassword,
   }
 }
 
