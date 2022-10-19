@@ -1,11 +1,11 @@
 import { FdpContracts, FdpStorage } from '../../src'
 import {
+  batchId,
   createFdp,
   generateRandomHexString,
   generateUser,
   GET_FEED_DATA_TIMEOUT,
   getBee,
-  getCachedBatchId,
   topUpFdp,
 } from '../utils'
 import { MAX_POD_NAME_LENGTH } from '../../src/pod/utils'
@@ -25,7 +25,7 @@ import { base64toReference } from '../../src/file/utils'
 jest.setTimeout(400000)
 describe('Fair Data Protocol class', () => {
   it('should strip trailing slash', () => {
-    const fdp = new FdpStorage('http://localhost:1633/', getCachedBatchId(), {
+    const fdp = new FdpStorage('http://localhost:1633/', batchId(), {
       downloadOptions: {
         timeout: GET_FEED_DATA_TIMEOUT,
       },
