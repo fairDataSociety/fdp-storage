@@ -9,7 +9,7 @@ Such data is stored using certain structures that allow the data created in one 
 The library requires the API endpoint of a [Bee](https://github.com/ethersphere/bee) node to interact with the data. If you plan to do write operations, you will need to specify [postage batch id](https://docs.ethswarm.org/docs/access-the-swarm/keep-your-data-alive).
 To run a local test node trying out the functionalities, you can use [FDP Play](https://github.com/fairDataSociety/fdp-play).
 
-As an account for FDP Storage, it can act as a local account based on the [BIP-44](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki) mnemonic phrase or an account saved in a [smart contract](https://github.com/fairDataSociety/fdp-contracts). To store an account in a smart contract, you may need to top up your wallet address. To test account registration in a test environment, you can also use [FDP Play](https://github.com/fairDataSociety/fdp-play).
+The FDP Storage user account is a wallet based on the [BIP-44](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki) mnemonic phrase from which one can create a portable account allowing retrieving the wallet from anywhere by providing a username and a password to the library.
 
 The library can work in the browser, in Node.js and in mobile applications using [React Native](https://reactnative.dev/). There is an implementation of FDP Storage in Golang: https://github.com/fairDataSociety/fairOS-dfs
 
