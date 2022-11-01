@@ -91,7 +91,13 @@ import { FdpStorage } from '@fairdatasociety/fdp-storage'
 const batchId = 'GET_BATCH_ID_FROM_YOUR_NODE' // fill it with batch id from your Bee node
 const fdp = new FdpStorage('http://localhost:1633', batchId)
 const wallet = fdp.account.createWallet() // after creating a wallet, the user must top up its balance before registration
+// Associate the created wallet with the username in the smart contract.
+// This method makes the account portable.
+// Seed is saved encrypted in Swarm.
 await fdp.account.register('myusername', 'mypassword')
+
+// If necessary, the account can be re-uploaded to Swarm.
+await fdp.personalStorage.reuploadPortableAccount('username', 'password')
 ```
 
 Login with FDP account
@@ -99,6 +105,25 @@ Login with FDP account
 ```js
 const wallet = await fdp.account.login('otherusername', 'mypassword')
 console.log(wallet) // prints downloaded and decrypted wallet
+```
+
+Creating and using a user without interacting with the blockchain
+
+It is not necessary to register a user in a smart contract and make his wallet portable. You can create a wallet, save the mnemonic phrase locally and import this account to interact with all the data.
+
+```js
+// Create a wallet for interacting with data.
+// It does not need to be funded.
+// Operations in the blockchain will not pass through it.
+const wallet = fdp.account.createWallet()
+
+// Get mnemonic phrase of the account.
+// This is the key to all data in FDP Storage.
+// You need to store in a safe place.
+const mnemonic = wallet.mnemonic.phrase
+
+// to access your account, you need to import the phrase
+fdp.account.setAccountFromMnemonic(mnemonic)
 ```
 
 Creating a pod
@@ -202,16 +227,10 @@ Deleting a pod
 await fdp.personalStorage.delete('my-new-pod')
 ```
 
-Re-uploading a portable account to SWARM
-
-```js
-await fdp.personalStorage.reuploadPortableAccount('username', 'password')
-```
-
 Checks whether the public key associated with the username in ENS is identical with the wallet's public key
 
 ```js
-await fdp.personalStorage.isPublicKeyEqual('username')
+await fdp.account.isPublicKeyEqual('username')
 ```
 
 ### Migrate from v1 to v2 account
