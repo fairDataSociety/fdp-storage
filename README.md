@@ -2,7 +2,7 @@
 
 # Fair Data Protocol Storage
 
-**FDP Storage** is a serverless web3 filesystem for organizing users' personal data implement in Typescript.
+**FDP Storage** is a serverless web3 filesystem for organizing users' personal data implemented in Typescript.
 
 Such data is stored using certain structures that allow the data created in one dApp to be interpreted in another dApp. The current implementation allows to create and manage pods (similar to disks in file systems), directories, and files.
 
