@@ -95,6 +95,9 @@ const wallet = fdp.account.createWallet() // after creating a wallet, the user m
 // This method makes the account portable.
 // Seed is saved encrypted in Swarm.
 await fdp.account.register('myusername', 'mypassword')
+
+// If necessary, the account can be re-uploaded to Swarm.
+await fdp.personalStorage.reuploadPortableAccount('username', 'password')
 ```
 
 Login with FDP account
@@ -224,16 +227,10 @@ Deleting a pod
 await fdp.personalStorage.delete('my-new-pod')
 ```
 
-Re-uploading a portable account to SWARM
-
-```js
-await fdp.personalStorage.reuploadPortableAccount('username', 'password')
-```
-
 Checks whether the public key associated with the username in ENS is identical with the wallet's public key
 
 ```js
-await fdp.personalStorage.isPublicKeyEqual('username')
+await fdp.account.isPublicKeyEqual('username')
 ```
 
 ### Migrate from v1 to v2 account
