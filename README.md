@@ -6,7 +6,8 @@
 
 Such data is stored using certain structures that allow the data created in one dApp to be interpreted in another dApp. The current implementation allows to create and manage pods (similar to disks in file systems), directories, and files.
 
-The library requires the [Bee](https://github.com/ethersphere/bee) endpoint of the node to interact with the data. If you plan to do write operations, you will need to specify [postage batch id](https://docs.ethswarm.org/docs/access-the-swarm/keep-your-data-alive). The library can work both with nodes connected to the mainnet network and with local nodes. To run a local test node, you can use [FDP Play](https://github.com/fairDataSociety/fdp-play).
+The library requires the API endpoint of a [Bee](https://github.com/ethersphere/bee) node to interact with the data. If you plan to do write operations, you will need to specify [postage batch id](https://docs.ethswarm.org/docs/access-the-swarm/keep-your-data-alive).
+To run a local test node trying out the functionalities, you can use [FDP Play](https://github.com/fairDataSociety/fdp-play).
 
 As an account for FDP Storage, it can act as a local account based on the [BIP-44](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki) mnemonic phrase or an account saved in a [smart contract](https://github.com/fairDataSociety/fdp-contracts). To store an account in a smart contract, you may need to top up your wallet address. To test account registration in a test environment, you can also use [FDP Play](https://github.com/fairDataSociety/fdp-play).
 
