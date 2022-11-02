@@ -2,7 +2,18 @@
 
 # Fair Data Protocol Storage
 
-> Typescript implementation of https://github.com/fairDataSociety/fairOS-dfs
+**FDP Storage** is a serverless web3 filesystem for organizing users' personal data implemented in Typescript.
+
+Such data is stored using certain structures that allow the data created in one dApp to be interpreted in another dApp. The current implementation allows to create and manage pods (similar to disks in file systems), directories, and files.
+
+The library requires the API endpoint of a [Bee](https://github.com/ethersphere/bee) node to interact with the data. If you plan to do write operations, you will need to specify [postage batch id](https://docs.ethswarm.org/docs/access-the-swarm/keep-your-data-alive).
+To run a local test node trying out the functionalities, you can use [FDP Play](https://github.com/fairDataSociety/fdp-play).
+
+The FDP Storage user account is a wallet based on the [BIP-44](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki) mnemonic phrase from which one can create a portable account allowing retrieving the wallet from anywhere by providing a username and a password to the library.
+
+The library can work in the browser, in Node.js and in mobile applications using [React Native](https://reactnative.dev/). There is an implementation of Personal Storage in Golang: https://github.com/fairDataSociety/fairOS-dfs
+
+Project development plans and details of how each of the parts works can be found in [FIPs](https://github.com/fairDataSociety/FIPs). In this repository, you can create your proposal, which will be considered and taken into account in further development.
 
 **Warning: This project is in beta state. There might (and most probably will) be changes in the future to its API and working. Also, no guarantees can be made about its stability, efficiency, and security at this stage.**
 
