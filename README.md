@@ -11,7 +11,7 @@ To run a local test node trying out the functionalities, you can use [FDP Play](
 
 The FDP Storage user account is a wallet based on the [BIP-44](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki) mnemonic phrase from which one can create a portable account allowing retrieving the wallet from anywhere by providing a username and a password to the library.
 
-The library can work in the browser, in Node.js and in mobile applications using [React Native](https://reactnative.dev/). There is an implementation of FDP Storage in Golang: https://github.com/fairDataSociety/fairOS-dfs
+The library can work in the browser, in Node.js and in mobile applications using [React Native](https://reactnative.dev/). There is an implementation of Personal Storage in Golang: https://github.com/fairDataSociety/fairOS-dfs
 
 Project development plans and details of how each of the parts works can be found in [FIPs](https://github.com/fairDataSociety/FIPs). In this repository, you can create your proposal, which will be considered and taken into account in further development.
 
