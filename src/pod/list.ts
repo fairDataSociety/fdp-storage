@@ -35,7 +35,6 @@ export class List {
 
       throw new Error(`Can't parse json pods list: ${error.message}`)
     }
-
     assertPodsMetadata(object)
     const pods = object.pods.map((item: JsonPod) => jsonPodToPod(item))
     const sharedPods = object.sharedPods.map((item: JsonSharedPod) => jsonSharedPodToSharedPod(item))

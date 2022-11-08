@@ -275,11 +275,6 @@ export class FairOSApi {
     form.append('block_size', blockSize)
     form.append('pod_name', podName)
     form.append('dir_path', dirPath)
-
-    return axios.post(url, form, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    })
+    return axios.post(url, form, { headers: form.getHeaders() })
   }
 }

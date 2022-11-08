@@ -247,7 +247,6 @@ export function isPod(value: unknown): value is Pod {
  */
 export function isJsonPod(value: unknown): value is JsonPod {
   const { index, password } = value as JsonPod
-
   return typeof value === 'object' && value !== null && isNumber(index) && Utils.isHexString(password)
 }
 
