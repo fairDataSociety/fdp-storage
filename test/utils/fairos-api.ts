@@ -1,6 +1,33 @@
 import axios, { AxiosResponse } from 'axios'
 import FormData from 'form-data'
 
+export interface Pod {
+  name: string
+  index: number
+  password: string
+}
+
+export interface SharedPod {
+  name: string
+}
+
+export interface PodsList {
+  pods: Pod[]
+  sharedPods: SharedPod[]
+}
+
+export interface Directory {
+  name: string
+  content_type: string
+  creation_time: string
+  modification_time: string
+  access_time: string
+}
+
+export interface Directories {
+  dirs: Directory[]
+}
+
 export class FairOSApi {
   public withCredentials = true
 
@@ -276,10 +303,6 @@ export class FairOSApi {
     form.append('pod_name', podName)
     form.append('dir_path', dirPath)
 
-    return axios.post(url, form, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    })
+    return axios.post(url, form, { headers: form.getHeaders() })
   }
 }

@@ -2,7 +2,7 @@ import crypto from 'crypto'
 import { BATCH_ID_HEX_LENGTH, BatchId, Bee, BeeDebug, Utils } from '@ethersphere/bee-js'
 import { FdpStorage } from '../src'
 import { utils, Wallet } from 'ethers'
-import { ENS, Environments, getEnvironmentConfig } from '@fairdatasociety/fdp-contracts'
+import { Environments, getEnvironmentConfig } from '@fairdatasociety/fdp-contracts'
 import axios from 'axios'
 
 export interface TestUser {
@@ -209,13 +209,14 @@ export async function topUpFdp(fdp: FdpStorage): Promise<void> {
     throw new Error('Address is not defined')
   }
 
-  await topUpAddress(fdp.ens, fdp.account.wallet?.address)
+  await topUpAddress(fdp.account.wallet?.address)
 }
 
 /**
  * Top up balance for address
  */
-export async function topUpAddress(ens: ENS, address: string, amountInEther = '0.01'): Promise<void> {
+export async function topUpAddress(address: string, amountInEther = '0.01'): Promise<void> {
+  const ens = new FdpStorage(beeUrl(), batchId()).ens
   const account = (await ens.provider.listAccounts())[0]
   const txHash = await ens.provider.send('eth_sendTransaction', [
     {
