@@ -1,4 +1,4 @@
-import { Bee, Reference, Utils } from '@ethersphere/bee-js'
+import { Bee, Reference, Utils } from '@fairdatasociety/bee-js'
 import { assertBase64UrlData, assertUsername } from './utils'
 import { Wallet } from 'ethers'
 import { getFeedData, writeFeedDataRaw } from '../feed/api'

@@ -1,4 +1,4 @@
-import { BrandedType, Utils } from '@ethersphere/bee-js'
+import { BrandedType, Utils } from '@fairdatasociety/bee-js'
 import { bmtHash } from './bmt'
 import { assertFlexBytes, makeSpan, serializeBytes, SPAN_SIZE } from '../utils/bytes'
 

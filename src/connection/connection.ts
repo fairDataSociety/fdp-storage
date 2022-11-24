@@ -1,4 +1,4 @@
-import { BatchId, Bee } from '@ethersphere/bee-js'
+import { BatchId, Bee } from '@fairdatasociety/bee-js'
 import { Options } from '../types'
 
 /**

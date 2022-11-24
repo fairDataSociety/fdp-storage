@@ -1,6 +1,6 @@
 import CryptoJS from 'crypto-js'
 import { decodeBase64Url, encodeBase64Url } from '../account/utils'
-import { PrivateKeyBytes, Utils } from '@ethersphere/bee-js'
+import { PrivateKeyBytes, Utils } from '@fairdatasociety/bee-js'
 import { bytesToHex } from './hex'
 import { bytesToString, bytesToWordArray, wordArrayToBytes } from './bytes'
 import { isArrayBufferView, isString } from './type'

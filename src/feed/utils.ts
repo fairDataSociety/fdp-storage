@@ -1,5 +1,5 @@
 import { extractChunkContent } from '../account/utils'
-import { Data } from '@ethersphere/bee-js'
+import { Data } from '@fairdatasociety/bee-js'
 import { LookupData } from './types'
 
 /**

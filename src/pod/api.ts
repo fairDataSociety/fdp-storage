@@ -1,4 +1,4 @@
-import { Bee, RequestOptions } from '@ethersphere/bee-js'
+import { Bee, RequestOptions } from '@fairdatasociety/bee-js'
 import { LookupAnswer } from '../feed/types'
 import { getFeedData } from '../feed/api'
 import { POD_TOPIC } from './personal-storage'

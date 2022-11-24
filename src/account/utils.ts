@@ -1,4 +1,4 @@
-import { Data, Utils } from '@ethersphere/bee-js'
+import { Data, Utils } from '@fairdatasociety/bee-js'
 import { bmtHash } from '../chunk/bmt'
 import { makeSpan, stringToBytes, wrapBytesWithHelpers } from '../utils/bytes'
 import { AccountData } from './account-data'

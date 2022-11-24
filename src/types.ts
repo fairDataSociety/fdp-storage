@@ -1,4 +1,4 @@
-import { RequestOptions } from '@ethersphere/bee-js'
+import { RequestOptions } from '@fairdatasociety/bee-js'
 import { Environment } from '@fairdatasociety/fdp-contracts'
 
 /**

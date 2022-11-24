@@ -18,7 +18,7 @@ import { MAX_POD_NAME_LENGTH } from '../../src/pod/utils'
 import { createUserV1 } from '../../src/account/account'
 import { PodShareInfo, RawFileMetadata } from '../../src/pod/types'
 import { FileShareInfo } from '../../src/file/types'
-import { BatchId } from '@ethersphere/bee-js'
+import { BatchId } from '@fairdatasociety/bee-js'
 
 jest.setTimeout(200000)
 describe('Fair Data Protocol class - in browser', () => {

@@ -1,5 +1,5 @@
 import { utils } from 'ethers'
-import { PrivateKeyBytes, Utils } from '@ethersphere/bee-js'
+import { PrivateKeyBytes, Utils } from '@fairdatasociety/bee-js'
 import { removeZeroFromHex } from '../account/utils'
 
 /**

@@ -1,5 +1,5 @@
 import { RawDirectoryMetadata, RawFileMetadata } from '../pod/types'
-import { Reference } from '@ethersphere/bee-js'
+import { Reference } from '@fairdatasociety/bee-js'
 import { ContentItem } from './content-item'
 import { FileItem } from './file-item'
 import { isDirectoryItem, isFileItem } from './utils'

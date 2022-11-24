@@ -1,5 +1,5 @@
 import { isSharedPod } from '../../../src/pod/utils'
-import { Utils } from '@ethersphere/bee-js'
+import { Utils } from '@fairdatasociety/bee-js'
 
 describe('pod/utils', () => {
   it('isSharedPod', () => {

@@ -1,5 +1,5 @@
 import { Connection } from '../connection/connection'
-import { Bee, Reference, RequestOptions, UploadResult, Utils } from '@ethersphere/bee-js'
+import { Bee, Reference, RequestOptions, UploadResult, Utils } from '@fairdatasociety/bee-js'
 import { PathInfo } from '../pod/utils'
 import { Blocks, FileShareInfo, RawBlock, RawBlocks } from './types'
 import { rawBlocksToBlocks } from './adapter'
