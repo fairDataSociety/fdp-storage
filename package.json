@@ -52,7 +52,7 @@
     "depcheck": "depcheck ."
   },
   "dependencies": {
-    "@ethersphere/bee-js": "^3.1.0",
+    "@fairdatasociety/bee-js": "^5.0.0",
     "@fairdatasociety/fdp-contracts": "^1.0.4",
     "crypto-js": "^4.1.1",
     "ethers": "^5.5.2",
