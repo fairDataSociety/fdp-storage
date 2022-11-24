@@ -1,4 +1,4 @@
-import { Utils } from '@ethersphere/bee-js'
+import { Utils } from '@fairdatasociety/bee-js'
 import { isEthAddress, isObject } from '../utils/type'
 import { isValidMnemonic } from 'ethers/lib/utils'
 

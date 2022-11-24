@@ -1,4 +1,4 @@
-import { Bee, Data, Reference, RequestOptions, Utils } from '@ethersphere/bee-js'
+import { Bee, Data, Reference, RequestOptions, Utils } from '@fairdatasociety/bee-js'
 import { bmtHashString } from '../account/utils'
 import { getId } from './handler'
 import { lookup } from './lookup/linear'

@@ -1,6 +1,6 @@
 import { wrapBytesWithHelpers } from '../utils/bytes'
-import { Bee, Data, RequestOptions, Utils } from '@ethersphere/bee-js'
-import { EthAddress } from '@ethersphere/bee-js/dist/types/utils/eth'
+import { Bee, Data, RequestOptions, Utils } from '@fairdatasociety/bee-js'
+import { EthAddress } from '@fairdatasociety/bee-js/dist/types/utils/eth'
 import { downloadBlocksManifest } from './utils'
 import { FileMetadata } from '../pod/types'
 import { rawFileMetadataToFileMetadata } from './adapter'

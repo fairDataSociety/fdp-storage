@@ -1,4 +1,4 @@
-import { Utils } from '@ethersphere/bee-js'
+import { Utils } from '@fairdatasociety/bee-js'
 import { longToByteArray } from '../../utils/bytes'
 
 const EPOCH_LENGTH = 8

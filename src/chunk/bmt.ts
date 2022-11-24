@@ -1,6 +1,6 @@
 import { keccak256 } from 'js-sha3'
 import { BeeArgumentError } from '../utils/error'
-import { Utils } from '@ethersphere/bee-js'
+import { Utils } from '@fairdatasociety/bee-js'
 
 const MAX_CHUNK_PAYLOAD_SIZE = 4096
 const SEGMENT_SIZE = 32

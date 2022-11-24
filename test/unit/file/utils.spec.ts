@@ -1,4 +1,4 @@
-import { Reference } from '@ethersphere/bee-js'
+import { Reference } from '@fairdatasociety/bee-js'
 import { assertFullPathWithName, extractPathInfo } from '../../../src/file/utils'
 import { blocksToManifest } from '../../../src/file/adapter'
 import { Block, Blocks } from '../../../src/file/types'

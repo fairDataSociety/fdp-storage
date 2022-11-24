@@ -1,5 +1,5 @@
 import { Epoch, HIGHEST_LEVEL } from './epoch'
-import { Data } from '@ethersphere/bee-js'
+import { Data } from '@fairdatasociety/bee-js'
 import { getUnixTimestamp } from '../../utils/time'
 import { wrapChunkHelper } from '../utils'
 import { LookupAnswer } from '../types'

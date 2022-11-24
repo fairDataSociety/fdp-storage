@@ -1,4 +1,4 @@
-import { Bee, PrivateKeyBytes, Reference, Utils } from '@ethersphere/bee-js'
+import { Bee, PrivateKeyBytes, Reference, Utils } from '@fairdatasociety/bee-js'
 import { utils, Wallet } from 'ethers'
 import { encryptText, IV_LENGTH, decryptBytes, encryptBytes } from '../utils/encryption'
 import { uploadEncryptedMnemonic } from './mnemonic'

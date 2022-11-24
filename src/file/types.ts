@@ -1,4 +1,4 @@
-import { Reference } from '@ethersphere/bee-js'
+import { Reference } from '@fairdatasociety/bee-js'
 import { RawFileMetadata } from '../pod/types'
 
 /**

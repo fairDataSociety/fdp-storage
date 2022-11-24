@@ -1,4 +1,4 @@
-import { ENCRYPTED_REFERENCE_HEX_LENGTH, FlavoredType, Reference, Utils } from '@ethersphere/bee-js'
+import { ENCRYPTED_REFERENCE_HEX_LENGTH, FlavoredType, Reference, Utils } from '@fairdatasociety/bee-js'
 
 export type EncryptedReference = Utils.HexString<typeof ENCRYPTED_REFERENCE_HEX_LENGTH>
 export type HexEthAddress = HexString<40>

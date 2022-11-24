@@ -1,4 +1,4 @@
-import { Utils } from '@ethersphere/bee-js'
+import { Utils } from '@fairdatasociety/bee-js'
 import { POD_PASSWORD_LENGTH, PodPasswordBytes } from './encryption'
 
 export type { PublicKey } from '@fairdatasociety/fdp-contracts'

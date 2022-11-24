@@ -8,7 +8,7 @@ import {
   JsonSharedPod,
   SharedPod,
 } from './types'
-import { Bee, Data, Utils } from '@ethersphere/bee-js'
+import { Bee, Data, Utils } from '@fairdatasociety/bee-js'
 import { bytesToString, stringToBytes, wordArrayToBytes } from '../utils/bytes'
 import { LookupAnswer } from '../feed/types'
 import { utils } from 'ethers'

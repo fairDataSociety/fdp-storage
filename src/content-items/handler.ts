@@ -1,6 +1,6 @@
 import { Connection } from '../connection/connection'
 import { utils } from 'ethers'
-import { Reference, RequestOptions } from '@ethersphere/bee-js'
+import { Reference, RequestOptions } from '@fairdatasociety/bee-js'
 import { getUnixTimestamp } from '../utils/time'
 import { writeFeedData } from '../feed/api'
 import { getRawDirectoryMetadataBytes } from '../directory/adapter'

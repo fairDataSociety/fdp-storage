@@ -1,4 +1,4 @@
-import { Utils } from '@ethersphere/bee-js'
+import { Utils } from '@fairdatasociety/bee-js'
 import { makeContentAddressedChunk } from '../chunk/cac'
 import { Epoch, HIGHEST_LEVEL } from './lookup/epoch'
 

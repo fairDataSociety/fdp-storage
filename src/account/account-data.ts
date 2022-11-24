@@ -14,7 +14,7 @@ import { downloadPortableAccount, uploadPortableAccount, UserAccountWithMnemonic
 import { Connection } from '../connection/connection'
 import { AddressOptions, isAddressOptions, isMnemonicOptions, MnemonicOptions } from './types'
 import { ENS, PublicKey } from '@fairdatasociety/fdp-contracts'
-import { Reference, Utils } from '@ethersphere/bee-js'
+import { Reference, Utils } from '@fairdatasociety/bee-js'
 import CryptoJS from 'crypto-js'
 import { bytesToHex } from '../utils/hex'
 import { mnemonicToSeed, prepareEthAddress, privateKeyToBytes } from '../utils/wallet'

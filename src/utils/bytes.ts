@@ -5,7 +5,7 @@
  * generic `Length` type parameter which is runtime compatible with
  * the original, because it extends from the `number` type.
  */
-import { Data, Utils } from '@ethersphere/bee-js'
+import { Data, Utils } from '@fairdatasociety/bee-js'
 import { bytesToHex } from './hex'
 import { BeeArgumentError } from './error'
 import CryptoJS from 'crypto-js'

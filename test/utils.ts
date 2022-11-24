@@ -1,5 +1,5 @@
 import crypto from 'crypto'
-import { BATCH_ID_HEX_LENGTH, BatchId, Bee, BeeDebug, Utils } from '@ethersphere/bee-js'
+import { BATCH_ID_HEX_LENGTH, BatchId, Bee, BeeDebug, Utils } from '@fairdatasociety/bee-js'
 import { FdpStorage } from '../src'
 import { Wallet } from 'ethers'
 import { Environments, getEnvironmentConfig } from '@fairdatasociety/fdp-contracts'

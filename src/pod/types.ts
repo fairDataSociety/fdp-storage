@@ -1,4 +1,4 @@
-import { Utils, Reference } from '@ethersphere/bee-js'
+import { Utils, Reference } from '@fairdatasociety/bee-js'
 import { PodPasswordBytes } from '../utils/encryption'
 import { HexString } from '../utils/hex'
 
