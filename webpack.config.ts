@@ -60,7 +60,7 @@ const base = async (env?: Partial<WebpackEnvParams>): Promise<Configuration> => 
     output: {
       path,
       filename,
-      sourceMapFilename: filename + '.map',
+      // sourceMapFilename: filename + '.map',
       library: 'fdp',
       libraryTarget: 'umd',
       globalObject: 'this',
@@ -83,6 +83,7 @@ const base = async (env?: Partial<WebpackEnvParams>): Promise<Configuration> => 
         fs: false,
         stream: false,
         crypto: false,
+        'web-streams-polyfill/ponyfill/es2018': require.resolve('web-streams-polyfill/ponyfill')
       },
     },
     optimization: {
@@ -116,6 +117,10 @@ const base = async (env?: Partial<WebpackEnvParams>): Promise<Configuration> => 
           parallel: true,
         }),
       ],
+    },
+    experiments: {
+      // Module parse failed: The top-level-await experiment is not enabled (set experiments.topLevelAwait: true to enabled it)
+      topLevelAwait: true,
     },
     plugins,
     target,
