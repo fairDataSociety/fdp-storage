@@ -28,6 +28,6 @@ module.exports = function (api) {
           regenerator: true
         }
       ]
-    ]
+    ],
   }
 }
