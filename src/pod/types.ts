@@ -54,19 +54,19 @@ export interface SharedPod extends PodName {
  */
 export interface RawFileMetadata {
   version: number
-  user_address: number[]
-  pod_name: string
-  file_path: string
-  file_name: string
-  file_size: number
-  block_size: number
-  content_type: string
+  userAddress: number[]
+  podName: string
+  filePath: string
+  fileName: string
+  fileSize: number
+  blockSize: number
+  contentType: string
   compression: string
-  creation_time: number
-  access_time: number
-  modification_time: number
-  file_inode_reference: string
-  shared_password: HexString
+  creationTime: number
+  accessTime: number
+  modificationTime: number
+  fileInodeReference: string
+  sharedPassword: HexString
 }
 
 /**
@@ -108,9 +108,9 @@ export interface RawDirectoryMetadata {
  * Pod share information
  */
 export interface PodShareInfo {
-  pod_name: string
-  pod_address: string
-  user_address: string
+  podName: string
+  podAddress: string
+  userAddress: string
   password: HexString
 }
 

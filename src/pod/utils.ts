@@ -380,9 +380,9 @@ export function createPodShareInfo(
   password: PodPasswordBytes,
 ): PodShareInfo {
   return {
-    pod_name: podName,
-    pod_address: bytesToHex(podAddress),
-    user_address: bytesToHex(userAddress),
+    podName: podName,
+    podAddress: bytesToHex(podAddress),
+    userAddress: bytesToHex(userAddress),
     password: bytesToHex(password),
   }
 }
@@ -394,10 +394,7 @@ export function isPodShareInfo(value: unknown): value is PodShareInfo {
   const data = value as PodShareInfo
 
   return (
-    isObject(value) &&
-    isString(data.pod_name) &&
-    isHexEthAddress(data.pod_address) &&
-    isHexEthAddress(data.user_address)
+    isObject(value) && isString(data.podName) && isHexEthAddress(data.podAddress) && isHexEthAddress(data.userAddress)
   )
 }
 

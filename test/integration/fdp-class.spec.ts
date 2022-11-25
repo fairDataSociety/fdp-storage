@@ -270,9 +270,9 @@ describe('Fair Data Protocol class', () => {
       const sharedReference = await fdp.personalStorage.share(podName)
       expect(sharedReference).toHaveLength(128)
       const sharedData = (await fdp.connection.bee.downloadData(sharedReference)).json() as unknown as PodShareInfo
-      expect(sharedData.pod_name).toEqual(podName)
-      expect(sharedData.pod_address).toHaveLength(40)
-      expect(sharedData.user_address).toEqual(user.address.toLowerCase().replace('0x', ''))
+      expect(sharedData.podName).toEqual(podName)
+      expect(sharedData.podAddress).toHaveLength(40)
+      expect(sharedData.userAddress).toEqual(user.address.toLowerCase().replace('0x', ''))
     })
 
     it('should receive shared pod info', async () => {
@@ -284,9 +284,9 @@ describe('Fair Data Protocol class', () => {
       const sharedReference = await fdp.personalStorage.share(podName)
       const sharedData = await fdp.personalStorage.getSharedInfo(sharedReference)
 
-      expect(sharedData.pod_name).toEqual(podName)
-      expect(sharedData.pod_address).toHaveLength(40)
-      expect(sharedData.user_address).toEqual(user.address.toLowerCase().replace('0x', ''))
+      expect(sharedData.podName).toEqual(podName)
+      expect(sharedData.podAddress).toHaveLength(40)
+      expect(sharedData.userAddress).toEqual(user.address.toLowerCase().replace('0x', ''))
     })
 
     it('should save shared pod', async () => {
@@ -488,10 +488,10 @@ describe('Fair Data Protocol class', () => {
       const sharedData = await fdp.file.getSharedInfo(sharedReference)
 
       expect(sharedData.meta).toBeDefined()
-      expect(sharedData.meta.pod_name).toEqual(pod)
-      expect(sharedData.meta.file_path).toEqual('/')
-      expect(sharedData.meta.file_name).toEqual(filenameSmall)
-      expect(sharedData.meta.file_size).toEqual(fileSizeSmall)
+      expect(sharedData.meta.podName).toEqual(pod)
+      expect(sharedData.meta.filePath).toEqual('/')
+      expect(sharedData.meta.fileName).toEqual(filenameSmall)
+      expect(sharedData.meta.fileSize).toEqual(fileSizeSmall)
     })
 
     it('should save shared file to a pod', async () => {
@@ -525,9 +525,9 @@ describe('Fair Data Protocol class', () => {
       expect(fileInfo.name).toEqual(filenameSmall)
       expect(fileInfo.size).toEqual(fileSizeSmall)
       const meta = fileInfo.raw as RawFileMetadata
-      expect(meta.file_name).toEqual(filenameSmall)
-      expect(meta.file_size).toEqual(fileSizeSmall)
-      expect(meta.pod_name).toEqual(pod1)
+      expect(meta.fileName).toEqual(filenameSmall)
+      expect(meta.fileSize).toEqual(fileSizeSmall)
+      expect(meta.podName).toEqual(pod1)
 
       const data = await fdp1.file.downloadData(pod1, fullFilenameSmallPath)
       expect(data.text()).toEqual(contentSmall)
@@ -609,12 +609,12 @@ describe('Fair Data Protocol class', () => {
         pod,
         filenameSmall,
         'version',
-        'user_address',
-        'pod_name',
-        'file_path',
-        'file_name',
-        'file_size',
-        'file_inode_reference',
+        'userAddress',
+        'podName',
+        'filePath',
+        'fileName',
+        'fileSize',
+        'fileInodeReference',
       ]
       for (const metaWord of metaWords2) {
         expect(encryptedText4).not.toContain(metaWord)
@@ -623,7 +623,7 @@ describe('Fair Data Protocol class', () => {
 
       // check file metadata
       const metaObject = JSON.parse(decryptedText4)
-      const blocksReference = base64toReference(metaObject.file_inode_reference)
+      const blocksReference = base64toReference(metaObject.fileInodeReference)
       const encryptedData5 = await bee.downloadData(blocksReference)
       const encryptedText5 = encryptedData5.text()
       const decryptedText5 = bytesToString(decryptBytes(bytesToHex(pod1.password), encryptedData5))

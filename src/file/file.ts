@@ -156,7 +156,7 @@ export class File {
     const { podAddress, pod } = await getExtendedPodsListByAccountData(this.accountData, podName)
     const meta = (await getRawMetadata(connection.bee, fullPath, podAddress, pod.password)).metadata
     assertRawFileMetadata(meta)
-    meta.shared_password = bytesToHex(pod.password)
+    meta.sharedPassword = bytesToHex(pod.password)
     const data = JSON.stringify(createFileShareInfo(meta))
 
     return (await uploadBytes(connection, stringToBytes(data))).reference
@@ -197,7 +197,7 @@ export class File {
     const connection = this.accountData.connection
     const { podWallet, podAddress, pod } = await getExtendedPodsListByAccountData(this.accountData, podName)
     let meta = rawFileMetadataToFileMetadata(sharedInfo.meta)
-    const fileName = options?.name ?? sharedInfo.meta.file_name
+    const fileName = options?.name ?? sharedInfo.meta.fileName
     meta = updateFileMetadata(meta, podName, parentPath, fileName, podAddress)
     const fullPath = combine(parentPath, fileName)
     await addEntryToDirectory(connection, podWallet, pod.password, parentPath, fileName, true)

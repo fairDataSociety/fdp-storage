@@ -75,19 +75,19 @@ export function blocksToManifest(blocks: Blocks): string {
 export function rawFileMetadataToFileMetadata(data: RawFileMetadata): FileMetadata {
   return {
     version: data.version,
-    podAddress: prepareEthAddress(Uint8Array.from(data.user_address)),
-    podName: data.pod_name,
-    filePath: data.file_path,
-    fileName: data.file_name,
-    fileSize: data.file_size,
-    blockSize: data.block_size,
-    contentType: data.content_type,
+    podAddress: prepareEthAddress(Uint8Array.from(data.userAddress)),
+    podName: data.podName,
+    filePath: data.filePath,
+    fileName: data.fileName,
+    fileSize: data.fileSize,
+    blockSize: data.blockSize,
+    contentType: data.contentType,
     compression: data.compression,
-    creationTime: data.creation_time,
-    accessTime: data.access_time,
-    modificationTime: data.modification_time,
-    blocksReference: base64toReference(data.file_inode_reference),
-    sharedPassword: data.shared_password,
+    creationTime: data.creationTime,
+    accessTime: data.accessTime,
+    modificationTime: data.modificationTime,
+    blocksReference: base64toReference(data.fileInodeReference),
+    sharedPassword: data.sharedPassword,
   }
 }
 
@@ -97,19 +97,19 @@ export function rawFileMetadataToFileMetadata(data: RawFileMetadata): FileMetada
 export function fileMetadataToRawFileMetadata(data: FileMetadata): RawFileMetadata {
   return {
     version: data.version,
-    user_address: Array.from(data.podAddress),
-    pod_name: data.podName,
-    file_path: data.filePath,
-    file_name: data.fileName,
-    file_size: data.fileSize,
-    block_size: data.blockSize,
-    content_type: data.contentType,
+    userAddress: Array.from(data.podAddress),
+    podName: data.podName,
+    filePath: data.filePath,
+    fileName: data.fileName,
+    fileSize: data.fileSize,
+    blockSize: data.blockSize,
+    contentType: data.contentType,
     compression: data.compression,
-    creation_time: data.creationTime,
-    access_time: data.accessTime,
-    modification_time: data.modificationTime,
-    file_inode_reference: referenceToBase64(data.blocksReference),
-    shared_password: data.sharedPassword,
+    creationTime: data.creationTime,
+    accessTime: data.accessTime,
+    modificationTime: data.modificationTime,
+    fileInodeReference: referenceToBase64(data.blocksReference),
+    sharedPassword: data.sharedPassword,
   }
 }
 
