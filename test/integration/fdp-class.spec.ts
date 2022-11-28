@@ -578,7 +578,7 @@ describe('Fair Data Protocol class', () => {
       // data decrypts with password stored in the pod
       const decryptedText2 = bytesToString(decryptBytes(bytesToHex(pod1.password), encryptedBytes2))
       // check some keywords from root directory of the pod metadata
-      const metaWords1 = ['Meta', 'Version', 'CreationTime', 'FileOrDirNames']
+      const metaWords1 = ['meta', 'version', 'creationTime', 'fileOrDirNames']
       for (const metaWord of metaWords1) {
         expect(encryptedText2).not.toContain(metaWord)
         expect(decryptedText2).toContain(metaWord)

@@ -15,11 +15,11 @@ describe('file/utils', () => {
           },
         ] as Block[],
         result: {
-          Blocks: [
+          blocks: [
             {
-              Size: 17,
-              CompressedSize: 17,
-              Reference: { R: 'KNPeilXXVD+m8uSBnoBunStOGZlwOmMjLwqoEm/SRmg=' },
+              size: 17,
+              compressedSize: 17,
+              reference: { swarm: 'KNPeilXXVD+m8uSBnoBunStOGZlwOmMjLwqoEm/SRmg=' },
             },
           ],
         },
@@ -58,36 +58,36 @@ describe('file/utils', () => {
           },
         ] as Block[],
         result: {
-          Blocks: [
+          blocks: [
             {
-              Size: 1000000,
-              CompressedSize: 1000000,
-              Reference: { R: 'CGpJuGm6EE96RSInah8uJCvjWNovmqNOM3EUkzVXdpo=' },
+              size: 1000000,
+              compressedSize: 1000000,
+              reference: { swarm: 'CGpJuGm6EE96RSInah8uJCvjWNovmqNOM3EUkzVXdpo=' },
             },
             {
-              Size: 1000000,
-              CompressedSize: 1000000,
-              Reference: { R: '9bo/c4cxvhhiB0FbhLwMj4MLCxwEPBfKztlZtVp1ykk=' },
+              size: 1000000,
+              compressedSize: 1000000,
+              reference: { swarm: '9bo/c4cxvhhiB0FbhLwMj4MLCxwEPBfKztlZtVp1ykk=' },
             },
             {
-              Size: 1000000,
-              CompressedSize: 1000000,
-              Reference: { R: '7PzVmuKPS+CABTZXeHRgmGkxgZImQE48AIYmwhYY2vw=' },
+              size: 1000000,
+              compressedSize: 1000000,
+              reference: { swarm: '7PzVmuKPS+CABTZXeHRgmGkxgZImQE48AIYmwhYY2vw=' },
             },
             {
-              Size: 1000000,
-              CompressedSize: 1000000,
-              Reference: { R: 'Qn6R91f0UYObSmRFn/OSrYCBmOizKMJbm5yK3zFXUgg=' },
+              size: 1000000,
+              compressedSize: 1000000,
+              reference: { swarm: 'Qn6R91f0UYObSmRFn/OSrYCBmOizKMJbm5yK3zFXUgg=' },
             },
             {
-              Size: 1000000,
-              CompressedSize: 1000000,
-              Reference: { R: 'jb4/Mz1jesXXTnKT456pGB3FiG1I5YRtDhT24wPsUEo=' },
+              size: 1000000,
+              compressedSize: 1000000,
+              reference: { swarm: 'jb4/Mz1jesXXTnKT456pGB3FiG1I5YRtDhT24wPsUEo=' },
             },
             {
-              Size: 242880,
-              CompressedSize: 242880,
-              Reference: { R: 'SSTJ+l0KD8y5djxId+IUIVUiI2pFRRInvG/amf7zU4k=' },
+              size: 242880,
+              compressedSize: 242880,
+              reference: { swarm: 'SSTJ+l0KD8y5djxId+IUIVUiI2pFRRInvG/amf7zU4k=' },
             },
           ],
         },
