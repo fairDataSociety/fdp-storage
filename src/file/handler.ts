@@ -57,7 +57,6 @@ export async function downloadData(
   downloadOptions?: RequestOptions,
 ): Promise<Data> {
   const fileMetadata = await getFileMetadata(bee, fullPath, address, podPassword, downloadOptions)
-  podPassword = fileMetadata.sharedPassword ? Utils.hexToBytes(fileMetadata.sharedPassword) : podPassword
 
   if (fileMetadata.compression) {
     // TODO: implement compression support
