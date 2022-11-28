@@ -601,7 +601,7 @@ describe('Fair Data Protocol class', () => {
       const encryptedText4 = fileManifestData.data.chunkContent().text()
       const encryptedBytes4 = fileManifestData.data.chunkContent()
       const decryptedText4 = bytesToString(decryptBytes(bytesToHex(pod1.password), encryptedBytes4))
-      const metaWords2 = [pod, filenameSmall, 'version', 'filePath', 'fileName', 'fileSize', 'fileInodeReference']
+      const metaWords2 = [filenameSmall, 'version', 'filePath', 'fileName', 'fileSize', 'fileInodeReference']
       for (const metaWord of metaWords2) {
         expect(encryptedText4).not.toContain(metaWord)
         expect(decryptedText4).toContain(metaWord)
@@ -613,7 +613,7 @@ describe('Fair Data Protocol class', () => {
       const encryptedData5 = await bee.downloadData(blocksReference)
       const encryptedText5 = encryptedData5.text()
       const decryptedText5 = bytesToString(decryptBytes(bytesToHex(pod1.password), encryptedData5))
-      const metaWords3 = ['Blocks', 'Name', 'Size', 'CompressedSize', 'Reference']
+      const metaWords3 = ['blocks', 'size', 'compressedSize', 'reference']
       for (const metaWord of metaWords3) {
         expect(encryptedText5).not.toContain(metaWord)
         expect(decryptedText5).toContain(metaWord)
@@ -621,7 +621,7 @@ describe('Fair Data Protocol class', () => {
 
       // check file block
       const blocks = JSON.parse(decryptedText5)
-      const blockReference = base64toReference(blocks.Blocks[0].Reference.R)
+      const blockReference = base64toReference(blocks.blocks[0].reference.swarm)
       const encryptedData6 = await bee.downloadData(blockReference)
       const encryptedText6 = encryptedData6.text()
       const decryptedText6 = bytesToString(decryptBytes(bytesToHex(pod1.password), encryptedData6))
