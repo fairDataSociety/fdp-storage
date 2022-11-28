@@ -91,15 +91,15 @@ export function createRawDirectoryMetadata(
   fileOrDirNames?: string[],
 ): Uint8Array {
   const data: RawDirectoryMetadata = {
-    Meta: {
-      Version: version,
-      Path: path,
-      Name: name,
-      CreationTime: creationTime,
-      ModificationTime: modificationTime,
-      AccessTime: accessTime,
+    meta: {
+      version,
+      path,
+      name,
+      creationTime,
+      modificationTime,
+      accessTime,
     },
-    FileOrDirNames: fileOrDirNames ?? null,
+    fileOrDirNames: fileOrDirNames ?? null,
   }
 
   return getRawDirectoryMetadataBytes(data)
