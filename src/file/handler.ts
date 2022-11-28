@@ -6,8 +6,7 @@ import { FileMetadata } from '../pod/types'
 import { rawFileMetadataToFileMetadata } from './adapter'
 import { assertRawFileMetadata } from '../directory/utils'
 import { getRawMetadata } from '../content-items/utils'
-import { decryptBytes, PodPasswordBytes } from '../utils/encryption'
-import { bytesToHex } from '../utils/hex'
+import { PodPasswordBytes } from '../utils/encryption'
 
 /**
  * File prefix
@@ -63,7 +62,7 @@ export async function downloadData(
     throw new Error('Compressed data is not supported yet')
   }
 
-  const blocks = await downloadBlocksManifest(bee, podPassword, fileMetadata.blocksReference, downloadOptions)
+  const blocks = await downloadBlocksManifest(bee, fileMetadata.blocksReference, downloadOptions)
 
   let totalLength = 0
   for (const block of blocks.blocks) {
@@ -73,7 +72,7 @@ export async function downloadData(
   const result = new Uint8Array(totalLength)
   let offset = 0
   for (const block of blocks.blocks) {
-    const data = decryptBytes(bytesToHex(podPassword), await bee.downloadData(block.reference, downloadOptions))
+    const data = await bee.downloadData(block.reference, downloadOptions)
     result.set(data, offset)
     offset += data.length
   }
