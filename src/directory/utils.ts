@@ -120,14 +120,14 @@ export function isRawDirectoryMetadata(value: unknown): value is RawDirectoryMet
   const data = value as RawDirectoryMetadata
 
   return (
-    typeof data.Meta === 'object' &&
-    isString(data.Meta.Name) &&
-    isString(data.Meta.Path) &&
-    isNumber(data.Meta.AccessTime) &&
-    isNumber(data.Meta.ModificationTime) &&
-    isNumber(data.Meta.CreationTime) &&
-    isNumber(data.Meta.Version) &&
-    (data.FileOrDirNames === null || Array.isArray(data.FileOrDirNames))
+    typeof data.meta === 'object' &&
+    isString(data.meta.name) &&
+    isString(data.meta.path) &&
+    isNumber(data.meta.accessTime) &&
+    isNumber(data.meta.modificationTime) &&
+    isNumber(data.meta.creationTime) &&
+    isNumber(data.meta.version) &&
+    (data.fileOrDirNames === null || Array.isArray(data.fileOrDirNames))
   )
 }
 
