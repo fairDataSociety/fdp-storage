@@ -12,8 +12,7 @@ import {
 } from '../utils'
 import { MAX_POD_NAME_LENGTH } from '../../src/pod/utils'
 import { createUserV1 } from '../../src/account/account'
-import { PodShareInfo, RawFileMetadata } from '../../src/pod/types'
-import { FileShareInfo } from '../../src/file/types'
+import { PodShareInfo } from '../../src/pod/types'
 import { getFeedData } from '../../src/feed/api'
 import { POD_TOPIC } from '../../src/pod/personal-storage'
 import { decryptBytes } from '../../src/utils/encryption'
@@ -454,95 +453,95 @@ describe('Fair Data Protocol class', () => {
       expect(fdpList1.getFiles().length).toEqual(0)
     })
 
-    it('should share a file', async () => {
-      const fdp = createFdp()
-      generateUser(fdp)
-      const pod = generateRandomHexString()
-      const fileSizeSmall = 100
-      const contentSmall = generateRandomHexString(fileSizeSmall)
-      const filenameSmall = generateRandomHexString() + '.txt'
-      const fullFilenameSmallPath = '/' + filenameSmall
+    // it('should share a file', async () => {
+    //   const fdp = createFdp()
+    //   generateUser(fdp)
+    //   const pod = generateRandomHexString()
+    //   const fileSizeSmall = 100
+    //   const contentSmall = generateRandomHexString(fileSizeSmall)
+    //   const filenameSmall = generateRandomHexString() + '.txt'
+    //   const fullFilenameSmallPath = '/' + filenameSmall
 
-      await fdp.personalStorage.create(pod)
-      await fdp.file.uploadData(pod, fullFilenameSmallPath, contentSmall)
+    //   await fdp.personalStorage.create(pod)
+    //   await fdp.file.uploadData(pod, fullFilenameSmallPath, contentSmall)
 
-      const sharedReference = await fdp.file.share(pod, fullFilenameSmallPath)
-      expect(sharedReference).toHaveLength(128)
-      const sharedData = (await fdp.connection.bee.downloadData(sharedReference)).json() as unknown as FileShareInfo
-      expect(sharedData.meta).toBeDefined()
-    })
+    //   const sharedReference = await fdp.file.share(pod, fullFilenameSmallPath)
+    //   expect(sharedReference).toHaveLength(128)
+    //   const sharedData = (await fdp.connection.bee.downloadData(sharedReference)).json() as unknown as FileShareInfo
+    //   expect(sharedData.meta).toBeDefined()
+    // })
 
-    it('should receive information about shared file', async () => {
-      const fdp = createFdp()
-      generateUser(fdp)
-      const pod = generateRandomHexString()
-      const fileSizeSmall = 100
-      const contentSmall = generateRandomHexString(fileSizeSmall)
-      const filenameSmall = generateRandomHexString() + '.txt'
-      const fullFilenameSmallPath = '/' + filenameSmall
+    // it('should receive information about shared file', async () => {
+    //   const fdp = createFdp()
+    //   generateUser(fdp)
+    //   const pod = generateRandomHexString()
+    //   const fileSizeSmall = 100
+    //   const contentSmall = generateRandomHexString(fileSizeSmall)
+    //   const filenameSmall = generateRandomHexString() + '.txt'
+    //   const fullFilenameSmallPath = '/' + filenameSmall
 
-      await fdp.personalStorage.create(pod)
-      await fdp.file.uploadData(pod, fullFilenameSmallPath, contentSmall)
+    //   await fdp.personalStorage.create(pod)
+    //   await fdp.file.uploadData(pod, fullFilenameSmallPath, contentSmall)
 
-      const sharedReference = await fdp.file.share(pod, fullFilenameSmallPath)
-      const sharedData = await fdp.file.getSharedInfo(sharedReference)
+    //   const sharedReference = await fdp.file.share(pod, fullFilenameSmallPath)
+    //   const sharedData = await fdp.file.getSharedInfo(sharedReference)
 
-      expect(sharedData.meta).toBeDefined()
-      expect(sharedData.meta.filePath).toEqual('/')
-      expect(sharedData.meta.fileName).toEqual(filenameSmall)
-      expect(sharedData.meta.fileSize).toEqual(fileSizeSmall)
-    })
+    //   expect(sharedData.meta).toBeDefined()
+    //   expect(sharedData.meta.filePath).toEqual('/')
+    //   expect(sharedData.meta.fileName).toEqual(filenameSmall)
+    //   expect(sharedData.meta.fileSize).toEqual(fileSizeSmall)
+    // })
 
-    it('should save shared file to a pod', async () => {
-      const fdp = createFdp()
-      const fdp1 = createFdp()
-      generateUser(fdp)
-      generateUser(fdp1)
-      const pod = generateRandomHexString()
-      const pod1 = generateRandomHexString()
-      const fileSizeSmall = 100
-      const contentSmall = generateRandomHexString(fileSizeSmall)
-      const filenameSmall = generateRandomHexString() + '.txt'
-      const fullFilenameSmallPath = '/' + filenameSmall
+    // it.skip('should save shared file to a pod', async () => {
+    //   const fdp = createFdp()
+    //   const fdp1 = createFdp()
+    //   generateUser(fdp)
+    //   generateUser(fdp1)
+    //   const pod = generateRandomHexString()
+    //   const pod1 = generateRandomHexString()
+    //   const fileSizeSmall = 100
+    //   const contentSmall = generateRandomHexString(fileSizeSmall)
+    //   const filenameSmall = generateRandomHexString() + '.txt'
+    //   const fullFilenameSmallPath = '/' + filenameSmall
 
-      await fdp.personalStorage.create(pod)
-      await fdp1.personalStorage.create(pod1)
-      await fdp.file.uploadData(pod, fullFilenameSmallPath, contentSmall)
-      const sharedReference = await fdp.file.share(pod, fullFilenameSmallPath)
-      const newFilePath = '/'
-      const sharedData = await fdp1.file.saveShared(pod1, newFilePath, sharedReference)
+    //   await fdp.personalStorage.create(pod)
+    //   await fdp1.personalStorage.create(pod1)
+    //   await fdp.file.uploadData(pod, fullFilenameSmallPath, contentSmall)
+    //   const sharedReference = await fdp.file.share(pod, fullFilenameSmallPath)
+    //   const newFilePath = '/'
+    //   const sharedData = await fdp1.file.saveShared(pod1, newFilePath, sharedReference)
 
-      expect(sharedData.filePath).toEqual(newFilePath)
-      expect(sharedData.fileName).toEqual(filenameSmall)
-      expect(sharedData.fileSize).toEqual(fileSizeSmall)
+    //   expect(sharedData.filePath).toEqual(newFilePath)
+    //   expect(sharedData.fileName).toEqual(filenameSmall)
+    //   expect(sharedData.fileSize).toEqual(fileSizeSmall)
 
-      const list = await fdp1.directory.read(pod1, '/')
-      const files = list.getFiles()
-      expect(files).toHaveLength(1)
-      const fileInfo = files[0]
-      expect(fileInfo.name).toEqual(filenameSmall)
-      expect(fileInfo.size).toEqual(fileSizeSmall)
-      const meta = fileInfo.raw as RawFileMetadata
-      expect(meta.fileName).toEqual(filenameSmall)
-      expect(meta.fileSize).toEqual(fileSizeSmall)
+    //   const list = await fdp1.directory.read(pod1, '/')
+    //   const files = list.getFiles()
+    //   expect(files).toHaveLength(1)
+    //   const fileInfo = files[0]
+    //   expect(fileInfo.name).toEqual(filenameSmall)
+    //   expect(fileInfo.size).toEqual(fileSizeSmall)
+    //   const meta = fileInfo.raw as RawFileMetadata
+    //   expect(meta.fileName).toEqual(filenameSmall)
+    //   expect(meta.fileSize).toEqual(fileSizeSmall)
 
-      const data = await fdp1.file.downloadData(pod1, fullFilenameSmallPath)
-      expect(data.text()).toEqual(contentSmall)
+    //   const data = await fdp1.file.downloadData(pod1, fullFilenameSmallPath)
+    //   expect(data.text()).toEqual(contentSmall)
 
-      // checking saving with custom name
-      const customName = 'NewCustomName.txt'
-      const sharedData1 = await fdp1.file.saveShared(pod1, newFilePath, sharedReference, { name: customName })
-      expect(sharedData1.filePath).toEqual(newFilePath)
-      expect(sharedData1.fileName).toEqual(customName)
-      expect(sharedData1.fileSize).toEqual(fileSizeSmall)
+    //   // checking saving with custom name
+    //   const customName = 'NewCustomName.txt'
+    //   const sharedData1 = await fdp1.file.saveShared(pod1, newFilePath, sharedReference, { name: customName })
+    //   expect(sharedData1.filePath).toEqual(newFilePath)
+    //   expect(sharedData1.fileName).toEqual(customName)
+    //   expect(sharedData1.fileSize).toEqual(fileSizeSmall)
 
-      const data1 = await fdp1.file.downloadData(pod1, '/' + customName)
-      expect(data1.text()).toEqual(contentSmall)
+    //   const data1 = await fdp1.file.downloadData(pod1, '/' + customName)
+    //   expect(data1.text()).toEqual(contentSmall)
 
-      const list1 = await fdp1.directory.read(pod1, '/')
-      const files1 = list1.getFiles()
-      expect(files1).toHaveLength(2)
-    })
+    //   const list1 = await fdp1.directory.read(pod1, '/')
+    //   const files1 = list1.getFiles()
+    //   expect(files1).toHaveLength(2)
+    // })
   })
 
   describe('Encryption', () => {

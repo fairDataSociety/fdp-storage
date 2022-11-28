@@ -4,18 +4,28 @@
 
 **FDP Storage** is a serverless web3 filesystem for organizing users' personal data implemented in Typescript.
 
-Such data is stored using certain structures that allow the data created in one dApp to be interpreted in another dApp. The current implementation allows to create and manage pods (similar to disks in file systems), directories, and files.
+Such data is stored using certain structures that allow the data created in one dApp to be interpreted in another dApp.
+The current implementation allows to create and manage pods (similar to disks in file systems), directories, and files.
 
-The library requires the API endpoint of a [Bee](https://github.com/ethersphere/bee) node to interact with the data. If you plan to do write operations, you will need to specify [postage batch id](https://docs.ethswarm.org/docs/access-the-swarm/keep-your-data-alive).
-To run a local test node trying out the functionalities, you can use [FDP Play](https://github.com/fairDataSociety/fdp-play).
+The library requires the API endpoint of a [Bee](https://github.com/ethersphere/bee) node to interact with the data. If
+you plan to do write operations, you will need to specify
+[postage batch id](https://docs.ethswarm.org/docs/access-the-swarm/keep-your-data-alive). To run a local test node
+trying out the functionalities, you can use [FDP Play](https://github.com/fairDataSociety/fdp-play).
 
-The FDP Storage user account is a wallet based on the [BIP-44](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki) mnemonic phrase from which one can create a portable account allowing retrieving the wallet from anywhere by providing a username and a password to the library.
+The FDP Storage user account is a wallet based on the
+[BIP-44](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki) mnemonic phrase from which one can create a
+portable account allowing retrieving the wallet from anywhere by providing a username and a password to the library.
 
-The library can work in the browser, in Node.js and in mobile applications using [React Native](https://reactnative.dev/). There is an implementation of Personal Storage in Golang: https://github.com/fairDataSociety/fairOS-dfs
+The library can work in the browser, in Node.js and in mobile applications using
+[React Native](https://reactnative.dev/). There is an implementation of Personal Storage in Golang:
+https://github.com/fairDataSociety/fairOS-dfs
 
-Project development plans and details of how each of the parts works can be found in [FIPs](https://github.com/fairDataSociety/FIPs). In this repository, you can create your proposal, which will be considered and taken into account in further development.
+Project development plans and details of how each of the parts works can be found in
+[FIPs](https://github.com/fairDataSociety/FIPs). In this repository, you can create your proposal, which will be
+considered and taken into account in further development.
 
-**Warning: This project is in beta state. There might (and most probably will) be changes in the future to its API and working. Also, no guarantees can be made about its stability, efficiency, and security at this stage.**
+**Warning: This project is in beta state. There might (and most probably will) be changes in the future to its API and
+working. Also, no guarantees can be made about its stability, efficiency, and security at this stage.**
 
 ## Table of Contents
 
@@ -52,7 +62,7 @@ yarn add @fairdatasociety/fdp-storage
 **We require Node.js's version of at least 16.x**
 
 ```js
-const FDP = require('@fairdatasociety/fdp-storage');
+const FDP = require('@fairdatasociety/fdp-storage')
 ```
 
 ### Use in a browser using a script tag
@@ -65,7 +75,8 @@ Loading this module through a script tag will make the `fdp` object available in
 
 ### Use in React Native
 
-FDP Storage is ready to work with React Native. But a few shims need to be added to the initialization script of your project to make the library components work.
+FDP Storage is ready to work with React Native. But a few shims need to be added to the initialization script of your
+project to make the library components work.
 
 ```js
 import 'react-native-url-polyfill/auto' // for bee-js. URL polyfill
@@ -74,21 +85,24 @@ import '@ethersproject/shims' // commong shims for ethers.js
 import 'text-encoding' // for fdp-storage to make TextEncoding work
 ```
 
-After creating instance of `FdpStorage` replace `bee-js` upload method to the new one because of bug [#757](https://github.com/ethersphere/bee-js/issues/757).
+After creating instance of `FdpStorage` replace `bee-js` upload method to the new one because of bug
+[#757](https://github.com/ethersphere/bee-js/issues/757).
 
 ```js
 const fdp = new FdpStorage('https://localhost:1633', batchId)
 
 fdp.connection.bee.uploadData = async (batchId, data) => {
-  return (await fetch(fdp.connection.bee.url + '/bytes', {
-    method: 'POST',
-    headers: {
-      'swarm-postage-batch-id': batchId,
-      'swarm-encrypt': true,
-      'swarm-pin': true,
-    },
-    body: data
-  })).json()
+  return (
+    await fetch(fdp.connection.bee.url + '/bytes', {
+      method: 'POST',
+      headers: {
+        'swarm-postage-batch-id': batchId,
+        'swarm-encrypt': true,
+        'swarm-pin': true,
+      },
+      body: data,
+    })
+  ).json()
 }
 ```
 
@@ -120,7 +134,8 @@ console.log(wallet) // prints downloaded and decrypted wallet
 
 Creating and using a user without interacting with the blockchain
 
-It is not necessary to register a user in a smart contract and make his wallet portable. You can create a wallet, save the mnemonic phrase locally and import this account to interact with all the data.
+It is not necessary to register a user in a smart contract and make his wallet portable. You can create a wallet, save
+the mnemonic phrase locally and import this account to interact with all the data.
 
 ```js
 // Create a wallet for interacting with data.
@@ -195,25 +210,6 @@ Deleting a file from a pod
 await fdp.file.delete('my-new-pod', '/my-dir/myfile.txt')
 ```
 
-Sharing a file from a pod
-
-```js
-const shareReference = await fdp.file.share('my-new-pod', '/my-dir/myfile.txt')
-console.log(shareReference) // prints share reference of a file
-```
-
-Get information about shared file
-
-```js
-await fdp.file.getSharedInfo(shareReference)
-```
-
-Save shared file to a pod
-
-```js
-await fdp.file.saveShared('my-new-pod', '/', shareReference)
-```
-
 Getting list of files and directories with recursion or not
 
 ```js
@@ -229,7 +225,6 @@ Downloading data from a file path
 ```js
 const data = await fdp.file.downloadData('my-new-pod', '/myfile.txt')
 console.log(data.text()) // prints data content in text format 'Hello world!'
-
 ```
 
 Deleting a pod
@@ -250,7 +245,7 @@ Export old wallet with mnemonic
 
 ```js
 const wallet = await fdp.account.exportWallet('oldusername', 'oldpassword', {
-  mnemonic: 'one two three one two three one two three one two three'
+  mnemonic: 'one two three one two three one two three one two three',
 })
 ```
 
@@ -258,14 +253,14 @@ or with address
 
 ```js
 const wallet = await fdp.account.exportWallet('oldusername', 'oldpassword', {
-  address: '0x...'
+  address: '0x...',
 })
 ```
 
 ```js
 // ask user to top up his account, then can be started the migration process
 await fdp.account.migrate('oldusername', 'oldpassword', {
-  mnemonic: wallet.mnemonic.phrase
+  mnemonic: wallet.mnemonic.phrase,
 })
 ```
 
@@ -298,9 +293,11 @@ npm ci
 
 The tests run in both context: Jest and Puppeteer.
 
-To run the integration tests, you need to use our [`bee-factory`](https://github.com/fairDataSociety/bee-factory/) project. Clone the repo, you can use our prebuilt Docker images with setting .env variables.
+To run the integration tests, you need to use our [`bee-factory`](https://github.com/fairDataSociety/bee-factory/)
+project. Clone the repo, you can use our prebuilt Docker images with setting .env variables.
 
-Customize .env values based on which FairOS version you want to run. After the .env variables are set use the `./scripts/environment.sh` script with `start --fairos` parameter.
+Customize .env values based on which FairOS version you want to run. After the .env variables are set use the
+`./scripts/environment.sh` script with `start --fairos` parameter.
 
 There are browser tests by Puppeteer, which also provide integrity testing.
 
@@ -308,8 +305,9 @@ There are browser tests by Puppeteer, which also provide integrity testing.
 npm run test:browser
 ```
 
-The test HTML file which Puppeteer uses is the [test/testpage/testpage.html](test/testpage/testpage.html).
-To open and manually test FDP with developer console, it is necessary to build the library first with `npm run compile:browser` (running the browser tests `npm run test:browser` also builds the library).
+The test HTML file which Puppeteer uses is the [test/testpage/testpage.html](test/testpage/testpage.html). To open and
+manually test FDP with developer console, it is necessary to build the library first with `npm run compile:browser`
+(running the browser tests `npm run test:browser` also builds the library).
 
 ### Compile code
 
@@ -325,9 +323,9 @@ or for Browsers
 
 With specific system environment variables you can alter the behaviour of the tests.
 
-* `BEE_API_URL` - API URL of Bee client
-* `BEE_DEBUG_API_URL` - Debug API URL of Bee client
-* `BEE_BATCH_ID` - Batch ID for data uploading
+- `BEE_API_URL` - API URL of Bee client
+- `BEE_DEBUG_API_URL` - Debug API URL of Bee client
+- `BEE_BATCH_ID` - Batch ID for data uploading
 
 ## Maintainers
 
