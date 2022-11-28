@@ -2,7 +2,6 @@ import { Block, Blocks, RawBlock, RawBlocks } from './types'
 import { FileMetadata, RawFileMetadata } from '../pod/types'
 import { base64toReference, referenceToBase64 } from './utils'
 import { stringToBytes } from '../utils/bytes'
-import { prepareEthAddress } from '../utils/wallet'
 
 /**
  * Converts FairOS block format to FDS block format
@@ -11,7 +10,6 @@ import { prepareEthAddress } from '../utils/wallet'
  */
 export function rawBlockToBlock(block: RawBlock): Block {
   return {
-    name: block.Name,
     size: block.Size,
     compressedSize: block.CompressedSize,
     reference: base64toReference(block.Reference.R),
@@ -38,7 +36,6 @@ export function rawBlocksToBlocks(blocks: RawBlocks): Blocks {
  */
 export function blockToRawBlock(block: Block): RawBlock {
   return {
-    Name: block.name,
     Size: block.size,
     CompressedSize: block.compressedSize,
     Reference: {
@@ -75,8 +72,6 @@ export function blocksToManifest(blocks: Blocks): string {
 export function rawFileMetadataToFileMetadata(data: RawFileMetadata): FileMetadata {
   return {
     version: data.version,
-    podAddress: prepareEthAddress(Uint8Array.from(data.userAddress)),
-    podName: data.podName,
     filePath: data.filePath,
     fileName: data.fileName,
     fileSize: data.fileSize,
@@ -87,7 +82,6 @@ export function rawFileMetadataToFileMetadata(data: RawFileMetadata): FileMetada
     accessTime: data.accessTime,
     modificationTime: data.modificationTime,
     blocksReference: base64toReference(data.fileInodeReference),
-    sharedPassword: data.sharedPassword,
   }
 }
 
@@ -97,8 +91,6 @@ export function rawFileMetadataToFileMetadata(data: RawFileMetadata): FileMetada
 export function fileMetadataToRawFileMetadata(data: FileMetadata): RawFileMetadata {
   return {
     version: data.version,
-    userAddress: Array.from(data.podAddress),
-    podName: data.podName,
     filePath: data.filePath,
     fileName: data.fileName,
     fileSize: data.fileSize,
@@ -109,7 +101,6 @@ export function fileMetadataToRawFileMetadata(data: FileMetadata): RawFileMetada
     accessTime: data.accessTime,
     modificationTime: data.modificationTime,
     fileInodeReference: referenceToBase64(data.blocksReference),
-    sharedPassword: data.sharedPassword,
   }
 }
 

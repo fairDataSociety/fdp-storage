@@ -26,7 +26,6 @@ export interface RawBlocks {
  * FairOS file block format
  */
 export interface RawBlock {
-  Name: string
   Size: number
   CompressedSize: number
   Reference: { R: string }
@@ -43,7 +42,6 @@ export interface Blocks {
  * FDP file block format
  */
 export interface Block {
-  name: string
   size: number
   compressedSize: number
   reference: Reference

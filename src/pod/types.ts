@@ -54,8 +54,6 @@ export interface SharedPod extends PodName {
  */
 export interface RawFileMetadata {
   version: number
-  userAddress: number[]
-  podName: string
   filePath: string
   fileName: string
   fileSize: number
@@ -66,7 +64,6 @@ export interface RawFileMetadata {
   accessTime: number
   modificationTime: number
   fileInodeReference: string
-  sharedPassword: HexString
 }
 
 /**
@@ -74,8 +71,6 @@ export interface RawFileMetadata {
  */
 export interface FileMetadata {
   version: number
-  podAddress: Utils.EthAddress
-  podName: string
   filePath: string
   fileName: string
   fileSize: number
@@ -86,7 +81,6 @@ export interface FileMetadata {
   accessTime: number
   modificationTime: number
   blocksReference: Reference
-  sharedPassword: HexString
 }
 
 /**

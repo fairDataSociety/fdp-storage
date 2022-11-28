@@ -809,7 +809,6 @@ describe('Fair Data Protocol class - in browser', () => {
       )
 
       expect(sharedData.meta).toBeDefined()
-      expect(sharedData.meta.podName).toEqual(pod)
       expect(sharedData.meta.filePath).toEqual('/')
       expect(sharedData.meta.fileName).toEqual(filenameSmall)
       expect(sharedData.meta.fileSize).toEqual(fileSizeSmall)
@@ -876,7 +875,6 @@ describe('Fair Data Protocol class - in browser', () => {
         customName,
       )
 
-      expect(sharedData.podName).toEqual(pod1)
       expect(sharedData.filePath).toEqual(newFilePath)
       expect(sharedData.fileName).toEqual(filenameSmall)
       expect(sharedData.fileSize).toEqual(fileSizeSmall)
@@ -885,9 +883,7 @@ describe('Fair Data Protocol class - in browser', () => {
       expect(fileInfo.size).toEqual(fileSizeSmall)
       expect(meta.fileName).toEqual(filenameSmall)
       expect(meta.fileSize).toEqual(fileSizeSmall)
-      expect(meta.podName).toEqual(pod1)
       expect(data).toEqual(contentSmall)
-      expect(sharedData1.podName).toEqual(pod1)
       expect(sharedData1.filePath).toEqual(newFilePath)
       expect(sharedData1.fileName).toEqual(customName)
       expect(sharedData1.fileSize).toEqual(fileSizeSmall)

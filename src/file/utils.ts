@@ -1,5 +1,5 @@
 import { Connection } from '../connection/connection'
-import { Bee, Reference, RequestOptions, UploadResult, Utils } from '@ethersphere/bee-js'
+import { Bee, Reference, RequestOptions, UploadResult } from '@ethersphere/bee-js'
 import { PathInfo } from '../pod/utils'
 import { Blocks, FileShareInfo, RawBlock, RawBlocks } from './types'
 import { rawBlocksToBlocks } from './adapter'
@@ -144,13 +144,7 @@ export function isFileShareInfo(value: unknown): value is FileShareInfo {
 export function isRawBlock(value: unknown): value is RawBlock {
   const data = value as RawBlock
 
-  return (
-    isObject(value) &&
-    isString(data.Name) &&
-    isNumber(data.Size) &&
-    isNumber(data.CompressedSize) &&
-    isString(data.Reference?.R)
-  )
+  return isObject(value) && isNumber(data.Size) && isNumber(data.CompressedSize) && isString(data.Reference?.R)
 }
 
 /**
@@ -193,26 +187,16 @@ export async function getSharedFileInfo(bee: Bee, reference: EncryptedReference)
  * Updates shared metadata with new params
  *
  * @param meta shared metadata
- * @param podName pod name
  * @param filePath parent path of file
  * @param fileName file name
- * @param podAddress pod address
  */
-export function updateFileMetadata(
-  meta: FileMetadata,
-  podName: string,
-  filePath: string,
-  fileName: string,
-  podAddress: Utils.EthAddress,
-): FileMetadata {
+export function updateFileMetadata(meta: FileMetadata, filePath: string, fileName: string): FileMetadata {
   const now = getUnixTimestamp()
 
   return {
     ...meta,
-    podName,
     filePath,
     fileName,
-    podAddress,
     accessTime: now,
     modificationTime: now,
     creationTime: now,

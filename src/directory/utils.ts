@@ -137,8 +137,6 @@ export function isRawDirectoryMetadata(value: unknown): value is RawDirectoryMet
 export function isRawFileMetadata(value: unknown): value is RawFileMetadata {
   const {
     version,
-    userAddress,
-    podName,
     filePath,
     fileName,
     fileSize,
@@ -153,8 +151,6 @@ export function isRawFileMetadata(value: unknown): value is RawFileMetadata {
 
   return (
     isNumber(version) &&
-    Array.isArray(userAddress) &&
-    isString(podName) &&
     isString(filePath) &&
     isString(fileName) &&
     isNumber(fileSize) &&

@@ -488,7 +488,6 @@ describe('Fair Data Protocol class', () => {
       const sharedData = await fdp.file.getSharedInfo(sharedReference)
 
       expect(sharedData.meta).toBeDefined()
-      expect(sharedData.meta.podName).toEqual(pod)
       expect(sharedData.meta.filePath).toEqual('/')
       expect(sharedData.meta.fileName).toEqual(filenameSmall)
       expect(sharedData.meta.fileSize).toEqual(fileSizeSmall)
@@ -513,7 +512,6 @@ describe('Fair Data Protocol class', () => {
       const newFilePath = '/'
       const sharedData = await fdp1.file.saveShared(pod1, newFilePath, sharedReference)
 
-      expect(sharedData.podName).toEqual(pod1)
       expect(sharedData.filePath).toEqual(newFilePath)
       expect(sharedData.fileName).toEqual(filenameSmall)
       expect(sharedData.fileSize).toEqual(fileSizeSmall)
@@ -527,7 +525,6 @@ describe('Fair Data Protocol class', () => {
       const meta = fileInfo.raw as RawFileMetadata
       expect(meta.fileName).toEqual(filenameSmall)
       expect(meta.fileSize).toEqual(fileSizeSmall)
-      expect(meta.podName).toEqual(pod1)
 
       const data = await fdp1.file.downloadData(pod1, fullFilenameSmallPath)
       expect(data.text()).toEqual(contentSmall)
@@ -535,7 +532,6 @@ describe('Fair Data Protocol class', () => {
       // checking saving with custom name
       const customName = 'NewCustomName.txt'
       const sharedData1 = await fdp1.file.saveShared(pod1, newFilePath, sharedReference, { name: customName })
-      expect(sharedData1.podName).toEqual(pod1)
       expect(sharedData1.filePath).toEqual(newFilePath)
       expect(sharedData1.fileName).toEqual(customName)
       expect(sharedData1.fileSize).toEqual(fileSizeSmall)
@@ -605,17 +601,7 @@ describe('Fair Data Protocol class', () => {
       const encryptedText4 = fileManifestData.data.chunkContent().text()
       const encryptedBytes4 = fileManifestData.data.chunkContent()
       const decryptedText4 = bytesToString(decryptBytes(bytesToHex(pod1.password), encryptedBytes4))
-      const metaWords2 = [
-        pod,
-        filenameSmall,
-        'version',
-        'userAddress',
-        'podName',
-        'filePath',
-        'fileName',
-        'fileSize',
-        'fileInodeReference',
-      ]
+      const metaWords2 = [pod, filenameSmall, 'version', 'filePath', 'fileName', 'fileSize', 'fileInodeReference']
       for (const metaWord of metaWords2) {
         expect(encryptedText4).not.toContain(metaWord)
         expect(decryptedText4).toContain(metaWord)
