@@ -144,7 +144,7 @@ export function isFileShareInfo(value: unknown): value is FileShareInfo {
 export function isRawBlock(value: unknown): value is RawBlock {
   const data = value as RawBlock
 
-  return isObject(value) && isNumber(data.Size) && isNumber(data.CompressedSize) && isString(data.Reference?.R)
+  return isObject(value) && isNumber(data.size) && isNumber(data.compressedSize) && isString(data.reference?.swarm)
 }
 
 /**
@@ -152,8 +152,8 @@ export function isRawBlock(value: unknown): value is RawBlock {
  */
 export function assertRawBlocks(value: unknown): asserts value is RawBlocks {
   const data = value as RawBlocks
-  assertArray(data.Blocks)
-  for (const block of data.Blocks) {
+  assertArray(data.blocks)
+  for (const block of data.blocks) {
     if (!isRawBlock(block)) {
       throw new Error('Incorrect file raw block')
     }

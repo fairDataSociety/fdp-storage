@@ -10,9 +10,9 @@ import { stringToBytes } from '../utils/bytes'
  */
 export function rawBlockToBlock(block: RawBlock): Block {
   return {
-    size: block.Size,
-    compressedSize: block.CompressedSize,
-    reference: base64toReference(block.Reference.R),
+    size: block.size,
+    compressedSize: block.compressedSize,
+    reference: base64toReference(block.reference.swarm),
   }
 }
 
@@ -22,7 +22,7 @@ export function rawBlockToBlock(block: RawBlock): Block {
  * @param blocks FairOS blocks
  */
 export function rawBlocksToBlocks(blocks: RawBlocks): Blocks {
-  const resultBlocks = blocks.Blocks.map(item => rawBlockToBlock(item))
+  const resultBlocks = blocks.blocks.map(item => rawBlockToBlock(item))
 
   return {
     blocks: resultBlocks,
@@ -36,10 +36,10 @@ export function rawBlocksToBlocks(blocks: RawBlocks): Blocks {
  */
 export function blockToRawBlock(block: Block): RawBlock {
   return {
-    Size: block.size,
-    CompressedSize: block.compressedSize,
-    Reference: {
-      R: referenceToBase64(block.reference),
+    size: block.size,
+    compressedSize: block.compressedSize,
+    reference: {
+      swarm: referenceToBase64(block.reference),
     },
   }
 }
@@ -51,7 +51,7 @@ export function blockToRawBlock(block: Block): RawBlock {
  */
 export function blocksToRawBlocks(blocks: Blocks): RawBlocks {
   return {
-    Blocks: blocks.blocks.map(item => blockToRawBlock(item)),
+    blocks: blocks.blocks.map(item => blockToRawBlock(item)),
   }
 }
 
