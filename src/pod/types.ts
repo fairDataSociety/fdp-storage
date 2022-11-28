@@ -87,15 +87,15 @@ export interface FileMetadata {
  * Information about a directory
  */
 export interface RawDirectoryMetadata {
-  Meta: {
-    Version: number
-    Path: string
-    Name: string
-    CreationTime: number
-    ModificationTime: number
-    AccessTime: number
+  meta: {
+    version: number
+    path: string
+    name: string
+    creationTime: number
+    modificationTime: number
+    accessTime: number
   }
-  FileOrDirNames: string[] | null
+  fileOrDirNames: string[] | null
 }
 
 /**
