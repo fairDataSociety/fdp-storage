@@ -21,7 +21,6 @@ import { Data, Reference } from '@ethersphere/bee-js'
 import { getRawMetadata } from '../content-items/utils'
 import { assertRawFileMetadata, combine } from '../directory/utils'
 import { assertEncryptedReference, EncryptedReference } from '../utils/hex'
-import { encryptBytes } from '../utils/encryption'
 
 /**
  * Files management class
@@ -85,7 +84,7 @@ export class File {
     const blocks: Blocks = { blocks: [] }
     for (let i = 0; i < blocksCount; i++) {
       const currentBlock = data.slice(i * options.blockSize, (i + 1) * options.blockSize)
-      const result = await uploadBytes(connection, encryptBytes(pod.password, currentBlock))
+      const result = await uploadBytes(connection, currentBlock)
       blocks.blocks.push({
         size: currentBlock.length,
         compressedSize: currentBlock.length,
@@ -93,7 +92,7 @@ export class File {
       })
     }
 
-    const manifestBytes = encryptBytes(pod.password, stringToBytes(blocksToManifest(blocks)))
+    const manifestBytes = stringToBytes(blocksToManifest(blocks))
     const blocksReference = (await uploadBytes(connection, manifestBytes)).reference
     const meta: FileMetadata = {
       version: META_VERSION,

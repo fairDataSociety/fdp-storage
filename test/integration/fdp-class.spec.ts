@@ -21,7 +21,7 @@ import { Wallet } from 'ethers'
 import { removeZeroFromHex } from '../../src/account/utils'
 import { bytesToString } from '../../src/utils/bytes'
 import { getWalletByIndex, mnemonicToSeed, prepareEthAddress } from '../../src/utils/wallet'
-import { bytesToHex } from '../../src/utils/hex'
+import { assertEncryptedReference, bytesToHex } from '../../src/utils/hex'
 import { base64toReference } from '../../src/file/utils'
 
 async function topUpAddress(fdp: FdpStorage) {
@@ -610,12 +610,11 @@ describe('Fair Data Protocol class', () => {
       // check file metadata
       const metaObject = JSON.parse(decryptedText4)
       const blocksReference = base64toReference(metaObject.fileInodeReference)
-      const encryptedData5 = await bee.downloadData(blocksReference)
-      const encryptedText5 = encryptedData5.text()
-      const decryptedText5 = bytesToString(decryptBytes(bytesToHex(pod1.password), encryptedData5))
+      assertEncryptedReference(blocksReference)
+      const decryptedData5 = await bee.downloadData(blocksReference)
+      const decryptedText5 = decryptedData5.text()
       const metaWords3 = ['blocks', 'size', 'compressedSize', 'reference']
       for (const metaWord of metaWords3) {
-        expect(encryptedText5).not.toContain(metaWord)
         expect(decryptedText5).toContain(metaWord)
       }
 
@@ -623,9 +622,7 @@ describe('Fair Data Protocol class', () => {
       const blocks = JSON.parse(decryptedText5)
       const blockReference = base64toReference(blocks.blocks[0].reference.swarm)
       const encryptedData6 = await bee.downloadData(blockReference)
-      const encryptedText6 = encryptedData6.text()
-      const decryptedText6 = bytesToString(decryptBytes(bytesToHex(pod1.password), encryptedData6))
-      expect(encryptedText6).not.toEqual(contentSmall)
+      const decryptedText6 = encryptedData6.text()
       expect(decryptedText6).toEqual(contentSmall)
     })
   })

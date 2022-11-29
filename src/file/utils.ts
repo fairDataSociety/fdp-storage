@@ -9,7 +9,7 @@ import { FileMetadata, RawFileMetadata } from '../pod/types'
 import { EncryptedReference } from '../utils/hex'
 import { isRawFileMetadata } from '../directory/utils'
 import { getUnixTimestamp } from '../utils/time'
-import { decryptJson, PodPasswordBytes } from '../utils/encryption'
+import { bytesToString } from '../utils/bytes'
 
 /**
  * Asserts that full path string is correct
@@ -91,12 +91,11 @@ export function extractPathInfo(fullPath: string): PathInfo {
  */
 export async function downloadBlocksManifest(
   bee: Bee,
-  podPassword: PodPasswordBytes,
   reference: Reference,
   downloadOptions?: RequestOptions,
 ): Promise<Blocks> {
-  const encryptedData = await bee.downloadData(reference, downloadOptions)
-  const rawBlocks = decryptJson(podPassword, encryptedData)
+  const data = await bee.downloadData(reference, downloadOptions)
+  const rawBlocks = JSON.parse(bytesToString(data))
   assertRawBlocks(rawBlocks)
 
   return rawBlocksToBlocks(rawBlocks)
