@@ -1,13 +1,12 @@
 import { wrapBytesWithHelpers } from '../utils/bytes'
-import { Bee, Data, RequestOptions, Utils } from '@ethersphere/bee-js'
+import { Bee, Data, RequestOptions } from '@ethersphere/bee-js'
 import { EthAddress } from '@ethersphere/bee-js/dist/types/utils/eth'
 import { downloadBlocksManifest } from './utils'
 import { FileMetadata } from '../pod/types'
 import { rawFileMetadataToFileMetadata } from './adapter'
 import { assertRawFileMetadata } from '../directory/utils'
 import { getRawMetadata } from '../content-items/utils'
-import { decryptBytes, PodPasswordBytes } from '../utils/encryption'
-import { bytesToHex } from '../utils/hex'
+import { PodPasswordBytes } from '../utils/encryption'
 
 /**
  * File prefix
@@ -57,14 +56,13 @@ export async function downloadData(
   downloadOptions?: RequestOptions,
 ): Promise<Data> {
   const fileMetadata = await getFileMetadata(bee, fullPath, address, podPassword, downloadOptions)
-  podPassword = fileMetadata.sharedPassword ? Utils.hexToBytes(fileMetadata.sharedPassword) : podPassword
 
   if (fileMetadata.compression) {
     // TODO: implement compression support
     throw new Error('Compressed data is not supported yet')
   }
 
-  const blocks = await downloadBlocksManifest(bee, podPassword, fileMetadata.blocksReference, downloadOptions)
+  const blocks = await downloadBlocksManifest(bee, fileMetadata.blocksReference, downloadOptions)
 
   let totalLength = 0
   for (const block of blocks.blocks) {
@@ -74,7 +72,7 @@ export async function downloadData(
   const result = new Uint8Array(totalLength)
   let offset = 0
   for (const block of blocks.blocks) {
-    const data = decryptBytes(bytesToHex(podPassword), await bee.downloadData(block.reference, downloadOptions))
+    const data = await bee.downloadData(block.reference, downloadOptions)
     result.set(data, offset)
     offset += data.length
   }

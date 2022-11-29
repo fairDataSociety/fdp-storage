@@ -2,7 +2,6 @@ import { Block, Blocks, RawBlock, RawBlocks } from './types'
 import { FileMetadata, RawFileMetadata } from '../pod/types'
 import { base64toReference, referenceToBase64 } from './utils'
 import { stringToBytes } from '../utils/bytes'
-import { prepareEthAddress } from '../utils/wallet'
 
 /**
  * Converts FairOS block format to FDS block format
@@ -11,10 +10,9 @@ import { prepareEthAddress } from '../utils/wallet'
  */
 export function rawBlockToBlock(block: RawBlock): Block {
   return {
-    name: block.Name,
-    size: block.Size,
-    compressedSize: block.CompressedSize,
-    reference: base64toReference(block.Reference.R),
+    size: block.size,
+    compressedSize: block.compressedSize,
+    reference: base64toReference(block.reference.swarm),
   }
 }
 
@@ -24,7 +22,7 @@ export function rawBlockToBlock(block: RawBlock): Block {
  * @param blocks FairOS blocks
  */
 export function rawBlocksToBlocks(blocks: RawBlocks): Blocks {
-  const resultBlocks = blocks.Blocks.map(item => rawBlockToBlock(item))
+  const resultBlocks = blocks.blocks.map(item => rawBlockToBlock(item))
 
   return {
     blocks: resultBlocks,
@@ -38,11 +36,10 @@ export function rawBlocksToBlocks(blocks: RawBlocks): Blocks {
  */
 export function blockToRawBlock(block: Block): RawBlock {
   return {
-    Name: block.name,
-    Size: block.size,
-    CompressedSize: block.compressedSize,
-    Reference: {
-      R: referenceToBase64(block.reference),
+    size: block.size,
+    compressedSize: block.compressedSize,
+    reference: {
+      swarm: referenceToBase64(block.reference),
     },
   }
 }
@@ -54,7 +51,7 @@ export function blockToRawBlock(block: Block): RawBlock {
  */
 export function blocksToRawBlocks(blocks: Blocks): RawBlocks {
   return {
-    Blocks: blocks.blocks.map(item => blockToRawBlock(item)),
+    blocks: blocks.blocks.map(item => blockToRawBlock(item)),
   }
 }
 
@@ -75,19 +72,16 @@ export function blocksToManifest(blocks: Blocks): string {
 export function rawFileMetadataToFileMetadata(data: RawFileMetadata): FileMetadata {
   return {
     version: data.version,
-    podAddress: prepareEthAddress(Uint8Array.from(data.user_address)),
-    podName: data.pod_name,
-    filePath: data.file_path,
-    fileName: data.file_name,
-    fileSize: data.file_size,
-    blockSize: data.block_size,
-    contentType: data.content_type,
+    filePath: data.filePath,
+    fileName: data.fileName,
+    fileSize: data.fileSize,
+    blockSize: data.blockSize,
+    contentType: data.contentType,
     compression: data.compression,
-    creationTime: data.creation_time,
-    accessTime: data.access_time,
-    modificationTime: data.modification_time,
-    blocksReference: base64toReference(data.file_inode_reference),
-    sharedPassword: data.shared_password,
+    creationTime: data.creationTime,
+    accessTime: data.accessTime,
+    modificationTime: data.modificationTime,
+    blocksReference: base64toReference(data.fileInodeReference),
   }
 }
 
@@ -97,19 +91,16 @@ export function rawFileMetadataToFileMetadata(data: RawFileMetadata): FileMetada
 export function fileMetadataToRawFileMetadata(data: FileMetadata): RawFileMetadata {
   return {
     version: data.version,
-    user_address: Array.from(data.podAddress),
-    pod_name: data.podName,
-    file_path: data.filePath,
-    file_name: data.fileName,
-    file_size: data.fileSize,
-    block_size: data.blockSize,
-    content_type: data.contentType,
+    filePath: data.filePath,
+    fileName: data.fileName,
+    fileSize: data.fileSize,
+    blockSize: data.blockSize,
+    contentType: data.contentType,
     compression: data.compression,
-    creation_time: data.creationTime,
-    access_time: data.accessTime,
-    modification_time: data.modificationTime,
-    file_inode_reference: referenceToBase64(data.blocksReference),
-    shared_password: data.sharedPassword,
+    creationTime: data.creationTime,
+    accessTime: data.accessTime,
+    modificationTime: data.modificationTime,
+    fileInodeReference: referenceToBase64(data.blocksReference),
   }
 }
 

@@ -435,9 +435,9 @@ describe('Fair Data Protocol class - in browser', () => {
       }, podName)
 
       expect(sharedReference).toBeDefined()
-      expect(sharedData.pod_name).toEqual(podName)
-      expect(sharedData.pod_address).toHaveLength(40)
-      expect(sharedData.user_address).toEqual(walletAddress.toLowerCase().replace('0x', ''))
+      expect(sharedData.podName).toEqual(podName)
+      expect(sharedData.podAddress).toHaveLength(40)
+      expect(sharedData.userAddress).toEqual(walletAddress.toLowerCase().replace('0x', ''))
     })
 
     it('should receive shared pod info', async () => {
@@ -459,9 +459,9 @@ describe('Fair Data Protocol class - in browser', () => {
       }, podName)
 
       expect(sharedReference).toBeDefined()
-      expect(sharedData.pod_name).toEqual(podName)
-      expect(sharedData.pod_address).toHaveLength(40)
-      expect(sharedData.user_address).toEqual(walletAddress.toLowerCase().replace('0x', ''))
+      expect(sharedData.podName).toEqual(podName)
+      expect(sharedData.podAddress).toHaveLength(40)
+      expect(sharedData.userAddress).toEqual(walletAddress.toLowerCase().replace('0x', ''))
     })
 
     it('should save shared pod', async () => {
@@ -809,10 +809,9 @@ describe('Fair Data Protocol class - in browser', () => {
       )
 
       expect(sharedData.meta).toBeDefined()
-      expect(sharedData.meta.pod_name).toEqual(pod)
-      expect(sharedData.meta.file_path).toEqual('/')
-      expect(sharedData.meta.file_name).toEqual(filenameSmall)
-      expect(sharedData.meta.file_size).toEqual(fileSizeSmall)
+      expect(sharedData.meta.filePath).toEqual('/')
+      expect(sharedData.meta.fileName).toEqual(filenameSmall)
+      expect(sharedData.meta.fileSize).toEqual(fileSizeSmall)
     })
 
     it('should save shared file to a pod', async () => {
@@ -876,18 +875,15 @@ describe('Fair Data Protocol class - in browser', () => {
         customName,
       )
 
-      expect(sharedData.podName).toEqual(pod1)
       expect(sharedData.filePath).toEqual(newFilePath)
       expect(sharedData.fileName).toEqual(filenameSmall)
       expect(sharedData.fileSize).toEqual(fileSizeSmall)
       expect(files).toHaveLength(1)
       expect(fileInfo.name).toEqual(filenameSmall)
       expect(fileInfo.size).toEqual(fileSizeSmall)
-      expect(meta.file_name).toEqual(filenameSmall)
-      expect(meta.file_size).toEqual(fileSizeSmall)
-      expect(meta.pod_name).toEqual(pod1)
+      expect(meta.fileName).toEqual(filenameSmall)
+      expect(meta.fileSize).toEqual(fileSizeSmall)
       expect(data).toEqual(contentSmall)
-      expect(sharedData1.podName).toEqual(pod1)
       expect(sharedData1.filePath).toEqual(newFilePath)
       expect(sharedData1.fileName).toEqual(customName)
       expect(sharedData1.fileSize).toEqual(fileSizeSmall)

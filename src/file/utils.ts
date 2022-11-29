@@ -1,5 +1,5 @@
 import { Connection } from '../connection/connection'
-import { Bee, Reference, RequestOptions, UploadResult, Utils } from '@ethersphere/bee-js'
+import { Bee, Reference, RequestOptions, UploadResult } from '@ethersphere/bee-js'
 import { PathInfo } from '../pod/utils'
 import { Blocks, FileShareInfo, RawBlock, RawBlocks } from './types'
 import { rawBlocksToBlocks } from './adapter'
@@ -9,7 +9,7 @@ import { FileMetadata, RawFileMetadata } from '../pod/types'
 import { EncryptedReference } from '../utils/hex'
 import { isRawFileMetadata } from '../directory/utils'
 import { getUnixTimestamp } from '../utils/time'
-import { decryptJson, PodPasswordBytes } from '../utils/encryption'
+import { bytesToString } from '../utils/bytes'
 
 /**
  * Asserts that full path string is correct
@@ -91,12 +91,11 @@ export function extractPathInfo(fullPath: string): PathInfo {
  */
 export async function downloadBlocksManifest(
   bee: Bee,
-  podPassword: PodPasswordBytes,
   reference: Reference,
   downloadOptions?: RequestOptions,
 ): Promise<Blocks> {
-  const encryptedData = await bee.downloadData(reference, downloadOptions)
-  const rawBlocks = decryptJson(podPassword, encryptedData)
+  const data = await bee.downloadData(reference, downloadOptions)
+  const rawBlocks = JSON.parse(bytesToString(data))
   assertRawBlocks(rawBlocks)
 
   return rawBlocksToBlocks(rawBlocks)
@@ -144,13 +143,7 @@ export function isFileShareInfo(value: unknown): value is FileShareInfo {
 export function isRawBlock(value: unknown): value is RawBlock {
   const data = value as RawBlock
 
-  return (
-    isObject(value) &&
-    isString(data.Name) &&
-    isNumber(data.Size) &&
-    isNumber(data.CompressedSize) &&
-    isString(data.Reference?.R)
-  )
+  return isObject(value) && isNumber(data.size) && isNumber(data.compressedSize) && isString(data.reference?.swarm)
 }
 
 /**
@@ -158,8 +151,8 @@ export function isRawBlock(value: unknown): value is RawBlock {
  */
 export function assertRawBlocks(value: unknown): asserts value is RawBlocks {
   const data = value as RawBlocks
-  assertArray(data.Blocks)
-  for (const block of data.Blocks) {
+  assertArray(data.blocks)
+  for (const block of data.blocks) {
     if (!isRawBlock(block)) {
       throw new Error('Incorrect file raw block')
     }
@@ -193,26 +186,16 @@ export async function getSharedFileInfo(bee: Bee, reference: EncryptedReference)
  * Updates shared metadata with new params
  *
  * @param meta shared metadata
- * @param podName pod name
  * @param filePath parent path of file
  * @param fileName file name
- * @param podAddress pod address
  */
-export function updateFileMetadata(
-  meta: FileMetadata,
-  podName: string,
-  filePath: string,
-  fileName: string,
-  podAddress: Utils.EthAddress,
-): FileMetadata {
+export function updateFileMetadata(meta: FileMetadata, filePath: string, fileName: string): FileMetadata {
   const now = getUnixTimestamp()
 
   return {
     ...meta,
-    podName,
     filePath,
     fileName,
-    podAddress,
     accessTime: now,
     modificationTime: now,
     creationTime: now,
