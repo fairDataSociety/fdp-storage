@@ -12,16 +12,16 @@ export interface SharedPod {
 }
 
 export interface PodsList {
-  pods: Pod[]
-  sharedPods: SharedPod[]
+  podName: string[]
+  sharedPodName: string[]
 }
 
 export interface Directory {
   name: string
-  content_type: string
-  creation_time: string
-  modification_time: string
-  access_time: string
+  contentType: string
+  creationTime: string
+  modificationTime: string
+  accessTime: string
 }
 
 export interface Directories {
@@ -61,19 +61,6 @@ export class FairOSApi {
   }
 
   /**
-   * Register new V1 user
-   */
-  async registerV1(username: string, password: string, mnemonic?: string): Promise<AxiosResponse> {
-    const url = this.getV1Url('user/signup')
-
-    return await axios.post(url, {
-      user_name: username,
-      password,
-      mnemonic,
-    })
-  }
-
-  /**
    * Gets user stat
    */
   async stat(username: string): Promise<AxiosResponse> {
@@ -81,7 +68,7 @@ export class FairOSApi {
 
     return axios.get(url, {
       params: {
-        user_name: username,
+        userName: username,
       },
     })
   }
@@ -93,7 +80,7 @@ export class FairOSApi {
     const url = this.getV2Url('user/login')
 
     return await axios.post(url, {
-      user_name: username,
+      userName: username,
       password,
     })
   }
@@ -105,7 +92,7 @@ export class FairOSApi {
     const url = this.getV2Url('user/signup')
 
     return await axios.post(url, {
-      user_name: username,
+      userName: username,
       password,
       mnemonic,
     })
@@ -130,7 +117,7 @@ export class FairOSApi {
     const url = this.getV1Url('pod/new')
 
     return axios.post(url, {
-      pod_name: name,
+      podName: name,
       password,
     })
   }
@@ -146,7 +133,7 @@ export class FairOSApi {
 
     return axios.delete(url, {
       data: {
-        pod_name: name,
+        podName: name,
         password,
       },
     })
@@ -163,8 +150,8 @@ export class FairOSApi {
 
     return axios.delete(url, {
       data: {
-        pod_name: name,
-        file_path: filePath,
+        podName: name,
+        filePath: filePath,
       },
     })
   }
@@ -180,8 +167,8 @@ export class FairOSApi {
 
     return axios.delete(url, {
       data: {
-        pod_name: name,
-        dir_path: directoryPath,
+        podName: name,
+        dirPath: directoryPath,
       },
     })
   }
@@ -196,7 +183,7 @@ export class FairOSApi {
     const url = this.getV1Url('pod/open')
 
     return axios.post(url, {
-      pod_name: name,
+      podName: name,
       password,
     })
   }
@@ -210,7 +197,7 @@ export class FairOSApi {
     const url = this.getV1Url('pod/close')
 
     return axios.post(url, {
-      pod_name: name,
+      podName: name,
     })
   }
 
@@ -222,8 +209,8 @@ export class FairOSApi {
 
     return axios.get(url, {
       params: {
-        dir_path: dirPath,
-        pod_name: podName,
+        dirPath: dirPath,
+        podName: podName,
       },
     })
   }
@@ -236,8 +223,8 @@ export class FairOSApi {
 
     return axios.get(url, {
       params: {
-        pod_name: podName,
-        sharing_ref: sharingReference,
+        podName: podName,
+        sharingRef: sharingReference,
       },
     })
   }
@@ -253,8 +240,8 @@ export class FairOSApi {
     const url = this.getV1Url('dir/mkdir')
 
     return axios.post(url, {
-      pod_name: podName,
-      dir_path: directoryPath,
+      podName,
+      dirPath: directoryPath,
       password,
     })
   }
@@ -273,8 +260,8 @@ export class FairOSApi {
       {},
       {
         params: {
-          pod_name: podName,
-          file_path: filePath,
+          podName,
+          filePath,
         },
       },
     )
@@ -299,9 +286,9 @@ export class FairOSApi {
     const url = this.getV1Url('file/upload')
     const form = new FormData()
     form.append('files', content, { filename: fileName })
-    form.append('block_size', blockSize)
-    form.append('pod_name', podName)
-    form.append('dir_path', dirPath)
+    form.append('blockSize', blockSize)
+    form.append('podName', podName)
+    form.append('dirPath', dirPath)
 
     return axios.post(url, form, { headers: form.getHeaders() })
   }
