@@ -19,17 +19,16 @@ export interface DataUploadOptions {
  * FairOS file blocks format
  */
 export interface RawBlocks {
-  Blocks: RawBlock[]
+  blocks: RawBlock[]
 }
 
 /**
  * FairOS file block format
  */
 export interface RawBlock {
-  Name: string
-  Size: number
-  CompressedSize: number
-  Reference: { R: string }
+  size: number
+  compressedSize: number
+  reference: { swarm: string }
 }
 
 /**
@@ -43,7 +42,6 @@ export interface Blocks {
  * FDP file block format
  */
 export interface Block {
-  name: string
   size: number
   compressedSize: number
   reference: Reference

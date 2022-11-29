@@ -38,6 +38,6 @@ export class DirectoryItem extends ContentItem {
    * @param item raw directory metadata from FairOS
    */
   static fromRawDirectoryMetadata(item: RawDirectoryMetadata): DirectoryItem {
-    return new DirectoryItem(item.Meta.Name, [], item)
+    return new DirectoryItem(item.meta.name, [], item)
   }
 }

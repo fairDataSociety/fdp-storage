@@ -21,7 +21,7 @@ import { Wallet } from 'ethers'
 import { removeZeroFromHex } from '../../src/account/utils'
 import { bytesToString } from '../../src/utils/bytes'
 import { getWalletByIndex, mnemonicToSeed, prepareEthAddress } from '../../src/utils/wallet'
-import { bytesToHex } from '../../src/utils/hex'
+import { assertEncryptedReference, bytesToHex } from '../../src/utils/hex'
 import { base64toReference } from '../../src/file/utils'
 
 async function topUpAddress(fdp: FdpStorage) {
@@ -270,9 +270,9 @@ describe('Fair Data Protocol class', () => {
       const sharedReference = await fdp.personalStorage.share(podName)
       expect(sharedReference).toHaveLength(128)
       const sharedData = (await fdp.connection.bee.downloadData(sharedReference)).json() as unknown as PodShareInfo
-      expect(sharedData.pod_name).toEqual(podName)
-      expect(sharedData.pod_address).toHaveLength(40)
-      expect(sharedData.user_address).toEqual(user.address.toLowerCase().replace('0x', ''))
+      expect(sharedData.podName).toEqual(podName)
+      expect(sharedData.podAddress).toHaveLength(40)
+      expect(sharedData.userAddress).toEqual(user.address.toLowerCase().replace('0x', ''))
     })
 
     it('should receive shared pod info', async () => {
@@ -284,9 +284,9 @@ describe('Fair Data Protocol class', () => {
       const sharedReference = await fdp.personalStorage.share(podName)
       const sharedData = await fdp.personalStorage.getSharedInfo(sharedReference)
 
-      expect(sharedData.pod_name).toEqual(podName)
-      expect(sharedData.pod_address).toHaveLength(40)
-      expect(sharedData.user_address).toEqual(user.address.toLowerCase().replace('0x', ''))
+      expect(sharedData.podName).toEqual(podName)
+      expect(sharedData.podAddress).toHaveLength(40)
+      expect(sharedData.userAddress).toEqual(user.address.toLowerCase().replace('0x', ''))
     })
 
     it('should save shared pod', async () => {
@@ -488,10 +488,9 @@ describe('Fair Data Protocol class', () => {
       const sharedData = await fdp.file.getSharedInfo(sharedReference)
 
       expect(sharedData.meta).toBeDefined()
-      expect(sharedData.meta.pod_name).toEqual(pod)
-      expect(sharedData.meta.file_path).toEqual('/')
-      expect(sharedData.meta.file_name).toEqual(filenameSmall)
-      expect(sharedData.meta.file_size).toEqual(fileSizeSmall)
+      expect(sharedData.meta.filePath).toEqual('/')
+      expect(sharedData.meta.fileName).toEqual(filenameSmall)
+      expect(sharedData.meta.fileSize).toEqual(fileSizeSmall)
     })
 
     it('should save shared file to a pod', async () => {
@@ -513,7 +512,6 @@ describe('Fair Data Protocol class', () => {
       const newFilePath = '/'
       const sharedData = await fdp1.file.saveShared(pod1, newFilePath, sharedReference)
 
-      expect(sharedData.podName).toEqual(pod1)
       expect(sharedData.filePath).toEqual(newFilePath)
       expect(sharedData.fileName).toEqual(filenameSmall)
       expect(sharedData.fileSize).toEqual(fileSizeSmall)
@@ -525,9 +523,8 @@ describe('Fair Data Protocol class', () => {
       expect(fileInfo.name).toEqual(filenameSmall)
       expect(fileInfo.size).toEqual(fileSizeSmall)
       const meta = fileInfo.raw as RawFileMetadata
-      expect(meta.file_name).toEqual(filenameSmall)
-      expect(meta.file_size).toEqual(fileSizeSmall)
-      expect(meta.pod_name).toEqual(pod1)
+      expect(meta.fileName).toEqual(filenameSmall)
+      expect(meta.fileSize).toEqual(fileSizeSmall)
 
       const data = await fdp1.file.downloadData(pod1, fullFilenameSmallPath)
       expect(data.text()).toEqual(contentSmall)
@@ -535,7 +532,6 @@ describe('Fair Data Protocol class', () => {
       // checking saving with custom name
       const customName = 'NewCustomName.txt'
       const sharedData1 = await fdp1.file.saveShared(pod1, newFilePath, sharedReference, { name: customName })
-      expect(sharedData1.podName).toEqual(pod1)
       expect(sharedData1.filePath).toEqual(newFilePath)
       expect(sharedData1.fileName).toEqual(customName)
       expect(sharedData1.fileSize).toEqual(fileSizeSmall)
@@ -582,7 +578,7 @@ describe('Fair Data Protocol class', () => {
       // data decrypts with password stored in the pod
       const decryptedText2 = bytesToString(decryptBytes(bytesToHex(pod1.password), encryptedBytes2))
       // check some keywords from root directory of the pod metadata
-      const metaWords1 = ['Meta', 'Version', 'CreationTime', 'FileOrDirNames']
+      const metaWords1 = ['meta', 'version', 'creationTime', 'fileOrDirNames']
       for (const metaWord of metaWords1) {
         expect(encryptedText2).not.toContain(metaWord)
         expect(decryptedText2).toContain(metaWord)
@@ -605,17 +601,7 @@ describe('Fair Data Protocol class', () => {
       const encryptedText4 = fileManifestData.data.chunkContent().text()
       const encryptedBytes4 = fileManifestData.data.chunkContent()
       const decryptedText4 = bytesToString(decryptBytes(bytesToHex(pod1.password), encryptedBytes4))
-      const metaWords2 = [
-        pod,
-        filenameSmall,
-        'version',
-        'user_address',
-        'pod_name',
-        'file_path',
-        'file_name',
-        'file_size',
-        'file_inode_reference',
-      ]
+      const metaWords2 = [filenameSmall, 'version', 'filePath', 'fileName', 'fileSize', 'fileInodeReference']
       for (const metaWord of metaWords2) {
         expect(encryptedText4).not.toContain(metaWord)
         expect(decryptedText4).toContain(metaWord)
@@ -623,23 +609,20 @@ describe('Fair Data Protocol class', () => {
 
       // check file metadata
       const metaObject = JSON.parse(decryptedText4)
-      const blocksReference = base64toReference(metaObject.file_inode_reference)
-      const encryptedData5 = await bee.downloadData(blocksReference)
-      const encryptedText5 = encryptedData5.text()
-      const decryptedText5 = bytesToString(decryptBytes(bytesToHex(pod1.password), encryptedData5))
-      const metaWords3 = ['Blocks', 'Name', 'Size', 'CompressedSize', 'Reference']
+      const blocksReference = base64toReference(metaObject.fileInodeReference)
+      assertEncryptedReference(blocksReference)
+      const decryptedData5 = await bee.downloadData(blocksReference)
+      const decryptedText5 = decryptedData5.text()
+      const metaWords3 = ['blocks', 'size', 'compressedSize', 'reference']
       for (const metaWord of metaWords3) {
-        expect(encryptedText5).not.toContain(metaWord)
         expect(decryptedText5).toContain(metaWord)
       }
 
       // check file block
       const blocks = JSON.parse(decryptedText5)
-      const blockReference = base64toReference(blocks.Blocks[0].Reference.R)
+      const blockReference = base64toReference(blocks.blocks[0].reference.swarm)
       const encryptedData6 = await bee.downloadData(blockReference)
-      const encryptedText6 = encryptedData6.text()
-      const decryptedText6 = bytesToString(decryptBytes(bytesToHex(pod1.password), encryptedData6))
-      expect(encryptedText6).not.toEqual(contentSmall)
+      const decryptedText6 = encryptedData6.text()
       expect(decryptedText6).toEqual(contentSmall)
     })
   })

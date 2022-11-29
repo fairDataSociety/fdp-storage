@@ -56,14 +56,14 @@ export async function addEntryToDirectory(
   }
 
   const itemToAdd = (isFile ? FILE_TOKEN : DIRECTORY_TOKEN) + entryPath
-  parentData.FileOrDirNames = parentData.FileOrDirNames ?? []
+  parentData.fileOrDirNames = parentData.fileOrDirNames ?? []
 
-  if (parentData.FileOrDirNames.includes(itemToAdd)) {
+  if (parentData.fileOrDirNames.includes(itemToAdd)) {
     throw new Error(`${itemText} already listed in the parent directory list`)
   }
 
-  parentData.FileOrDirNames.push(itemToAdd)
-  parentData.Meta.ModificationTime = getUnixTimestamp()
+  parentData.fileOrDirNames.push(itemToAdd)
+  parentData.meta.modificationTime = getUnixTimestamp()
 
   return writeFeedData(
     connection,
@@ -106,8 +106,8 @@ export async function removeEntryFromDirectory(
   assertRawDirectoryMetadata(parentData)
   const itemToRemove = (isFile ? FILE_TOKEN : DIRECTORY_TOKEN) + entryPath
 
-  if (parentData.FileOrDirNames) {
-    parentData.FileOrDirNames = parentData.FileOrDirNames.filter(name => name !== itemToRemove)
+  if (parentData.fileOrDirNames) {
+    parentData.fileOrDirNames = parentData.fileOrDirNames.filter(name => name !== itemToRemove)
   }
 
   return writeFeedData(

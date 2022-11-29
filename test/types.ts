@@ -12,11 +12,11 @@ export interface FairOSDirectoryItems {
 export interface FairOSDirectoryItem {
   name: string
   size: string
-  content_type: string
-  block_size: string
-  creation_time: string
-  modification_time: string
-  access_time: string
+  contentType: string
+  blockSize: string
+  creationTime: string
+  modificationTime: string
+  accessTime: string
 }
 
 /**
@@ -24,8 +24,8 @@ export interface FairOSDirectoryItem {
  */
 export interface FairOSFileItem {
   name: string
-  content_type: string
-  creation_time: string
-  modification_time: string
-  access_time: string
+  contentType: string
+  creationTime: string
+  modificationTime: string
+  accessTime: string
 }

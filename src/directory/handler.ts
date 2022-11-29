@@ -46,11 +46,11 @@ export async function readDirectory(
   assertRawDirectoryMetadata(parentRawDirectoryMetadata)
   const resultDirectoryItem = DirectoryItem.fromRawDirectoryMetadata(parentRawDirectoryMetadata)
 
-  if (!parentRawDirectoryMetadata.FileOrDirNames) {
+  if (!parentRawDirectoryMetadata.fileOrDirNames) {
     return resultDirectoryItem
   }
 
-  for (let item of parentRawDirectoryMetadata.FileOrDirNames) {
+  for (let item of parentRawDirectoryMetadata.fileOrDirNames) {
     const isFile = item.startsWith(FILE_TOKEN)
     const isDirectory = item.startsWith(DIRECTORY_TOKEN)
 

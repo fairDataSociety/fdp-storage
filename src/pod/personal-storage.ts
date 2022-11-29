@@ -161,8 +161,8 @@ export class PersonalStorage {
       this.accountData.wallet!,
       this.accountData.seed!,
       {
-        name: options?.name ?? data.pod_name,
-        address: prepareEthAddress(data.pod_address),
+        name: options?.name ?? data.podName,
+        address: prepareEthAddress(data.podAddress),
         password: Utils.hexToBytes(data.password),
       },
     )
