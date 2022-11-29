@@ -32,7 +32,7 @@
   ],
   "types": "dist/index.d.ts",
   "scripts": {
-    "prepublishOnly": "rimraf dist && npm run compile:types && npm run compile:browser --env mode=production && npm run compile:node --env mode=production",
+    "prepare": "rimraf dist && npm run compile:types && npm run compile:browser --env mode=production",
     "compile:node": "webpack --progress --env target=node",
     "compile:types": "tsc --emitDeclarationOnly --declaration",
     "compile:browser": "webpack --progress --env target=web",
@@ -52,7 +52,7 @@
     "depcheck": "depcheck ."
   },
   "dependencies": {
-    "@ethersphere/bee-js": "^3.1.0",
+    "@ethersphere/bee-js": "https://github.com/fairDataSociety/bee-js.git",
     "@fairdatasociety/fdp-contracts": "^1.0.4",
     "crypto-js": "^4.1.1",
     "ethers": "^5.5.2",
@@ -103,7 +103,7 @@
     "rimraf": "^3.0.2",
     "terser-webpack-plugin": "^5.1.3",
     "ts-node": "^10.0.0",
-    "typedoc": "^0.22.0",
+    "typedoc": "^0.23.0",
     "typedoc-plugin-markdown": "^3.10.0",
     "typescript": "^4.3.4",
     "webpack": "^5.40.0",
