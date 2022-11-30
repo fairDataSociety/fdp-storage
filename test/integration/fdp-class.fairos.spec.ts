@@ -1,6 +1,8 @@
 import { createFdp, generateRandomHexString, generateUser, topUpAddress, topUpFdp, waitFairOS } from '../utils'
 import { Directories, FairOSApi, PodsList } from '../utils/fairos-api'
 import { Wallet, utils } from 'ethers'
+import { bytesToHex } from '../../src/utils/hex'
+import { Utils } from '@ethersphere/bee-js'
 
 jest.setTimeout(400000)
 describe('Fair Data Protocol with FairOS-dfs', () => {
@@ -59,23 +61,35 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
 
       await topUpFdp(fdp)
       await fdp.account.register(user.username, user.password)
-      await fdp.personalStorage.create(podName1)
+      const createdPod1 = await fdp.personalStorage.create(podName1)
       await fairos.login(user.username, user.password)
       const response = await fairos.podLs()
+      const expectedPod1 = {
+        index: 1,
+        name: podName1,
+        password: bytesToHex(createdPod1.password),
+      }
       expect(response.status).toEqual(200)
       expect(response.data).toStrictEqual({
-        podName: [podName1],
-        sharedPodName: [],
+        pods: [expectedPod1],
+        sharedPods: [],
       })
 
-      await fdp.personalStorage.create(podName2)
+      const createdPod2 = await fdp.personalStorage.create(podName2)
+      const expectedPod2 = {
+        index: 2,
+        name: podName2,
+        password: bytesToHex(createdPod2.password),
+      }
       const response2 = await fairos.podLs()
       expect(response2.status).toEqual(200)
       const response2Data = response2.data as PodsList
-      expect(response2Data.podName).toHaveLength(2)
-      expect(response2Data.sharedPodName).toHaveLength(0)
-      expect(response2Data.podName.includes(podName1)).toBeDefined()
-      expect(response2Data.podName.includes(podName2)).toBeDefined()
+      expect(response2Data.pods).toHaveLength(2)
+      expect(response2Data.sharedPods).toHaveLength(0)
+      const foundPod1 = response2Data.pods.find(item => item.name === podName1)
+      const foundPod2 = response2Data.pods.find(item => item.name === podName2)
+      expect(foundPod1).toStrictEqual(expectedPod1)
+      expect(foundPod2).toStrictEqual(expectedPod2)
     })
 
     it('should create pods in fairos and list them in fdp', async () => {
@@ -92,13 +106,15 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
       expect(createdPod1.status).toEqual(201)
       expect(createdPod1.data).toStrictEqual({ message: 'pod created successfully' })
       const fairosList1 = (await fairos.podLs()).data as PodsList
-      expect(fairosList1.podName).toHaveLength(1)
+      expect(fairosList1.pods).toHaveLength(1)
+      const pod1Password = fairosList1.pods[0].password
 
       await fdp.account.login(user.username, user.password)
       const fdpResponse = await fdp.personalStorage.list()
-      const responsePod1 = fdpResponse.getPods()[0]
-      expect(responsePod1.name).toEqual(podName1)
-      expect(responsePod1.index).toEqual(1)
+      expect(fdpResponse).toEqual({
+        pods: [{ name: podName1, index: 1, password: Utils.hexToBytes(pod1Password) }],
+        sharedPods: [],
+      })
 
       const createdPod2 = await fairos.podNew(podName2, user.password)
       expect(createdPod2.status).toEqual(201)
@@ -111,11 +127,11 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
       expect(fdpResponse2.getPods().find(item => item.name === podName2)).toBeDefined()
 
       await fdp.personalStorage.create(podName3)
-      const fairosPods = ((await fairos.podLs()).data as PodsList).podName
+      const fairosPods = ((await fairos.podLs()).data as PodsList).pods
       expect(fairosPods).toHaveLength(3)
-      expect(fairosPods.includes(podName1)).toBeDefined()
-      expect(fairosPods.includes(podName2)).toBeDefined()
-      expect(fairosPods.includes(podName3)).toBeDefined()
+      expect(fairosPods.find(item => item.name === podName1)).toBeDefined()
+      expect(fairosPods.find(item => item.name === podName2)).toBeDefined()
+      expect(fairosPods.find(item => item.name === podName3)).toBeDefined()
     })
 
     it('should delete pod in fdp and it will disappear in fairos', async () => {
@@ -129,13 +145,13 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
       await fdp.personalStorage.create(podName1)
       await fairos.login(user.username, user.password)
       const fairosList1 = (await fairos.podLs()).data as PodsList
-      expect(fairosList1.podName).toHaveLength(1)
-      expect(fairosList1.sharedPodName).toHaveLength(0)
+      expect(fairosList1.pods).toHaveLength(1)
+      expect(fairosList1.sharedPods).toHaveLength(0)
 
       await fdp.personalStorage.delete(podName1)
       const fairosList2 = (await fairos.podLs()).data as PodsList
-      expect(fairosList2.podName).toHaveLength(0)
-      expect(fairosList2.sharedPodName).toHaveLength(0)
+      expect(fairosList2.pods).toHaveLength(0)
+      expect(fairosList2.sharedPods).toHaveLength(0)
     })
 
     it('should delete pod in fairos and it will disappear in fdp', async () => {
@@ -177,8 +193,8 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
       })
       const fairosResponse3 = await fairos.podLs()
       expect(fairosResponse3.data).toEqual({
-        podName: [],
-        sharedPodName: [],
+        pods: [],
+        sharedPods: [],
       })
     })
   })
@@ -203,9 +219,10 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
       await fairos.login(user.username, user.password)
       await fairos.podOpen(podName1, user.password)
       const response = await fairos.dirLs(podName1)
+      const data = response.data as Directories
       expect(response.status).toEqual(200)
-      expect(response.data?.dirs).toHaveLength(1)
-      const dir1 = response.data.dirs[0]
+      expect(data.dirs).toHaveLength(1)
+      const dir1 = data.dirs[0]
       expect(dir1.name).toEqual(directoryName1)
       expect(dir1.contentType).toEqual('inode/directory')
       expect(dir1.creationTime).toBeDefined()

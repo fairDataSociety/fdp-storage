@@ -12,8 +12,8 @@ export interface SharedPod {
 }
 
 export interface PodsList {
-  podName: string[]
-  sharedPodName: string[]
+  pods: Pod[]
+  sharedPods: SharedPod[]
 }
 
 export interface Directory {
