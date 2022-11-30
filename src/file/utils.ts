@@ -1,14 +1,15 @@
 import { Connection } from '../connection/connection'
-import { Bee, Reference, RequestOptions, UploadResult, Utils } from '@ethersphere/bee-js'
+import { Bee, Reference, RequestOptions, UploadResult } from '@ethersphere/bee-js'
 import { PathInfo } from '../pod/utils'
-import { Blocks, FileShareInfo, RawBlocks } from './types'
+import { Blocks, FileShareInfo, RawBlock, RawBlocks } from './types'
 import { rawBlocksToBlocks } from './adapter'
 import CryptoJS from 'crypto-js'
-import { assertString, isObject } from '../utils/type'
+import { assertArray, assertString, isNumber, isObject, isString } from '../utils/type'
 import { FileMetadata, RawFileMetadata } from '../pod/types'
-import { bytesToHex, EncryptedReference } from '../utils/hex'
+import { EncryptedReference } from '../utils/hex'
 import { isRawFileMetadata } from '../directory/utils'
 import { getUnixTimestamp } from '../utils/time'
+import { bytesToString } from '../utils/bytes'
 
 /**
  * Asserts that full path string is correct
@@ -84,6 +85,7 @@ export function extractPathInfo(fullPath: string): PathInfo {
  * Downloads raw FairOS blocks and convert it to FDS blocks
  *
  * @param bee Bee client
+ * @param podPassword bytes for data encryption from pod metadata
  * @param reference blocks Swarm reference
  * @param downloadOptions download options
  */
@@ -92,7 +94,9 @@ export async function downloadBlocksManifest(
   reference: Reference,
   downloadOptions?: RequestOptions,
 ): Promise<Blocks> {
-  const rawBlocks = (await bee.downloadData(reference, downloadOptions)).json() as unknown as RawBlocks
+  const data = await bee.downloadData(reference, downloadOptions)
+  const rawBlocks = JSON.parse(bytesToString(data))
+  assertRawBlocks(rawBlocks)
 
   return rawBlocksToBlocks(rawBlocks)
 }
@@ -118,10 +122,9 @@ export function referenceToBase64(reference: Reference): string {
 /**
  * Creates file share information structure
  */
-export function createFileShareInfo(meta: RawFileMetadata, podAddress: Utils.EthAddress): FileShareInfo {
+export function createFileShareInfo(meta: RawFileMetadata): FileShareInfo {
   return {
     meta,
-    source_address: bytesToHex(podAddress),
   }
 }
 
@@ -131,7 +134,29 @@ export function createFileShareInfo(meta: RawFileMetadata, podAddress: Utils.Eth
 export function isFileShareInfo(value: unknown): value is FileShareInfo {
   const data = value as FileShareInfo
 
-  return isObject(value) && isRawFileMetadata(data.meta) && Utils.isHexEthAddress(data.source_address)
+  return isObject(value) && isRawFileMetadata(data.meta)
+}
+
+/**
+ * Checks that value is file raw block
+ */
+export function isRawBlock(value: unknown): value is RawBlock {
+  const data = value as RawBlock
+
+  return isObject(value) && isNumber(data.size) && isNumber(data.compressedSize) && isString(data.reference?.swarm)
+}
+
+/**
+ * Asserts that file raw blocks are correct
+ */
+export function assertRawBlocks(value: unknown): asserts value is RawBlocks {
+  const data = value as RawBlocks
+  assertArray(data.blocks)
+  for (const block of data.blocks) {
+    if (!isRawBlock(block)) {
+      throw new Error('Incorrect file raw block')
+    }
+  }
 }
 
 /**
@@ -161,26 +186,16 @@ export async function getSharedFileInfo(bee: Bee, reference: EncryptedReference)
  * Updates shared metadata with new params
  *
  * @param meta shared metadata
- * @param podName pod name
  * @param filePath parent path of file
  * @param fileName file name
- * @param podAddress pod address
  */
-export function updateFileMetadata(
-  meta: FileMetadata,
-  podName: string,
-  filePath: string,
-  fileName: string,
-  podAddress: Utils.EthAddress,
-): FileMetadata {
+export function updateFileMetadata(meta: FileMetadata, filePath: string, fileName: string): FileMetadata {
   const now = getUnixTimestamp()
 
   return {
     ...meta,
-    podName,
     filePath,
     fileName,
-    podAddress,
     accessTime: now,
     modificationTime: now,
     creationTime: now,

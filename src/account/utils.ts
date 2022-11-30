@@ -13,6 +13,7 @@ export const AUTH_VERSION = 'FDP-login-v1.0'
 export const CHUNK_SIZE = 4096
 export const SEED_SIZE = 64
 export const HD_PATH = `m/44'/60'/0'/0/0`
+export const CHUNK_ALREADY_EXISTS_ERROR = 'Conflict: chunk already exists'
 
 /**
  * Encode input data to Base64Url with Go lang compatible paddings
@@ -204,11 +205,4 @@ export function assertChunkSizeLength(value: unknown): asserts value is number {
   if (data !== CHUNK_SIZE) {
     throw new Error('Chunk size is not correct')
   }
-}
-
-/**
- * Converts bytes to CryptoJS WordArray
- */
-export function bytesToWordArray(data: Uint8Array): CryptoJS.lib.WordArray {
-  return CryptoJS.enc.Hex.parse(Utils.bytesToHex(data))
 }

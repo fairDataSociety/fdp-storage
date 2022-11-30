@@ -8,6 +8,7 @@
 import { Data, Utils } from '@ethersphere/bee-js'
 import { bytesToHex } from './hex'
 import { BeeArgumentError } from './error'
+import CryptoJS from 'crypto-js'
 
 export const SPAN_SIZE = 8
 
@@ -133,10 +134,33 @@ export function stringToBytes(data: string): Uint8Array {
   return new TextEncoder().encode(data)
 }
 
+/**
+ * Converts bytes array to string
+ *
+ * @param data bytes data
+ */
+export function bytesToString(data: Uint8Array): string {
+  return new TextDecoder().decode(data)
+}
+
 export function assertFlexBytes<Min extends number, Max extends number = Min>(
   b: unknown,
   min: Min,
   max: Max,
 ): asserts b is Utils.FlexBytes<Min, Max> {
   return Utils.assertFlexBytes(b, min, max)
+}
+
+/**
+ * Converts bytes to CryptoJS WordArray
+ */
+export function bytesToWordArray(data: Uint8Array): CryptoJS.lib.WordArray {
+  return CryptoJS.enc.Hex.parse(bytesToHex(data))
+}
+
+/**
+ * Converts word array to bytes
+ */
+export function wordArrayToBytes(data: CryptoJS.lib.WordArray): Uint8Array {
+  return Utils.hexToBytes(CryptoJS.enc.Hex.stringify(data))
 }

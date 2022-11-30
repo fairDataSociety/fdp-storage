@@ -22,11 +22,13 @@ export class Directory {
   async read(podName: string, path: string, isRecursive?: boolean): Promise<DirectoryItem> {
     assertAccount(this.accountData)
     assertPodName(podName)
+    const { podAddress, pod } = await getExtendedPodsListByAccountData(this.accountData, podName)
 
     return readDirectory(
       this.accountData.connection.bee,
       path,
-      (await getExtendedPodsListByAccountData(this.accountData, podName)).podAddress,
+      podAddress,
+      pod.password,
       isRecursive,
       this.accountData.connection.options?.downloadOptions,
     )
@@ -42,13 +44,9 @@ export class Directory {
     assertAccount(this.accountData)
     assertPodName(podName)
     const downloadOptions = this.accountData.connection.options?.downloadOptions
+    const { podWallet, pod } = await getExtendedPodsListByAccountData(this.accountData, podName)
 
-    return createDirectory(
-      this.accountData.connection,
-      fullPath,
-      (await getExtendedPodsListByAccountData(this.accountData, podName)).podWallet,
-      downloadOptions,
-    )
+    return createDirectory(this.accountData.connection, fullPath, podWallet, pod.password, downloadOptions)
   }
 
   /**
@@ -63,12 +61,12 @@ export class Directory {
     const pathInfo = extractPathInfo(fullPath)
     const connection = this.accountData.connection
     const downloadOptions = connection.options?.downloadOptions
+    const { podWallet, pod } = await getExtendedPodsListByAccountData(this.accountData, podName)
 
     await removeEntryFromDirectory(
       connection,
-      (
-        await getExtendedPodsListByAccountData(this.accountData, podName)
-      ).podWallet,
+      podWallet,
+      pod.password,
       pathInfo.path,
       pathInfo.filename,
       false,
