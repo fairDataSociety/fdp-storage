@@ -96,7 +96,7 @@ export async function downloadBlocksManifest(
   downloadOptions?: RequestOptions,
 ): Promise<Blocks> {
   const encryptedData = await bee.downloadData(reference, downloadOptions)
-  const rawBlocks = decryptJson(podPassword, encryptedData)
+  const rawBlocks = decryptJson(podPassword, encryptedData.bytes())
   assertRawBlocks(rawBlocks)
 
   return rawBlocksToBlocks(rawBlocks)

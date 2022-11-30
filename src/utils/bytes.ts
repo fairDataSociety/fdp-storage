@@ -61,6 +61,7 @@ export function wrapBytesWithHelpers(data: Uint8Array): Data {
     text: () => new TextDecoder('utf-8').decode(data),
     json: () => JSON.parse(new TextDecoder('utf-8').decode(data)),
     hex: () => bytesToHex(data),
+    bytes: () => data,
   })
 }
 

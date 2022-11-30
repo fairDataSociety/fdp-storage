@@ -75,7 +75,7 @@ export interface PathInfo {
  * @param podPassword bytes of pod password
  */
 export function extractPods(data: Data, podPassword: PodPasswordBytes): List {
-  return List.fromJSON(bytesToString(decryptBytes(bytesToHex(podPassword), data)))
+  return List.fromJSON(bytesToString(decryptBytes(bytesToHex(podPassword), data.bytes())))
 }
 
 /**

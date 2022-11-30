@@ -52,11 +52,13 @@ export function extractChunkContent(data: Data): Data {
   // length of feed (32) + signature length (65) + span length (8)
   const chunkContentPosition = 105
 
-  if (data.length < chunkContentPosition) {
+  const bytes = data.bytes()
+
+  if (bytes.length < chunkContentPosition) {
     throw new Error('Incorrect chunk size')
   }
 
-  return wrapBytesWithHelpers(data.slice(chunkContentPosition))
+  return wrapBytesWithHelpers(bytes.slice(chunkContentPosition))
 }
 
 /**

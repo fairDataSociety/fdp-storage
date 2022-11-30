@@ -39,7 +39,7 @@ export async function getRawMetadata(
   downloadOptions?: RequestOptions,
 ): Promise<RawMetadataWithEpoch> {
   const feedData = await getFeedData(bee, path, address, downloadOptions)
-  const data = decryptJson(podPassword, feedData.data.chunkContent())
+  const data = decryptJson(podPassword, feedData.data.chunkContent().bytes())
   let metadata
 
   if (isRawDirectoryMetadata(data)) {

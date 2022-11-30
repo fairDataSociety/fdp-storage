@@ -74,7 +74,10 @@ export async function downloadData(
   const result = new Uint8Array(totalLength)
   let offset = 0
   for (const block of blocks.blocks) {
-    const data = decryptBytes(bytesToHex(podPassword), await bee.downloadData(block.reference, downloadOptions))
+    const data = decryptBytes(
+      bytesToHex(podPassword),
+      (await bee.downloadData(block.reference, downloadOptions)).bytes(),
+    )
     result.set(data, offset)
     offset += data.length
   }
