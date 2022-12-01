@@ -213,7 +213,7 @@ export function podListToBytes(pods: Pod[], sharedPods: SharedPod[]): Uint8Array
   assertSharedPods(sharedPods)
 
   if (pods.length === 0 && sharedPods.length === 0) {
-    return new Uint8Array([0])
+    return new Uint8Array()
   }
 
   return stringToBytes(

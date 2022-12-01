@@ -9,7 +9,7 @@ on:
       - '**'
 
 env:
-  BEE_VERSION: '1.6.2'
+  BEE_VERSION: '1.8.2'
 
 jobs:
   nodejs:
@@ -38,7 +38,7 @@ jobs:
         run: npm install -g @fairdatasociety/fdp-play
 
       - name: Run fdp-play
-        run: fdp-play start -d --bee-version $BEE_VERSION
+        run: fdp-play start -d --fairos --bee-version $BEE_VERSION
 
       ## Try getting the node modules from cache, if failed npm ci
       - uses: actions/cache@v2
@@ -56,6 +56,9 @@ jobs:
 
       - name: Run unit and integration tests for node
         run: npm run test:node -- --detectOpenHandles
+
+      - name: Run unit and integration tests for FairOS
+        run: npm run test:fairos -- --detectOpenHandles
 
   browser:
     runs-on: ubuntu-latest

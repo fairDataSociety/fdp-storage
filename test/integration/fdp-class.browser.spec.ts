@@ -1,15 +1,5 @@
 import { join } from 'path'
-import {
-  beeUrl,
-  createFdp,
-  createUsableBatch,
-  fdpOptions,
-  generateRandomHexString,
-  generateUser,
-  getCachedBatchId,
-  setCachedBatchId,
-  TestUser,
-} from '../utils'
+import { batchId, beeUrl, createFdp, fdpOptions, generateRandomHexString, generateUser, TestUser } from '../utils'
 import '../../src/index'
 import '../index'
 import { JSONArray, JSONObject } from 'puppeteer'
@@ -20,14 +10,11 @@ import { PodShareInfo, RawFileMetadata } from '../../src/pod/types'
 import { FileShareInfo } from '../../src/file/types'
 import { BatchId } from '@ethersphere/bee-js'
 
-jest.setTimeout(200000)
+jest.setTimeout(400000)
 describe('Fair Data Protocol class - in browser', () => {
   const BEE_URL = beeUrl()
-  let batchId: BatchId
 
   beforeAll(async () => {
-    batchId = await createUsableBatch()
-    setCachedBatchId(batchId)
     await jestPuppeteer.resetPage()
     const testPage = join(__dirname, '..', 'testpage', 'testpage.html')
     await page.goto(`file://${testPage}`)
@@ -69,7 +56,7 @@ describe('Fair Data Protocol class - in browser', () => {
             await fdp.ens.provider.waitForTransaction(txHash)
         }
 
-        new window.fdp.FdpStorage('${BEE_URL}', '${batchId}', ${JSON.stringify(fdpOptions)})`,
+        new window.fdp.FdpStorage('${BEE_URL}', '${batchId()}', ${JSON.stringify(fdpOptions)})`,
     )
   })
 
@@ -80,7 +67,7 @@ describe('Fair Data Protocol class - in browser', () => {
       return {
         beeUrl: fdp.connection.bee.url,
       }
-    }, getCachedBatchId())
+    }, batchId())
 
     expect(urls.beeUrl).toBe('http://localhost:1633')
   })

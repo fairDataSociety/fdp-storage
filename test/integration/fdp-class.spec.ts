@@ -1,14 +1,12 @@
 import { FdpContracts, FdpStorage } from '../../src'
 import {
+  batchId,
   createFdp,
-  createUsableBatch,
   generateRandomHexString,
   generateUser,
   GET_FEED_DATA_TIMEOUT,
   getBee,
-  getCachedBatchId,
-  isUsableBatchExists,
-  setCachedBatchId,
+  topUpFdp,
 } from '../utils'
 import { MAX_POD_NAME_LENGTH } from '../../src/pod/utils'
 import { createUserV1 } from '../../src/account/account'
@@ -24,41 +22,15 @@ import { getWalletByIndex, mnemonicToSeed, prepareEthAddress } from '../../src/u
 import { assertEncryptedReference, bytesToHex } from '../../src/utils/hex'
 import { base64toReference } from '../../src/file/utils'
 
-async function topUpAddress(fdp: FdpStorage) {
-  if (!fdp.account.wallet?.address) {
-    throw new Error('Address is not defined')
-  }
-
-  const account = (await fdp.ens.provider.listAccounts())[0]
-  const txHash = await fdp.ens.provider.send('eth_sendTransaction', [
-    {
-      from: account,
-      to: fdp.account.wallet!.address,
-      value: '0x2386f26fc10000', // 0.01 ETH
-    },
-  ])
-
-  await fdp.ens.provider.waitForTransaction(txHash)
-}
-
-jest.setTimeout(200000)
+jest.setTimeout(400000)
 describe('Fair Data Protocol class', () => {
-  beforeAll(async () => {
-    const batchId = await createUsableBatch()
-    setCachedBatchId(batchId)
-  })
-
   it('should strip trailing slash', () => {
-    const fdp = new FdpStorage('http://localhost:1633/', getCachedBatchId(), {
+    const fdp = new FdpStorage('http://localhost:1633/', batchId(), {
       downloadOptions: {
         timeout: GET_FEED_DATA_TIMEOUT,
       },
     })
     expect(fdp.connection.bee.url).toEqual('http://localhost:1633')
-  })
-
-  it('check default batch usability', async () => {
-    expect(await isUsableBatchExists()).toBe(true)
   })
 
   it('fdp-contracts is not empty', async () => {
@@ -94,7 +66,7 @@ describe('Fair Data Protocol class', () => {
         const fdp = createFdp()
 
         const user = generateUser(fdp)
-        await topUpAddress(fdp)
+        await topUpFdp(fdp)
         const reference = await fdp.account.register(user.username, user.password)
         expect(reference).toBeDefined()
       }
@@ -103,7 +75,7 @@ describe('Fair Data Protocol class', () => {
     it('should throw when registering already registered user', async () => {
       const fdp = createFdp()
       const user = generateUser(fdp)
-      await topUpAddress(fdp)
+      await topUpFdp(fdp)
 
       await fdp.account.register(user.username, user.password)
       await expect(fdp.account.register(user.username, user.password)).rejects.toThrow(
@@ -117,8 +89,8 @@ describe('Fair Data Protocol class', () => {
 
       const user = generateUser(fdp)
       generateUser(fdp2)
-      await topUpAddress(fdp)
-      await topUpAddress(fdp2)
+      await topUpFdp(fdp)
+      await topUpFdp(fdp2)
       await createUserV1(fdp.connection, user.username, user.password, user.mnemonic)
       await fdp.account.migrate(user.username, user.password, {
         mnemonic: user.mnemonic,
@@ -137,7 +109,7 @@ describe('Fair Data Protocol class', () => {
       const fdp = createFdp()
       const fdp1 = createFdp()
       const user = generateUser(fdp)
-      await topUpAddress(fdp)
+      await topUpFdp(fdp)
 
       const data = await fdp.account.register(user.username, user.password)
       expect(data).toBeDefined()
@@ -158,7 +130,7 @@ describe('Fair Data Protocol class', () => {
     it('should throw when password is not correct', async () => {
       const fdp = createFdp()
       const user = generateUser(fdp)
-      await topUpAddress(fdp)
+      await topUpFdp(fdp)
 
       await fdp.account.register(user.username, user.password)
       await expect(fdp.account.login(user.username, generateUser().password)).rejects.toThrow('Incorrect password')
@@ -170,7 +142,7 @@ describe('Fair Data Protocol class', () => {
       const fdp1 = createFdp()
       const user = generateUser(fdp)
       const userFake = generateUser()
-      await topUpAddress(fdp)
+      await topUpFdp(fdp)
 
       const data = await fdp.account.register(user.username, user.password)
       expect(data).toBeDefined()

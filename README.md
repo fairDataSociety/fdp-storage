@@ -30,7 +30,6 @@ Project development plans and details of how each of the parts works can be foun
   - [Setup](#setup)
   - [Test](#test)
   - [Compile code](#compile-code)
-  - [System environment](#system-environment)
 - [License](#license)
 
 ## Install
@@ -298,9 +297,14 @@ npm ci
 
 The tests run in both context: Jest and Puppeteer.
 
-To run the integration tests, you need to use our [`bee-factory`](https://github.com/fairDataSociety/bee-factory/) project. Clone the repo, you can use our prebuilt Docker images with setting .env variables.
+To run the integration tests, you need to use our [`fdp-play`](https://github.com/fairDataSociety/fdp-play) project.
 
-Customize .env values based on which FairOS version you want to run. After the .env variables are set use the `./scripts/environment.sh` script with `start --fairos` parameter.
+With specific system environment variables you can alter the behaviour of the tests.
+
+* `BEE_API_URL` - API URL of Bee client
+* `BEE_DEBUG_API_URL` - Debug API URL of Bee client
+* `BEE_BATCH_ID` - Batch ID for data uploading
+* `FAIROS_API_URL` - FairOS API URL
 
 There are browser tests by Puppeteer, which also provide integrity testing.
 
@@ -320,14 +324,6 @@ In order to compile NodeJS code run
 or for Browsers
 
 `npm run compile:browser`
-
-### System environment
-
-With specific system environment variables you can alter the behaviour of the tests.
-
-* `BEE_API_URL` - API URL of Bee client
-* `BEE_DEBUG_API_URL` - Debug API URL of Bee client
-* `BEE_BATCH_ID` - Batch ID for data uploading
 
 ## Maintainers
 

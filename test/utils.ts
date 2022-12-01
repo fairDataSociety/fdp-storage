@@ -1,8 +1,9 @@
 import crypto from 'crypto'
 import { BATCH_ID_HEX_LENGTH, BatchId, Bee, BeeDebug, Utils } from '@ethersphere/bee-js'
 import { FdpStorage } from '../src'
-import { Wallet } from 'ethers'
+import { utils, Wallet } from 'ethers'
 import { Environments, getEnvironmentConfig } from '@fairdatasociety/fdp-contracts'
+import axios from 'axios'
 
 export interface TestUser {
   username: string
@@ -14,9 +15,6 @@ export interface TestUser {
 export const USERNAME_LENGTH = 16
 export const PASSWORD_LENGTH = 6
 export const GET_FEED_DATA_TIMEOUT = 1000
-export const defaultBatchId = '0000000000000000000000000000000000000000000000000000000000000000'
-
-let cachedBatchId = defaultBatchId
 
 /**
  * Generate new user info
@@ -79,8 +77,7 @@ export function assertBatchId(value: unknown): asserts value is BatchId {
  * Returns an url for testing the Bee Debug API
  */
 export function batchId(): BatchId {
-  const envBatchId = process.env.BEE_BATCH_ID
-  const result = envBatchId || cachedBatchId
+  const result = process.env.BEE_BATCH_ID || process.env.CACHED_BEE_BATCH_ID
   assertBatchId(result)
 
   return result
@@ -174,17 +171,60 @@ export async function createUsableBatch(): Promise<BatchId> {
 }
 
 /**
- * Sets cached batch id
+ * Returns FairOS API URL
  */
-export function setCachedBatchId(batchId: BatchId): void {
-  cachedBatchId = batchId
+export function fairOSUrl(): string {
+  return process.env.FAIROS_API_URL || 'http://127.0.0.1:9090'
 }
 
 /**
- * Sets cached batch id
+ * Waits until FairOS API return message about readiness
  */
-export function getCachedBatchId(): BatchId {
-  assertBatchId(cachedBatchId)
+export async function waitFairOS(): Promise<void> {
+  const url = fairOSUrl()
+  for (let i = 0; i <= 100; i++) {
+    let status
+    try {
+      status = (await axios.get(url)).status
+      // eslint-disable-next-line no-empty
+    } catch (e) {}
 
-  return cachedBatchId
+    if (status === 200) {
+      return
+    } else if (status) {
+      throw new Error('Incorrect FairOS API answer')
+    }
+
+    await sleep(1000)
+  }
+
+  throw new Error('FairOS API is not ready')
+}
+
+/**
+ * Top up balance for address in fdp instance
+ */
+export async function topUpFdp(fdp: FdpStorage): Promise<void> {
+  if (!fdp.account.wallet?.address) {
+    throw new Error('Address is not defined')
+  }
+
+  await topUpAddress(fdp.account.wallet?.address)
+}
+
+/**
+ * Top up balance for address
+ */
+export async function topUpAddress(address: string, amountInEther = '0.01'): Promise<void> {
+  const ens = new FdpStorage(beeUrl(), batchId()).ens
+  const account = (await ens.provider.listAccounts())[0]
+  const txHash = await ens.provider.send('eth_sendTransaction', [
+    {
+      from: account,
+      to: address,
+      value: utils.hexlify(utils.parseEther(amountInEther)),
+    },
+  ])
+
+  await ens.provider.waitForTransaction(txHash)
 }

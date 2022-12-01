@@ -29,6 +29,9 @@ export async function getBrowserPathMapping(): Promise<{ [aliasNodeReference: st
 
 export default async (): Promise<Config.InitialOptions> => {
   return {
+    // Setup the prerequisites for the tests to run
+    globalSetup: './tests-setup.ts',
+
     // The directory where Jest should output its coverage files
     coverageDirectory: 'coverage',
 
@@ -55,9 +58,14 @@ export default async (): Promise<Config.InitialOptions> => {
         preset: 'jest-puppeteer',
       },
       {
+        displayName: 'node:fairos',
+        testEnvironment: 'node',
+        testRegex: 'test/integration/.*\\.fairos\\.spec\\.ts',
+      },
+      {
         displayName: 'node:integration',
         testEnvironment: 'node',
-        testRegex: 'test/integration/((?!\\.browser).)*\\.spec\\.ts',
+        testRegex: 'test/integration/((?!\\.(browser|fairos)).)*\\.spec\\.ts',
       },
     ] as unknown[] as string[], // bad types
 
