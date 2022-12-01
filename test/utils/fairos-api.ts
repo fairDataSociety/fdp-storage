@@ -1,18 +1,12 @@
 import axios, { AxiosResponse } from 'axios'
 import FormData from 'form-data'
 
-export interface Pod {
-  name: string
-  index: number
-  password: string
-}
-
 export interface SharedPod {
   name: string
 }
 
 export interface PodsList {
-  pods: Pod[]
+  pods: string[]
   sharedPods: SharedPod[]
 }
 
