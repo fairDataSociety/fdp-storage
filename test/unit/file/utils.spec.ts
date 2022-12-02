@@ -9,19 +9,17 @@ describe('file/utils', () => {
       {
         blocks: [
           {
-            name: 'block-00000',
             size: 17,
             compressedSize: 17,
             reference: '28d3de8a55d7543fa6f2e4819e806e9d2b4e1999703a63232f0aa8126fd24668' as Reference,
           },
         ] as Block[],
         result: {
-          Blocks: [
+          blocks: [
             {
-              Name: 'block-00000',
-              Size: 17,
-              CompressedSize: 17,
-              Reference: { R: 'KNPeilXXVD+m8uSBnoBunStOGZlwOmMjLwqoEm/SRmg=' },
+              size: 17,
+              compressedSize: 17,
+              reference: { swarm: 'KNPeilXXVD+m8uSBnoBunStOGZlwOmMjLwqoEm/SRmg=' },
             },
           ],
         },
@@ -29,79 +27,67 @@ describe('file/utils', () => {
       {
         blocks: [
           {
-            name: 'block-00000',
             size: 1000000,
             compressedSize: 1000000,
             reference: '086a49b869ba104f7a4522276a1f2e242be358da2f9aa34e337114933557769a',
           },
           {
-            name: 'block-00001',
             size: 1000000,
             compressedSize: 1000000,
             reference: 'f5ba3f738731be186207415b84bc0c8f830b0b1c043c17caced959b55a75ca49',
           },
           {
-            name: 'block-00002',
             size: 1000000,
             compressedSize: 1000000,
             reference: 'ecfcd59ae28f4be080053657787460986931819226404e3c008626c21618dafc',
           },
           {
-            name: 'block-00003',
             size: 1000000,
             compressedSize: 1000000,
             reference: '427e91f757f451839b4a64459ff392ad808198e8b328c25b9b9c8adf31575208',
           },
           {
-            name: 'block-00004',
             size: 1000000,
             compressedSize: 1000000,
             reference: '8dbe3f333d637ac5d74e7293e39ea9181dc5886d48e5846d0e14f6e303ec504a',
           },
           {
-            name: 'block-00005',
             size: 242880,
             compressedSize: 242880,
             reference: '4924c9fa5d0a0fccb9763c4877e214215522236a45451227bc6fda99fef35389',
           },
         ] as Block[],
         result: {
-          Blocks: [
+          blocks: [
             {
-              Name: 'block-00000',
-              Size: 1000000,
-              CompressedSize: 1000000,
-              Reference: { R: 'CGpJuGm6EE96RSInah8uJCvjWNovmqNOM3EUkzVXdpo=' },
+              size: 1000000,
+              compressedSize: 1000000,
+              reference: { swarm: 'CGpJuGm6EE96RSInah8uJCvjWNovmqNOM3EUkzVXdpo=' },
             },
             {
-              Name: 'block-00001',
-              Size: 1000000,
-              CompressedSize: 1000000,
-              Reference: { R: '9bo/c4cxvhhiB0FbhLwMj4MLCxwEPBfKztlZtVp1ykk=' },
+              size: 1000000,
+              compressedSize: 1000000,
+              reference: { swarm: '9bo/c4cxvhhiB0FbhLwMj4MLCxwEPBfKztlZtVp1ykk=' },
             },
             {
-              Name: 'block-00002',
-              Size: 1000000,
-              CompressedSize: 1000000,
-              Reference: { R: '7PzVmuKPS+CABTZXeHRgmGkxgZImQE48AIYmwhYY2vw=' },
+              size: 1000000,
+              compressedSize: 1000000,
+              reference: { swarm: '7PzVmuKPS+CABTZXeHRgmGkxgZImQE48AIYmwhYY2vw=' },
             },
             {
-              Name: 'block-00003',
-              Size: 1000000,
-              CompressedSize: 1000000,
-              Reference: { R: 'Qn6R91f0UYObSmRFn/OSrYCBmOizKMJbm5yK3zFXUgg=' },
+              size: 1000000,
+              compressedSize: 1000000,
+              reference: { swarm: 'Qn6R91f0UYObSmRFn/OSrYCBmOizKMJbm5yK3zFXUgg=' },
             },
             {
-              Name: 'block-00004',
-              Size: 1000000,
-              CompressedSize: 1000000,
-              Reference: { R: 'jb4/Mz1jesXXTnKT456pGB3FiG1I5YRtDhT24wPsUEo=' },
+              size: 1000000,
+              compressedSize: 1000000,
+              reference: { swarm: 'jb4/Mz1jesXXTnKT456pGB3FiG1I5YRtDhT24wPsUEo=' },
             },
             {
-              Name: 'block-00005',
-              Size: 242880,
-              CompressedSize: 242880,
-              Reference: { R: 'SSTJ+l0KD8y5djxId+IUIVUiI2pFRRInvG/amf7zU4k=' },
+              size: 242880,
+              compressedSize: 242880,
+              reference: { swarm: 'SSTJ+l0KD8y5djxId+IUIVUiI2pFRRInvG/amf7zU4k=' },
             },
           ],
         },

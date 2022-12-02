@@ -1,18 +1,51 @@
 import { Utils, Reference } from '@ethersphere/bee-js'
+import { PodPasswordBytes } from '../utils/encryption'
+import { HexString } from '../utils/hex'
+
+/**
+ * Pods metadata structure
+ */
+export interface PodsMetadata {
+  pods: JsonPod[]
+  sharedPods: JsonSharedPod[]
+}
+
+/**
+ * Pod name only
+ */
+export interface PodName {
+  name: string
+}
 
 /**
  * Pod information
  */
-export interface Pod {
-  name: string
+export interface Pod extends PodName {
+  password: PodPasswordBytes
   index: number
+}
+
+/**
+ * Pod information for json serialization
+ */
+export interface JsonPod extends PodName {
+  password: HexString
+  index: number
+}
+
+/**
+ * Shared pod information for json serialization
+ */
+export interface JsonSharedPod extends PodName {
+  password: HexString
+  address: HexString
 }
 
 /**
  * Shared pod information
  */
-export interface SharedPod {
-  name: string
+export interface SharedPod extends PodName {
+  password: PodPasswordBytes
   address: Utils.EthAddress
 }
 
@@ -21,18 +54,16 @@ export interface SharedPod {
  */
 export interface RawFileMetadata {
   version: number
-  user_address: number[]
-  pod_name: string
-  file_path: string
-  file_name: string
-  file_size: number
-  block_size: number
-  content_type: string
+  filePath: string
+  fileName: string
+  fileSize: number
+  blockSize: number
+  contentType: string
   compression: string
-  creation_time: number
-  access_time: number
-  modification_time: number
-  file_inode_reference: string
+  creationTime: number
+  accessTime: number
+  modificationTime: number
+  fileInodeReference: string
 }
 
 /**
@@ -40,8 +71,6 @@ export interface RawFileMetadata {
  */
 export interface FileMetadata {
   version: number
-  podAddress: Utils.EthAddress
-  podName: string
   filePath: string
   fileName: string
   fileSize: number
@@ -58,24 +87,25 @@ export interface FileMetadata {
  * Information about a directory
  */
 export interface RawDirectoryMetadata {
-  Meta: {
-    Version: number
-    Path: string
-    Name: string
-    CreationTime: number
-    ModificationTime: number
-    AccessTime: number
+  meta: {
+    version: number
+    path: string
+    name: string
+    creationTime: number
+    modificationTime: number
+    accessTime: number
   }
-  FileOrDirNames: string[] | null
+  fileOrDirNames: string[] | null
 }
 
 /**
  * Pod share information
  */
 export interface PodShareInfo {
-  pod_name: string
-  pod_address: string
-  user_address: string
+  podName: string
+  podAddress: string
+  userAddress: string
+  password: HexString
 }
 
 /**

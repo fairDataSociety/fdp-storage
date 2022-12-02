@@ -34,17 +34,6 @@ export function isHexEthAddress(address: string | HexString | HexEthAddress): ad
 }
 
 /**
- * Asserts that the given value is a hex eth address
- */
-export function assertHexEthAddress(value: unknown): asserts value is HexEthAddress {
-  const data = value as HexEthAddress
-
-  if (!isHexEthAddress(data)) {
-    throw new Error('Expected a number')
-  }
-}
-
-/**
  * Verifies if encrypted reference is correct
  */
 export function assertEncryptedReference(value: unknown): asserts value is EncryptedReference {

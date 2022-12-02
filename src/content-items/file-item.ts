@@ -24,10 +24,10 @@ export class FileItem extends ContentItem {
   static fromRawFileMetadata(item: RawFileMetadata): FileItem {
     let reference: Reference | undefined
 
-    if (item.file_inode_reference) {
-      reference = CryptoJS.enc.Base64.parse(item.file_inode_reference).toString(CryptoJS.enc.Hex) as Reference
+    if (item.fileInodeReference) {
+      reference = CryptoJS.enc.Base64.parse(item.fileInodeReference).toString(CryptoJS.enc.Hex) as Reference
     }
 
-    return new FileItem(item.file_name, item, Number(item.file_size), reference)
+    return new FileItem(item.fileName, item, Number(item.fileSize), reference)
   }
 }

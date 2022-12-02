@@ -1,24 +1,44 @@
-import { Pod, PodShareInfo, RawDirectoryMetadata, SharedPod } from './types'
+import {
+  JsonPod,
+  Pod,
+  PodName,
+  PodShareInfo,
+  PodsMetadata,
+  RawDirectoryMetadata,
+  JsonSharedPod,
+  SharedPod,
+} from './types'
 import { Bee, Data, Utils } from '@ethersphere/bee-js'
-import { stringToBytes } from '../utils/bytes'
+import { bytesToString, stringToBytes, wordArrayToBytes } from '../utils/bytes'
 import { LookupAnswer } from '../feed/types'
 import { utils } from 'ethers'
 import { getRawDirectoryMetadataBytes } from '../directory/adapter'
-import { assertNumber, assertString, isEthAddress, isNumber, isObject, isString } from '../utils/type'
-import { assertHexEthAddress, bytesToHex, EncryptedReference } from '../utils/hex'
+import {
+  assertArray,
+  assertNumber,
+  assertPodPasswordBytes,
+  assertString,
+  isEthAddress,
+  isNumber,
+  isObject,
+  isPodPassword,
+  isString,
+} from '../utils/type'
+import { bytesToHex, EncryptedReference, isHexEthAddress } from '../utils/hex'
 import { List } from './list'
-import { prepareEthAddress } from '../utils/address'
 import { getExtendedPodsList, getPodsList } from './api'
 import { Epoch, getFirstEpoch } from '../feed/lookup/epoch'
 import { getUnixTimestamp } from '../utils/time'
 import { writeFeedData } from '../feed/api'
-import { getWalletByIndex } from '../utils/wallet'
+import { getWalletByIndex, preparePrivateKey } from '../utils/wallet'
 import { createRootDirectory } from '../directory/handler'
 import { POD_TOPIC } from './personal-storage'
 import { Connection } from '../connection/connection'
 import { AccountData } from '../account/account-data'
+import { decryptBytes, POD_PASSWORD_LENGTH, PodPasswordBytes } from '../utils/encryption'
+import CryptoJS from 'crypto-js'
 
-export const META_VERSION = 1
+export const META_VERSION = 2
 export const MAX_PODS_COUNT = 65536
 export const MAX_POD_NAME_LENGTH = 64
 
@@ -52,44 +72,10 @@ export interface PathInfo {
  * Extracts pod information from raw data
  *
  * @param data raw data with pod information
+ * @param podPassword bytes of pod password
  */
-export function extractPods(data: Data): List {
-  const pods: Pod[] = []
-  const sharedPods: SharedPod[] = []
-
-  data
-    .text()
-    .split('\n')
-    .filter(item => Boolean(item.trim()))
-    .map(item => {
-      const parts = item.split(',')
-
-      if (parts.length !== 2) {
-        throw new Error('Pod information: incorrect length')
-      }
-
-      const isShared = Number.isNaN(Number(parts[1]))
-      const name = parts[0]
-      assertPodName(name)
-
-      if (isShared) {
-        const address = parts[1]
-        assertHexEthAddress(address)
-        sharedPods.push({
-          name,
-          address: prepareEthAddress(address),
-        })
-      } else {
-        const index = Number(parts[1])
-        assertNumber(index)
-        pods.push({
-          name,
-          index,
-        })
-      }
-    })
-
-  return new List(pods, sharedPods)
+export function extractPods(data: Data, podPassword: PodPasswordBytes): List {
+  return List.fromJSON(bytesToString(decryptBytes(bytesToHex(podPassword), data)))
 }
 
 /**
@@ -105,15 +91,15 @@ export function createRawDirectoryMetadata(
   fileOrDirNames?: string[],
 ): Uint8Array {
   const data: RawDirectoryMetadata = {
-    Meta: {
-      Version: version,
-      Path: path,
-      Name: name,
-      CreationTime: creationTime,
-      ModificationTime: modificationTime,
-      AccessTime: accessTime,
+    meta: {
+      version,
+      path,
+      name,
+      creationTime,
+      modificationTime,
+      accessTime,
     },
-    FileOrDirNames: fileOrDirNames ?? null,
+    fileOrDirNames: fileOrDirNames ?? null,
   }
 
   return getRawDirectoryMetadataBytes(data)
@@ -185,6 +171,41 @@ export function assertPodName(value: unknown): asserts value is string {
 }
 
 /**
+ * Converts Pod to JsonPod
+ */
+export function podToJsonPod(pod: Pod): JsonPod {
+  return { ...pod, password: bytesToHex(pod.password) }
+}
+
+/**
+ * Converts SharedPod to JsonSharedPod
+ */
+export function sharedPodToJsonSharedPod(pod: SharedPod): JsonSharedPod {
+  return { ...pod, password: bytesToHex(pod.password), address: bytesToHex(pod.address) }
+}
+
+/**
+ * Converts JsonPod to Pod
+ */
+export function jsonPodToPod(pod: JsonPod): Pod {
+  const password = Utils.hexToBytes(pod.password) as PodPasswordBytes
+  assertPodPasswordBytes(password)
+
+  return { ...pod, password }
+}
+
+/**
+ * Converts JsonSharedPod to SharedPod
+ */
+export function jsonSharedPodToSharedPod(pod: JsonSharedPod): SharedPod {
+  const password = Utils.hexToBytes(pod.password) as PodPasswordBytes
+  const address = Utils.hexToBytes(pod.address) as Utils.EthAddress
+  assertPodPasswordBytes(password)
+
+  return { ...pod, password, address }
+}
+
+/**
  * Converts pods list to bytes array
  */
 export function podListToBytes(pods: Pod[], sharedPods: SharedPod[]): Uint8Array {
@@ -195,36 +216,73 @@ export function podListToBytes(pods: Pod[], sharedPods: SharedPod[]): Uint8Array
     return new Uint8Array([0])
   }
 
-  const allPods =
-    [...pods, ...sharedPods]
-      .map(pod => {
-        if (isPod(pod)) {
-          return `${pod.name},${pod.index}`
-        } else if (isSharedPod(pod)) {
-          return `${pod.name},${bytesToHex(pod.address)}`
-        }
-      })
-      .join('\n') + '\n'
+  return stringToBytes(
+    JSON.stringify({
+      pods: pods.map(item => podToJsonPod(item)),
+      sharedPods: sharedPods.map(item => sharedPodToJsonSharedPod(item)),
+    }),
+  )
+}
 
-  return stringToBytes(allPods)
+/**
+ * Pod name guard
+ */
+export function isPodName(value: unknown): value is PodName {
+  const { name } = value as PodName
+
+  return typeof value === 'object' && value !== null && isString(name)
 }
 
 /**
  * Pod guard
  */
 export function isPod(value: unknown): value is Pod {
-  const { name, index } = value as Pod
+  const { name, index, password } = value as Pod
 
-  return typeof value === 'object' && value !== null && isString(name) && isNumber(index)
+  return typeof value === 'object' && value !== null && isString(name) && isNumber(index) && isPodPassword(password)
+}
+
+/**
+ * Json pod guard
+ */
+export function isJsonPod(value: unknown): value is JsonPod {
+  const { index, password } = value as JsonPod
+
+  return typeof value === 'object' && value !== null && isNumber(index) && Utils.isHexString(password)
 }
 
 /**
  * Shared pod guard
  */
 export function isSharedPod(value: unknown): value is SharedPod {
-  const { name, address } = value as SharedPod
+  const { name, address, password } = value as SharedPod
 
-  return typeof value === 'object' && value !== null && isString(name) && isEthAddress(bytesToHex(address))
+  return (
+    typeof value === 'object' &&
+    typeof address === 'object' &&
+    value !== null &&
+    isString(name) &&
+    isEthAddress(bytesToHex(address)) &&
+    isPodPassword(password)
+  )
+}
+
+/**
+ * Json shared pod guard
+ */
+export function isJsonSharedPod(value: unknown): value is JsonSharedPod {
+  const { address, password } = value as JsonSharedPod
+
+  return typeof value === 'object' && value !== null && isEthAddress(address) && Utils.isHexString(password)
+}
+
+/**
+ * Asserts that pod name type is correct
+ */
+export function assertPodNameType(value: unknown): asserts value is PodName {
+  if (!isPodName(value)) {
+    throw new Error('Invalid pod name type')
+  }
 }
 
 /**
@@ -232,7 +290,16 @@ export function isSharedPod(value: unknown): value is SharedPod {
  */
 export function assertPod(value: unknown): asserts value is Pod {
   if (!isPod(value)) {
-    throw new Error('Invalid pod')
+    throw new Error(`Invalid pod: ${JSON.stringify(value)}`)
+  }
+}
+
+/**
+ * Asserts that json pod is correct
+ */
+export function assertJsonPod(value: unknown): asserts value is JsonPod {
+  if (!isJsonPod(value)) {
+    throw new Error(`Invalid json pod: ${JSON.stringify(value)}`)
   }
 }
 
@@ -241,16 +308,45 @@ export function assertPod(value: unknown): asserts value is Pod {
  */
 export function assertSharedPod(value: unknown): asserts value is SharedPod {
   if (!isSharedPod(value)) {
-    throw new Error('Invalid shared pod')
+    throw new Error(`Invalid shared pod: ${JSON.stringify(value)}`)
+  }
+}
+
+/**
+ * Asserts that json shared pod is correct
+ */
+export function assertJsonSharedPod(value: unknown): asserts value is JsonSharedPod {
+  if (!isJsonSharedPod(value)) {
+    throw new Error(`Invalid json shared pod: ${JSON.stringify(value)}`)
   }
 }
 
 /**
  * Asserts that pods are correct
  */
+export function assertPodsMetadata(value: unknown): asserts value is PodsMetadata {
+  const data = value as PodsMetadata
+  assertJsonPods(data.pods)
+  assertJsonSharedPods(data.sharedPods)
+}
+
+/**
+ * Asserts that pods are correct
+ */
 export function assertPods(value: unknown): asserts value is Pod[] {
+  assertArray(value)
   for (const pod of value as Pod[]) {
     assertPod(pod)
+  }
+}
+
+/**
+ * Asserts that json pods are correct
+ */
+export function assertJsonPods(value: unknown): asserts value is JsonPod[] {
+  assertArray(value)
+  for (const pod of value as JsonPod[]) {
+    assertJsonPod(pod)
   }
 }
 
@@ -258,8 +354,19 @@ export function assertPods(value: unknown): asserts value is Pod[] {
  * Asserts that shared pods are correct
  */
 export function assertSharedPods(value: unknown): asserts value is SharedPod[] {
+  assertArray(value)
   for (const pod of value as SharedPod[]) {
     assertSharedPod(pod)
+  }
+}
+
+/**
+ * Asserts that json shared pods are correct
+ */
+export function assertJsonSharedPods(value: unknown): asserts value is JsonSharedPod[] {
+  assertArray(value)
+  for (const pod of value as JsonSharedPod[]) {
+    assertJsonSharedPod(pod)
   }
 }
 
@@ -270,11 +377,13 @@ export function createPodShareInfo(
   podName: string,
   podAddress: Utils.EthAddress,
   userAddress: Utils.EthAddress,
+  password: PodPasswordBytes,
 ): PodShareInfo {
   return {
-    pod_name: podName,
-    pod_address: bytesToHex(podAddress),
-    user_address: bytesToHex(userAddress),
+    podName: podName,
+    podAddress: bytesToHex(podAddress),
+    userAddress: bytesToHex(userAddress),
+    password: bytesToHex(password),
   }
 }
 
@@ -285,10 +394,7 @@ export function isPodShareInfo(value: unknown): value is PodShareInfo {
   const data = value as PodShareInfo
 
   return (
-    isObject(value) &&
-    isString(data.pod_name) &&
-    Utils.isHexEthAddress(data.pod_address) &&
-    Utils.isHexEthAddress(data.user_address)
+    isObject(value) && isString(data.podName) && isHexEthAddress(data.podAddress) && isHexEthAddress(data.userAddress)
   )
 }
 
@@ -297,8 +403,15 @@ export function isPodShareInfo(value: unknown): value is PodShareInfo {
  */
 export function assertPodShareInfo(value: unknown): asserts value is PodShareInfo {
   if (!isPodShareInfo(value)) {
-    throw new Error('Incorrect pod share info')
+    throw new Error(`Incorrect pod share info: ${JSON.stringify(value)}`)
   }
+}
+
+/**
+ * Generates random password for a pod
+ */
+export function getRandomPodPassword(): PodPasswordBytes {
+  return wordArrayToBytes(CryptoJS.lib.WordArray.random(POD_PASSWORD_LENGTH)) as PodPasswordBytes
 }
 
 /**
@@ -315,18 +428,15 @@ export async function createPod(
   connection: Connection,
   userWallet: utils.HDNode,
   seed: Uint8Array,
-  pod: Pod | SharedPod,
+  pod: PodName | SharedPod,
 ): Promise<Pod | SharedPod> {
+  assertPodNameType(pod)
   pod.name = pod.name.trim()
   assertPodName(pod.name)
 
-  const isSimplePod = isPod(pod)
-  const userAddress = prepareEthAddress(userWallet.address)
-  const podsInfo = await getPodsList(bee, userAddress, connection.options?.downloadOptions)
-
+  const podsInfo = await getPodsList(bee, userWallet, connection.options?.downloadOptions)
   const nextIndex = podsInfo.podsList.getPods().length + 1
   assertPodsLength(nextIndex)
-
   const pods = podsInfo.podsList.getPods()
   const sharedPods = podsInfo.podsList.getSharedPods()
   assertPodNameAvailable(pod.name, pods)
@@ -341,22 +451,36 @@ export async function createPod(
     epoch = getFirstEpoch(currentTime)
   }
 
-  if (isSimplePod) {
-    pod.index = nextIndex
-    pods.push(pod)
+  let realPod: Pod | SharedPod
+
+  if (isSharedPod(pod)) {
+    realPod = pod
+    sharedPods.push(realPod)
   } else {
-    sharedPods.push(pod)
+    realPod = {
+      name: pod.name,
+      index: nextIndex,
+      password: getRandomPodPassword(),
+    }
+    pods.push(realPod)
   }
 
   const allPodsData = podListToBytes(pods, sharedPods)
-  await writeFeedData(connection, POD_TOPIC, allPodsData, userWallet.privateKey, epoch)
+  await writeFeedData(
+    connection,
+    POD_TOPIC,
+    allPodsData,
+    userWallet.privateKey,
+    preparePrivateKey(userWallet.privateKey),
+    epoch,
+  )
 
-  if (isSimplePod) {
+  if (isPod(realPod)) {
     const podWallet = getWalletByIndex(seed, nextIndex)
-    await createRootDirectory(connection, podWallet.privateKey)
+    await createRootDirectory(connection, realPod.password, preparePrivateKey(podWallet.privateKey))
   }
 
-  return pod
+  return realPod
 }
 
 /**
@@ -372,7 +496,7 @@ export async function getExtendedPodsListByAccountData(
   return getExtendedPodsList(
     accountData.connection.bee,
     podName,
-    prepareEthAddress(accountData.wallet!.address),
+    accountData.wallet!,
     accountData.seed!,
     accountData.connection.options?.downloadOptions,
   )

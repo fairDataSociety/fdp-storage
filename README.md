@@ -2,7 +2,18 @@
 
 # Fair Data Protocol Storage
 
-> Typescript implementation of https://github.com/fairDataSociety/fairOS-dfs
+**FDP Storage** is a serverless web3 filesystem for organizing users' personal data implemented in Typescript.
+
+Such data is stored using certain structures that allow the data created in one dApp to be interpreted in another dApp. The current implementation allows to create and manage pods (similar to disks in file systems), directories, and files.
+
+The library requires the API endpoint of a [Bee](https://github.com/ethersphere/bee) node to interact with the data. If you plan to do write operations, you will need to specify [postage batch id](https://docs.ethswarm.org/docs/access-the-swarm/keep-your-data-alive).
+To run a local test node trying out the functionalities, you can use [FDP Play](https://github.com/fairDataSociety/fdp-play).
+
+The FDP Storage user account is a wallet based on the [BIP-44](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki) mnemonic phrase from which one can create a portable account allowing retrieving the wallet from anywhere by providing a username and a password to the library.
+
+The library can work in the browser, in Node.js and in mobile applications using [React Native](https://reactnative.dev/). There is an implementation of Personal Storage in Golang: https://github.com/fairDataSociety/fairOS-dfs
+
+Project development plans and details of how each of the parts works can be found in [FIPs](https://github.com/fairDataSociety/FIPs). In this repository, you can create your proposal, which will be considered and taken into account in further development.
 
 **Warning: This project is in beta state. There might (and most probably will) be changes in the future to its API and working. Also, no guarantees can be made about its stability, efficiency, and security at this stage.**
 
@@ -63,6 +74,24 @@ import '@ethersproject/shims' // commong shims for ethers.js
 import 'text-encoding' // for fdp-storage to make TextEncoding work
 ```
 
+After creating instance of `FdpStorage` replace `bee-js` upload method to the new one because of bug [#757](https://github.com/ethersphere/bee-js/issues/757).
+
+```js
+const fdp = new FdpStorage('https://localhost:1633', batchId)
+
+fdp.connection.bee.uploadData = async (batchId, data) => {
+  return (await fetch(fdp.connection.bee.url + '/bytes', {
+    method: 'POST',
+    headers: {
+      'swarm-postage-batch-id': batchId,
+      'swarm-encrypt': true,
+      'swarm-pin': true,
+    },
+    body: data
+  })).json()
+}
+```
+
 ## Usage
 
 Creating FDP account
@@ -73,7 +102,13 @@ import { FdpStorage } from '@fairdatasociety/fdp-storage'
 const batchId = 'GET_BATCH_ID_FROM_YOUR_NODE' // fill it with batch id from your Bee node
 const fdp = new FdpStorage('http://localhost:1633', batchId)
 const wallet = fdp.account.createWallet() // after creating a wallet, the user must top up its balance before registration
+// Associate the created wallet with the username in the smart contract.
+// This method makes the account portable.
+// Seed is saved encrypted in Swarm.
 await fdp.account.register('myusername', 'mypassword')
+
+// If necessary, the account can be re-uploaded to Swarm.
+await fdp.personalStorage.reuploadPortableAccount('username', 'password')
 ```
 
 Login with FDP account
@@ -81,6 +116,25 @@ Login with FDP account
 ```js
 const wallet = await fdp.account.login('otherusername', 'mypassword')
 console.log(wallet) // prints downloaded and decrypted wallet
+```
+
+Creating and using a user without interacting with the blockchain
+
+It is not necessary to register a user in a smart contract and make his wallet portable. You can create a wallet, save the mnemonic phrase locally and import this account to interact with all the data.
+
+```js
+// Create a wallet for interacting with data.
+// It does not need to be funded.
+// Operations in the blockchain will not pass through it.
+const wallet = fdp.account.createWallet()
+
+// Get mnemonic phrase of the account.
+// This is the key to all data in FDP Storage.
+// You need to store in a safe place.
+const mnemonic = wallet.mnemonic.phrase
+
+// to access your account, you need to import the phrase
+fdp.account.setAccountFromMnemonic(mnemonic)
 ```
 
 Creating a pod
@@ -182,6 +236,12 @@ Deleting a pod
 
 ```js
 await fdp.personalStorage.delete('my-new-pod')
+```
+
+Checks whether the public key associated with the username in ENS is identical with the wallet's public key
+
+```js
+await fdp.account.isPublicKeyEqual('username')
 ```
 
 ### Migrate from v1 to v2 account
