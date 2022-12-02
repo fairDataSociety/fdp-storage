@@ -1,4 +1,3 @@
-import './shim/crypto'
 import { FdpStorage } from './fdp-storage'
 import { AccountData } from './account/account-data'
 import { PersonalStorage } from './pod/personal-storage'
