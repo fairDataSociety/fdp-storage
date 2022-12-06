@@ -1,0 +1,71 @@
+import { utils } from 'ethers'
+import { PrivateKeyBytes, Utils } from '@ethersphere/bee-js'
+import { removeZeroFromHex } from './src/account/utils'
+
+/**
+ * Get Hierarchal Deterministic Wallet from seed by index
+ *
+ * @param seed data for wallet creation
+ * @param index wallet index
+ */
+export function getWalletByIndex(seed: Uint8Array, index: number): utils.HDNode {
+  const node = utils.HDNode.fromSeed(seed)
+
+  return node.derivePath(`m/44'/60'/0'/0/${index}`)
+}
+
+/**
+ * Converts string representation of private key to bytes representation
+ *
+ * @param privateKey string representation of private key
+ */
+export function privateKeyToBytes(privateKey: string): PrivateKeyBytes {
+  return Utils.hexToBytes(removeZeroFromHex(privateKey))
+}
+
+/**
+ * Converts mnemonic to seed bytes
+ *
+ * @param mnemonic mnemonic phrase
+ */
+export function mnemonicToSeed(mnemonic: string): Uint8Array {
+  return Utils.hexToBytes(removeZeroFromHex(utils.mnemonicToSeed(mnemonic)))
+}
+
+/**
+ * Converts string to Ethereum address in form of bytes
+ *
+ * @param address Ethereum address for preparation
+ */
+export function prepareEthAddress(address: string | Uint8Array): Utils.EthAddress {
+  return Utils.makeEthAddress(address)
+}
+
+/**
+ * Converts private key from to bytes
+ *
+ * @param privateKey string representation of private key
+ */
+export function preparePrivateKey(privateKey: string): PrivateKeyBytes {
+  return Utils.hexToBytes(removeZeroFromHex(privateKey))
+}
+
+
+import b from 'benny'
+
+b.suite(
+  'Prepare address vs initial calculated variable',
+
+  b.add('Calculate prepareEthAddress', () => {
+    prepareEthAddress('0x0000000000000000000000000000000000000000')
+  }),
+
+  b.add('Initialized prepareEthAddress variable', () => {
+    const prepareEthAddress = '0x0000000000000000000000000000000000000000'
+  }),
+
+  b.cycle(),
+  b.complete(),
+  b.save({ file: 'reduce', version: '1.0.0' }),
+  b.save({ file: 'reduce', format: 'chart.html' }),
+)
