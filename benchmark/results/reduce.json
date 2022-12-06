@@ -1,0 +1,27 @@
+{
+  "name": "Create wallet vs wallet variable in memory",
+  "date": "2022-12-06T23:29:15.672Z",
+  "version": "1.0.0",
+  "results": [
+    {
+      "name": "Create getWalletByIndex",
+      "ops": 227,
+      "margin": 1.9,
+      "percentSlower": 100
+    },
+    {
+      "name": "Initialized wallet variable",
+      "ops": 1041202569,
+      "margin": 0.93,
+      "percentSlower": 0
+    }
+  ],
+  "fastest": {
+    "name": "Initialized wallet variable",
+    "index": 1
+  },
+  "slowest": {
+    "name": "Create getWalletByIndex",
+    "index": 0
+  }
+}

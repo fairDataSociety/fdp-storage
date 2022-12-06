@@ -17,6 +17,7 @@
   "bugs": {
     "url": "https://github.com/fairDataSociety/fdp-storage/issues/"
   },
+  "type": "module",
   "license": "BSD-3-Clause",
   "main": "dist/index.min.js",
   "repository": {
@@ -87,7 +88,6 @@
     "@typescript-eslint/parser": "^4.28.0",
     "babel-jest": "^27.0.5",
     "babel-loader": "^8.2.2",
-    "benny": "^3.7.1",
     "debug": "^4.3.1",
     "depcheck": "^1.4.0",
     "eslint": "^7.29.0",
