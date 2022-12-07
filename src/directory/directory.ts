@@ -4,13 +4,19 @@ import { assertAccount } from '../account/utils'
 import { DirectoryItem } from '../content-items/directory-item'
 import { removeEntryFromDirectory } from '../content-items/handler'
 import { extractPathInfo } from '../file/utils'
-import { assertPodName, getExtendedPodsListByAccountData } from '../pod/utils'
+import { assertPodName } from '../pod/utils'
+import { PodEnvironment } from '../pod/PodEnvironment'
 
 /**
  * Directory related class
  */
 export class Directory {
+  podEnvironment: PodEnvironment = {} as PodEnvironment
+
   constructor(private accountData: AccountData) {}
+  setPodEnvironment(podEnvironment: PodEnvironment) {
+    this.podEnvironment = podEnvironment
+  }
 
   /**
    * Get files and directories under the given path
@@ -22,8 +28,8 @@ export class Directory {
   async read(podName: string, path: string, isRecursive?: boolean): Promise<DirectoryItem> {
     assertAccount(this.accountData)
     assertPodName(podName)
-    const { podAddress, pod } = await getExtendedPodsListByAccountData(this.accountData, podName)
 
+    const { podAddress, pod } = this.podEnvironment
     return readDirectory(
       this.accountData.connection.bee,
       path,
@@ -44,8 +50,8 @@ export class Directory {
     assertAccount(this.accountData)
     assertPodName(podName)
     const downloadOptions = this.accountData.connection.options?.downloadOptions
-    const { podWallet, pod } = await getExtendedPodsListByAccountData(this.accountData, podName)
 
+    const { podWallet, pod } = this.podEnvironment
     return createDirectory(this.accountData.connection, fullPath, podWallet, pod.password, downloadOptions)
   }
 
@@ -61,8 +67,8 @@ export class Directory {
     const pathInfo = extractPathInfo(fullPath)
     const connection = this.accountData.connection
     const downloadOptions = connection.options?.downloadOptions
-    const { podWallet, pod } = await getExtendedPodsListByAccountData(this.accountData, podName)
 
+    const { podWallet, pod } = this.podEnvironment
     await removeEntryFromDirectory(
       connection,
       podWallet,

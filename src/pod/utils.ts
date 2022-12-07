@@ -26,7 +26,7 @@ import {
 } from '../utils/type'
 import { bytesToHex, EncryptedReference, isHexEthAddress } from '../utils/hex'
 import { List } from './list'
-import { getExtendedPodsList, getPodsList } from './api'
+import { getPodsList } from './api'
 import { Epoch, getFirstEpoch } from '../feed/lookup/epoch'
 import { getUnixTimestamp } from '../utils/time'
 import { writeFeedData } from '../feed/api'
@@ -483,24 +483,24 @@ export async function createPod(
   return realPod
 }
 
-/**
- * Gets extended information about pods using AccountData instance and pod name
- *
- * @param accountData AccountData instance
- * @param podName pod name
- */
-export async function getExtendedPodsListByAccountData(
-  accountData: AccountData,
-  podName: string,
-): Promise<ExtendedPodInfo> {
-  return getExtendedPodsList(
-    accountData.connection.bee,
-    podName,
-    accountData.wallet!,
-    accountData.seed!,
-    accountData.connection.options?.downloadOptions,
-  )
-}
+// /**
+//  * Gets extended information about pods using AccountData instance and pod name
+//  *
+//  * @param accountData AccountData instance
+//  * @param podName pod name
+//  */
+// export async function getExtendedPodsListByAccountData(
+//   accountData: AccountData,
+//   podName: string,
+// ): Promise<ExtendedPodInfo> {
+//   return getExtendedPodsList(
+//     accountData.connection.bee,
+//     podName,
+//     accountData.wallet!,
+//     accountData.seed!,
+//     accountData.connection.options?.downloadOptions,
+//   )
+// }
 
 /**
  * Gets shared information about pod

@@ -30,35 +30,28 @@ export async function getPodsList(bee: Bee, userWallet: utils.HDNode, options?: 
   }
 }
 
-/**
- * Gets pods list with lookup answer and extended info about pod
- *
- * @param bee Bee instance
- * @param podName pod to find
- * @param userWallet root wallet for downloading and decrypting data
- * @param seed seed of wallet owns the FDP account
- * @param downloadOptions request options
- */
-export async function getExtendedPodsList(
-  bee: Bee,
-  podName: string,
-  userWallet: utils.HDNode,
-  seed: Uint8Array,
-  downloadOptions?: RequestOptions,
-): Promise<ExtendedPodInfo> {
-  const podsInfo = await getPodsList(bee, userWallet, downloadOptions)
-  const pod = podsInfo.podsList.getPods().find(item => item.name === podName)
+// /**
+//  * Gets pods list with lookup answer and extended info about pod
+//  *
+//  * @param bee Bee instance
+//  * @param podName pod to find
+//  * @param userWallet root wallet for downloading and decrypting data
+//  * @param seed seed of wallet owns the FDP account
+//  * @param downloadOptions request options
+//  */
+// export async function getExtendedPodsList(
+//   bee: Bee,
+//   podName: string,
+//   userWallet: utils.HDNode,
+//   seed: Uint8Array,
+//   downloadOptions?: RequestOptions,
+// ): Promise<ExtendedPodInfo> {
 
-  if (!pod) {
-    throw new Error(`Pod "${podName}" does not exist`)
-  }
 
-  const podWallet = getWalletByIndex(seed, pod.index)
-
-  return {
-    pod,
-    podAddress: prepareEthAddress(podWallet.address),
-    podWallet,
-    lookupAnswer: podsInfo.lookupAnswer,
-  }
-}
+//   return {
+//     pod,
+//     podAddress: prepareEthAddress(podWallet.address),
+//     podWallet,
+//     lookupAnswer: podsInfo.lookupAnswer,
+//   }
+// }

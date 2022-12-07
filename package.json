@@ -17,7 +17,6 @@
   "bugs": {
     "url": "https://github.com/fairDataSociety/fdp-storage/issues/"
   },
-  "type": "module",
   "license": "BSD-3-Clause",
   "main": "dist/index.min.js",
   "repository": {

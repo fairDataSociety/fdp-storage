@@ -13,19 +13,25 @@ import {
   podListToBytes,
 } from './utils'
 import { getUnixTimestamp } from '../utils/time'
-import { getExtendedPodsList, getPodsList } from './api'
+import { getPodsList } from './api'
 import { uploadBytes } from '../file/utils'
 import { stringToBytes } from '../utils/bytes'
 import { Reference, Utils } from '@ethersphere/bee-js'
 import { List } from './list'
 import { assertEncryptedReference, EncryptedReference } from '../utils/hex'
 import { prepareEthAddress, preparePrivateKey } from '../utils/wallet'
+import { PodEnvironment } from './PodEnvironment'
 
 export const POD_TOPIC = 'Pods'
 
 export class PersonalStorage {
+  podEnvironment: PodEnvironment = {} as PodEnvironment
+  
   constructor(private accountData: AccountData) {}
 
+  setPodEnvironment(podEnvironment: PodEnvironment) {
+    this.podEnvironment = podEnvironment
+  }
   /**
    * Gets the list of pods for the active account
    *
@@ -113,13 +119,7 @@ export class PersonalStorage {
     assertPodName(name)
     const wallet = this.accountData.wallet!
     const address = prepareEthAddress(wallet.address)
-    const podInfo = await getExtendedPodsList(
-      this.accountData.connection.bee,
-      name,
-      wallet,
-      this.accountData.seed!,
-      this.accountData.connection.options?.downloadOptions,
-    )
+    const podInfo = this.podEnvironment!
 
     const data = stringToBytes(
       JSON.stringify(createPodShareInfo(name, podInfo.podAddress, address, podInfo.pod.password)),

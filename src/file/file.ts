@@ -1,6 +1,6 @@
 import { FileMetadata } from '../pod/types'
 import { assertAccount } from '../account/utils'
-import { assertPodName, getExtendedPodsListByAccountData, META_VERSION } from '../pod/utils'
+import { assertPodName, META_VERSION } from '../pod/utils'
 import { getUnixTimestamp } from '../utils/time'
 import { stringToBytes } from '../utils/bytes'
 import { AccountData } from '../account/account-data'
@@ -21,18 +21,23 @@ import { Data, Reference } from '@ethersphere/bee-js'
 import { getRawMetadata } from '../content-items/utils'
 import { assertRawFileMetadata, combine } from '../directory/utils'
 import { assertEncryptedReference, EncryptedReference } from '../utils/hex'
+import { PodEnvironment } from '../pod/PodEnvironment'
 
 /**
  * Files management class
  */
 export class File {
+  podEnvironment: PodEnvironment = {} as PodEnvironment
+
   public readonly defaultUploadOptions: DataUploadOptions = {
     blockSize: 1000000,
     contentType: '',
   }
 
   constructor(private accountData: AccountData) {}
-
+  setPodEnvironment(podEnvironment: PodEnvironment) {
+    this.podEnvironment = podEnvironment
+  }
   /**
    * Downloads file content
    *
@@ -44,13 +49,12 @@ export class File {
     assertPodName(podName)
     assertFullPathWithName(fullPath)
     assertPodName(podName)
-    const { podAddress, pod } = await getExtendedPodsListByAccountData(this.accountData, podName)
 
     return downloadData(
       this.accountData.connection.bee,
       fullPath,
-      podAddress,
-      pod.password,
+      this.podEnvironment.podAddress,
+      this.podEnvironment.pod.password,
       this.accountData.connection.options?.downloadOptions,
     )
   }
@@ -76,7 +80,6 @@ export class File {
     assertPodName(podName)
     data = typeof data === 'string' ? stringToBytes(data) : data
     const connection = this.accountData.connection
-    const { podWallet, pod } = await getExtendedPodsListByAccountData(this.accountData, podName)
 
     const pathInfo = extractPathInfo(fullPath)
     const now = getUnixTimestamp()
@@ -108,6 +111,7 @@ export class File {
       blocksReference,
     }
 
+    const { podWallet, pod } = this.podEnvironment
     await addEntryToDirectory(connection, podWallet, pod.password, pathInfo.path, pathInfo.filename, true)
     await writeFeedData(connection, fullPath, getFileMetadataRawBytes(meta), podWallet.privateKey, pod.password)
 
@@ -124,8 +128,9 @@ export class File {
     assertAccount(this.accountData)
     assertFullPathWithName(fullPath)
     assertPodName(podName)
+
+    const { podWallet, pod } = this.podEnvironment
     const pathInfo = extractPathInfo(fullPath)
-    const { podWallet, pod } = await getExtendedPodsListByAccountData(this.accountData, podName)
     await removeEntryFromDirectory(
       this.accountData.connection,
       podWallet,
@@ -147,8 +152,9 @@ export class File {
     assertFullPathWithName(fullPath)
     assertPodName(podName)
 
+
+    const { podAddress, pod } = this.podEnvironment
     const connection = this.accountData.connection
-    const { podAddress, pod } = await getExtendedPodsListByAccountData(this.accountData, podName)
     const meta = (await getRawMetadata(connection.bee, fullPath, podAddress, pod.password)).metadata
     assertRawFileMetadata(meta)
     const data = JSON.stringify(createFileShareInfo(meta))
@@ -189,7 +195,8 @@ export class File {
     assertPodName(podName)
     const sharedInfo = await this.getSharedInfo(reference)
     const connection = this.accountData.connection
-    const { podWallet, pod } = await getExtendedPodsListByAccountData(this.accountData, podName)
+
+    const { podWallet, pod } = this.podEnvironment
     let meta = rawFileMetadataToFileMetadata(sharedInfo.meta)
     const fileName = options?.name ?? sharedInfo.meta.fileName
     meta = updateFileMetadata(meta, parentPath, fileName)
