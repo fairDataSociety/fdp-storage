@@ -96,3 +96,6 @@ jobs:
 
       - name: Run browser tests
         run: npm run test:browser
+
+      - name: Run browser profile tests
+        run: npm run test:profile
