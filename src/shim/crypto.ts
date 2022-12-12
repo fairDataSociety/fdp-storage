@@ -1,6 +1,8 @@
 import crypto from 'crypto'
 
-const isNode = typeof process !== 'undefined' && process.versions && process.versions.node !== null
+// `process.versions.node` is defined for NodeJS
+// most of js frameworks have no `process.versions` property, but in some there is an empty object in `process.versions`
+const isNode = typeof process !== 'undefined' && Boolean(process?.versions?.node)
 
 const getRandomValuesNode = <T extends ArrayBufferView | null>(array: T): T => {
   if (!(array instanceof Uint8Array || array instanceof Uint32Array)) {
