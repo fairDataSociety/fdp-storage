@@ -308,7 +308,22 @@ With specific system environment variables you can alter the behaviour of the te
 
 There are browser tests by Puppeteer, which also provide integrity testing.
 
+To run the tests for this project, you can use the following commands:
+
 ```sh
+# to run all tests
+npm run test
+
+# to run node tests
+npm run test:node
+
+# to run FairOS-dfs integration tests
+npm run test:fairos
+
+# to run unit tests
+npm run test:unit
+
+# to run browser tests
 npm run test:browser
 ```
 
