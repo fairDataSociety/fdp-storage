@@ -140,7 +140,7 @@ Creating a pod
 
 ```js
 const pod = await fdp.personalStorage.create('my-new-pod')
-console.log(pods) // prints info about created pod
+console.log(pod) // prints info about created pod
 ```
 
 Getting list of pods
