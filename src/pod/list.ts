@@ -1,5 +1,6 @@
 import { JsonPod, Pod, JsonSharedPod, SharedPod } from './types'
 import { assertPods, assertPodsMetadata, assertSharedPods, jsonPodToPod, jsonSharedPodToSharedPod } from './utils'
+import { getError } from '../utils/error'
 
 /**
  * List of created and shared pods
@@ -31,9 +32,7 @@ export class List {
     try {
       object = JSON.parse(json)
     } catch (e) {
-      const error = e as Error
-
-      throw new Error(`Can't parse json pods list: ${error.message}`)
+      throw new Error(`Can't parse json pods list: ${getError(e)?.message}`)
     }
 
     assertPodsMetadata(object)

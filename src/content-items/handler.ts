@@ -7,7 +7,7 @@ import { getRawDirectoryMetadataBytes } from '../directory/adapter'
 import { DIRECTORY_TOKEN, FILE_TOKEN } from '../file/handler'
 import { assertRawDirectoryMetadata, combine, splitPath } from '../directory/utils'
 import { RawDirectoryMetadata } from '../pod/types'
-import { assertItemIsNotExists, getRawMetadata } from './utils'
+import { getRawMetadata } from './utils'
 import { RawMetadataWithEpoch } from './types'
 import { prepareEthAddress } from '../utils/wallet'
 import { PodPasswordBytes } from '../utils/encryption'
@@ -65,7 +65,7 @@ export async function addEntryToDirectory(
   parentData.fileOrDirNames = parentData.fileOrDirNames ?? []
 
   if (parentData.fileOrDirNames.includes(itemToAdd)) {
-    throw new Error(`${itemText} already listed in the parent directory list`)
+    throw new Error(`${itemText} "${entryPath}" already created`)
   }
 
   parentData.fileOrDirNames.push(itemToAdd)

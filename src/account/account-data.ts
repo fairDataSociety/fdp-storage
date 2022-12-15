@@ -4,7 +4,6 @@ import {
   assertPassword,
   assertRegistrationAccount,
   assertUsername,
-  CHUNK_ALREADY_EXISTS_ERROR,
   HD_PATH,
   removeZeroFromHex,
 } from './utils'
@@ -18,6 +17,7 @@ import { Reference, Utils } from '@ethersphere/bee-js'
 import CryptoJS from 'crypto-js'
 import { bytesToHex } from '../utils/hex'
 import { mnemonicToSeed, prepareEthAddress, privateKeyToBytes } from '../utils/wallet'
+import { CHUNK_ALREADY_EXISTS_ERROR, errorStartWith } from '../utils/error'
 
 export class AccountData {
   /**
@@ -187,9 +187,7 @@ export class AccountData {
         seed,
       )
     } catch (e) {
-      const error = e as Error
-
-      if (error.message?.startsWith(CHUNK_ALREADY_EXISTS_ERROR)) {
+      if (errorStartWith(e, CHUNK_ALREADY_EXISTS_ERROR)) {
         throw new Error('User account already uploaded')
       } else {
         throw e
@@ -237,9 +235,7 @@ export class AccountData {
         seed,
       )
     } catch (e) {
-      const error = e as Error
-
-      if (!error.message?.startsWith(CHUNK_ALREADY_EXISTS_ERROR)) {
+      if (!errorStartWith(e, CHUNK_ALREADY_EXISTS_ERROR)) {
         throw e
       }
     }

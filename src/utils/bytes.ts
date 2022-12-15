@@ -5,12 +5,14 @@
  * generic `Length` type parameter which is runtime compatible with
  * the original, because it extends from the `number` type.
  */
-import { Data, Utils } from '@ethersphere/bee-js'
+import { Data, Reference, Utils } from '@ethersphere/bee-js'
 import { bytesToHex } from './hex'
 import { BeeArgumentError } from './error'
 import CryptoJS from 'crypto-js'
+import { makeChunkedFile } from '@fairdatasociety/bmt-js'
 
 export const SPAN_SIZE = 8
+export const REFERENCE_SIZE = 64
 
 // we limit the maximum span size in 32 bits to avoid BigInt compatibility issues
 const MAX_SPAN_LENGTH = 2 ** 32 - 1
@@ -163,4 +165,13 @@ export function bytesToWordArray(data: Uint8Array): CryptoJS.lib.WordArray {
  */
 export function wordArrayToBytes(data: CryptoJS.lib.WordArray): Uint8Array {
   return Utils.hexToBytes(CryptoJS.enc.Hex.stringify(data))
+}
+
+/**
+ * Calculates data address without uploading data to Swarm
+ */
+export function getBmtDataAddress(data: Uint8Array): Reference {
+  const chunkedFile = makeChunkedFile(data)
+
+  return bytesToHex(chunkedFile.address(), REFERENCE_SIZE)
 }
