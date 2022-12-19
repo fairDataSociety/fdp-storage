@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.6.0](https://github.com/fairDataSociety/fdp-storage/compare/v0.5.1...v0.6.0) (2022-12-19)
+
+
+### ⚠ BREAKING CHANGES
+
+* added encryption for data ([#149](https://github.com/fairDataSociety/fdp-storage/issues/149))
+
+### Features
+
+* added encryption for data ([#149](https://github.com/fairDataSociety/fdp-storage/issues/149)) ([c0444c6](https://github.com/fairDataSociety/fdp-storage/commit/c0444c62e1cccbb437c7fccff20f3a77fa39e600))
+* re-uploading a portable account to SWARM ([#156](https://github.com/fairDataSociety/fdp-storage/issues/156)) ([63a4dee](https://github.com/fairDataSociety/fdp-storage/commit/63a4dee7092fbc801e2f82fa5e8305e0b3e4ad05))
+
+
+### Bug Fixes
+
+* crypto shim improved for next.js ([#187](https://github.com/fairDataSociety/fdp-storage/issues/187)) ([367f836](https://github.com/fairDataSociety/fdp-storage/commit/367f8361ab5e7c3b05f020244e9f6194887cc7c6))
+* metadata properties ([#182](https://github.com/fairDataSociety/fdp-storage/issues/182)) ([905756b](https://github.com/fairDataSociety/fdp-storage/commit/905756b7d4238629f0a831babe35efff8121a1cf))
+
 ## [0.5.1](https://github.com/fairDataSociety/fdp-storage/compare/v0.5.0...v0.5.1) (2022-08-31)
 
 
