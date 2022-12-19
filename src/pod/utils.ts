@@ -225,9 +225,9 @@ export function podListToBytes(pods: Pod[], sharedPods: SharedPod[]): Uint8Array
 }
 
 /**
- * Pod name guard
+ * Pod name type guard
  */
-export function isPodName(value: unknown): value is PodName {
+export function isPodNameType(value: unknown): value is PodName {
   const { name } = value as PodName
 
   return typeof value === 'object' && value !== null && isString(name)
@@ -237,9 +237,9 @@ export function isPodName(value: unknown): value is PodName {
  * Pod guard
  */
 export function isPod(value: unknown): value is Pod {
-  const { name, index, password } = value as Pod
+  const { index, password } = value as Pod
 
-  return typeof value === 'object' && value !== null && isString(name) && isNumber(index) && isPodPassword(password)
+  return typeof isPodNameType(value) && isNumber(index) && isPodPassword(password)
 }
 
 /**
@@ -248,23 +248,16 @@ export function isPod(value: unknown): value is Pod {
 export function isJsonPod(value: unknown): value is JsonPod {
   const { index, password } = value as JsonPod
 
-  return typeof value === 'object' && value !== null && isNumber(index) && Utils.isHexString(password)
+  return isPodNameType(value) && isNumber(index) && Utils.isHexString(password)
 }
 
 /**
  * Shared pod guard
  */
 export function isSharedPod(value: unknown): value is SharedPod {
-  const { name, address, password } = value as SharedPod
+  const { address, password } = value as SharedPod
 
-  return (
-    typeof value === 'object' &&
-    typeof address === 'object' &&
-    value !== null &&
-    isString(name) &&
-    isEthAddress(bytesToHex(address)) &&
-    isPodPassword(password)
-  )
+  return isPodNameType(value) && isObject(address) && isEthAddress(bytesToHex(address)) && isPodPassword(password)
 }
 
 /**
@@ -273,14 +266,14 @@ export function isSharedPod(value: unknown): value is SharedPod {
 export function isJsonSharedPod(value: unknown): value is JsonSharedPod {
   const { address, password } = value as JsonSharedPod
 
-  return typeof value === 'object' && value !== null && isEthAddress(address) && Utils.isHexString(password)
+  return isPodNameType(value) && isEthAddress(address) && Utils.isHexString(password)
 }
 
 /**
  * Asserts that pod name type is correct
  */
 export function assertPodNameType(value: unknown): asserts value is PodName {
-  if (!isPodName(value)) {
+  if (!isPodNameType(value)) {
     throw new Error('Invalid pod name type')
   }
 }
