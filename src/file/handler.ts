@@ -1,12 +1,18 @@
-import { wrapBytesWithHelpers } from '../utils/bytes'
+import { stringToBytes, wrapBytesWithHelpers } from '../utils/bytes'
 import { Bee, Data, RequestOptions } from '@ethersphere/bee-js'
 import { EthAddress } from '@ethersphere/bee-js/dist/types/utils/eth'
-import { downloadBlocksManifest } from './utils'
+import { assertFullPathWithName, downloadBlocksManifest, extractPathInfo, uploadBytes } from './utils'
 import { FileMetadata } from '../pod/types'
-import { rawFileMetadataToFileMetadata } from './adapter'
+import { blocksToManifest, getFileMetadataRawBytes, rawFileMetadataToFileMetadata } from './adapter'
 import { assertRawFileMetadata } from '../directory/utils'
 import { getRawMetadata } from '../content-items/utils'
 import { PodPasswordBytes } from '../utils/encryption'
+import { Blocks, DataUploadOptions } from './types'
+import { assertPodName, getExtendedPodsListByAccountData, META_VERSION } from '../pod/utils'
+import { getUnixTimestamp } from '../utils/time'
+import { addEntryToDirectory } from '../content-items/handler'
+import { writeFeedData } from '../feed/api'
+import { AccountData } from '../account/account-data'
 
 /**
  * File prefix
@@ -85,4 +91,64 @@ export async function downloadData(
  */
 export function generateBlockName(blockNumber: number): string {
   return 'block-' + blockNumber.toString().padStart(5, '0')
+}
+
+/**
+ * Uploads file content
+ *
+ * @param podName pod where file is stored
+ * @param fullPath full path of the file
+ * @param data file content
+ * @param accountData account data
+ * @param options upload options
+ */
+export async function uploadData(
+  podName: string,
+  fullPath: string,
+  data: Uint8Array | string,
+  accountData: AccountData,
+  options: DataUploadOptions,
+): Promise<FileMetadata> {
+  assertPodName(podName)
+  assertFullPathWithName(fullPath)
+  assertPodName(podName)
+
+  data = typeof data === 'string' ? stringToBytes(data) : data
+  const connection = accountData.connection
+  const { podWallet, pod } = await getExtendedPodsListByAccountData(accountData, podName)
+
+  const pathInfo = extractPathInfo(fullPath)
+  const now = getUnixTimestamp()
+  const blocksCount = Math.ceil(data.length / options.blockSize)
+  const blocks: Blocks = { blocks: [] }
+  for (let i = 0; i < blocksCount; i++) {
+    const currentBlock = data.slice(i * options.blockSize, (i + 1) * options.blockSize)
+    const result = await uploadBytes(connection, currentBlock)
+    blocks.blocks.push({
+      size: currentBlock.length,
+      compressedSize: currentBlock.length,
+      reference: result.reference,
+    })
+  }
+
+  const manifestBytes = stringToBytes(blocksToManifest(blocks))
+  const blocksReference = (await uploadBytes(connection, manifestBytes)).reference
+  const meta: FileMetadata = {
+    version: META_VERSION,
+    filePath: pathInfo.path,
+    fileName: pathInfo.filename,
+    fileSize: data.length,
+    blockSize: options.blockSize,
+    contentType: options.contentType,
+    compression: '',
+    creationTime: now,
+    accessTime: now,
+    modificationTime: now,
+    blocksReference,
+  }
+
+  await addEntryToDirectory(connection, podWallet, pod.password, pathInfo.path, pathInfo.filename, true)
+  await writeFeedData(connection, fullPath, getFileMetadataRawBytes(meta), podWallet.privateKey, pod.password)
+
+  return meta
 }

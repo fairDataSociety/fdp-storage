@@ -1,7 +1,6 @@
 import { FileMetadata } from '../pod/types'
 import { assertAccount } from '../account/utils'
-import { assertPodName, getExtendedPodsListByAccountData, META_VERSION } from '../pod/utils'
-import { getUnixTimestamp } from '../utils/time'
+import { assertPodName, getExtendedPodsListByAccountData } from '../pod/utils'
 import { stringToBytes } from '../utils/bytes'
 import { AccountData } from '../account/account-data'
 import {
@@ -13,24 +12,19 @@ import {
   uploadBytes,
 } from './utils'
 import { writeFeedData } from '../feed/api'
-import { downloadData } from './handler'
-import { blocksToManifest, getFileMetadataRawBytes, rawFileMetadataToFileMetadata } from './adapter'
-import { Blocks, DataUploadOptions, FileReceiveOptions, FileShareInfo } from './types'
-import { addEntryToDirectory, removeEntryFromDirectory } from '../content-items/handler'
+import { downloadData, uploadData } from './handler'
+import { getFileMetadataRawBytes, rawFileMetadataToFileMetadata } from './adapter'
+import { DataUploadOptions, FileReceiveOptions, FileShareInfo } from './types'
+import { addEntryToDirectory, DEFAULT_UPLOAD_OPTIONS, removeEntryFromDirectory } from '../content-items/handler'
 import { Data, Reference } from '@ethersphere/bee-js'
 import { getRawMetadata } from '../content-items/utils'
-import { assertRawFileMetadata, combine } from '../directory/utils'
+import { assertRawFileMetadata, combine, splitPath } from '../directory/utils'
 import { assertEncryptedReference, EncryptedReference } from '../utils/hex'
 
 /**
  * Files management class
  */
 export class File {
-  public readonly defaultUploadOptions: DataUploadOptions = {
-    blockSize: 1000000,
-    contentType: '',
-  }
-
   constructor(private accountData: AccountData) {}
 
   /**
@@ -69,49 +63,10 @@ export class File {
     data: Uint8Array | string,
     options?: DataUploadOptions,
   ): Promise<FileMetadata> {
-    options = { ...this.defaultUploadOptions, ...options }
+    options = { ...DEFAULT_UPLOAD_OPTIONS, ...options }
     assertAccount(this.accountData)
-    assertPodName(podName)
-    assertFullPathWithName(fullPath)
-    assertPodName(podName)
-    data = typeof data === 'string' ? stringToBytes(data) : data
-    const connection = this.accountData.connection
-    const { podWallet, pod } = await getExtendedPodsListByAccountData(this.accountData, podName)
 
-    const pathInfo = extractPathInfo(fullPath)
-    const now = getUnixTimestamp()
-    const blocksCount = Math.ceil(data.length / options.blockSize)
-    const blocks: Blocks = { blocks: [] }
-    for (let i = 0; i < blocksCount; i++) {
-      const currentBlock = data.slice(i * options.blockSize, (i + 1) * options.blockSize)
-      const result = await uploadBytes(connection, currentBlock)
-      blocks.blocks.push({
-        size: currentBlock.length,
-        compressedSize: currentBlock.length,
-        reference: result.reference,
-      })
-    }
-
-    const manifestBytes = stringToBytes(blocksToManifest(blocks))
-    const blocksReference = (await uploadBytes(connection, manifestBytes)).reference
-    const meta: FileMetadata = {
-      version: META_VERSION,
-      filePath: pathInfo.path,
-      fileName: pathInfo.filename,
-      fileSize: data.length,
-      blockSize: options.blockSize,
-      contentType: options.contentType,
-      compression: '',
-      creationTime: now,
-      accessTime: now,
-      modificationTime: now,
-      blocksReference,
-    }
-
-    await addEntryToDirectory(connection, podWallet, pod.password, pathInfo.path, pathInfo.filename, true)
-    await writeFeedData(connection, fullPath, getFileMetadataRawBytes(meta), podWallet.privateKey, pod.password)
-
-    return meta
+    return uploadData(podName, fullPath, data, this.accountData, options)
   }
 
   /**
@@ -193,7 +148,7 @@ export class File {
     let meta = rawFileMetadataToFileMetadata(sharedInfo.meta)
     const fileName = options?.name ?? sharedInfo.meta.fileName
     meta = updateFileMetadata(meta, parentPath, fileName)
-    const fullPath = combine(parentPath, fileName)
+    const fullPath = combine(...splitPath(parentPath), fileName)
     await addEntryToDirectory(connection, podWallet, pod.password, parentPath, fileName, true)
     await writeFeedData(connection, fullPath, getFileMetadataRawBytes(meta), podWallet.privateKey, pod.password)
 

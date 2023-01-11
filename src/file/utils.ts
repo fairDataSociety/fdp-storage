@@ -85,7 +85,6 @@ export function extractPathInfo(fullPath: string): PathInfo {
  * Downloads raw FairOS blocks and convert it to FDS blocks
  *
  * @param bee Bee client
- * @param podPassword bytes for data encryption from pod metadata
  * @param reference blocks Swarm reference
  * @param downloadOptions download options
  */
@@ -200,4 +199,18 @@ export function updateFileMetadata(meta: FileMetadata, filePath: string, fileNam
     modificationTime: now,
     creationTime: now,
   }
+}
+
+/**
+ * Reads file content in a browser
+ */
+export async function readBrowseFileAsBytes(file: File): Promise<Uint8Array> {
+  const arrayBuffer = await new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onloadend = () => resolve(reader.result)
+    reader.onerror = reject
+    reader.readAsArrayBuffer(file)
+  })
+
+  return new Uint8Array(arrayBuffer as ArrayBuffer)
 }

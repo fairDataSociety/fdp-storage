@@ -25,9 +25,9 @@ export function assertArray(value: unknown): asserts value is [] {
 /**
  * Asserts that the given value is a string
  */
-export function assertString(value: unknown): asserts value is string {
+export function assertString(value: unknown, customMessage?: string): asserts value is string {
   if (!isString(value)) {
-    throw new Error('Expected a string')
+    throw new Error(customMessage ? customMessage : 'Expected a string')
   }
 }
 

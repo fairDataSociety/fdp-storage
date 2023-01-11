@@ -182,6 +182,13 @@ Deleting a directory
 await fdp.directory.delete('my-new-pod', '/my-dir')
 ```
 
+Upload the entire directory with files
+```js
+// `recursively: false` will upload only files in passed directory
+// `recursively: true` will find all files recursively in nested directories and upload them to the network
+await fdp.directory.upload('my-new-pod', '/Users/fdp/MY_LOCAL_DIRECTORY', { isRecursive: true })
+```
+
 Uploading data as a file into a pod
 
 ```js
