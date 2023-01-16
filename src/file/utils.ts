@@ -82,6 +82,15 @@ export function extractPathInfo(fullPath: string): PathInfo {
 }
 
 /**
+ * Get basename from a path
+ */
+export function getBaseName(path: string): string | undefined {
+  const exploded = path.split('/')
+
+  return exploded.pop()
+}
+
+/**
  * Downloads raw FairOS blocks and convert it to FDS blocks
  *
  * @param bee Bee client

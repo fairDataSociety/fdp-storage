@@ -91,10 +91,10 @@ export class Directory {
    * Uploads a directory with files
    *
    * @param podName pod where to upload a directory
-   * @param filesSource files source. path for Node.js, `File` array for browser
+   * @param filesSource files source. path for Node.js, `FileList` for browser
    * @param options upload directory options
    */
-  async upload(podName: string, filesSource: string | File[], options?: UploadDirectoryOptions): Promise<void> {
+  async upload(podName: string, filesSource: string | FileList, options?: UploadDirectoryOptions): Promise<void> {
     assertAccount(this.accountData)
     assertPodName(podName)
     const downloadOptions = this.accountData.connection.options?.downloadOptions

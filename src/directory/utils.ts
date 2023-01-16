@@ -5,6 +5,7 @@ import { replaceAll } from '../utils/string'
 import * as fs from 'fs'
 import * as nodePath from 'path'
 import { isNode } from '../shim/utils'
+import { getBaseName } from '../file/utils'
 
 /**
  * Type of file system: Node.js or browser
@@ -241,9 +242,9 @@ export function getDirectoriesToCreate(paths: string[]): string[] {
 }
 
 /**
- * Converts browser files list to `InfoList`
+ * Converts browser's `FileList` to `InfoList`
  */
-export function browserFilesToFileInfoList(files: File[]): FileInfo[] {
+export function browserFilesToFileInfoList(files: FileList): FileInfo[] {
   if (files.length === 0) {
     return []
   }
@@ -257,7 +258,7 @@ export function browserFilesToFileInfoList(files: File[]): FileInfo[] {
     throw new Error(`"webkitRelativePath" does not contain base path part: "${testFilePath}"`)
   }
 
-  return files.map(file => {
+  return Array.from(files).map(file => {
     const relativePath = file.webkitRelativePath.substring(parts[0].length + 1)
 
     return {
@@ -292,18 +293,18 @@ export async function getNodeFileInfoList(path: string, recursive: boolean): Pro
 }
 
 /**
- * Assert that File instance from browser contains "webkitRelativePath"
+ * Assert that `File` instance from browser contains `webkitRelativePath`
  */
-export function assertBrowserFilesWithPath(value: unknown): asserts value is File[] {
-  if (!isNode()) {
+export function assertBrowserFilesWithPath(value: unknown): asserts value is FileList {
+  if (isNode()) {
     throw new Error('File info asserting is available only in browser')
   }
 
-  if (!Array.isArray(value)) {
-    throw new Error('Browser files is not an array')
+  if (!(value instanceof FileList)) {
+    throw new Error('Browser files is not `FileList`')
   }
 
-  const data = value as File[]
+  const data = Array.from(value)
   for (const item of data) {
     if (!(item instanceof File)) {
       throw new Error(`Item of browser files is not a File instance`)
@@ -319,7 +320,11 @@ export function assertBrowserFilesWithPath(value: unknown): asserts value is Fil
  * Filters FileInfo items where filename starts with dot
  */
 export function filterDotFiles(files: FileInfo[]): FileInfo[] {
-  return files.filter(item => !nodePath.basename(item.relativePath).startsWith('.'))
+  return files.filter(item => {
+    const basename = getBaseName(item.relativePath)
+
+    return !basename || !basename.startsWith('.')
+  })
 }
 
 /**

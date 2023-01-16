@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>FDP Storage manual testing</title>
+  <link rel="stylesheet" href="../../node_modules/bootstrap/dist/css/bootstrap.min.css">
+  <script src="../../dist/index.browser.js"></script>
+</head>
+<body>
+<div class="container">
+  <div class="mb-3">
+    <label for="pod-name" class="form-label">Postage stamp</label>
+    <input class="form-control" id="stamp" value="">
+  </div>
+
+  <div class="mb-3">
+    <button class="btn btn-primary" onclick="setPostageStamp()">Set</button>
+  </div>
+
+  <hr>
+
+  <div class="mb-3">
+    <button class="btn btn-primary" onclick="createFdpStorage()">Create FDP</button>
+  </div>
+
+  <hr>
+
+  <div class="mb-3">
+    <button class="btn btn-primary" onclick="createAccount()">Create account</button>
+  </div>
+
+  <hr>
+
+  <div class="mb-3">
+    <label for="pod-name" class="form-label">Pod name</label>
+    <input class="form-control" id="pod-name">
+  </div>
+
+  <div class="mb-3">
+    <button class="btn btn-primary" onclick="createPod()">Create Pod</button>
+  </div>
+
+  <hr>
+
+  <div class="mb-3">
+    <button class="btn btn-primary" onclick="podsList()">Pods list</button>
+  </div>
+
+  <hr>
+
+  <div class="mb-3">
+    <label for="pod-name" class="form-label">Pod name</label>
+    <input class="form-control" id="pod-name-files">
+  </div>
+
+  <div class="mb-3">
+    <label for="pod-name" class="form-label">Path</label>
+    <input class="form-control" id="path-files" value="/">
+  </div>
+
+  <div class="mb-3">
+    <button class="btn btn-primary" onclick="filesList()">Files list</button>
+  </div>
+
+  <hr>
+
+  <div class="mb-3">
+    <label for="pod-name" class="form-label">Pod name</label>
+    <input class="form-control" id="pod-name-download-file">
+  </div>
+
+  <div class="mb-3">
+    <label for="pod-name" class="form-label">Path name</label>
+    <input class="form-control" id="path-download-file" value="/">
+  </div>
+
+  <div class="mb-3">
+    <button class="btn btn-primary" onclick="downloadFile()">Download the file</button>
+  </div>
+
+  <hr>
+
+  <div class="mb-3">
+    <input type="file" id="upload-file" class="form-control"/>
+  </div>
+
+  <div class="mb-3">
+    <label for="pod-name" class="form-label">Pod name</label>
+    <input class="form-control" id="pod-name-file">
+  </div>
+
+  <div class="mb-3">
+    <label for="pod-name" class="form-label">Path name</label>
+    <input class="form-control" id="path-file" value="/">
+  </div>
+
+  <div class="mb-3">
+    <button class="btn btn-primary" onclick="uploadFile()">Upload a file</button>
+  </div>
+
+  <hr>
+
+  <div class="mb-3">
+    <label for="upload-directory" class="form-label">Upload a directory</label>
+    <input type="file" class="form-control" id="upload-directory" webkitdirectory mozdirectory/>
+  </div>
+
+  <div class="mb-3">
+    <label for="pod-name" class="form-label">Pod name</label>
+    <input class="form-control" id="pod-name-directory">
+  </div>
+
+  <div class="mb-3">
+    <label for="pod-name" class="form-label">Path name</label>
+    <input class="form-control" id="path-directory" value="/">
+  </div>
+
+  <div class="mb-3">
+    <button class="btn btn-primary" onclick="uploadDirectory()">Upload a directory</button>
+  </div>
+</div>
+
+<script src="./js/script.js"></script>
+</body>
+</html>
