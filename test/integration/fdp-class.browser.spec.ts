@@ -628,8 +628,9 @@ describe('Fair Data Protocol class - in browser', () => {
       const filenameSmall = generateRandomHexString() + '.txt'
       const fullFilenameSmallPath = '/' + filenameSmall
 
-      const { listFiles1, listFiles2, listFiles3 } = await page.evaluate(
+      const { listFiles1, listFiles2, listFiles3, data1 } = await page.evaluate(
         async (pod: string, filenameSmall: string, fullFilenameSmallPath: string, contentSmall: string) => {
+          const reuploadTimes = 3
           const fdp = eval(await window.initFdp()) as FdpStorage
           fdp.account.createWallet()
 
@@ -637,16 +638,23 @@ describe('Fair Data Protocol class - in browser', () => {
           await fdp.file.uploadData(pod, fullFilenameSmallPath, contentSmall)
           const list1 = await fdp.directory.read(pod, '/')
 
-          await fdp.file.delete(pod, fullFilenameSmallPath)
-          const list2 = await fdp.directory.read(pod, '/')
+          let list2
+          let list3
+          for (let i = 0; i < reuploadTimes; i++) {
+            await fdp.file.delete(pod, fullFilenameSmallPath)
+            list2 = await fdp.directory.read(pod, '/')
 
-          await fdp.file.uploadData(pod, fullFilenameSmallPath, contentSmall)
-          const list3 = await fdp.directory.read(pod, '/')
+            await fdp.file.uploadData(pod, fullFilenameSmallPath, contentSmall)
+            list3 = await fdp.directory.read(pod, '/')
+          }
+
+          const data1 = await fdp.file.downloadData(pod, fullFilenameSmallPath)
 
           return {
             listFiles1: list1.getFiles(),
-            listFiles2: list2.getFiles(),
-            listFiles3: list3.getFiles(),
+            listFiles2: list2?.getFiles(),
+            listFiles3: list3?.getFiles(),
+            data1: data1.text(),
           }
         },
         pod,
@@ -658,8 +666,10 @@ describe('Fair Data Protocol class - in browser', () => {
       expect(listFiles1).toHaveLength(1)
       expect(listFiles2).toHaveLength(0)
       expect(listFiles3).toHaveLength(1)
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
       expect(listFiles3[0].name).toEqual(filenameSmall)
-      expect(listFiles1[0].reference).toEqual(listFiles3[0].reference)
+      expect(data1).toEqual(contentSmall)
     })
 
     it('should upload small text data as a file', async () => {

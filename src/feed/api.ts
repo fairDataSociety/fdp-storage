@@ -8,8 +8,6 @@ import { getUnixTimestamp } from '../utils/time'
 import { LookupAnswer } from './types'
 import { Connection } from '../connection/connection'
 import { encryptBytes, PodPasswordBytes } from '../utils/encryption'
-import { CHUNK_ALREADY_EXISTS_ERROR, errorStartWith, getError } from '../utils/error'
-import { getBmtDataAddress } from '../utils/bytes'
 
 /**
  * Finds and downloads the latest feed content
@@ -83,15 +81,8 @@ export async function writeFeedDataRaw(
   const topicHash = bmtHashString(topic)
   const id = getId(topicHash, epoch.time, epoch.level)
   const socWriter = connection.bee.makeSOCWriter(privateKey)
-  try {
-    return await socWriter.upload(connection.postageBatchId, id, data, {
-      pin: true,
-    })
-  } catch (e) {
-    if (errorStartWith(e, CHUNK_ALREADY_EXISTS_ERROR)) {
-      return getBmtDataAddress(data)
-    } else {
-      throw new Error(getError(e)?.message || 'Unknown error')
-    }
-  }
+
+  return await socWriter.upload(connection.postageBatchId, id, data, {
+    pin: true,
+  })
 }

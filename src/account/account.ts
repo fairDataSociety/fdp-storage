@@ -123,9 +123,7 @@ export async function uploadPortableAccount(
   const topic = createCredentialsTopic(username, password)
   const socWriter = connection.bee.makeSOCWriter(privateKey)
 
-  return socWriter.upload(connection.postageBatchId, topic, encryptedBytes, {
-    pin: true,
-  })
+  return socWriter.upload(connection.postageBatchId, topic, encryptedBytes)
 }
 
 /**

@@ -411,7 +411,9 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
       const user = generateUser(fdp)
       const podName1 = generateRandomHexString()
       const fileSizeBig = 1000015
+      const fileSizeBig2 = 1000017
       const contentBig = generateRandomHexString(fileSizeBig)
+      const contentBig2 = generateRandomHexString(fileSizeBig2)
       const filenameBig = generateRandomHexString() + '.txt'
       const fullFilenameBigPath = '/' + filenameBig
 
@@ -431,6 +433,27 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
       const response2 = await fairos.dirLs(podName1)
       const dirs2 = response2.data?.files
       expect(dirs2).toBeUndefined()
+
+      // upload the same file again under the same name
+      await fdp.file.uploadData(podName1, fullFilenameBigPath, contentBig)
+      const response3 = await fairos.dirLs(podName1)
+      const dirs3 = response3?.data?.files
+      expect(dirs3).toHaveLength(1)
+      expect(dirs3[0].name).toEqual(filenameBig)
+
+      // upload other file again under the same name
+      await fdp.file.delete(podName1, fullFilenameBigPath)
+      await fdp.file.uploadData(podName1, fullFilenameBigPath, contentBig2)
+      const response4 = await fairos.dirLs(podName1)
+      const dirs4 = response4?.data?.files
+      expect(dirs4).toHaveLength(1)
+      expect(dirs4[0].name).toEqual(filenameBig)
+      expect(Number(dirs4[0].size)).toEqual(fileSizeBig2)
+
+      // check new file content
+      const response5 = await fairos.fileDownload(podName1, fullFilenameBigPath)
+      expect(response5.status).toEqual(200)
+      expect(response5.data).toEqual(contentBig2)
     })
 
     it('should delete file in fairos and it will disappear in fdp', async () => {
