@@ -21,6 +21,8 @@ import { bytesToString } from '../../src/utils/bytes'
 import { getWalletByIndex, mnemonicToSeed, prepareEthAddress } from '../../src/utils/wallet'
 import { assertEncryptedReference, bytesToHex } from '../../src/utils/hex'
 import { base64toReference } from '../../src/file/utils'
+import path from 'path'
+import { getNodeFileContent } from '../../src/directory/utils'
 
 jest.setTimeout(400000)
 describe('Fair Data Protocol class', () => {
@@ -353,6 +355,70 @@ describe('Fair Data Protocol class', () => {
       await fdp.directory.delete(pod, directoryFull)
       const listAfter = await fdp.directory.read(pod, '/', true)
       expect(listAfter.content).toHaveLength(0)
+    })
+
+    it('should upload a directory', async () => {
+      const fdp = createFdp()
+      generateUser(fdp)
+      const pod1 = generateRandomHexString()
+      const pod2 = generateRandomHexString()
+      const fullPath = path.resolve(__dirname, '../data-unit/directory-utils')
+      const filesInfo = [
+        {
+          localPath: fullPath + '/file1.txt',
+          fdpPath: '/file1.txt',
+          fdpFullPath: '/directory-utils/file1.txt',
+        },
+        {
+          localPath: fullPath + '/file2.txt',
+          fdpPath: '/file2.txt',
+          fdpFullPath: '/directory-utils/file2.txt',
+        },
+        {
+          localPath: fullPath + '/dir1/dir1-1/file1-1-1.txt',
+          fdpPath: '/dir1/dir1-1/file1-1-1.txt',
+          fdpFullPath: '/directory-utils/dir1/dir1-1/file1-1-1.txt',
+        },
+        {
+          localPath: fullPath + '/dir2/file2-1.txt',
+          fdpPath: '/dir2/file2-1.txt',
+          fdpFullPath: '/directory-utils/dir2/file2-1.txt',
+        },
+      ]
+
+      await fdp.personalStorage.create(pod1)
+      await fdp.personalStorage.create(pod2)
+      await fdp.directory.upload(pod1, fullPath, { isRecursive: true, isIncludeDirectoryName: true })
+      const list1 = await fdp.directory.read(pod1, '/', true)
+      const dir1 = list1.getDirectories()[0]
+      expect(dir1.getFiles()).toHaveLength(2)
+      expect(dir1.getDirectories()).toHaveLength(2)
+      const subDir1 = dir1.getDirectories().find(item => item.name === 'dir1')
+      const subDir2 = dir1.getDirectories().find(item => item.name === 'dir2')
+      expect(subDir1).toBeDefined()
+      expect(subDir2).toBeDefined()
+      // 1 empty directory should not be uploaded + 1 not empty should be uploaded
+      expect(subDir1!.getDirectories()).toHaveLength(1)
+      expect(subDir1!.getDirectories()[0].getFiles()).toHaveLength(1)
+      expect(subDir1!.getFiles()).toHaveLength(0)
+      expect(subDir2!.getFiles()).toHaveLength(1)
+
+      for (const fileInfo of filesInfo) {
+        const fileContent = getNodeFileContent(fileInfo.localPath)
+        const downloaded = await fdp.file.downloadData(pod1, fileInfo.fdpFullPath)
+        expect(downloaded.text()).toEqual(fileContent.toString())
+      }
+
+      await fdp.directory.upload(pod2, fullPath, { isRecursive: true, isIncludeDirectoryName: false })
+      const list2 = await fdp.directory.read(pod2, '/', true)
+      expect(list2.getDirectories()).toHaveLength(2)
+      expect(list2.getFiles()).toHaveLength(2)
+
+      for (const fileInfo of filesInfo) {
+        const fileContent = getNodeFileContent(fileInfo.localPath)
+        const downloaded = await fdp.file.downloadData(pod2, fileInfo.fdpPath)
+        expect(downloaded.text()).toEqual(fileContent.toString())
+      }
     })
   })
 

@@ -5,12 +5,18 @@ import { getUnixTimestamp } from '../utils/time'
 import { writeFeedData } from '../feed/api'
 import { getRawDirectoryMetadataBytes } from '../directory/adapter'
 import { DIRECTORY_TOKEN, FILE_TOKEN } from '../file/handler'
-import { assertRawDirectoryMetadata, combine } from '../directory/utils'
+import { assertRawDirectoryMetadata, combine, splitPath } from '../directory/utils'
 import { RawDirectoryMetadata } from '../pod/types'
 import { assertItemIsNotExists, getRawMetadata } from './utils'
 import { RawMetadataWithEpoch } from './types'
 import { prepareEthAddress } from '../utils/wallet'
 import { PodPasswordBytes } from '../utils/encryption'
+import { DataUploadOptions } from '../file/types'
+
+export const DEFAULT_UPLOAD_OPTIONS: DataUploadOptions = {
+  blockSize: 1000000,
+  contentType: '',
+}
 
 /**
  * Add child file or directory to a defined parent directory
@@ -42,7 +48,7 @@ export async function addEntryToDirectory(
 
   const address = prepareEthAddress(wallet.address)
   const itemText = isFile ? 'File' : 'Directory'
-  const fullPath = combine(parentPath, entryPath)
+  const fullPath = combine(...splitPath(parentPath), entryPath)
   await assertItemIsNotExists(itemText, connection.bee, fullPath, address, downloadOptions)
 
   let parentData: RawDirectoryMetadata | undefined

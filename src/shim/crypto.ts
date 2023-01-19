@@ -1,8 +1,5 @@
 import crypto from 'crypto'
-
-// `process.versions.node` is defined for NodeJS
-// most of js frameworks have no `process.versions` property, but in some there is an empty object in `process.versions`
-const isNode = typeof process !== 'undefined' && Boolean(process?.versions?.node)
+import { isNode } from './utils'
 
 const getRandomValuesNode = <T extends ArrayBufferView | null>(array: T): T => {
   if (!(array instanceof Uint8Array || array instanceof Uint32Array)) {
@@ -22,6 +19,6 @@ const getRandomValuesNode = <T extends ArrayBufferView | null>(array: T): T => {
   return array
 }
 
-if (isNode && globalThis) {
+if (isNode() && globalThis) {
   globalThis.crypto = { ...globalThis.crypto, getRandomValues: getRandomValuesNode }
 }

@@ -228,3 +228,10 @@ export async function topUpAddress(address: string, amountInEther = '0.01'): Pro
 
   await ens.provider.waitForTransaction(txHash)
 }
+
+/**
+ * Make `FileList` from `File` array
+ */
+export function makeFileList(files: File[]): FileList {
+  return files as unknown as FileList
+}

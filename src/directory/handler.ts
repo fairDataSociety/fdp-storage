@@ -9,20 +9,43 @@ import {
   combine,
   getPathFromParts,
   getPathParts,
+  splitPath,
 } from './utils'
 import { DIRECTORY_TOKEN, FILE_TOKEN } from '../file/handler'
 import { getUnixTimestamp } from '../utils/time'
 import { createRawDirectoryMetadata, META_VERSION } from '../pod/utils'
 import { Connection } from '../connection/connection'
 import { utils } from 'ethers'
-import { addEntryToDirectory } from '../content-items/handler'
+import { addEntryToDirectory, DEFAULT_UPLOAD_OPTIONS } from '../content-items/handler'
 import { DirectoryItem } from '../content-items/directory-item'
 import { FileItem } from '../content-items/file-item'
 import { getRawMetadata } from '../content-items/utils'
 import { PodPasswordBytes } from '../utils/encryption'
 import { preparePrivateKey } from '../utils/wallet'
+import { DataUploadOptions } from '../file/types'
+
+/**
+ * Options for uploading a directory
+ */
+export interface UploadDirectoryOptions {
+  uploadOptions?: DataUploadOptions
+  // find files recursively in nested directories
+  isRecursive?: boolean
+  // hide files that started with dots
+  excludeDotFiles?: boolean
+  // create a directory with a name like the source directory
+  isIncludeDirectoryName?: boolean
+  // uploading progress callback
+  onProgress?: (processingPath: string, processingFileNumber: number, filesCount: number) => void
+}
 
 export const MAX_DIRECTORY_NAME_LENGTH = 100
+export const DEFAULT_UPLOAD_DIRECTORY_OPTIONS: UploadDirectoryOptions = {
+  uploadOptions: DEFAULT_UPLOAD_OPTIONS,
+  isRecursive: true,
+  excludeDotFiles: false,
+  isIncludeDirectoryName: true,
+}
 
 /**
  * Get files and directories under path with recursion or not
@@ -55,12 +78,12 @@ export async function readDirectory(
     const isDirectory = item.startsWith(DIRECTORY_TOKEN)
 
     if (isFile) {
-      item = combine(path, item.substring(FILE_TOKEN.length))
+      item = combine(...splitPath(path), item.substring(FILE_TOKEN.length))
       const data = (await getRawMetadata(bee, item, address, podPassword, downloadOptions)).metadata
       assertRawFileMetadata(data)
       resultDirectoryItem.content.push(FileItem.fromRawFileMetadata(data))
     } else if (isDirectory) {
-      item = combine(path, item.substring(DIRECTORY_TOKEN.length))
+      item = combine(...splitPath(path), item.substring(DIRECTORY_TOKEN.length))
       const data = (await getRawMetadata(bee, item, address, podPassword, downloadOptions)).metadata
       assertRawDirectoryMetadata(data)
       const currentMetadata = DirectoryItem.fromRawDirectoryMetadata(data)
@@ -97,7 +120,7 @@ async function createDirectoryInfo(
   const now = getUnixTimestamp()
   const metadata = createRawDirectoryMetadata(META_VERSION, path, name, now, now, now)
 
-  return writeFeedData(connection, combine(path, name), metadata, privateKey, podPassword)
+  return writeFeedData(connection, combine(...splitPath(path), name), metadata, privateKey, podPassword)
 }
 
 /**

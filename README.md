@@ -182,6 +182,30 @@ Deleting a directory
 await fdp.directory.delete('my-new-pod', '/my-dir')
 ```
 
+Upload an entire directory with files in Node.js
+
+```js
+// `recursively: false` will upload only files in passed directory
+// `recursively: true` will find all files recursively in nested directories and upload them to the network
+await fdp.directory.upload('my-new-pod', '/Users/fdp/MY_LOCAL_DIRECTORY', { isRecursive: true })
+```
+
+Upload an entire directory with files in browser.
+
+Create input element with `webkitdirectory` property. With this property entire directory can be chosen instead of a file.
+
+```html
+<input type="file" id="upload-directory" webkitdirectory/>
+```
+
+```js
+// getting list of files in a directory
+const files = document.getElementById('upload-directory').files
+// `recursively: false` will upload only files in passed directory
+// `recursively: true` will find all files recursively in nested directories and upload them to the network
+await fdp.directory.upload('my-new-pod', files, { isRecursive: true })
+```
+
 Uploading data as a file into a pod
 
 ```js
