@@ -1,8 +1,6 @@
 import {
   assertDirectoryName,
   combine,
-  FileInfo,
-  FileSystemType,
   filterBrowserRecursiveFiles,
   filterDotFiles,
   browserFileListToFileInfoList,
@@ -11,6 +9,7 @@ import {
   getPathFromParts,
   getPathParts,
   getUploadPath,
+  NodeFileInfo,
 } from '../../../src/directory/utils'
 import path from 'path'
 import { makeFileList } from '../../utils'
@@ -20,8 +19,6 @@ describe('directory/utils', () => {
     const paths1 = [
       {
         input: {
-          fileSystemType: FileSystemType.browser,
-          fullPath: '',
           relativePath: 'file2.txt',
           relativePathWithBase: 'test/file2.txt',
         },
@@ -30,8 +27,6 @@ describe('directory/utils', () => {
       },
       {
         input: {
-          fileSystemType: FileSystemType.browser,
-          fullPath: '',
           relativePath: 'file2.txt',
           relativePathWithBase: 'test/file2.txt',
         },
@@ -40,8 +35,6 @@ describe('directory/utils', () => {
       },
       {
         input: {
-          fileSystemType: FileSystemType.browser,
-          fullPath: '',
           relativePath: 'test-1/file1.txt',
           relativePathWithBase: 'test/test-1/file1.txt',
         },
@@ -50,8 +43,6 @@ describe('directory/utils', () => {
       },
       {
         input: {
-          fileSystemType: FileSystemType.browser,
-          fullPath: '',
           relativePath: 'test-1/file1.txt',
           relativePathWithBase: 'test/test-1/file1.txt',
         },
@@ -68,32 +59,27 @@ describe('directory/utils', () => {
   it('filterBrowserRecursiveFiles', () => {
     const paths1 = [
       {
-        fileSystemType: FileSystemType.browser,
-        fullPath: '',
+        browserFile: {} as File,
         relativePath: 'file1.txt',
         relativePathWithBase: 'test/file1.txt',
       },
       {
-        fileSystemType: FileSystemType.browser,
-        fullPath: '',
+        browserFile: {} as File,
         relativePath: 'file2.txt',
         relativePathWithBase: 'test/file2.txt',
       },
       {
-        fileSystemType: FileSystemType.browser,
-        fullPath: '',
+        browserFile: {} as File,
         relativePath: 'test-1/file1.txt',
         relativePathWithBase: 'test/test-1/file1.txt',
       },
       {
-        fileSystemType: FileSystemType.browser,
-        fullPath: '',
+        browserFile: {} as File,
         relativePath: 'test-1/.file1.txt',
         relativePathWithBase: 'test/test-1/.file1.txt',
       },
       {
-        fileSystemType: FileSystemType.browser,
-        fullPath: '',
+        browserFile: {} as File,
         relativePath: 'test-1/test-2/.DS_Store',
         relativePathWithBase: 'test/test-1/test-2/.DS_Store',
       },
@@ -108,37 +94,31 @@ describe('directory/utils', () => {
   it('filterFileInfoStartingWithDot', () => {
     const paths1 = [
       {
-        fileSystemType: FileSystemType.browser,
         fullPath: '',
         relativePath: 'file1.txt',
         relativePathWithBase: 'test/file1.txt',
       },
       {
-        fileSystemType: FileSystemType.browser,
         fullPath: '',
         relativePath: 'file2.txt',
         relativePathWithBase: 'test/file2.txt',
       },
       {
-        fileSystemType: FileSystemType.browser,
         fullPath: '',
         relativePath: 'test-1/file1.txt',
         relativePathWithBase: 'test/test-1/file1.txt',
       },
       {
-        fileSystemType: FileSystemType.browser,
         fullPath: '',
         relativePath: '.file1.txt',
         relativePathWithBase: 'test/.file1.txt',
       },
       {
-        fileSystemType: FileSystemType.browser,
         fullPath: '',
         relativePath: 'test-1/.file1.txt',
         relativePathWithBase: 'test/test-1/.file1.txt',
       },
       {
-        fileSystemType: FileSystemType.browser,
         fullPath: '',
         relativePath: 'test-1/test-2/.DS_Store',
         relativePathWithBase: 'test/test-1/test-2/.DS_Store',
@@ -183,7 +163,7 @@ describe('directory/utils', () => {
     expect(getDirectoriesToCreate([])).toEqual([])
   })
 
-  it('getBrowserFileInfoList for browser', async () => {
+  it('browserFileListToFileInfoList', async () => {
     const file1 = {
       webkitRelativePath: 'test/file1.txt',
     } as File
@@ -210,22 +190,16 @@ describe('directory/utils', () => {
     const result1 = browserFileListToFileInfoList(files)
     expect(result1).toEqual([
       {
-        fileSystemType: FileSystemType.browser,
-        fullPath: '',
         relativePath: 'file1.txt',
         relativePathWithBase: 'test/file1.txt',
         browserFile: file1,
       },
       {
-        fileSystemType: FileSystemType.browser,
-        fullPath: '',
         relativePath: 'file2.txt',
         relativePathWithBase: 'test/file2.txt',
         browserFile: file2,
       },
       {
-        fileSystemType: FileSystemType.browser,
-        fullPath: '',
         relativePath: 'test-1/file1.txt',
         relativePathWithBase: 'test/test-1/file1.txt',
         browserFile: file3,
@@ -239,42 +213,36 @@ describe('directory/utils', () => {
     const listNoRecursive = await getNodeFileInfoList(fullPath, false)
     const expectData1 = [
       {
-        fileSystemType: FileSystemType.node,
         fullPath: `${fullPath}/file1.txt`,
         relativePath: 'file1.txt',
         relativePathWithBase: 'directory-utils/file1.txt',
       },
       {
-        fileSystemType: FileSystemType.node,
         fullPath: `${fullPath}/file2.txt`,
         relativePath: 'file2.txt',
         relativePathWithBase: 'directory-utils/file2.txt',
       },
-    ] as FileInfo[]
+    ] as NodeFileInfo[]
     expect(listNoRecursive).toEqual(expectData1)
 
     const listRecursive = await getNodeFileInfoList(fullPath, true)
     expect(listRecursive).toEqual([
       {
-        fileSystemType: FileSystemType.node,
         fullPath: `${fullPath}/dir1/dir1-1/file1-1-1.txt`,
         relativePath: 'dir1/dir1-1/file1-1-1.txt',
         relativePathWithBase: 'directory-utils/dir1/dir1-1/file1-1-1.txt',
       },
       {
-        fileSystemType: FileSystemType.node,
         fullPath: `${fullPath}/dir2/file2-1.txt`,
         relativePath: 'dir2/file2-1.txt',
         relativePathWithBase: 'directory-utils/dir2/file2-1.txt',
       },
       {
-        fileSystemType: FileSystemType.node,
         fullPath: `${fullPath}/file1.txt`,
         relativePath: 'file1.txt',
         relativePathWithBase: 'directory-utils/file1.txt',
       },
       {
-        fileSystemType: FileSystemType.node,
         fullPath: `${fullPath}/file2.txt`,
         relativePath: 'file2.txt',
         relativePathWithBase: 'directory-utils/file2.txt',

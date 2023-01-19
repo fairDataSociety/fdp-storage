@@ -190,7 +190,7 @@ Upload an entire directory with files in Node.js
 await fdp.directory.upload('my-new-pod', '/Users/fdp/MY_LOCAL_DIRECTORY', { isRecursive: true })
 ```
 
-Upload an entire directory with files in browser
+Upload an entire directory with files in browser.
 
 Create input element with `webkitdirectory` property. With this property entire directory can be chosen instead of a file.
 

@@ -8,27 +8,29 @@ import { isNode } from '../shim/utils'
 import { getBaseName } from '../file/utils'
 
 /**
- * Type of file system: Node.js or browser
- */
-export enum FileSystemType {
-  node,
-  browser,
-}
-
-/**
- * Information about a file
+ * General information about a file
  */
 export interface FileInfo {
-  // type of file system
-  fileSystemType: FileSystemType
-  // full path of the file. Empty for browser file
-  fullPath: string
   // relative path of a file without base path. e.g `file.txt`
   relativePath: string
   // relative path of a file with base path. e.g `/all-files/file.txt`
   relativePathWithBase: string
+}
+
+/**
+ * Information about browser file
+ */
+export interface BrowserFileInfo extends FileInfo {
   // original browser file
-  browserFile?: File
+  browserFile: File
+}
+
+/**
+ * Information about Node.js file
+ */
+export interface NodeFileInfo extends FileInfo {
+  // full path of the file
+  fullPath: string
 }
 
 /**
@@ -241,9 +243,9 @@ export function getDirectoriesToCreate(paths: string[]): string[] {
 }
 
 /**
- * Converts browser's `FileList` to `InfoList`
+ * Converts browser's `FileList` to `BrowserFileInfo` array
  */
-export function browserFileListToFileInfoList(files: FileList): FileInfo[] {
+export function browserFileListToFileInfoList(files: FileList): BrowserFileInfo[] {
   if (files.length === 0) {
     return []
   }
@@ -261,8 +263,6 @@ export function browserFileListToFileInfoList(files: FileList): FileInfo[] {
     const relativePath = file.webkitRelativePath.substring(parts[0].length + 1)
 
     return {
-      fileSystemType: FileSystemType.browser,
-      fullPath: '',
       relativePath,
       relativePathWithBase: file.webkitRelativePath,
       browserFile: file,
@@ -273,7 +273,7 @@ export function browserFileListToFileInfoList(files: FileList): FileInfo[] {
 /**
  * Gets files list with base path like in a browser's `File` object
  */
-export async function getNodeFileInfoList(path: string, recursive: boolean): Promise<FileInfo[]> {
+export async function getNodeFileInfoList(path: string, recursive: boolean): Promise<NodeFileInfo[]> {
   const paths = await getNodePaths(path, recursive)
   const pathLength = path.length + 1
   const basePath = nodePath.basename(path)
@@ -283,7 +283,6 @@ export async function getNodeFileInfoList(path: string, recursive: boolean): Pro
     const relativePathWithBase = nodePath.join(basePath, relativePath)
 
     return {
-      fileSystemType: FileSystemType.node,
       fullPath,
       relativePath,
       relativePathWithBase,
@@ -318,7 +317,7 @@ export function assertBrowserFilesWithPath(value: unknown): asserts value is Fil
 /**
  * Filters FileInfo items where filename starts with dot
  */
-export function filterDotFiles(files: FileInfo[]): FileInfo[] {
+export function filterDotFiles<T extends FileInfo>(files: T[]): T[] {
   return files.filter(item => {
     const basename = getBaseName(item.relativePath)
 
@@ -329,7 +328,7 @@ export function filterDotFiles(files: FileInfo[]): FileInfo[] {
 /**
  * Filters extra files found recursively which browser adds by default
  */
-export function filterBrowserRecursiveFiles(files: FileInfo[]): FileInfo[] {
+export function filterBrowserRecursiveFiles(files: BrowserFileInfo[]): BrowserFileInfo[] {
   return files.filter(item => !item.relativePath.includes('/'))
 }
 

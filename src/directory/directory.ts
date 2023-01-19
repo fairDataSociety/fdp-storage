@@ -8,7 +8,6 @@ import { assertPodName, getExtendedPodsListByAccountData } from '../pod/utils'
 import { isNode } from '../shim/utils'
 import {
   assertBrowserFilesWithPath,
-  FileInfo,
   filterBrowserRecursiveFiles,
   filterDotFiles,
   browserFileListToFileInfoList,
@@ -16,8 +15,11 @@ import {
   getNodeFileContent,
   getNodeFileInfoList,
   getUploadPath,
+  BrowserFileInfo,
+  NodeFileInfo,
 } from './utils'
 import { uploadData } from '../file/handler'
+import { assertNodeFileInfo, isBrowserFileInfo } from './types'
 
 /**
  * Directory related class
@@ -108,7 +110,7 @@ export class Directory {
       throw new Error('Directory uploading with path as string is available in Node.js only')
     }
 
-    let files: FileInfo[]
+    let files: (BrowserFileInfo | NodeFileInfo)[]
 
     if (isNodePath) {
       files = await getNodeFileInfoList(filesSource, Boolean(options.isRecursive))
@@ -117,7 +119,7 @@ export class Directory {
       files = browserFileListToFileInfoList(filesSource)
 
       if (!options.isRecursive) {
-        files = filterBrowserRecursiveFiles(files)
+        files = filterBrowserRecursiveFiles(files as BrowserFileInfo[])
       }
     }
 
@@ -143,11 +145,12 @@ export class Directory {
       let bytes
 
       if (isNodePath) {
+        assertNodeFileInfo(file)
         bytes = getNodeFileContent(file.fullPath)
-      } else if (!isNodePath && file.browserFile) {
+      } else if (!isNodePath && isBrowserFileInfo(file)) {
         bytes = await readBrowserFileAsBytes(file.browserFile)
       } else {
-        throw new Error("Directory uploading: one of the browser's files is empty")
+        throw new Error('Directory uploading: one of the files is not correct')
       }
 
       const uploadPath = getUploadPath(file, options.isIncludeDirectoryName!)
