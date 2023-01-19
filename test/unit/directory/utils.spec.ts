@@ -5,7 +5,7 @@ import {
   FileSystemType,
   filterBrowserRecursiveFiles,
   filterDotFiles,
-  browserFilesToFileInfoList,
+  browserFileListToFileInfoList,
   getDirectoriesToCreate,
   getNodeFileInfoList,
   getPathFromParts,
@@ -13,6 +13,7 @@ import {
   getUploadPath,
 } from '../../../src/directory/utils'
 import path from 'path'
+import { makeFileList } from '../../utils'
 
 describe('directory/utils', () => {
   it('getUploadPath', () => {
@@ -197,16 +198,16 @@ describe('directory/utils', () => {
     } as File
     const fileIncorrect2 = {} as File
 
-    expect(browserFilesToFileInfoList([])).toEqual([])
-    expect(() => browserFilesToFileInfoList([fileIncorrect1])).toThrow(
+    expect(browserFileListToFileInfoList(makeFileList([]))).toEqual([])
+    expect(() => browserFileListToFileInfoList(makeFileList([fileIncorrect1]))).toThrow(
       `"webkitRelativePath" does not contain base path part: "file1.txt"`,
     )
-    expect(() => browserFilesToFileInfoList([fileIncorrect2])).toThrow(
+    expect(() => browserFileListToFileInfoList(makeFileList([fileIncorrect2]))).toThrow(
       '"webkitRelativePath" property should be a string',
     )
 
-    const files = [file1, file2, file3]
-    const result1 = browserFilesToFileInfoList(files)
+    const files = makeFileList([file1, file2, file3])
+    const result1 = browserFileListToFileInfoList(files)
     expect(result1).toEqual([
       {
         fileSystemType: FileSystemType.browser,

@@ -19,13 +19,13 @@ function checkPod() {
 }
 
 function getValue(id) {
-  const podName = document.getElementById(id).value
+  const value = document.getElementById(id).value
 
-  if (!podName) {
+  if (!value) {
     throw new Error(`Empty value for "${id}"`)
   }
 
-  return podName
+  return value
 }
 
 function createFdpStorage() {
@@ -124,7 +124,7 @@ function getPostageStamp() {
 function saveAs(data, name) {
   const blob = new Blob([data], { type: 'application/octet-stream' })
   const file = new File([blob], name, { type: 'application/octet-stream' })
-  const link = document.createElement('a');
+  const link = document.createElement('a')
   link.href = URL.createObjectURL(file)
   link.download = file.name
   document.body.appendChild(link)

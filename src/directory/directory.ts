@@ -3,7 +3,7 @@ import { createDirectory, readDirectory, DEFAULT_UPLOAD_DIRECTORY_OPTIONS, Uploa
 import { assertAccount } from '../account/utils'
 import { DirectoryItem } from '../content-items/directory-item'
 import { removeEntryFromDirectory } from '../content-items/handler'
-import { extractPathInfo, readBrowseFileAsBytes } from '../file/utils'
+import { extractPathInfo, readBrowserFileAsBytes } from '../file/utils'
 import { assertPodName, getExtendedPodsListByAccountData } from '../pod/utils'
 import { isNode } from '../shim/utils'
 import {
@@ -11,7 +11,7 @@ import {
   FileInfo,
   filterBrowserRecursiveFiles,
   filterDotFiles,
-  browserFilesToFileInfoList,
+  browserFileListToFileInfoList,
   getDirectoriesToCreate,
   getNodeFileContent,
   getNodeFileInfoList,
@@ -114,14 +114,14 @@ export class Directory {
       files = await getNodeFileInfoList(filesSource, Boolean(options.isRecursive))
     } else {
       assertBrowserFilesWithPath(filesSource)
-      files = browserFilesToFileInfoList(filesSource)
+      files = browserFileListToFileInfoList(filesSource)
 
       if (!options.isRecursive) {
         files = filterBrowserRecursiveFiles(files)
       }
     }
 
-    if (options.isHideDotFiles) {
+    if (options.excludeDotFiles) {
       files = filterDotFiles(files)
     }
     const directoriesToCreate = getDirectoriesToCreate(
@@ -145,7 +145,7 @@ export class Directory {
       if (isNodePath) {
         bytes = getNodeFileContent(file.fullPath)
       } else if (!isNodePath && file.browserFile) {
-        bytes = await readBrowseFileAsBytes(file.browserFile)
+        bytes = await readBrowserFileAsBytes(file.browserFile)
       } else {
         throw new Error("Directory uploading: one of the browser's files is empty")
       }

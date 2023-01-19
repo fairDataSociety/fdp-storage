@@ -7,7 +7,7 @@ import CryptoJS from 'crypto-js'
 import { assertArray, assertString, isNumber, isObject, isString } from '../utils/type'
 import { FileMetadata, RawFileMetadata } from '../pod/types'
 import { EncryptedReference } from '../utils/hex'
-import { isRawFileMetadata } from '../directory/utils'
+import { isRawFileMetadata, splitPath } from '../directory/utils'
 import { getUnixTimestamp } from '../utils/time'
 import { bytesToString } from '../utils/bytes'
 
@@ -31,7 +31,7 @@ export function assertFullPathWithName(value: unknown): asserts value is string 
     throw new Error('Path must start with "/"')
   }
 
-  const exploded = value.split('/')
+  const exploded = splitPath(value)
 
   if (exploded.length < 2) {
     throw new Error('Path must contain at least one file or directory name')
@@ -66,7 +66,7 @@ export async function uploadBytes(connection: Connection, data: Uint8Array): Pro
  */
 export function extractPathInfo(fullPath: string): PathInfo {
   assertFullPathWithName(fullPath)
-  const exploded = fullPath.split('/')
+  const exploded = splitPath(fullPath)
   const filename = exploded.pop()
 
   if (!filename) {
@@ -85,7 +85,7 @@ export function extractPathInfo(fullPath: string): PathInfo {
  * Get basename from a path
  */
 export function getBaseName(path: string): string | undefined {
-  const exploded = path.split('/')
+  const exploded = splitPath(path)
 
   return exploded.pop()
 }
@@ -213,7 +213,7 @@ export function updateFileMetadata(meta: FileMetadata, filePath: string, fileNam
 /**
  * Reads file content in a browser
  */
-export async function readBrowseFileAsBytes(file: File): Promise<Uint8Array> {
+export async function readBrowserFileAsBytes(file: File): Promise<Uint8Array> {
   const arrayBuffer = await new Promise((resolve, reject) => {
     const reader = new FileReader()
     reader.onloadend = () => resolve(reader.result)

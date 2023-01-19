@@ -75,7 +75,7 @@ export function getPathParts(path: string): string[] {
     return ['/']
   }
 
-  return ['/', ...path.split('/').slice(1)]
+  return ['/', ...splitPath(path).slice(1)]
 }
 
 /**
@@ -227,10 +227,9 @@ export async function getNodePaths(path: string, recursive = false): Promise<str
  */
 export function getDirectoriesToCreate(paths: string[]): string[] {
   const directories = new Set()
-  directories.entries()
 
   paths.forEach(path => {
-    const pathDirectories = path.split('/').slice(0, -1)
+    const pathDirectories = splitPath(path).slice(0, -1)
     let currentDirectory = ''
     pathDirectories.forEach(directory => {
       currentDirectory += '/' + directory
@@ -244,14 +243,14 @@ export function getDirectoriesToCreate(paths: string[]): string[] {
 /**
  * Converts browser's `FileList` to `InfoList`
  */
-export function browserFilesToFileInfoList(files: FileList): FileInfo[] {
+export function browserFileListToFileInfoList(files: FileList): FileInfo[] {
   if (files.length === 0) {
     return []
   }
 
   const testFilePath = files[0]?.webkitRelativePath
   assertString(testFilePath, '"webkitRelativePath" property should be a string')
-  const parts = testFilePath.split('/')
+  const parts = splitPath(testFilePath)
 
   // `webkitRelativePath` always contains base file path
   if (parts.length < 2) {
@@ -293,11 +292,11 @@ export async function getNodeFileInfoList(path: string, recursive: boolean): Pro
 }
 
 /**
- * Assert that `File` instance from browser contains `webkitRelativePath`
+ * Assert that `FileList` instance from browser contains `webkitRelativePath`
  */
 export function assertBrowserFilesWithPath(value: unknown): asserts value is FileList {
   if (isNode()) {
-    throw new Error('File info asserting is available only in browser')
+    throw new Error('`FileList` info asserting is available only in browser')
   }
 
   if (!(value instanceof FileList)) {
@@ -307,11 +306,11 @@ export function assertBrowserFilesWithPath(value: unknown): asserts value is Fil
   const data = Array.from(value)
   for (const item of data) {
     if (!(item instanceof File)) {
-      throw new Error(`Item of browser files is not a File instance`)
+      throw new Error('Item of browser files is not a `File` instance')
     }
 
     if (!('webkitRelativePath' in item)) {
-      throw new Error(`${item.name} does not contain "webkitRelativePath"`)
+      throw new Error(`${(item as File).name} does not contain "webkitRelativePath"`)
     }
   }
 }

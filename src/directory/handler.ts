@@ -32,7 +32,7 @@ export interface UploadDirectoryOptions {
   // find files recursively in nested directories
   isRecursive?: boolean
   // hide files that started with dots
-  isHideDotFiles?: boolean
+  excludeDotFiles?: boolean
   // create a directory with a name like the source directory
   isIncludeDirectoryName?: boolean
   // uploading progress callback
@@ -42,8 +42,8 @@ export interface UploadDirectoryOptions {
 export const MAX_DIRECTORY_NAME_LENGTH = 100
 export const DEFAULT_UPLOAD_DIRECTORY_OPTIONS: UploadDirectoryOptions = {
   uploadOptions: DEFAULT_UPLOAD_OPTIONS,
-  isRecursive: false,
-  isHideDotFiles: true,
+  isRecursive: true,
+  excludeDotFiles: false,
   isIncludeDirectoryName: true,
 }
 
