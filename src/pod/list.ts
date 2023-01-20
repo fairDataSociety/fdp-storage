@@ -1,5 +1,14 @@
 import { JsonPod, Pod, JsonSharedPod, SharedPod } from './types'
-import { assertPods, assertPodsMetadata, assertSharedPods, jsonPodToPod, jsonSharedPodToSharedPod } from './utils'
+import {
+  assertPods,
+  assertPodsMetadata,
+  assertSharedPods,
+  jsonPodToPod,
+  jsonSharedPodToSharedPod,
+  podToJsonPod,
+  sharedPodToJsonSharedPod,
+} from './utils'
+import { jsonParse } from '../utils/json'
 
 /**
  * List of created and shared pods
@@ -27,15 +36,7 @@ export class List {
    * @param json {pods: Pod[], sharedPods: SharedPod[]}
    */
   static fromJSON(json: string): List {
-    let object: unknown
-    try {
-      object = JSON.parse(json)
-    } catch (e) {
-      const error = e as Error
-
-      throw new Error(`Can't parse json pods list: ${error.message}`)
-    }
-
+    const object = jsonParse(json, 'pod list')
     assertPodsMetadata(object)
     const pods = object.pods.map((item: JsonPod) => jsonPodToPod(item))
     const sharedPods = object.sharedPods.map((item: JsonSharedPod) => jsonSharedPodToSharedPod(item))
@@ -43,5 +44,15 @@ export class List {
     assertSharedPods(sharedPods)
 
     return new List(pods, sharedPods)
+  }
+
+  /**
+   * Prepares data to convert to a JSON string
+   */
+  toJSON(): unknown {
+    return {
+      pods: this.pods.map(item => podToJsonPod(item)),
+      sharedPods: this.sharedPods.map(item => sharedPodToJsonSharedPod(item)),
+    }
   }
 }

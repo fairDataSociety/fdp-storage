@@ -206,22 +206,31 @@ export function jsonSharedPodToSharedPod(pod: JsonSharedPod): SharedPod {
 }
 
 /**
- * Converts pods list to bytes array
+ * Converts pods list to JSON string
  */
-export function podListToBytes(pods: Pod[], sharedPods: SharedPod[]): Uint8Array {
+export function podListToJSON(pods: Pod[], sharedPods: SharedPod[]): string {
   assertPods(pods)
   assertSharedPods(sharedPods)
 
   if (pods.length === 0 && sharedPods.length === 0) {
-    return new Uint8Array()
+    throw new Error('Empty pods in the pods list during JSON conversion')
   }
 
-  return stringToBytes(
-    JSON.stringify({
-      pods: pods.map(item => podToJsonPod(item)),
-      sharedPods: sharedPods.map(item => sharedPodToJsonSharedPod(item)),
-    }),
-  )
+  return JSON.stringify({
+    pods: pods.map(item => podToJsonPod(item)),
+    sharedPods: sharedPods.map(item => sharedPodToJsonSharedPod(item)),
+  })
+}
+
+/**
+ * Converts pods list to bytes array
+ */
+export function podListToBytes(pods: Pod[], sharedPods: SharedPod[]): Uint8Array {
+  try {
+    return stringToBytes(podListToJSON(pods, sharedPods))
+  } catch (e) {
+    return new Uint8Array()
+  }
 }
 
 /**

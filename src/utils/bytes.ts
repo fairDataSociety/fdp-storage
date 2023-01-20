@@ -25,37 +25,6 @@ export function isBytes<Length extends number>(b: unknown, length: Length): b is
   return b instanceof Uint8Array && b.length === length
 }
 
-/**
- * Verifies if a byte array has a certain length
- *
- * @param b       The byte array
- * @param length  The specified length
- */
-export function assertBytes<Length extends number>(b: unknown, length: Length): asserts b is Utils.Bytes<Length> {
-  if (!isBytes(b, length)) {
-    throw new TypeError(`Parameter is not valid Bytes of length: ${length} !== ${(b as Uint8Array).length}`)
-  }
-}
-
-/**
- * Returns true if two byte arrays are equal
- *
- * @param a Byte array to compare
- * @param b Byte array to compare
- */
-export function bytesEqual(a: Uint8Array, b: Uint8Array): boolean {
-  return a.length === b.length && a.every((value, index) => value === b[index])
-}
-
-/**
- * Returns a new byte array filled with zeroes with the specified length
- *
- * @param length The length of data to be returned
- */
-export function makeBytes<Length extends number>(length: Length): Utils.Bytes<Length> {
-  return new Uint8Array(length) as Utils.Bytes<Length>
-}
-
 export function wrapBytesWithHelpers(data: Uint8Array): Data {
   return Object.assign(data, {
     text: () => new TextDecoder('utf-8').decode(data),

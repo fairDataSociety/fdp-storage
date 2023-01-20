@@ -23,6 +23,8 @@ import { assertEncryptedReference, bytesToHex } from '../../src/utils/hex'
 import { base64toReference } from '../../src/file/utils'
 import path from 'path'
 import { getNodeFileContent } from '../../src/directory/utils'
+import { jsonToDirectoryItem } from '../../src/content-items/serialization'
+import { List } from '../../src/pod/list'
 
 jest.setTimeout(400000)
 describe('Fair Data Protocol class', () => {
@@ -419,6 +421,75 @@ describe('Fair Data Protocol class', () => {
         const downloaded = await fdp.file.downloadData(pod2, fileInfo.fdpPath)
         expect(downloaded.text()).toEqual(fileContent.toString())
       }
+    })
+
+    it('should serialize and deserialize directories list and pods', async () => {
+      const fdp = createFdp()
+      generateUser(fdp)
+      const pod = generateRandomHexString()
+      const directoriesToCreate = ['/one', '/two', '/three', '/one/one-one', '/one/one-one/one-one-one', '/two/two-one']
+      const filesToCreate = [
+        {
+          path: '/file1.txt',
+          data: generateRandomHexString(),
+        },
+        {
+          path: '/file2.txt',
+          data: generateRandomHexString(),
+        },
+        {
+          path: '/one/file-in-one-1.txt',
+          data: generateRandomHexString(),
+        },
+        {
+          path: '/one/file-in-one-2.txt',
+          data: generateRandomHexString(),
+        },
+      ]
+
+      await fdp.personalStorage.create(pod)
+      const pods1 = await fdp.personalStorage.list()
+      const pods1Serialized = JSON.stringify(pods1)
+      const pods1Deserialized = List.fromJSON(pods1Serialized)
+      expect(pods1.getPods().length).toEqual(pods1Deserialized.getPods().length)
+      const firstPod = pods1.getPods()[0]
+      const firstPodDeserialized = pods1Deserialized.getPods()[0]
+      expect(firstPod.name).toStrictEqual(firstPodDeserialized.name)
+      expect(firstPod.index).toStrictEqual(firstPodDeserialized.index)
+      expect(firstPod.password).toStrictEqual(firstPodDeserialized.password)
+      expect(pods1.getSharedPods().length).toEqual(pods1Deserialized.getSharedPods().length)
+
+      for (const directoryToCreate of directoriesToCreate) {
+        await fdp.directory.create(pod, directoryToCreate)
+      }
+
+      for (const fileToCreate of filesToCreate) {
+        await fdp.file.uploadData(pod, fileToCreate.path, fileToCreate.data)
+      }
+      const list1 = await fdp.directory.read(pod, '/', true)
+      expect(list1.getDirectories()).toHaveLength(3)
+      const dirOne1 = list1.getDirectories().find(item => item.name === 'one')
+      const dirOneOne1 = dirOne1?.getDirectories().find(item => item.name === 'one-one')
+      const dirTwo1 = list1.getDirectories().find(item => item.name === 'two')
+      expect(dirOne1?.getDirectories()).toHaveLength(1)
+      expect(dirOneOne1?.getDirectories()).toHaveLength(1)
+      expect(dirOneOne1?.getFiles()).toHaveLength(0)
+      expect(dirOne1?.getFiles()).toHaveLength(2)
+      expect(dirTwo1?.getDirectories()).toHaveLength(1)
+      expect(list1.getFiles()).toHaveLength(2)
+
+      const serialized = JSON.stringify(list1)
+      const recovered = jsonToDirectoryItem(serialized)
+      expect(recovered.getDirectories()).toHaveLength(3)
+      expect(recovered.getFiles()).toHaveLength(2)
+      const recoveredDirOne1 = recovered.getDirectories().find(item => item.name === 'one')
+      const recoveredDirOneOne1 = recoveredDirOne1?.getDirectories().find(item => item.name === 'one-one')
+      const recoveredDirTwo1 = recovered.getDirectories().find(item => item.name === 'two')
+      expect(recoveredDirOne1?.getDirectories()).toHaveLength(1)
+      expect(recoveredDirOneOne1?.getDirectories()).toHaveLength(1)
+      expect(recoveredDirOneOne1?.getFiles()).toHaveLength(0)
+      expect(recoveredDirOne1?.getFiles()).toHaveLength(2)
+      expect(recoveredDirTwo1?.getDirectories()).toHaveLength(1)
     })
   })
 

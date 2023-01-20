@@ -18,6 +18,8 @@ export class DirectoryItem extends ContentItem {
     super(name, raw, size, reference)
   }
 
+  static type = 'directory-item'
+
   /**
    * Gets the list of files in the directory
    */
@@ -39,5 +41,15 @@ export class DirectoryItem extends ContentItem {
    */
   static fromRawDirectoryMetadata(item: RawDirectoryMetadata): DirectoryItem {
     return new DirectoryItem(item.meta.name, [], item)
+  }
+
+  /**
+   * Prepares data to convert to a JSON string
+   */
+  toJSON(): unknown {
+    return {
+      ...this,
+      objectType: DirectoryItem.type,
+    }
   }
 }

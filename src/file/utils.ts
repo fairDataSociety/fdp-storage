@@ -10,6 +10,7 @@ import { EncryptedReference } from '../utils/hex'
 import { isRawFileMetadata, splitPath } from '../directory/utils'
 import { getUnixTimestamp } from '../utils/time'
 import { bytesToString } from '../utils/bytes'
+import { jsonParse } from '../utils/json'
 
 /**
  * Asserts that full path string is correct
@@ -103,7 +104,7 @@ export async function downloadBlocksManifest(
   downloadOptions?: RequestOptions,
 ): Promise<Blocks> {
   const data = await bee.downloadData(reference, downloadOptions)
-  const rawBlocks = JSON.parse(bytesToString(data))
+  const rawBlocks = jsonParse(bytesToString(data), 'blocks manifest')
   assertRawBlocks(rawBlocks)
 
   return rawBlocksToBlocks(rawBlocks)

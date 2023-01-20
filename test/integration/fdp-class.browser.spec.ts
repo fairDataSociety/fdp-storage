@@ -610,6 +610,107 @@ describe('Fair Data Protocol class - in browser', () => {
       expect(list.content).toHaveLength(1)
       expect(listAfter.content).toHaveLength(0)
     })
+
+    it('should serialize and deserialize directories list and pods', async () => {
+      const fdp = createFdp()
+      generateUser(fdp)
+      const pod = generateRandomHexString()
+      const directoriesToCreate = ['/one', '/two', '/three', '/one/one-one', '/one/one-one/one-one-one', '/two/two-one']
+      const filesToCreate = [
+        {
+          path: '/file1.txt',
+          data: generateRandomHexString(),
+        },
+        {
+          path: '/file2.txt',
+          data: generateRandomHexString(),
+        },
+        {
+          path: '/one/file-in-one-1.txt',
+          data: generateRandomHexString(),
+        },
+        {
+          path: '/one/file-in-one-2.txt',
+          data: generateRandomHexString(),
+        },
+      ]
+
+      const { counts } = await page.evaluate(
+        async (pod: string, directoriesToCreate: string[], filesToCreate: { path: string; data: string }[]) => {
+          const fdp = eval(await window.initFdp()) as FdpStorage
+          const { jsonToDirectoryItem, PersonalStorageList } = window.fdp.Utils
+          fdp.account.createWallet()
+
+          await fdp.personalStorage.create(pod)
+          const pods1 = await fdp.personalStorage.list()
+          const pods1Serialized = JSON.stringify(pods1)
+          const pods1Deserialized = PersonalStorageList.fromJSON(pods1Serialized)
+          const firstPod = pods1.getPods()[0]
+          const firstPodDeserialized = pods1Deserialized.getPods()[0]
+
+          for (const directoryToCreate of directoriesToCreate) {
+            await fdp.directory.create(pod, directoryToCreate)
+          }
+
+          for (const fileToCreate of filesToCreate) {
+            await fdp.file.uploadData(pod, fileToCreate.path, fileToCreate.data)
+          }
+
+          const list1 = await fdp.directory.read(pod, '/', true)
+          const serialized = JSON.stringify(list1)
+          const recovered = jsonToDirectoryItem(serialized)
+          const recoveredDirOne1 = recovered.getDirectories().find(item => item.name === 'one')
+          const recoveredDirOneOne1 = recoveredDirOne1?.getDirectories().find(item => item.name === 'one-one')
+          const recoveredDirTwo1 = recovered.getDirectories().find(item => item.name === 'two')
+
+          const dirOne1Length = recoveredDirOne1?.getDirectories().length
+          const dirOneOne1Length = recoveredDirOneOne1?.getDirectories().length
+          const dirOneOne1FilesLength = recoveredDirOneOne1?.getFiles().length
+          const dirOne1FilesLength = recoveredDirOne1?.getFiles().length
+          const dirTwo1Length = recoveredDirTwo1?.getDirectories().length
+
+          return {
+            counts: {
+              dir1Length: recovered.getDirectories().length,
+              files1Length: recovered.getFiles().length,
+              dirOne1Length,
+              dirOneOne1Length,
+              dirOneOne1FilesLength,
+              dirOne1FilesLength,
+              dirTwo1Length,
+              pods1PodsLength: pods1.getPods().length,
+              pods1SharedPodsLength: pods1.getSharedPods().length,
+              deserializedPods1PodsLength: pods1Deserialized.getPods().length,
+              deserializedPods1SharedPodsLength: pods1Deserialized.getSharedPods().length,
+              pods1Name: firstPod.name,
+              pods1Index: firstPod.index,
+              pods1Password: firstPod.password,
+              deserializedPods1Name: firstPodDeserialized.name,
+              deserializedPods1Index: firstPodDeserialized.index,
+              deserializedPods1Password: firstPodDeserialized.password,
+            },
+          }
+        },
+        pod,
+        directoriesToCreate,
+        filesToCreate,
+      )
+
+      expect(counts.dir1Length).toEqual(3)
+      expect(counts.files1Length).toEqual(2)
+      expect(counts.dirOne1Length).toEqual(1)
+      expect(counts.dirOneOne1Length).toEqual(1)
+      expect(counts.dirOneOne1FilesLength).toEqual(0)
+      expect(counts.dirOne1FilesLength).toEqual(2)
+      expect(counts.dirTwo1Length).toEqual(1)
+
+      // pods checking
+      expect(counts.pods1PodsLength).toStrictEqual(counts.deserializedPods1PodsLength)
+      expect(counts.pods1SharedPodsLength).toStrictEqual(counts.deserializedPods1SharedPodsLength)
+      expect(counts.pods1Name).toStrictEqual(counts.deserializedPods1Name)
+      expect(counts.pods1Index).toStrictEqual(counts.deserializedPods1Index)
+      expect(counts.pods1Password).toStrictEqual(counts.deserializedPods1Password)
+    })
   })
 
   describe('File', () => {

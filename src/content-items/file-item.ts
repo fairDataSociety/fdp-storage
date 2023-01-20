@@ -16,6 +16,8 @@ export class FileItem extends ContentItem {
     super(name, raw, size, reference)
   }
 
+  static type = 'file-item'
+
   /**
    * Converts FairOS file metadata to a DirectoryItem
    *
@@ -29,5 +31,15 @@ export class FileItem extends ContentItem {
     }
 
     return new FileItem(item.fileName, item, Number(item.fileSize), reference)
+  }
+
+  /**
+   * Prepares data to convert to a JSON string
+   */
+  toJSON(): unknown {
+    return {
+      ...this,
+      objectType: FileItem.type,
+    }
   }
 }
