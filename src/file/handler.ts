@@ -1,7 +1,14 @@
 import { stringToBytes, wrapBytesWithHelpers } from '../utils/bytes'
 import { Bee, Data, RequestOptions } from '@ethersphere/bee-js'
 import { EthAddress } from '@ethersphere/bee-js/dist/types/utils/eth'
-import { assertFullPathWithName, downloadBlocksManifest, extractPathInfo, uploadBytes } from './utils'
+import {
+  assertFullPathWithName,
+  DEFAULT_FILE_PERMISSIONS,
+  downloadBlocksManifest,
+  extractPathInfo,
+  getFileMode,
+  uploadBytes,
+} from './utils'
 import { FileMetadata } from '../pod/types'
 import { blocksToManifest, getFileMetadataRawBytes, rawFileMetadataToFileMetadata } from './adapter'
 import { assertRawFileMetadata } from '../directory/utils'
@@ -115,15 +122,20 @@ export async function uploadData(
 
   data = typeof data === 'string' ? stringToBytes(data) : data
   const connection = accountData.connection
+  // tag can be equal 0 in case of gateway
+  let tag = 0
+  try {
+    tag = (await connection.bee.createTag()).uid
+    // eslint-disable-next-line no-empty
+  } catch (e) {}
   const { podWallet, pod } = await getExtendedPodsListByAccountData(accountData, podName)
-
   const pathInfo = extractPathInfo(fullPath)
   const now = getUnixTimestamp()
   const blocksCount = Math.ceil(data.length / options.blockSize)
   const blocks: Blocks = { blocks: [] }
   for (let i = 0; i < blocksCount; i++) {
     const currentBlock = data.slice(i * options.blockSize, (i + 1) * options.blockSize)
-    const result = await uploadBytes(connection, currentBlock)
+    const result = await uploadBytes(connection, currentBlock, tag)
     blocks.blocks.push({
       size: currentBlock.length,
       compressedSize: currentBlock.length,
@@ -132,7 +144,7 @@ export async function uploadData(
   }
 
   const manifestBytes = stringToBytes(blocksToManifest(blocks))
-  const blocksReference = (await uploadBytes(connection, manifestBytes)).reference
+  const blocksReference = (await uploadBytes(connection, manifestBytes, tag)).reference
   const meta: FileMetadata = {
     version: META_VERSION,
     filePath: pathInfo.path,
@@ -145,6 +157,8 @@ export async function uploadData(
     accessTime: now,
     modificationTime: now,
     blocksReference,
+    tag,
+    mode: getFileMode(DEFAULT_FILE_PERMISSIONS),
   }
 
   await addEntryToDirectory(connection, podWallet, pod.password, pathInfo.path, pathInfo.filename, true)

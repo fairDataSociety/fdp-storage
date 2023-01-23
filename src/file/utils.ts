@@ -13,6 +13,16 @@ import { bytesToString } from '../utils/bytes'
 import { jsonParse } from '../utils/json'
 
 /**
+ * Default file permission in octal format
+ */
+export const DEFAULT_FILE_PERMISSIONS = 0o666
+
+/**
+ * File indication in octal format
+ */
+export const FILE_MODE = 0o100000
+
+/**
  * Asserts that full path string is correct
  *
  * @param value full path string
@@ -52,11 +62,13 @@ export function assertFullPathWithName(value: unknown): asserts value is string 
  *
  * @param connection Bee connection
  * @param data data to upload
+ * @param tag tag for tracking data uploading
  */
-export async function uploadBytes(connection: Connection, data: Uint8Array): Promise<UploadResult> {
+export async function uploadBytes(connection: Connection, data: Uint8Array, tag?: number): Promise<UploadResult> {
   return connection.bee.uploadData(connection.postageBatchId, data, {
     pin: true,
     encrypt: true,
+    tag,
   })
 }
 
@@ -223,4 +235,11 @@ export async function readBrowserFileAsBytes(file: File): Promise<Uint8Array> {
   })
 
   return new Uint8Array(arrayBuffer as ArrayBuffer)
+}
+
+/**
+ * Calculates file mode
+ */
+export function getFileMode(mode: number): number {
+  return FILE_MODE | mode
 }

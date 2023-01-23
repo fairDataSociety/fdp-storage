@@ -8,6 +8,16 @@ import { isNode } from '../shim/utils'
 import { getBaseName } from '../file/utils'
 
 /**
+ * Default directory permission in octal format
+ */
+export const DEFAULT_DIRECTORY_PERMISSIONS = 0o777
+
+/**
+ * Directory indication in octal format
+ */
+export const DIRECTORY_MODE = 0o40000
+
+/**
  * General information about a file
  */
 export interface FileInfo {
@@ -348,4 +358,11 @@ export function getNodeFileContent(fullPath: string): Uint8Array {
  */
 export function getUploadPath(fileInfo: FileInfo, isIncludeDirectoryName: boolean): string {
   return `/${isIncludeDirectoryName ? fileInfo.relativePathWithBase : fileInfo.relativePath}`
+}
+
+/**
+ * Calculates directory mode
+ */
+export function getDirectoryMode(mode: number): number {
+  return DIRECTORY_MODE | mode
 }
