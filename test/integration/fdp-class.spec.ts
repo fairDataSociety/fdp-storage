@@ -23,8 +23,8 @@ import { assertEncryptedReference, bytesToHex } from '../../src/utils/hex'
 import { base64toReference } from '../../src/file/utils'
 import path from 'path'
 import { getNodeFileContent } from '../../src/directory/utils'
-import { jsonToDirectoryItem } from '../../src/content-items/serialization'
 import { List } from '../../src/pod/list'
+import { DirectoryItem } from '../../src/content-items/directory-item'
 
 jest.setTimeout(400000)
 describe('Fair Data Protocol class', () => {
@@ -479,7 +479,7 @@ describe('Fair Data Protocol class', () => {
       expect(list1.getFiles()).toHaveLength(2)
 
       const serialized = JSON.stringify(list1)
-      const recovered = jsonToDirectoryItem(serialized)
+      const recovered = DirectoryItem.fromJSON(serialized)
       expect(recovered.getDirectories()).toHaveLength(3)
       expect(recovered.getFiles()).toHaveLength(2)
       const recoveredDirOne1 = recovered.getDirectories().find(item => item.name === 'one')

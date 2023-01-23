@@ -3,6 +3,7 @@ import { Reference } from '@ethersphere/bee-js'
 import { ContentItem } from './content-item'
 import { FileItem } from './file-item'
 import { isDirectoryItem, isFileItem } from './utils'
+import { jsonToDirectoryItem } from './serialization'
 
 /**
  * A representation of a directory in the pod
@@ -35,6 +36,16 @@ export class DirectoryItem extends ContentItem {
   }
 
   /**
+   * Prepares data to convert to a JSON string
+   */
+  toJSON(): unknown {
+    return {
+      ...this,
+      objectType: DirectoryItem.type,
+    }
+  }
+
+  /**
    * Converts FairOS directory metadata to a DirectoryItem
    *
    * @param item raw directory metadata from FairOS
@@ -44,12 +55,9 @@ export class DirectoryItem extends ContentItem {
   }
 
   /**
-   * Prepares data to convert to a JSON string
+   * Creates directory item from JSON string
    */
-  toJSON(): unknown {
-    return {
-      ...this,
-      objectType: DirectoryItem.type,
-    }
+  static fromJSON(json: string): DirectoryItem {
+    return jsonToDirectoryItem(json)
   }
 }

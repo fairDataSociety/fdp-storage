@@ -31,6 +31,16 @@ export class List {
   }
 
   /**
+   * Prepares data to convert to a JSON string
+   */
+  toJSON(): unknown {
+    return {
+      pods: this.pods.map(item => podToJsonPod(item)),
+      sharedPods: this.sharedPods.map(item => sharedPodToJsonSharedPod(item)),
+    }
+  }
+
+  /**
    * Creates pods list from JSON string
    *
    * @param json {pods: Pod[], sharedPods: SharedPod[]}
@@ -44,15 +54,5 @@ export class List {
     assertSharedPods(sharedPods)
 
     return new List(pods, sharedPods)
-  }
-
-  /**
-   * Prepares data to convert to a JSON string
-   */
-  toJSON(): unknown {
-    return {
-      pods: this.pods.map(item => podToJsonPod(item)),
-      sharedPods: this.sharedPods.map(item => sharedPodToJsonSharedPod(item)),
-    }
   }
 }
