@@ -34,9 +34,9 @@ export interface DirectoryItemObject extends TypedObject {
 }
 
 /**
- * Validates that `DirectoryItemObject` is correct
+ * Asserts that `DirectoryItemObject` is correct
  */
-export function validateDirectoryItemObject(data: unknown): asserts data is DirectoryItemObject {
+export function assertDirectoryItemObject(data: unknown): asserts data is DirectoryItemObject {
   const value = data as DirectoryItemObject
 
   if (
@@ -67,7 +67,7 @@ export function validateFileItemObject(data: unknown): asserts data is FileItemO
  */
 export function jsonToDirectoryItem(data: string | unknown): DirectoryItem {
   const json = getJsonObject(data, 'directory item')
-  validateDirectoryItemObject(json)
+  assertDirectoryItemObject(json)
   const content = json.content.map((item: TypedObject) => {
     if (item.objectType === DirectoryItem.type) {
       return jsonToDirectoryItem(item)

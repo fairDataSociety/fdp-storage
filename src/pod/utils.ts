@@ -212,10 +212,6 @@ export function podListToJSON(pods: Pod[], sharedPods: SharedPod[]): string {
   assertPods(pods)
   assertSharedPods(sharedPods)
 
-  if (pods.length === 0 && sharedPods.length === 0) {
-    throw new Error('Empty pods in the pods list during JSON conversion')
-  }
-
   return JSON.stringify({
     pods: pods.map(item => podToJsonPod(item)),
     sharedPods: sharedPods.map(item => sharedPodToJsonSharedPod(item)),
@@ -226,11 +222,11 @@ export function podListToJSON(pods: Pod[], sharedPods: SharedPod[]): string {
  * Converts pods list to bytes array
  */
 export function podListToBytes(pods: Pod[], sharedPods: SharedPod[]): Uint8Array {
-  try {
-    return stringToBytes(podListToJSON(pods, sharedPods))
-  } catch (e) {
+  if (pods.length === 0 && sharedPods.length === 0) {
     return new Uint8Array()
   }
+
+  return stringToBytes(podListToJSON(pods, sharedPods))
 }
 
 /**
