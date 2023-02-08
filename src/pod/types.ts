@@ -3,11 +3,19 @@ import { PodPasswordBytes } from '../utils/encryption'
 import { HexString } from '../utils/hex'
 
 /**
- * Pods metadata structure
+ * Pods list for internal usage
  */
-export interface PodsMetadata {
-  pods: JsonPod[]
-  sharedPods: JsonSharedPod[]
+export interface PodsList {
+  pods: Pod[]
+  sharedPods: SharedPod[]
+}
+
+/**
+ * Pods information for json serialization
+ */
+export interface PodsListSerializable {
+  pods: PodSerializable[]
+  sharedPods: SharedPodSerializable[]
 }
 
 /**
@@ -28,7 +36,7 @@ export interface Pod extends PodName {
 /**
  * Pod information for json serialization
  */
-export interface JsonPod extends PodName {
+export interface PodSerializable extends PodName {
   password: HexString
   index: number
 }
@@ -36,7 +44,7 @@ export interface JsonPod extends PodName {
 /**
  * Shared pod information for json serialization
  */
-export interface JsonSharedPod extends PodName {
+export interface SharedPodSerializable extends PodName {
   password: HexString
   address: HexString
 }

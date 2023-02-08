@@ -5,7 +5,7 @@ import { Connection } from './connection/connection'
 import { Options } from './types'
 import { Directory } from './directory/directory'
 import { File } from './file/file'
-import { ENS } from '@fairdatasociety/fdp-contracts'
+import { ENS } from '@fairdatasociety/fdp-contracts-js'
 
 export class FdpStorage {
   public readonly connection: Connection

@@ -4,8 +4,8 @@ import { getFeedData } from '../feed/api'
 import { POD_TOPIC } from './personal-storage'
 import { ExtendedPodInfo, extractPods, PodsInfo } from './utils'
 import { getWalletByIndex, prepareEthAddress, privateKeyToBytes } from '../utils/wallet'
-import { List } from './list'
 import { utils } from 'ethers'
+import { PodsList } from './types'
 
 /**
  * Gets pods list with lookup answer
@@ -16,7 +16,7 @@ import { utils } from 'ethers'
  */
 export async function getPodsList(bee: Bee, userWallet: utils.HDNode, options?: RequestOptions): Promise<PodsInfo> {
   let lookupAnswer: LookupAnswer | undefined
-  let podsList = new List([], [])
+  let podsList: PodsList = { pods: [], sharedPods: [] }
 
   try {
     lookupAnswer = await getFeedData(bee, POD_TOPIC, prepareEthAddress(userWallet.address), options)
@@ -47,7 +47,7 @@ export async function getExtendedPodsList(
   downloadOptions?: RequestOptions,
 ): Promise<ExtendedPodInfo> {
   const podsInfo = await getPodsList(bee, userWallet, downloadOptions)
-  const pod = podsInfo.podsList.getPods().find(item => item.name === podName)
+  const pod = podsInfo.podsList.pods.find(item => item.name === podName)
 
   if (!pod) {
     throw new Error(`Pod "${podName}" does not exist`)

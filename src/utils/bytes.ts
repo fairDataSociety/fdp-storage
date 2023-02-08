@@ -15,16 +15,6 @@ export const SPAN_SIZE = 8
 // we limit the maximum span size in 32 bits to avoid BigInt compatibility issues
 const MAX_SPAN_LENGTH = 2 ** 32 - 1
 
-/**
- * Type guard for `Bytes<T>` type
- *
- * @param b       The byte array
- * @param length  The length of the byte array
- */
-export function isBytes<Length extends number>(b: unknown, length: Length): b is Utils.Bytes<Length> {
-  return b instanceof Uint8Array && b.length === length
-}
-
 export function wrapBytesWithHelpers(data: Uint8Array): Data {
   return Object.assign(data, {
     text: () => new TextDecoder('utf-8').decode(data),

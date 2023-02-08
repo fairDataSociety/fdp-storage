@@ -3,7 +3,7 @@ import { FdpStorage } from './fdp-storage'
 import { AccountData } from './account/account-data'
 import { PersonalStorage } from './pod/personal-storage'
 import { Directory } from './directory/directory'
-import * as FdpContracts from '@fairdatasociety/fdp-contracts'
+import * as FdpContracts from '@fairdatasociety/fdp-contracts-js'
 
 export { FdpStorage, AccountData, PersonalStorage, Directory, FdpContracts }
 export * as Utils from './utils/expose'

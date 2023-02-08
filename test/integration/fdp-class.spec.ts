@@ -19,12 +19,12 @@ import { Wallet } from 'ethers'
 import { removeZeroFromHex } from '../../src/account/utils'
 import { bytesToString } from '../../src/utils/bytes'
 import { getWalletByIndex, mnemonicToSeed, prepareEthAddress } from '../../src/utils/wallet'
-import { assertEncryptedReference, bytesToHex } from '../../src/utils/hex'
+import { assertEncryptedReference } from '../../src/utils/hex'
 import { base64toReference } from '../../src/file/utils'
 import path from 'path'
 import { getNodeFileContent } from '../../src/directory/utils'
-import { List } from '../../src/pod/list'
 import { DirectoryItem } from '../../src/content-items/directory-item'
+import { ETH_ADDR_HEX_LENGTH } from '../../src/utils/type'
 
 jest.setTimeout(400000)
 describe('Fair Data Protocol class', () => {
@@ -170,7 +170,7 @@ describe('Fair Data Protocol class', () => {
       const fdp = createFdp()
       generateUser(fdp)
 
-      const pods = (await fdp.personalStorage.list()).getPods()
+      const pods = (await fdp.personalStorage.list()).pods
       expect(pods).toHaveLength(0)
     })
 
@@ -178,7 +178,7 @@ describe('Fair Data Protocol class', () => {
       const fdp = createFdp()
       generateUser(fdp)
 
-      let list = (await fdp.personalStorage.list()).getPods()
+      let list = (await fdp.personalStorage.list()).pods
       expect(list).toHaveLength(0)
 
       const longPodName = generateRandomHexString(MAX_POD_NAME_LENGTH + 1)
@@ -202,7 +202,7 @@ describe('Fair Data Protocol class', () => {
         expect(result.index).toEqual(example.index)
         expect(result.password).toBeDefined()
 
-        list = (await fdp.personalStorage.list()).getPods()
+        list = (await fdp.personalStorage.list()).pods
         expect(list).toHaveLength(i + 1)
         expect(list[i].name).toEqual(example.name)
         expect(list[i].index).toEqual(example.index)
@@ -222,18 +222,18 @@ describe('Fair Data Protocol class', () => {
       const podName1 = generateRandomHexString()
       await fdp.personalStorage.create(podName)
       await fdp.personalStorage.create(podName1)
-      let list = (await fdp.personalStorage.list()).getPods()
+      let list = (await fdp.personalStorage.list()).pods
       expect(list).toHaveLength(2)
 
       const notExistsPod = generateRandomHexString()
       await expect(fdp.personalStorage.delete(notExistsPod)).rejects.toThrow(`Pod "${notExistsPod}" does not exist`)
 
       await fdp.personalStorage.delete(podName)
-      list = (await fdp.personalStorage.list()).getPods()
+      list = (await fdp.personalStorage.list()).pods
       expect(list).toHaveLength(1)
 
       await fdp.personalStorage.delete(podName1)
-      list = (await fdp.personalStorage.list()).getPods()
+      list = (await fdp.personalStorage.list()).pods
       expect(list).toHaveLength(0)
     })
 
@@ -247,7 +247,7 @@ describe('Fair Data Protocol class', () => {
       expect(sharedReference).toHaveLength(128)
       const sharedData = (await fdp.connection.bee.downloadData(sharedReference)).json() as unknown as PodShareInfo
       expect(sharedData.podName).toEqual(podName)
-      expect(sharedData.podAddress).toHaveLength(40)
+      expect(sharedData.podAddress).toHaveLength(ETH_ADDR_HEX_LENGTH)
       expect(sharedData.userAddress).toEqual(user.address.toLowerCase().replace('0x', ''))
     })
 
@@ -261,7 +261,7 @@ describe('Fair Data Protocol class', () => {
       const sharedData = await fdp.personalStorage.getSharedInfo(sharedReference)
 
       expect(sharedData.podName).toEqual(podName)
-      expect(sharedData.podAddress).toHaveLength(40)
+      expect(sharedData.podAddress).toHaveLength(ETH_ADDR_HEX_LENGTH)
       expect(sharedData.userAddress).toEqual(user.address.toLowerCase().replace('0x', ''))
     })
 
@@ -276,19 +276,19 @@ describe('Fair Data Protocol class', () => {
       const sharedReference = await fdp.personalStorage.share(podName)
 
       const list0 = await fdp1.personalStorage.list()
-      expect(list0.getPods()).toHaveLength(0)
-      expect(list0.getSharedPods()).toHaveLength(0)
+      expect(list0.pods).toHaveLength(0)
+      expect(list0.sharedPods).toHaveLength(0)
       const pod = await fdp1.personalStorage.saveShared(sharedReference)
 
       expect(pod.name).toEqual(podName)
-      expect(pod.address).toHaveLength(20)
+      expect(pod.address).toHaveLength(ETH_ADDR_HEX_LENGTH)
 
       const list = await fdp1.personalStorage.list()
-      expect(list.getPods()).toHaveLength(0)
-      expect(list.getSharedPods()).toHaveLength(1)
-      const savedPod = list.getSharedPods()[0]
+      expect(list.pods).toHaveLength(0)
+      expect(list.sharedPods).toHaveLength(1)
+      const savedPod = list.sharedPods[0]
       expect(savedPod.name).toEqual(podName)
-      expect(savedPod.address).toHaveLength(20)
+      expect(savedPod.address).toHaveLength(ETH_ADDR_HEX_LENGTH)
       expect(savedPod.address).toStrictEqual(pod.address)
 
       await expect(fdp1.personalStorage.saveShared(sharedReference)).rejects.toThrow(
@@ -301,14 +301,14 @@ describe('Fair Data Protocol class', () => {
       })
 
       expect(pod1.name).toEqual(newPodName)
-      expect(pod1.address).toHaveLength(20)
+      expect(pod1.address).toHaveLength(ETH_ADDR_HEX_LENGTH)
       expect(pod1.address).toStrictEqual(pod.address)
       const list1 = await fdp1.personalStorage.list()
-      expect(list1.getPods()).toHaveLength(0)
-      expect(list1.getSharedPods()).toHaveLength(2)
-      const savedPod1 = list1.getSharedPods()[1]
+      expect(list1.pods).toHaveLength(0)
+      expect(list1.sharedPods).toHaveLength(2)
+      const savedPod1 = list1.sharedPods[1]
       expect(savedPod1.name).toEqual(newPodName)
-      expect(savedPod1.address).toHaveLength(20)
+      expect(savedPod1.address).toHaveLength(ETH_ADDR_HEX_LENGTH)
       expect(savedPod1.address).toStrictEqual(pod.address)
     })
   })
@@ -450,14 +450,14 @@ describe('Fair Data Protocol class', () => {
       await fdp.personalStorage.create(pod)
       const pods1 = await fdp.personalStorage.list()
       const pods1Serialized = JSON.stringify(pods1)
-      const pods1Deserialized = List.fromJSON(pods1Serialized)
-      expect(pods1.getPods().length).toEqual(pods1Deserialized.getPods().length)
-      const firstPod = pods1.getPods()[0]
-      const firstPodDeserialized = pods1Deserialized.getPods()[0]
+      const pods1Deserialized = JSON.parse(pods1Serialized)
+      expect(pods1.pods.length).toEqual(pods1Deserialized.pods.length)
+      const firstPod = pods1.pods[0]
+      const firstPodDeserialized = pods1Deserialized.pods[0]
       expect(firstPod.name).toStrictEqual(firstPodDeserialized.name)
       expect(firstPod.index).toStrictEqual(firstPodDeserialized.index)
       expect(firstPod.password).toStrictEqual(firstPodDeserialized.password)
-      expect(pods1.getSharedPods().length).toEqual(pods1Deserialized.getSharedPods().length)
+      expect(pods1.sharedPods.length).toEqual(pods1Deserialized.sharedPods.length)
 
       for (const directoryToCreate of directoriesToCreate) {
         await fdp.directory.create(pod, directoryToCreate)
@@ -685,7 +685,7 @@ describe('Fair Data Protocol class', () => {
       const encryptedText2 = rootDirectoryData.data.chunkContent().text()
       const encryptedBytes2 = rootDirectoryData.data.chunkContent()
       // data decrypts with password stored in the pod
-      const decryptedText2 = bytesToString(decryptBytes(bytesToHex(pod1.password), encryptedBytes2))
+      const decryptedText2 = bytesToString(decryptBytes(pod1.password, encryptedBytes2))
       // check some keywords from root directory of the pod metadata
       const metaWords1 = ['meta', 'version', 'creationTime', 'fileOrDirNames']
       for (const metaWord of metaWords1) {
@@ -698,7 +698,7 @@ describe('Fair Data Protocol class', () => {
       const fullDirectoryData = await getFeedData(bee, fullDirectory, prepareEthAddress(node1.address))
       const encryptedText3 = fullDirectoryData.data.chunkContent().text()
       const encryptedBytes3 = fullDirectoryData.data.chunkContent()
-      const decryptedText3 = bytesToString(decryptBytes(bytesToHex(pod1.password), encryptedBytes3))
+      const decryptedText3 = bytesToString(decryptBytes(pod1.password, encryptedBytes3))
       expect(decryptedText3).toContain(directoryName)
       for (const metaWord of metaWords1) {
         expect(encryptedText3).not.toContain(metaWord)
@@ -709,7 +709,7 @@ describe('Fair Data Protocol class', () => {
       const fileManifestData = await getFeedData(bee, fullFilenameSmallPath, prepareEthAddress(node1.address))
       const encryptedText4 = fileManifestData.data.chunkContent().text()
       const encryptedBytes4 = fileManifestData.data.chunkContent()
-      const decryptedText4 = bytesToString(decryptBytes(bytesToHex(pod1.password), encryptedBytes4))
+      const decryptedText4 = bytesToString(decryptBytes(pod1.password, encryptedBytes4))
       const metaWords2 = [filenameSmall, 'version', 'filePath', 'fileName', 'fileSize', 'fileInodeReference']
       for (const metaWord of metaWords2) {
         expect(encryptedText4).not.toContain(metaWord)
