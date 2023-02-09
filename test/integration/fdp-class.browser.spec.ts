@@ -725,6 +725,7 @@ describe('Fair Data Protocol class - in browser', () => {
       const { dataSmall, fdpList, fileInfoSmall } = await page.evaluate(
         async (pod: string, fullFilenameSmallPath: string, contentSmall: string) => {
           const fdp = eval(await window.initFdp()) as FdpStorage
+          const { wrapBytesWithHelpers } = window.fdp.Utils
           fdp.account.createWallet()
 
           await fdp.personalStorage.create(pod)
@@ -734,7 +735,7 @@ describe('Fair Data Protocol class - in browser', () => {
             `File "${fullFilenameSmallPath}" already uploaded to the network`,
           )
 
-          const dataSmall = (await fdp.file.downloadData(pod, fullFilenameSmallPath)).text()
+          const dataSmall = wrapBytesWithHelpers(await fdp.file.downloadData(pod, fullFilenameSmallPath)).text()
           const fdpList = await fdp.directory.read(pod, '/', true)
           const fileInfoSmall = fdpList.files[0]
 
@@ -773,6 +774,7 @@ describe('Fair Data Protocol class - in browser', () => {
           incorrectFullPath: string,
         ) => {
           const fdp = eval(await window.initFdp()) as FdpStorage
+          const { wrapBytesWithHelpers } = window.fdp.Utils
           fdp.account.createWallet()
 
           await fdp.personalStorage.create(pod)
@@ -782,7 +784,7 @@ describe('Fair Data Protocol class - in browser', () => {
           )
           await fdp.file.uploadData(pod, fullFilenameBigPath, contentBig)
           await window.shouldFail(fdp.file.downloadData(pod, incorrectFullPath), 'Data not found')
-          const dataBig = (await fdp.file.downloadData(pod, fullFilenameBigPath)).text()
+          const dataBig = wrapBytesWithHelpers(await fdp.file.downloadData(pod, fullFilenameBigPath)).text()
           const fdpList = await fdp.directory.read(pod, '/', true)
           const fileInfoBig = fdpList.files[0]
 
@@ -924,6 +926,7 @@ describe('Fair Data Protocol class - in browser', () => {
         ) => {
           const fdp = eval(await window.initFdp()) as FdpStorage
           const fdp1 = eval(await window.initFdp()) as FdpStorage
+          const { wrapBytesWithHelpers } = window.fdp.Utils
           fdp.account.createWallet()
           fdp1.account.createWallet()
 
@@ -937,11 +940,11 @@ describe('Fair Data Protocol class - in browser', () => {
           const files = list.files
           const fileInfo = files[0]
           const meta = fileInfo.raw as RawFileMetadata
-          const data = (await fdp1.file.downloadData(pod1, fullFilenameSmallPath)).text()
+          const data = wrapBytesWithHelpers(await fdp1.file.downloadData(pod1, fullFilenameSmallPath)).text()
 
           // checking saving with custom name
           const sharedData1 = await fdp1.file.saveShared(pod1, newFilePath, sharedReference, { name: customName })
-          const data1 = (await fdp1.file.downloadData(pod1, '/' + customName)).text()
+          const data1 = wrapBytesWithHelpers(await fdp1.file.downloadData(pod1, '/' + customName)).text()
           const list1 = await fdp1.directory.read(pod1, '/')
           const files1 = list1.files
 

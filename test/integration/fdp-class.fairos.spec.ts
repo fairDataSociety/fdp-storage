@@ -1,6 +1,7 @@
 import { createFdp, generateRandomHexString, generateUser, topUpAddress, topUpFdp, waitFairOS } from '../utils'
 import { Directories, FairOSApi, PodsList } from '../utils/fairos-api'
 import { Wallet, utils } from 'ethers'
+import { wrapBytesWithHelpers } from '../../src/utils/bytes'
 
 jest.setTimeout(400000)
 describe('Fair Data Protocol with FairOS-dfs', () => {
@@ -389,7 +390,7 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
         },
       ])
 
-      const file1 = await fdp.file.downloadData(podName1, fullFilenameBigPath)
+      const file1 = wrapBytesWithHelpers(await fdp.file.downloadData(podName1, fullFilenameBigPath))
       expect(file1.text()).toEqual(contentBig)
 
       // test mixed uploading

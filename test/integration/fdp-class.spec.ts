@@ -17,7 +17,7 @@ import { POD_TOPIC } from '../../src/pod/personal-storage'
 import { decryptBytes } from '../../src/utils/encryption'
 import { Wallet } from 'ethers'
 import { removeZeroFromHex } from '../../src/account/utils'
-import { bytesToString } from '../../src/utils/bytes'
+import { bytesToString, wrapBytesWithHelpers } from '../../src/utils/bytes'
 import { getWalletByIndex, mnemonicToSeed, prepareEthAddress } from '../../src/utils/wallet'
 import { assertEncryptedReference } from '../../src/utils/hex'
 import { base64toReference } from '../../src/file/utils'
@@ -406,7 +406,7 @@ describe('Fair Data Protocol class', () => {
 
       for (const fileInfo of filesInfo) {
         const fileContent = getNodeFileContent(fileInfo.localPath)
-        const downloaded = await fdp.file.downloadData(pod1, fileInfo.fdpFullPath)
+        const downloaded = wrapBytesWithHelpers(await fdp.file.downloadData(pod1, fileInfo.fdpFullPath))
         expect(downloaded.text()).toEqual(fileContent.toString())
       }
 
@@ -417,7 +417,7 @@ describe('Fair Data Protocol class', () => {
 
       for (const fileInfo of filesInfo) {
         const fileContent = getNodeFileContent(fileInfo.localPath)
-        const downloaded = await fdp.file.downloadData(pod2, fileInfo.fdpPath)
+        const downloaded = wrapBytesWithHelpers(await fdp.file.downloadData(pod2, fileInfo.fdpPath))
         expect(downloaded.text()).toEqual(fileContent.toString())
       }
     })
@@ -507,7 +507,7 @@ describe('Fair Data Protocol class', () => {
       await expect(fdp.file.uploadData(pod, fullFilenameSmallPath, contentSmall)).rejects.toThrow(
         `File "${fullFilenameSmallPath}" already uploaded to the network`,
       )
-      const dataSmall = await fdp.file.downloadData(pod, fullFilenameSmallPath)
+      const dataSmall = wrapBytesWithHelpers(await fdp.file.downloadData(pod, fullFilenameSmallPath))
       expect(dataSmall.text()).toEqual(contentSmall)
       const fdpList = await fdp.directory.read(pod, '/', true)
       expect(fdpList.files.length).toEqual(1)
@@ -533,7 +533,7 @@ describe('Fair Data Protocol class', () => {
       )
       await fdp.file.uploadData(pod, fullFilenameBigPath, contentBig)
       await expect(fdp.file.downloadData(pod, incorrectFullPath)).rejects.toThrow('Data not found')
-      const dataBig = (await fdp.file.downloadData(pod, fullFilenameBigPath)).text()
+      const dataBig = wrapBytesWithHelpers(await fdp.file.downloadData(pod, fullFilenameBigPath)).text()
       expect(dataBig).toEqual(contentBig)
       const fdpList = await fdp.directory.read(pod, '/', true)
       expect(fdpList.files.length).toEqual(1)
@@ -634,7 +634,7 @@ describe('Fair Data Protocol class', () => {
       expect(meta.fileName).toEqual(filenameSmall)
       expect(meta.fileSize).toEqual(fileSizeSmall)
 
-      const data = await fdp1.file.downloadData(pod1, fullFilenameSmallPath)
+      const data = wrapBytesWithHelpers(await fdp1.file.downloadData(pod1, fullFilenameSmallPath))
       expect(data.text()).toEqual(contentSmall)
 
       // checking saving with custom name
@@ -644,7 +644,7 @@ describe('Fair Data Protocol class', () => {
       expect(sharedData1.fileName).toEqual(customName)
       expect(sharedData1.fileSize).toEqual(fileSizeSmall)
 
-      const data1 = await fdp1.file.downloadData(pod1, '/' + customName)
+      const data1 = wrapBytesWithHelpers(await fdp1.file.downloadData(pod1, '/' + customName))
       expect(data1.text()).toEqual(contentSmall)
 
       const list1 = await fdp1.directory.read(pod1, '/')
