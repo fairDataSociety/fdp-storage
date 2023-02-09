@@ -560,9 +560,9 @@ describe('Fair Data Protocol class - in browser', () => {
           )
 
           const list = await fdp.directory.read(pod, '/', true)
-          const directoryInfo = list.getDirectories()[0]
-          const subDirectoriesLength = directoryInfo.getDirectories().length
-          const directoryInfo1 = directoryInfo.getDirectories()[0]
+          const directoryInfo = list.directories[0]
+          const subDirectoriesLength = directoryInfo.directories.length
+          const directoryInfo1 = directoryInfo.directories[0]
 
           return {
             list,
@@ -576,7 +576,7 @@ describe('Fair Data Protocol class - in browser', () => {
         directoryFull1,
       )
 
-      expect(list.content).toHaveLength(1)
+      expect(list.directories).toHaveLength(1)
       expect(subDirectoriesLength).toEqual(1)
       expect(directoryInfo.name).toEqual(directoryName)
       expect(directoryInfo1.name).toEqual(directoryName1)
@@ -608,8 +608,8 @@ describe('Fair Data Protocol class - in browser', () => {
         directoryFull,
       )
 
-      expect(list.content).toHaveLength(1)
-      expect(listAfter.content).toHaveLength(0)
+      expect(list.directories).toHaveLength(1)
+      expect(listAfter.files).toHaveLength(0)
     })
 
     it('should serialize and deserialize directories list and pods', async () => {
@@ -639,7 +639,7 @@ describe('Fair Data Protocol class - in browser', () => {
       const { counts } = await page.evaluate(
         async (pod: string, directoriesToCreate: string[], filesToCreate: { path: string; data: string }[]) => {
           const fdp = eval(await window.initFdp()) as FdpStorage
-          const { DirectoryItem } = window.fdp.Utils
+          const { DirectoryItemSerializable } = window.fdp
           fdp.account.createWallet()
 
           await fdp.personalStorage.create(pod)
@@ -659,21 +659,21 @@ describe('Fair Data Protocol class - in browser', () => {
 
           const list1 = await fdp.directory.read(pod, '/', true)
           const serialized = JSON.stringify(list1)
-          const recovered = DirectoryItem.fromJSON(serialized)
-          const recoveredDirOne1 = recovered.getDirectories().find(item => item.name === 'one')
-          const recoveredDirOneOne1 = recoveredDirOne1?.getDirectories().find(item => item.name === 'one-one')
-          const recoveredDirTwo1 = recovered.getDirectories().find(item => item.name === 'two')
+          const recovered = JSON.parse(serialized) as typeof DirectoryItemSerializable
+          const recoveredDirOne1 = recovered.directories.find(item => item.name === 'one')
+          const recoveredDirOneOne1 = recoveredDirOne1?.directories.find(item => item.name === 'one-one')
+          const recoveredDirTwo1 = recovered.directories.find(item => item.name === 'two')
 
-          const dirOne1Length = recoveredDirOne1?.getDirectories().length
-          const dirOneOne1Length = recoveredDirOneOne1?.getDirectories().length
-          const dirOneOne1FilesLength = recoveredDirOneOne1?.getFiles().length
-          const dirOne1FilesLength = recoveredDirOne1?.getFiles().length
-          const dirTwo1Length = recoveredDirTwo1?.getDirectories().length
+          const dirOne1Length = recoveredDirOne1?.directories.length
+          const dirOneOne1Length = recoveredDirOneOne1?.directories.length
+          const dirOneOne1FilesLength = recoveredDirOneOne1?.files.length
+          const dirOne1FilesLength = recoveredDirOne1?.files.length
+          const dirTwo1Length = recoveredDirTwo1?.directories.length
 
           return {
             counts: {
-              dir1Length: recovered.getDirectories().length,
-              files1Length: recovered.getFiles().length,
+              dir1Length: recovered.directories.length,
+              files1Length: recovered.files.length,
               dirOne1Length,
               dirOneOne1Length,
               dirOneOne1FilesLength,
@@ -736,7 +736,7 @@ describe('Fair Data Protocol class - in browser', () => {
 
           const dataSmall = (await fdp.file.downloadData(pod, fullFilenameSmallPath)).text()
           const fdpList = await fdp.directory.read(pod, '/', true)
-          const fileInfoSmall = fdpList.getFiles()[0]
+          const fileInfoSmall = fdpList.files[0]
 
           return {
             dataSmall,
@@ -750,7 +750,7 @@ describe('Fair Data Protocol class - in browser', () => {
       )
 
       expect(dataSmall).toEqual(contentSmall)
-      expect(fdpList.content.length).toEqual(1)
+      expect(fdpList.files.length).toEqual(1)
       expect(fileInfoSmall.name).toEqual(filenameSmall)
       expect(fileInfoSmall.size).toEqual(fileSizeSmall)
     })
@@ -784,7 +784,7 @@ describe('Fair Data Protocol class - in browser', () => {
           await window.shouldFail(fdp.file.downloadData(pod, incorrectFullPath), 'Data not found')
           const dataBig = (await fdp.file.downloadData(pod, fullFilenameBigPath)).text()
           const fdpList = await fdp.directory.read(pod, '/', true)
-          const fileInfoBig = fdpList.getFiles()[0]
+          const fileInfoBig = fdpList.files[0]
 
           return {
             dataBig,
@@ -800,7 +800,7 @@ describe('Fair Data Protocol class - in browser', () => {
       )
 
       expect(dataBig).toEqual(contentBig)
-      expect(fdpList.content.length).toEqual(1)
+      expect(fdpList.files.length).toEqual(1)
       expect(fileInfoBig.name).toEqual(filenameBig)
       expect(fileInfoBig.size).toEqual(fileSizeBig)
     })
@@ -834,8 +834,8 @@ describe('Fair Data Protocol class - in browser', () => {
         contentSmall,
       )
 
-      expect(fdpList.content.length).toEqual(1)
-      expect(fdpListAfter.content.length).toEqual(0)
+      expect(fdpList.files.length).toEqual(1)
+      expect(fdpListAfter.files.length).toEqual(0)
     })
 
     it('should share a file', async () => {
@@ -934,7 +934,7 @@ describe('Fair Data Protocol class - in browser', () => {
           const sharedData = await fdp1.file.saveShared(pod1, newFilePath, sharedReference)
 
           const list = await fdp1.directory.read(pod1, '/')
-          const files = list.getFiles()
+          const files = list.files
           const fileInfo = files[0]
           const meta = fileInfo.raw as RawFileMetadata
           const data = (await fdp1.file.downloadData(pod1, fullFilenameSmallPath)).text()
@@ -943,7 +943,7 @@ describe('Fair Data Protocol class - in browser', () => {
           const sharedData1 = await fdp1.file.saveShared(pod1, newFilePath, sharedReference, { name: customName })
           const data1 = (await fdp1.file.downloadData(pod1, '/' + customName)).text()
           const list1 = await fdp1.directory.read(pod1, '/')
-          const files1 = list1.getFiles()
+          const files1 = list1.files
 
           return {
             sharedData,

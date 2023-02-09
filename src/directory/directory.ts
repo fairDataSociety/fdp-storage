@@ -1,7 +1,6 @@
 import { AccountData } from '../account/account-data'
 import { createDirectory, readDirectory, DEFAULT_UPLOAD_DIRECTORY_OPTIONS, UploadDirectoryOptions } from './handler'
 import { assertAccount } from '../account/utils'
-import { DirectoryItem } from '../content-items/directory-item'
 import { removeEntryFromDirectory } from '../content-items/handler'
 import { extractPathInfo, readBrowserFileAsBytes } from '../file/utils'
 import { assertPodName, getExtendedPodsListByAccountData } from '../pod/utils'
@@ -20,6 +19,7 @@ import {
 } from './utils'
 import { uploadData } from '../file/handler'
 import { assertNodeFileInfo, isBrowserFileInfo } from './types'
+import { DirectoryItemSerializable, directoryItemToDirectoryItemSerializable } from '../content-items/serialization'
 
 /**
  * Directory related class
@@ -34,18 +34,20 @@ export class Directory {
    * @param path path to start searching from
    * @param isRecursive search with recursion or not
    */
-  async read(podName: string, path: string, isRecursive?: boolean): Promise<DirectoryItem> {
+  async read(podName: string, path: string, isRecursive?: boolean): Promise<DirectoryItemSerializable> {
     assertAccount(this.accountData)
     assertPodName(podName)
     const { podAddress, pod } = await getExtendedPodsListByAccountData(this.accountData, podName)
 
-    return readDirectory(
-      this.accountData.connection.bee,
-      path,
-      podAddress,
-      pod.password,
-      isRecursive,
-      this.accountData.connection.options?.downloadOptions,
+    return directoryItemToDirectoryItemSerializable(
+      await readDirectory(
+        this.accountData.connection.bee,
+        path,
+        podAddress,
+        pod.password,
+        isRecursive,
+        this.accountData.connection.options?.downloadOptions,
+      ),
     )
   }
 

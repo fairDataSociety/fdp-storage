@@ -1,6 +1,8 @@
 import { RequestOptions } from '@ethersphere/bee-js'
 import { Environment } from '@fairdatasociety/fdp-contracts-js'
 
+export { DirectoryItemSerializable, FileItemSerializable } from './content-items/serialization'
+
 /**
  * Fair Data Protocol options
  */

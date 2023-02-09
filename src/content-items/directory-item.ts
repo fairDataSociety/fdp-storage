@@ -3,7 +3,6 @@ import { Reference } from '@ethersphere/bee-js'
 import { ContentItem } from './content-item'
 import { FileItem } from './file-item'
 import { isDirectoryItem, isFileItem } from './utils'
-import { jsonToDirectoryItem } from './serialization'
 
 /**
  * A representation of a directory in the pod
@@ -52,12 +51,5 @@ export class DirectoryItem extends ContentItem {
    */
   static fromRawDirectoryMetadata(item: RawDirectoryMetadata): DirectoryItem {
     return new DirectoryItem(item.meta.name, [], item)
-  }
-
-  /**
-   * Creates directory item from JSON string
-   */
-  static fromJSON(json: string): DirectoryItem {
-    return jsonToDirectoryItem(json)
   }
 }

@@ -1,21 +1,12 @@
 import { DirectoryItem } from './directory-item'
 import { FileItem } from './file-item'
 import { RawDirectoryMetadata, RawFileMetadata } from '../pod/types'
-import { isObject, isString } from '../utils/type'
-import { Reference } from '@ethersphere/bee-js'
-import { getJsonObject } from '../utils/json'
+import { isDirectoryItem, isFileItem } from './utils'
 
 /**
- * Type container for an object
+ * Serializable `FileItem`
  */
-export interface TypedObject {
-  objectType: string
-}
-
-/**
- * `FileItem` in an object representation
- */
-export interface FileItemObject extends TypedObject {
+export interface FileItemSerializable {
   name: string
   raw?: RawFileMetadata | RawDirectoryMetadata
   size?: number
@@ -23,68 +14,41 @@ export interface FileItemObject extends TypedObject {
 }
 
 /**
- * `DirectoryItem` in an object representation
+ * Serializable `DirectoryItem`
  */
-export interface DirectoryItemObject extends TypedObject {
+export interface DirectoryItemSerializable {
   name: string
-  content: Array<DirectoryItemObject | FileItemObject>
+  directories: DirectoryItemSerializable[]
+  files: FileItemSerializable[]
   raw?: RawFileMetadata | RawDirectoryMetadata
   size?: number
   reference?: string
 }
 
 /**
- * Asserts that `DirectoryItemObject` is correct
+ * Converts `FileItem` to `FileItemSerializable`
  */
-export function assertDirectoryItemObject(data: unknown): asserts data is DirectoryItemObject {
-  const value = data as DirectoryItemObject
+export function fileItemToFileItemSerializable(fileItem: FileItem): FileItemSerializable {
+  const { name, raw, size, reference } = fileItem
 
-  if (
-    !(
-      isObject(value) &&
-      value.objectType === DirectoryItem.type &&
-      isString(value.name) &&
-      Array.isArray(value.content)
-    )
-  ) {
-    throw new Error('Incorrect directory item object')
+  return {
+    name,
+    raw,
+    size,
+    reference,
   }
 }
 
 /**
- * Validates that `FileItemObject` is correct
+ * Converts `DirectoryItem` to `DirectoryItemSerializable`
  */
-export function validateFileItemObject(data: unknown): asserts data is FileItemObject {
-  const value = data as FileItemObject
-
-  if (!(isObject(value) && value.objectType === FileItem.type && isString(value.name))) {
-    throw new Error('Incorrect file item object')
+export function directoryItemToDirectoryItemSerializable(directoryItem: DirectoryItem): DirectoryItemSerializable {
+  return {
+    name: directoryItem.name,
+    directories: directoryItem.content.filter(isDirectoryItem).map(directoryItemToDirectoryItemSerializable),
+    files: directoryItem.content.filter(isFileItem).map(fileItemToFileItemSerializable),
+    raw: directoryItem.raw,
+    size: directoryItem.size,
+    reference: directoryItem.reference,
   }
-}
-
-/**
- * Converts JSON to `DirectoryItem`
- */
-export function jsonToDirectoryItem(data: string | unknown): DirectoryItem {
-  const json = getJsonObject(data, 'directory item')
-  assertDirectoryItemObject(json)
-  const content = json.content.map((item: TypedObject) => {
-    if (item.objectType === DirectoryItem.type) {
-      return jsonToDirectoryItem(item)
-    } else {
-      return jsonToFileItem(item)
-    }
-  })
-
-  return new DirectoryItem(json.name, content, json.raw, json.size, json.reference as Reference)
-}
-
-/**
- * Converts JSON to `FileItem`
- */
-export function jsonToFileItem(data: string | unknown): FileItem {
-  const json = getJsonObject(data, 'file item')
-  validateFileItemObject(json)
-
-  return new FileItem(json.name, json.raw, json.size, json.reference as Reference)
 }

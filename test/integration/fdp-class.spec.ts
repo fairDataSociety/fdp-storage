@@ -1,4 +1,4 @@
-import { FdpContracts, FdpStorage } from '../../src'
+import { DirectoryItemSerializable, FdpContracts, FdpStorage } from '../../src'
 import {
   batchId,
   createFdp,
@@ -23,7 +23,6 @@ import { assertEncryptedReference } from '../../src/utils/hex'
 import { base64toReference } from '../../src/file/utils'
 import path from 'path'
 import { getNodeFileContent } from '../../src/directory/utils'
-import { DirectoryItem } from '../../src/content-items/directory-item'
 import { ETH_ADDR_HEX_LENGTH } from '../../src/utils/type'
 
 jest.setTimeout(400000)
@@ -334,10 +333,10 @@ describe('Fair Data Protocol class', () => {
         `Directory "${directoryFull}" already uploaded to the network`,
       )
       const list = await fdp.directory.read(pod, '/', true)
-      expect(list.content).toHaveLength(1)
-      expect(list.getDirectories()[0].content).toHaveLength(1)
-      const directoryInfo = list.content[0]
-      const directoryInfo1 = list.getDirectories()[0].getDirectories()[0]
+      expect(list.directories).toHaveLength(1)
+      expect(list.directories[0].directories).toHaveLength(1)
+      const directoryInfo = list.directories[0]
+      const directoryInfo1 = list.directories[0].directories[0]
       expect(directoryInfo.name).toEqual(directoryName)
       expect(directoryInfo1.name).toEqual(directoryName1)
     })
@@ -352,11 +351,11 @@ describe('Fair Data Protocol class', () => {
       await fdp.personalStorage.create(pod)
       await fdp.directory.create(pod, directoryFull)
       const list = await fdp.directory.read(pod, '/', true)
-      expect(list.content).toHaveLength(1)
+      expect(list.directories).toHaveLength(1)
 
       await fdp.directory.delete(pod, directoryFull)
       const listAfter = await fdp.directory.read(pod, '/', true)
-      expect(listAfter.content).toHaveLength(0)
+      expect(listAfter.directories).toHaveLength(0)
     })
 
     it('should upload a directory', async () => {
@@ -392,18 +391,18 @@ describe('Fair Data Protocol class', () => {
       await fdp.personalStorage.create(pod2)
       await fdp.directory.upload(pod1, fullPath, { isRecursive: true, isIncludeDirectoryName: true })
       const list1 = await fdp.directory.read(pod1, '/', true)
-      const dir1 = list1.getDirectories()[0]
-      expect(dir1.getFiles()).toHaveLength(2)
-      expect(dir1.getDirectories()).toHaveLength(2)
-      const subDir1 = dir1.getDirectories().find(item => item.name === 'dir1')
-      const subDir2 = dir1.getDirectories().find(item => item.name === 'dir2')
+      const dir1 = list1.directories[0]
+      expect(dir1.files).toHaveLength(2)
+      expect(dir1.directories).toHaveLength(2)
+      const subDir1 = dir1.directories.find(item => item.name === 'dir1')
+      const subDir2 = dir1.directories.find(item => item.name === 'dir2')
       expect(subDir1).toBeDefined()
       expect(subDir2).toBeDefined()
       // 1 empty directory should not be uploaded + 1 not empty should be uploaded
-      expect(subDir1!.getDirectories()).toHaveLength(1)
-      expect(subDir1!.getDirectories()[0].getFiles()).toHaveLength(1)
-      expect(subDir1!.getFiles()).toHaveLength(0)
-      expect(subDir2!.getFiles()).toHaveLength(1)
+      expect(subDir1!.directories).toHaveLength(1)
+      expect(subDir1!.directories[0].files).toHaveLength(1)
+      expect(subDir1!.files).toHaveLength(0)
+      expect(subDir2!.files).toHaveLength(1)
 
       for (const fileInfo of filesInfo) {
         const fileContent = getNodeFileContent(fileInfo.localPath)
@@ -413,8 +412,8 @@ describe('Fair Data Protocol class', () => {
 
       await fdp.directory.upload(pod2, fullPath, { isRecursive: true, isIncludeDirectoryName: false })
       const list2 = await fdp.directory.read(pod2, '/', true)
-      expect(list2.getDirectories()).toHaveLength(2)
-      expect(list2.getFiles()).toHaveLength(2)
+      expect(list2.directories).toHaveLength(2)
+      expect(list2.files).toHaveLength(2)
 
       for (const fileInfo of filesInfo) {
         const fileContent = getNodeFileContent(fileInfo.localPath)
@@ -467,29 +466,29 @@ describe('Fair Data Protocol class', () => {
         await fdp.file.uploadData(pod, fileToCreate.path, fileToCreate.data)
       }
       const list1 = await fdp.directory.read(pod, '/', true)
-      expect(list1.getDirectories()).toHaveLength(3)
-      const dirOne1 = list1.getDirectories().find(item => item.name === 'one')
-      const dirOneOne1 = dirOne1?.getDirectories().find(item => item.name === 'one-one')
-      const dirTwo1 = list1.getDirectories().find(item => item.name === 'two')
-      expect(dirOne1?.getDirectories()).toHaveLength(1)
-      expect(dirOneOne1?.getDirectories()).toHaveLength(1)
-      expect(dirOneOne1?.getFiles()).toHaveLength(0)
-      expect(dirOne1?.getFiles()).toHaveLength(2)
-      expect(dirTwo1?.getDirectories()).toHaveLength(1)
-      expect(list1.getFiles()).toHaveLength(2)
+      expect(list1.directories).toHaveLength(3)
+      const dirOne1 = list1.directories.find(item => item.name === 'one')
+      const dirOneOne1 = dirOne1?.directories.find(item => item.name === 'one-one')
+      const dirTwo1 = list1.directories.find(item => item.name === 'two')
+      expect(dirOne1?.directories).toHaveLength(1)
+      expect(dirOneOne1?.directories).toHaveLength(1)
+      expect(dirOneOne1?.files).toHaveLength(0)
+      expect(dirOne1?.files).toHaveLength(2)
+      expect(dirTwo1?.directories).toHaveLength(1)
+      expect(list1.files).toHaveLength(2)
 
       const serialized = JSON.stringify(list1)
-      const recovered = DirectoryItem.fromJSON(serialized)
-      expect(recovered.getDirectories()).toHaveLength(3)
-      expect(recovered.getFiles()).toHaveLength(2)
-      const recoveredDirOne1 = recovered.getDirectories().find(item => item.name === 'one')
-      const recoveredDirOneOne1 = recoveredDirOne1?.getDirectories().find(item => item.name === 'one-one')
-      const recoveredDirTwo1 = recovered.getDirectories().find(item => item.name === 'two')
-      expect(recoveredDirOne1?.getDirectories()).toHaveLength(1)
-      expect(recoveredDirOneOne1?.getDirectories()).toHaveLength(1)
-      expect(recoveredDirOneOne1?.getFiles()).toHaveLength(0)
-      expect(recoveredDirOne1?.getFiles()).toHaveLength(2)
-      expect(recoveredDirTwo1?.getDirectories()).toHaveLength(1)
+      const recovered = JSON.parse(serialized) as DirectoryItemSerializable
+      expect(recovered.directories).toHaveLength(3)
+      expect(recovered.files).toHaveLength(2)
+      const recoveredDirOne1 = recovered.directories.find(item => item.name === 'one')
+      const recoveredDirOneOne1 = recoveredDirOne1?.directories.find(item => item.name === 'one-one')
+      const recoveredDirTwo1 = recovered.directories.find(item => item.name === 'two')
+      expect(recoveredDirOne1?.directories).toHaveLength(1)
+      expect(recoveredDirOneOne1?.directories).toHaveLength(1)
+      expect(recoveredDirOneOne1?.files).toHaveLength(0)
+      expect(recoveredDirOne1?.files).toHaveLength(2)
+      expect(recoveredDirTwo1?.directories).toHaveLength(1)
     })
   })
 
@@ -511,8 +510,8 @@ describe('Fair Data Protocol class', () => {
       const dataSmall = await fdp.file.downloadData(pod, fullFilenameSmallPath)
       expect(dataSmall.text()).toEqual(contentSmall)
       const fdpList = await fdp.directory.read(pod, '/', true)
-      expect(fdpList.getFiles().length).toEqual(1)
-      const fileInfoSmall = fdpList.getFiles()[0]
+      expect(fdpList.files.length).toEqual(1)
+      const fileInfoSmall = fdpList.files[0]
       expect(fileInfoSmall.name).toEqual(filenameSmall)
       expect(fileInfoSmall.size).toEqual(fileSizeSmall)
     })
@@ -537,8 +536,8 @@ describe('Fair Data Protocol class', () => {
       const dataBig = (await fdp.file.downloadData(pod, fullFilenameBigPath)).text()
       expect(dataBig).toEqual(contentBig)
       const fdpList = await fdp.directory.read(pod, '/', true)
-      expect(fdpList.getFiles().length).toEqual(1)
-      const fileInfoBig = fdpList.getFiles()[0]
+      expect(fdpList.files.length).toEqual(1)
+      const fileInfoBig = fdpList.files[0]
       expect(fileInfoBig.name).toEqual(filenameBig)
       expect(fileInfoBig.size).toEqual(fileSizeBig)
     })
@@ -556,11 +555,11 @@ describe('Fair Data Protocol class', () => {
       await fdp.file.uploadData(pod, fullFilenameSmallPath, contentSmall)
 
       const fdpList = await fdp.directory.read(pod, '/', true)
-      expect(fdpList.getFiles().length).toEqual(1)
+      expect(fdpList.files.length).toEqual(1)
 
       await fdp.file.delete(pod, fullFilenameSmallPath)
       const fdpList1 = await fdp.directory.read(pod, '/', true)
-      expect(fdpList1.getFiles().length).toEqual(0)
+      expect(fdpList1.files.length).toEqual(0)
     })
 
     it('should share a file', async () => {
@@ -626,7 +625,7 @@ describe('Fair Data Protocol class', () => {
       expect(sharedData.fileSize).toEqual(fileSizeSmall)
 
       const list = await fdp1.directory.read(pod1, '/')
-      const files = list.getFiles()
+      const files = list.files
       expect(files).toHaveLength(1)
       const fileInfo = files[0]
       expect(fileInfo.name).toEqual(filenameSmall)
@@ -649,7 +648,7 @@ describe('Fair Data Protocol class', () => {
       expect(data1.text()).toEqual(contentSmall)
 
       const list1 = await fdp1.directory.read(pod1, '/')
-      const files1 = list1.getFiles()
+      const files1 = list1.files
       expect(files1).toHaveLength(2)
     })
   })

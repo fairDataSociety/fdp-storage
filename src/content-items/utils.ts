@@ -18,7 +18,7 @@ export function isDirectoryItem(value: unknown): value is DirectoryItem {
 /**
  * File item guard
  */
-export function isFileItem(value: unknown): value is DirectoryItem {
+export function isFileItem(value: unknown): value is FileItem {
   return value instanceof FileItem
 }
 

@@ -252,18 +252,18 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
       await fairos.podNew(podName1, user.password)
       await fairos.dirMkdir(podName1, fullDirectoryName1, user.password)
       const response = await fdp.directory.read(podName1, '/')
-      expect(response.getDirectories()).toHaveLength(1)
-      const dir1 = response.getDirectories()[0]
+      expect(response.directories).toHaveLength(1)
+      const dir1 = response.directories[0]
       expect(dir1.name).toEqual(directoryName1)
 
       await fairos.dirMkdir(podName1, fullSubDirectoryName1, user.password)
       await fairos.dirMkdir(podName1, fullDirectoryName2, user.password)
       const response2 = await fdp.directory.read(podName1, '/', true)
-      expect(response2.getDirectories()).toHaveLength(2)
-      const dir2 = response2.getDirectories()[0].getDirectories()
+      expect(response2.directories).toHaveLength(2)
+      const dir2 = response2.directories[0].directories
       expect(dir2).toHaveLength(1)
-      expect(response2.getDirectories()[1].getDirectories()).toHaveLength(0)
-      expect(response2.getDirectories()[1].name).toEqual(directoryName2)
+      expect(response2.directories[1].directories).toHaveLength(0)
+      expect(response2.directories[1].name).toEqual(directoryName2)
       expect(dir2[0].name).toEqual(subDirectoryName1)
 
       // test mixed clients directory creation in the same account
@@ -315,18 +315,18 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
 
       await fdp.account.login(user.username, user.password)
       const fdpResponse = await fdp.directory.read(podName1, '/', true)
-      expect(fdpResponse.getDirectories()).toHaveLength(1)
-      const dir1 = fdpResponse.getDirectories()[0]
+      expect(fdpResponse.directories).toHaveLength(1)
+      const dir1 = fdpResponse.directories[0]
       expect(dir1.name).toEqual(directoryName1)
 
       await fairos.dirRmdir(podName1, fullDirectoryName1)
       const fdpResponse2 = await fdp.directory.read(podName1, '/', true)
-      expect(fdpResponse2.getDirectories()).toHaveLength(0)
+      expect(fdpResponse2.directories).toHaveLength(0)
 
       // test mixed interaction (directory created from fairos and deleted with fdp)
       await fdp.directory.delete(podName1, fullDirectoryName1)
       const fdpResponse3 = await fdp.directory.read(podName1, '/', true)
-      expect(fdpResponse3.getDirectories()).toHaveLength(0)
+      expect(fdpResponse3.directories).toHaveLength(0)
       const fairosDirs = await fairos.dirLs(podName1)
       expect(fairosDirs.data).toEqual({})
     })
@@ -454,19 +454,19 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
 
       await fdp.account.login(user.username, user.password)
       const fdpResponse = await fdp.directory.read(podName1, '/', true)
-      expect(fdpResponse.getFiles()).toHaveLength(2)
-      expect(fdpResponse.getFiles()[0].name).toEqual(filenameBig)
-      expect(fdpResponse.getFiles()[1].name).toEqual(filenameBig2)
+      expect(fdpResponse.files).toHaveLength(2)
+      expect(fdpResponse.files[0].name).toEqual(filenameBig)
+      expect(fdpResponse.files[1].name).toEqual(filenameBig2)
 
       await fairos.fileDelete(podName1, fullFilenameBigPath)
       const fdpResponse2 = await fdp.directory.read(podName1, '/', true)
-      expect(fdpResponse2.getFiles()).toHaveLength(1)
-      expect(fdpResponse2.getFiles()[0].name).toEqual(filenameBig2)
+      expect(fdpResponse2.files).toHaveLength(1)
+      expect(fdpResponse2.files[0].name).toEqual(filenameBig2)
 
       // test mixed interaction (file created from fairos and deleted with fdp)
       await fdp.file.delete(podName1, fullFilenameBigPath2)
       const fdpResponse3 = await fdp.directory.read(podName1, '/', true)
-      expect(fdpResponse3.getFiles()).toHaveLength(0)
+      expect(fdpResponse3.files).toHaveLength(0)
       const fairosDirs = await fairos.dirLs(podName1)
       expect(fairosDirs.data).toEqual({})
     })
