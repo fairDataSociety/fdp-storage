@@ -19,7 +19,7 @@ import {
 } from './utils'
 import { uploadData } from '../file/handler'
 import { assertNodeFileInfo, isBrowserFileInfo } from './types'
-import { DirectoryItemSerializable, directoryItemToDirectoryItemSerializable } from '../content-items/serialization'
+import { DirectoryItemSerializable } from '../content-items/serialization'
 
 /**
  * Directory related class
@@ -39,15 +39,13 @@ export class Directory {
     assertPodName(podName)
     const { podAddress, pod } = await getExtendedPodsListByAccountData(this.accountData, podName)
 
-    return directoryItemToDirectoryItemSerializable(
-      await readDirectory(
-        this.accountData.connection.bee,
-        path,
-        podAddress,
-        pod.password,
-        isRecursive,
-        this.accountData.connection.options?.downloadOptions,
-      ),
+    return readDirectory(
+      this.accountData.connection.bee,
+      path,
+      podAddress,
+      pod.password,
+      isRecursive,
+      this.accountData.connection.options?.downloadOptions,
     )
   }
 

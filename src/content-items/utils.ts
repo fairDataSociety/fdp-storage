@@ -1,26 +1,12 @@
-import { FileItem } from './file-item'
-import { DirectoryItem } from './directory-item'
-import { Bee, RequestOptions } from '@ethersphere/bee-js'
+import { Bee, Reference, RequestOptions } from '@ethersphere/bee-js'
 import { EthAddress } from '@ethersphere/bee-js/dist/types/utils/eth'
 import { RawDirectoryMetadata, RawFileMetadata } from '../pod/types'
 import { getFeedData } from '../feed/api'
 import { isRawDirectoryMetadata, isRawFileMetadata } from '../directory/utils'
 import { RawMetadataWithEpoch } from './types'
 import { decryptJson, PodPasswordBytes } from '../utils/encryption'
-
-/**
- * Directory item guard
- */
-export function isDirectoryItem(value: unknown): value is DirectoryItem {
-  return value instanceof DirectoryItem
-}
-
-/**
- * File item guard
- */
-export function isFileItem(value: unknown): value is FileItem {
-  return value instanceof FileItem
-}
+import CryptoJS from 'crypto-js'
+import { DirectoryItemSerializable, FileItemSerializable } from './serialization'
 
 /**
  * Get raw metadata by path
@@ -97,5 +83,39 @@ export async function assertItemIsNotExists(
 ): Promise<void> {
   if (await isItemExists(bee, fullPath, address, downloadOptions)) {
     throw new Error(`${contentType} "${fullPath}" already uploaded to the network`)
+  }
+}
+
+/**
+ * Converts FairOS directory metadata to a `DirectoryItemSerializable`
+ *
+ * @param item raw directory metadata from FairOS
+ */
+export function rawDirectoryMetadataToDirectoryItemSerializable(item: RawDirectoryMetadata): DirectoryItemSerializable {
+  return {
+    name: item.meta.name,
+    directories: [],
+    files: [],
+    raw: item,
+  }
+}
+
+/**
+ * Converts FairOS file metadata to a `FileItemSerializable`
+ *
+ * @param item raw file metadata from FairOS
+ */
+export function rawFileMetadataToFileItemSerializable(item: RawFileMetadata): FileItemSerializable {
+  let reference: Reference | undefined
+
+  if (item.fileInodeReference) {
+    reference = CryptoJS.enc.Base64.parse(item.fileInodeReference).toString(CryptoJS.enc.Hex) as Reference
+  }
+
+  return {
+    name: item.fileName,
+    raw: item,
+    size: Number(item.fileSize),
+    reference,
   }
 }
