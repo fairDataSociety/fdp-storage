@@ -82,5 +82,7 @@ export async function writeFeedDataRaw(
   const id = getId(topicHash, epoch.time, epoch.level)
   const socWriter = connection.bee.makeSOCWriter(privateKey)
 
-  return socWriter.upload(connection.postageBatchId, id, data)
+  return await socWriter.upload(connection.postageBatchId, id, data, {
+    pin: true,
+  })
 }

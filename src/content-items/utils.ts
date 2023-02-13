@@ -78,24 +78,3 @@ export async function isItemExists(
     return false
   }
 }
-
-/**
- * Asserts whether item is not exists
- *
- * @param contentType human readable content type explanation
- * @param bee Bee instance
- * @param fullPath full path to the item
- * @param address uploader address
- * @param downloadOptions options for downloading
- */
-export async function assertItemIsNotExists(
-  contentType: string,
-  bee: Bee,
-  fullPath: string,
-  address: EthAddress,
-  downloadOptions: RequestOptions | undefined,
-): Promise<void> {
-  if (await isItemExists(bee, fullPath, address, downloadOptions)) {
-    throw new Error(`${contentType} "${fullPath}" already uploaded to the network`)
-  }
-}

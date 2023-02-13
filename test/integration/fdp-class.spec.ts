@@ -325,11 +325,11 @@ describe('Fair Data Protocol class', () => {
       await expect(fdp.directory.create(pod, directoryFull1)).rejects.toThrow('Parent directory does not exist')
       await fdp.directory.create(pod, directoryFull)
       await expect(fdp.directory.create(pod, directoryFull)).rejects.toThrow(
-        `Directory "${directoryFull}" already uploaded to the network`,
+        `Directory "${directoryName}" already created`,
       )
       await fdp.directory.create(pod, directoryFull1)
       await expect(fdp.directory.create(pod, directoryFull)).rejects.toThrow(
-        `Directory "${directoryFull}" already uploaded to the network`,
+        `Directory "${directoryName}" already created`,
       )
       const list = await fdp.directory.read(pod, '/', true)
       expect(list.content).toHaveLength(1)
@@ -423,6 +423,62 @@ describe('Fair Data Protocol class', () => {
   })
 
   describe('File', () => {
+    it('should upload the same file after deletion', async () => {
+      const reuploadTimes = 3
+      const fdp = createFdp()
+      generateUser(fdp)
+      const pod = generateRandomHexString()
+      const fileSizeSmall = 100
+      const contentSmall = generateRandomHexString(fileSizeSmall)
+      const filenameSmall = generateRandomHexString() + '.txt'
+      const fullFilenameSmallPath = '/' + filenameSmall
+
+      await fdp.personalStorage.create(pod)
+      await fdp.file.uploadData(pod, fullFilenameSmallPath, contentSmall)
+      const list1 = await fdp.directory.read(pod, '/')
+      expect(list1.getFiles()).toHaveLength(1)
+
+      for (let i = 0; i < reuploadTimes; i++) {
+        await fdp.file.delete(pod, fullFilenameSmallPath)
+        const list2 = await fdp.directory.read(pod, '/')
+        expect(list2.getFiles()).toHaveLength(0)
+
+        await fdp.file.uploadData(pod, fullFilenameSmallPath, contentSmall)
+        const list3 = await fdp.directory.read(pod, '/')
+        expect(list3.getFiles()).toHaveLength(1)
+        expect(list3.getFiles()[0].name).toEqual(filenameSmall)
+        const data1 = await fdp.file.downloadData(pod, fullFilenameSmallPath)
+        expect(data1.text()).toEqual(contentSmall)
+      }
+    })
+
+    it('should replace file with different content', async () => {
+      const reuploadTimes = 3
+      const fdp = createFdp()
+      generateUser(fdp)
+      const pod = generateRandomHexString()
+      const fileSizeSmall = 100
+      const contentSmall = generateRandomHexString(fileSizeSmall)
+      const filenameSmall = generateRandomHexString() + '.txt'
+      const fullFilenameSmallPath = '/' + filenameSmall
+
+      await fdp.personalStorage.create(pod)
+      await fdp.file.uploadData(pod, fullFilenameSmallPath, contentSmall)
+      const list1 = await fdp.directory.read(pod, '/')
+      expect(list1.getFiles()).toHaveLength(1)
+
+      for (let i = 0; i < reuploadTimes; i++) {
+        await fdp.file.delete(pod, fullFilenameSmallPath)
+        const list2 = await fdp.directory.read(pod, '/')
+        expect(list2.getFiles()).toHaveLength(0)
+
+        const newContent = generateRandomHexString(fileSizeSmall)
+        await fdp.file.uploadData(pod, fullFilenameSmallPath, newContent)
+        const data1 = await fdp.file.downloadData(pod, fullFilenameSmallPath)
+        expect(data1.text()).toEqual(newContent)
+      }
+    })
+
     it('should upload small text data as a file', async () => {
       const fdp = createFdp()
       generateUser(fdp)
@@ -435,7 +491,7 @@ describe('Fair Data Protocol class', () => {
       await fdp.personalStorage.create(pod)
       await fdp.file.uploadData(pod, fullFilenameSmallPath, contentSmall)
       await expect(fdp.file.uploadData(pod, fullFilenameSmallPath, contentSmall)).rejects.toThrow(
-        `File "${fullFilenameSmallPath}" already uploaded to the network`,
+        `File "${filenameSmall}" already created`,
       )
       const dataSmall = await fdp.file.downloadData(pod, fullFilenameSmallPath)
       expect(dataSmall.text()).toEqual(contentSmall)
