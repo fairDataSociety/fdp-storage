@@ -533,6 +533,49 @@ describe('Fair Data Protocol class - in browser', () => {
   })
 
   describe('Directory', () => {
+    it('should create directories after deletion', async () => {
+      const pod = generateRandomHexString()
+      const path1Name = generateRandomHexString()
+      const path1Full = `/${path1Name}`
+
+      const { listFiles1, listFiles2, listFiles3 } = await page.evaluate(
+        async (pod: string, path1Full: string) => {
+          const reuploadTimes = 3
+          const fdp = eval(await window.initFdp()) as FdpStorage
+          fdp.account.createWallet()
+
+          await fdp.personalStorage.create(pod)
+          await fdp.directory.create(pod, path1Full)
+          const list1 = await fdp.directory.read(pod, '/')
+
+          let list2
+          let list3
+          for (let i = 0; i < reuploadTimes; i++) {
+            await fdp.directory.delete(pod, path1Full)
+            list2 = await fdp.directory.read(pod, '/')
+
+            await fdp.directory.create(pod, path1Full)
+            list3 = await fdp.directory.read(pod, '/')
+          }
+
+          return {
+            listFiles1: list1.directories,
+            listFiles2: list2?.directories,
+            listFiles3: list3?.directories,
+          }
+        },
+        pod,
+        path1Full,
+      )
+
+      expect(listFiles1).toHaveLength(1)
+      expect(listFiles2).toHaveLength(0)
+      expect(listFiles3).toHaveLength(1)
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      expect(listFiles3[0].name).toEqual(path1Name)
+    })
+
     it('should create new directory', async () => {
       const pod = generateRandomHexString()
       const directoryName = generateRandomHexString()
@@ -551,12 +594,12 @@ describe('Fair Data Protocol class - in browser', () => {
           await fdp.directory.create(pod, directoryFull)
           await window.shouldFail(
             fdp.directory.create(pod, directoryFull),
-            `Directory "${directoryFull}" already uploaded to the network`,
+            `Directory "${directoryFull}" already listed in the parent directory list`,
           )
           await fdp.directory.create(pod, directoryFull1)
           await window.shouldFail(
             fdp.directory.create(pod, directoryFull1),
-            `Directory "${directoryFull1}" already uploaded to the network`,
+            `Directory "${directoryFull1}" already listed in the parent directory list`,
           )
 
           const list = await fdp.directory.read(pod, '/', true)
@@ -715,6 +758,75 @@ describe('Fair Data Protocol class - in browser', () => {
   })
 
   describe('File', () => {
+    it('should upload files after deletion', async () => {
+      const pod = generateRandomHexString()
+      const fileSizeSmall = 100
+      const fileSizeSmall1 = 10
+      const fileSizeSmall2 = 1000
+      const contentSmall = generateRandomHexString(fileSizeSmall)
+      const filenameSmall = generateRandomHexString() + '.txt'
+      const fullFilenameSmallPath = '/' + filenameSmall
+      const contentSamples = [
+        // the same content
+        contentSmall,
+        // less data
+        generateRandomHexString(fileSizeSmall1),
+        // more data
+        generateRandomHexString(fileSizeSmall2),
+      ]
+
+      const { listFiles1, listFiles2, listFiles3, results } = await page.evaluate(
+        async (
+          pod: string,
+          filenameSmall: string,
+          fullFilenameSmallPath: string,
+          contentSmall: string,
+          contentSamples: string[],
+        ) => {
+          const reuploadTimes = 3
+          const fdp = eval(await window.initFdp()) as FdpStorage
+          const { wrapBytesWithHelpers } = window.fdp.Utils
+          fdp.account.createWallet()
+
+          await fdp.personalStorage.create(pod)
+          await fdp.file.uploadData(pod, fullFilenameSmallPath, contentSmall)
+          const list1 = await fdp.directory.read(pod, '/')
+
+          let list2
+          let list3
+          const results = []
+          for (let i = 0; i < reuploadTimes; i++) {
+            await fdp.file.delete(pod, fullFilenameSmallPath)
+            list2 = await fdp.directory.read(pod, '/')
+
+            await fdp.file.uploadData(pod, fullFilenameSmallPath, contentSamples[i])
+            list3 = await fdp.directory.read(pod, '/')
+            results.push(wrapBytesWithHelpers(await fdp.file.downloadData(pod, fullFilenameSmallPath)).text())
+          }
+
+          return {
+            listFiles1: list1.files,
+            listFiles2: list2?.files,
+            listFiles3: list3?.files,
+            results,
+          }
+        },
+        pod,
+        filenameSmall,
+        fullFilenameSmallPath,
+        contentSmall,
+        contentSamples,
+      )
+
+      expect(listFiles1).toHaveLength(1)
+      expect(listFiles2).toHaveLength(0)
+      expect(listFiles3).toHaveLength(1)
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      expect(listFiles3[0].name).toEqual(filenameSmall)
+      expect(results).toEqual(contentSamples)
+    })
+
     it('should upload small text data as a file', async () => {
       const pod = generateRandomHexString()
       const fileSizeSmall = 100
@@ -732,7 +844,7 @@ describe('Fair Data Protocol class - in browser', () => {
           await fdp.file.uploadData(pod, fullFilenameSmallPath, contentSmall)
           await window.shouldFail(
             fdp.file.uploadData(pod, fullFilenameSmallPath, contentSmall),
-            `File "${fullFilenameSmallPath}" already uploaded to the network`,
+            `File "${fullFilenameSmallPath}" already listed in the parent directory list`,
           )
 
           const dataSmall = wrapBytesWithHelpers(await fdp.file.downloadData(pod, fullFilenameSmallPath)).text()

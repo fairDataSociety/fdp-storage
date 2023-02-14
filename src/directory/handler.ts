@@ -1,6 +1,6 @@
 import { writeFeedData } from '../feed/api'
 import { EthAddress } from '@ethersphere/bee-js/dist/types/utils/eth'
-import { Bee, PrivateKeyBytes, Reference, RequestOptions } from '@ethersphere/bee-js'
+import { Bee, Reference, RequestOptions } from '@ethersphere/bee-js'
 import {
   assertDirectoryName,
   assertPartsLength,
@@ -19,7 +19,6 @@ import { utils } from 'ethers'
 import { addEntryToDirectory, DEFAULT_UPLOAD_OPTIONS } from '../content-items/handler'
 import { rawDirectoryMetadataToDirectoryItem, rawFileMetadataToFileItem, getRawMetadata } from '../content-items/utils'
 import { PodPasswordBytes } from '../utils/encryption'
-import { preparePrivateKey } from '../utils/wallet'
 import { DataUploadOptions } from '../file/types'
 import { DirectoryItem } from '../content-items/types'
 
@@ -107,19 +106,19 @@ export async function readDirectory(
  * @param path parent path
  * @param name name of the directory
  * @param podPassword bytes for data encryption from pod metadata
- * @param privateKey private key for uploading data to the network
+ * @param wallet feed owner's wallet
  */
 async function createDirectoryInfo(
   connection: Connection,
   path: string,
   name: string,
   podPassword: PodPasswordBytes,
-  privateKey: PrivateKeyBytes,
+  wallet: utils.HDNode,
 ): Promise<Reference> {
   const now = getUnixTimestamp()
   const metadata = createRawDirectoryMetadata(META_VERSION, path, name, now, now, now)
 
-  return writeFeedData(connection, combine(...splitPath(path), name), metadata, privateKey, podPassword)
+  return writeFeedData(connection, combine(...splitPath(path), name), metadata, wallet, podPassword)
 }
 
 /**
@@ -127,14 +126,14 @@ async function createDirectoryInfo(
  *
  * @param connection Bee connection
  * @param podPassword bytes for data encryption
- * @param privateKey private key for uploading data to the network
+ * @param wallet feed owner's wallet
  */
 export async function createRootDirectory(
   connection: Connection,
   podPassword: PodPasswordBytes,
-  privateKey: PrivateKeyBytes,
+  wallet: utils.HDNode,
 ): Promise<Reference> {
-  return createDirectoryInfo(connection, '', '/', podPassword, privateKey)
+  return createDirectoryInfo(connection, '', '/', podPassword, wallet)
 }
 
 /**
@@ -158,8 +157,7 @@ export async function createDirectory(
   const name = parts[parts.length - 1]
   assertDirectoryName(name)
 
-  const privateKey = preparePrivateKey(podWallet.privateKey)
   const parentPath = getPathFromParts(parts, 1)
   await addEntryToDirectory(connection, podWallet, podPassword, parentPath, name, false, downloadOptions)
-  await createDirectoryInfo(connection, parentPath, name, podPassword, privateKey)
+  await createDirectoryInfo(connection, parentPath, name, podPassword, podWallet)
 }

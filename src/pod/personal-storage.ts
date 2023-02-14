@@ -109,7 +109,7 @@ export class PersonalStorage {
       this.accountData.connection,
       POD_TOPIC,
       allPodsData,
-      wallet.privateKey,
+      wallet,
       preparePrivateKey(wallet.privateKey),
       epoch,
     )

@@ -2,7 +2,7 @@ import { Connection } from '../connection/connection'
 import { utils } from 'ethers'
 import { Reference, RequestOptions } from '@ethersphere/bee-js'
 import { getUnixTimestamp } from '../utils/time'
-import { writeFeedData } from '../feed/api'
+import { deleteFeedData, writeFeedData } from '../feed/api'
 import { getRawDirectoryMetadataBytes } from '../directory/adapter'
 import { DIRECTORY_TOKEN, FILE_TOKEN } from '../file/handler'
 import { assertRawDirectoryMetadata, combine, splitPath } from '../directory/utils'
@@ -65,7 +65,7 @@ export async function addEntryToDirectory(
   parentData.fileOrDirNames = parentData.fileOrDirNames ?? []
 
   if (parentData.fileOrDirNames.includes(itemToAdd)) {
-    throw new Error(`${itemText} already listed in the parent directory list`)
+    throw new Error(`${itemText} "${fullPath}" already listed in the parent directory list`)
   }
 
   parentData.fileOrDirNames.push(itemToAdd)
@@ -75,7 +75,7 @@ export async function addEntryToDirectory(
     connection,
     parentPath,
     getRawDirectoryMetadataBytes(parentData),
-    wallet.privateKey,
+    wallet,
     podPassword,
     metadataWithEpoch.epoch.getNextEpoch(getUnixTimestamp()),
   )
@@ -116,12 +116,8 @@ export async function removeEntryFromDirectory(
     parentData.fileOrDirNames = parentData.fileOrDirNames.filter(name => name !== itemToRemove)
   }
 
-  return writeFeedData(
-    connection,
-    parentPath,
-    getRawDirectoryMetadataBytes(parentData),
-    wallet.privateKey,
-    podPassword,
-    metadataWithEpoch.epoch.getNextEpoch(getUnixTimestamp()),
-  )
+  const nextEpoch = metadataWithEpoch.epoch.getNextEpoch(getUnixTimestamp())
+  await deleteFeedData(connection, entryPath, wallet, podPassword, nextEpoch)
+
+  return writeFeedData(connection, parentPath, getRawDirectoryMetadataBytes(parentData), wallet, podPassword, nextEpoch)
 }

@@ -155,7 +155,7 @@ export async function uploadData(
   }
 
   await addEntryToDirectory(connection, podWallet, pod.password, pathInfo.path, pathInfo.filename, true)
-  await writeFeedData(connection, fullPath, getFileMetadataRawBytes(meta), podWallet.privateKey, pod.password)
+  await writeFeedData(connection, fullPath, getFileMetadataRawBytes(meta), podWallet, pod.password)
 
   return meta
 }

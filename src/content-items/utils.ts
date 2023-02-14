@@ -1,7 +1,7 @@
 import { Bee, Reference, RequestOptions } from '@ethersphere/bee-js'
 import { EthAddress } from '@ethersphere/bee-js/dist/types/utils/eth'
 import { RawDirectoryMetadata, RawFileMetadata } from '../pod/types'
-import { getFeedData } from '../feed/api'
+import { DELETE_FEED_MAGIC_WORD, getFeedData } from '../feed/api'
 import { isRawDirectoryMetadata, isRawFileMetadata } from '../directory/utils'
 import { DirectoryItem, FileItem, RawMetadataWithEpoch } from './types'
 import { decryptJson, PodPasswordBytes } from '../utils/encryption'
@@ -56,9 +56,7 @@ export async function isItemExists(
   requestOptions: RequestOptions | undefined,
 ): Promise<boolean> {
   try {
-    await getFeedData(bee, fullPath, address, requestOptions)
-
-    return true
+    return (await getFeedData(bee, fullPath, address, downloadOptions)).data.text() === DELETE_FEED_MAGIC_WORD
   } catch (e) {
     return false
   }

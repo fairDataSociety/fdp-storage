@@ -1,6 +1,6 @@
 import { Bee, Reference, Utils } from '@ethersphere/bee-js'
 import { assertBase64UrlData, assertUsername } from './utils'
-import { Wallet } from 'ethers'
+import { utils, Wallet } from 'ethers'
 import { getFeedData, writeFeedDataRaw } from '../feed/api'
 import { Connection } from '../connection/connection'
 import { stringToBytes } from '../utils/bytes'
@@ -41,5 +41,10 @@ export async function uploadEncryptedMnemonic(
   assertUsername(username)
   assertBase64UrlData(encryptedMnemonic)
 
-  return writeFeedDataRaw(connection, username, stringToBytes(encryptedMnemonic), wallet.privateKey)
+  return writeFeedDataRaw(
+    connection,
+    username,
+    stringToBytes(encryptedMnemonic),
+    utils.HDNode.fromMnemonic(wallet.mnemonic.phrase),
+  )
 }
