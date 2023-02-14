@@ -17,12 +17,11 @@ import { createRawDirectoryMetadata, META_VERSION } from '../pod/utils'
 import { Connection } from '../connection/connection'
 import { utils } from 'ethers'
 import { addEntryToDirectory, DEFAULT_UPLOAD_OPTIONS } from '../content-items/handler'
-import { DirectoryItem } from '../content-items/directory-item'
-import { FileItem } from '../content-items/file-item'
-import { getRawMetadata } from '../content-items/utils'
+import { rawDirectoryMetadataToDirectoryItem, rawFileMetadataToFileItem, getRawMetadata } from '../content-items/utils'
 import { PodPasswordBytes } from '../utils/encryption'
 import { preparePrivateKey } from '../utils/wallet'
 import { DataUploadOptions } from '../file/types'
+import { DirectoryItem } from '../content-items/types'
 
 /**
  * Options for uploading a directory
@@ -67,7 +66,7 @@ export async function readDirectory(
 ): Promise<DirectoryItem> {
   const parentRawDirectoryMetadata = (await getRawMetadata(bee, path, address, podPassword, downloadOptions)).metadata
   assertRawDirectoryMetadata(parentRawDirectoryMetadata)
-  const resultDirectoryItem = DirectoryItem.fromRawDirectoryMetadata(parentRawDirectoryMetadata)
+  const resultDirectoryItem = rawDirectoryMetadataToDirectoryItem(parentRawDirectoryMetadata)
 
   if (!parentRawDirectoryMetadata.fileOrDirNames) {
     return resultDirectoryItem
@@ -81,20 +80,20 @@ export async function readDirectory(
       item = combine(...splitPath(path), item.substring(FILE_TOKEN.length))
       const data = (await getRawMetadata(bee, item, address, podPassword, downloadOptions)).metadata
       assertRawFileMetadata(data)
-      resultDirectoryItem.content.push(FileItem.fromRawFileMetadata(data))
+      resultDirectoryItem.files.push(rawFileMetadataToFileItem(data))
     } else if (isDirectory) {
       item = combine(...splitPath(path), item.substring(DIRECTORY_TOKEN.length))
       const data = (await getRawMetadata(bee, item, address, podPassword, downloadOptions)).metadata
       assertRawDirectoryMetadata(data)
-      const currentMetadata = DirectoryItem.fromRawDirectoryMetadata(data)
+      const currentMetadata = rawDirectoryMetadataToDirectoryItem(data)
 
       if (isRecursive) {
-        currentMetadata.content = (
-          await readDirectory(bee, item, address, podPassword, isRecursive, downloadOptions)
-        ).content
+        const content = await readDirectory(bee, item, address, podPassword, isRecursive, downloadOptions)
+        currentMetadata.files = content.files
+        currentMetadata.directories = content.directories
       }
 
-      resultDirectoryItem.content.push(currentMetadata)
+      resultDirectoryItem.directories.push(currentMetadata)
     }
   }
 

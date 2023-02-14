@@ -2,7 +2,7 @@ import crypto from 'crypto'
 import { BATCH_ID_HEX_LENGTH, BatchId, Bee, BeeDebug, Utils } from '@ethersphere/bee-js'
 import { FdpStorage } from '../src'
 import { utils, Wallet } from 'ethers'
-import { Environments, getEnvironmentConfig } from '@fairdatasociety/fdp-contracts'
+import { Environments, getEnvironmentConfig } from '@fairdatasociety/fdp-contracts-js'
 import axios from 'axios'
 
 export interface TestUser {

@@ -1,7 +1,7 @@
 import { Utils } from '@ethersphere/bee-js'
 import { POD_PASSWORD_LENGTH, PodPasswordBytes } from './encryption'
 
-export type { PublicKey } from '@fairdatasociety/fdp-contracts'
+export type { PublicKey } from '@fairdatasociety/fdp-contracts-js'
 export const ETH_ADDR_HEX_LENGTH = 40
 
 /**

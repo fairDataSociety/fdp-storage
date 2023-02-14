@@ -9,6 +9,7 @@ import { createUserV1 } from '../../src/account/account'
 import { PodShareInfo, RawFileMetadata } from '../../src/pod/types'
 import { FileShareInfo } from '../../src/file/types'
 import { BatchId } from '@ethersphere/bee-js'
+import { ETH_ADDR_HEX_LENGTH } from '../../src/utils/type'
 
 jest.setTimeout(400000)
 describe('Fair Data Protocol class - in browser', () => {
@@ -264,7 +265,7 @@ describe('Fair Data Protocol class - in browser', () => {
         const fdp = eval(await window.initFdp()) as FdpStorage
         fdp.account.createWallet()
 
-        return (await fdp.personalStorage.list()).getPods()
+        return (await fdp.personalStorage.list()).pods
       })
 
       expect(answer).toEqual([])
@@ -284,7 +285,7 @@ describe('Fair Data Protocol class - in browser', () => {
           await window.shouldFail(fdp.personalStorage.create(''), 'Pod name is too short')
 
           return {
-            result: (await fdp.personalStorage.list()).getPods(),
+            result: (await fdp.personalStorage.list()).pods,
             mnemonic: wallet.mnemonic!.phrase,
           }
         },
@@ -361,7 +362,7 @@ describe('Fair Data Protocol class - in browser', () => {
           await window.shouldFail(fdp.personalStorage.delete(notExistsPod), `Pod "${notExistsPod}" does not exist`)
 
           return {
-            list: (await fdp.personalStorage.list()).getPods(),
+            list: (await fdp.personalStorage.list()).pods,
             mnemonic: wallet.mnemonic.phrase,
           }
         },
@@ -379,7 +380,7 @@ describe('Fair Data Protocol class - in browser', () => {
 
           await fdp.personalStorage.delete(podName)
 
-          return (await fdp.personalStorage.list()).getPods()
+          return (await fdp.personalStorage.list()).pods
         },
         podName,
         mnemonic,
@@ -394,7 +395,7 @@ describe('Fair Data Protocol class - in browser', () => {
 
           await fdp.personalStorage.delete(podName)
 
-          return (await fdp.personalStorage.list()).getPods()
+          return (await fdp.personalStorage.list()).pods
         },
         podName1,
         mnemonic,
@@ -423,7 +424,7 @@ describe('Fair Data Protocol class - in browser', () => {
 
       expect(sharedReference).toBeDefined()
       expect(sharedData.podName).toEqual(podName)
-      expect(sharedData.podAddress).toHaveLength(40)
+      expect(sharedData.podAddress).toHaveLength(ETH_ADDR_HEX_LENGTH)
       expect(sharedData.userAddress).toEqual(walletAddress.toLowerCase().replace('0x', ''))
     })
 
@@ -447,7 +448,7 @@ describe('Fair Data Protocol class - in browser', () => {
 
       expect(sharedReference).toBeDefined()
       expect(sharedData.podName).toEqual(podName)
-      expect(sharedData.podAddress).toHaveLength(40)
+      expect(sharedData.podAddress).toHaveLength(ETH_ADDR_HEX_LENGTH)
       expect(sharedData.userAddress).toEqual(walletAddress.toLowerCase().replace('0x', ''))
     })
 
@@ -475,7 +476,7 @@ describe('Fair Data Protocol class - in browser', () => {
           const list0 = await fdp1.personalStorage.list()
           const pod = await fdp1.personalStorage.saveShared(sharedReference)
           const list = await fdp1.personalStorage.list()
-          const savedPod = list.getSharedPods()[0]
+          const savedPod = list.sharedPods[0]
           await window.shouldFail(
             fdp1.personalStorage.saveShared(sharedReference),
             `Shared pod with name "${podName}" already exists`,
@@ -486,23 +487,23 @@ describe('Fair Data Protocol class - in browser', () => {
           })
 
           const list1 = await fdp1.personalStorage.list()
-          const savedPod1 = list1.getSharedPods()[1]
+          const savedPod1 = list1.sharedPods[1]
 
           return {
             listBeforeSave: {
-              pods: list0.getPods(),
-              sharedPods: list0.getSharedPods(),
+              pods: list0.pods,
+              sharedPods: list0.sharedPods,
             },
             podAfterCreate: pod,
             listAfterCreate: {
-              pods: list.getPods(),
-              sharedPods: list.getSharedPods(),
+              pods: list.pods,
+              sharedPods: list.sharedPods,
             },
             savedPod,
             savedPodCustom: pod1,
             listAfterSaveCustom: {
-              pods: list1.getPods(),
-              sharedPods: list1.getSharedPods(),
+              pods: list1.pods,
+              sharedPods: list1.sharedPods,
             },
             podAfterSaveCustom: savedPod1,
           }
@@ -514,19 +515,19 @@ describe('Fair Data Protocol class - in browser', () => {
       expect(listBeforeSave.pods).toHaveLength(0)
       expect(listBeforeSave.sharedPods).toHaveLength(0)
       expect(podAfterCreate.name).toEqual(podName)
-      expect(Object.keys(podAfterCreate.address)).toHaveLength(20)
+      expect(Object.keys(podAfterCreate.address)).toHaveLength(ETH_ADDR_HEX_LENGTH)
       expect(listAfterCreate.pods).toHaveLength(0)
       expect(listAfterCreate.sharedPods).toHaveLength(1)
       expect(savedPod.name).toEqual(podName)
-      expect(Object.keys(savedPod.address)).toHaveLength(20)
+      expect(savedPod.address).toHaveLength(ETH_ADDR_HEX_LENGTH)
       expect(savedPod.address).toStrictEqual(podAfterCreate.address)
       expect(savedPodCustom.name).toEqual(newPodName)
-      expect(Object.keys(savedPodCustom.address)).toHaveLength(20)
+      expect(savedPodCustom.address).toHaveLength(ETH_ADDR_HEX_LENGTH)
       expect(savedPodCustom.address).toStrictEqual(savedPod.address)
       expect(listAfterSaveCustom.pods).toHaveLength(0)
       expect(listAfterSaveCustom.sharedPods).toHaveLength(2)
       expect(podAfterSaveCustom.name).toEqual(newPodName)
-      expect(Object.keys(podAfterSaveCustom.address)).toHaveLength(20)
+      expect(podAfterSaveCustom.address).toHaveLength(ETH_ADDR_HEX_LENGTH)
       expect(podAfterSaveCustom.address).toStrictEqual(savedPod.address)
     })
   })
@@ -559,9 +560,9 @@ describe('Fair Data Protocol class - in browser', () => {
           )
 
           const list = await fdp.directory.read(pod, '/', true)
-          const directoryInfo = list.getDirectories()[0]
-          const subDirectoriesLength = directoryInfo.getDirectories().length
-          const directoryInfo1 = directoryInfo.getDirectories()[0]
+          const directoryInfo = list.directories[0]
+          const subDirectoriesLength = directoryInfo.directories.length
+          const directoryInfo1 = directoryInfo.directories[0]
 
           return {
             list,
@@ -575,7 +576,7 @@ describe('Fair Data Protocol class - in browser', () => {
         directoryFull1,
       )
 
-      expect(list.content).toHaveLength(1)
+      expect(list.directories).toHaveLength(1)
       expect(subDirectoriesLength).toEqual(1)
       expect(directoryInfo.name).toEqual(directoryName)
       expect(directoryInfo1.name).toEqual(directoryName1)
@@ -607,8 +608,109 @@ describe('Fair Data Protocol class - in browser', () => {
         directoryFull,
       )
 
-      expect(list.content).toHaveLength(1)
-      expect(listAfter.content).toHaveLength(0)
+      expect(list.directories).toHaveLength(1)
+      expect(listAfter.files).toHaveLength(0)
+    })
+
+    it('should serialize and deserialize directories list and pods', async () => {
+      const fdp = createFdp()
+      generateUser(fdp)
+      const pod = generateRandomHexString()
+      const directoriesToCreate = ['/one', '/two', '/three', '/one/one-one', '/one/one-one/one-one-one', '/two/two-one']
+      const filesToCreate = [
+        {
+          path: '/file1.txt',
+          data: generateRandomHexString(),
+        },
+        {
+          path: '/file2.txt',
+          data: generateRandomHexString(),
+        },
+        {
+          path: '/one/file-in-one-1.txt',
+          data: generateRandomHexString(),
+        },
+        {
+          path: '/one/file-in-one-2.txt',
+          data: generateRandomHexString(),
+        },
+      ]
+
+      const { counts } = await page.evaluate(
+        async (pod: string, directoriesToCreate: string[], filesToCreate: { path: string; data: string }[]) => {
+          const fdp = eval(await window.initFdp()) as FdpStorage
+          const { DirectoryItem } = window.fdp
+          fdp.account.createWallet()
+
+          await fdp.personalStorage.create(pod)
+          const pods1 = await fdp.personalStorage.list()
+          const pods1Serialized = JSON.stringify(pods1)
+          const pods1Deserialized = JSON.parse(pods1Serialized)
+          const firstPod = pods1.pods[0]
+          const firstPodDeserialized = pods1Deserialized.pods[0]
+
+          for (const directoryToCreate of directoriesToCreate) {
+            await fdp.directory.create(pod, directoryToCreate)
+          }
+
+          for (const fileToCreate of filesToCreate) {
+            await fdp.file.uploadData(pod, fileToCreate.path, fileToCreate.data)
+          }
+
+          const list1 = await fdp.directory.read(pod, '/', true)
+          const serialized = JSON.stringify(list1)
+          const recovered = JSON.parse(serialized) as typeof DirectoryItem
+          const recoveredDirOne1 = recovered.directories.find(item => item.name === 'one')
+          const recoveredDirOneOne1 = recoveredDirOne1?.directories.find(item => item.name === 'one-one')
+          const recoveredDirTwo1 = recovered.directories.find(item => item.name === 'two')
+
+          const dirOne1Length = recoveredDirOne1?.directories.length
+          const dirOneOne1Length = recoveredDirOneOne1?.directories.length
+          const dirOneOne1FilesLength = recoveredDirOneOne1?.files.length
+          const dirOne1FilesLength = recoveredDirOne1?.files.length
+          const dirTwo1Length = recoveredDirTwo1?.directories.length
+
+          return {
+            counts: {
+              dir1Length: recovered.directories.length,
+              files1Length: recovered.files.length,
+              dirOne1Length,
+              dirOneOne1Length,
+              dirOneOne1FilesLength,
+              dirOne1FilesLength,
+              dirTwo1Length,
+              pods1PodsLength: pods1.pods.length,
+              pods1SharedPodsLength: pods1.sharedPods.length,
+              deserializedPods1PodsLength: pods1Deserialized.pods.length,
+              deserializedPods1SharedPodsLength: pods1Deserialized.sharedPods.length,
+              pods1Name: firstPod.name,
+              pods1Index: firstPod.index,
+              pods1Password: firstPod.password,
+              deserializedPods1Name: firstPodDeserialized.name,
+              deserializedPods1Index: firstPodDeserialized.index,
+              deserializedPods1Password: firstPodDeserialized.password,
+            },
+          }
+        },
+        pod,
+        directoriesToCreate,
+        filesToCreate,
+      )
+
+      expect(counts.dir1Length).toEqual(3)
+      expect(counts.files1Length).toEqual(2)
+      expect(counts.dirOne1Length).toEqual(1)
+      expect(counts.dirOneOne1Length).toEqual(1)
+      expect(counts.dirOneOne1FilesLength).toEqual(0)
+      expect(counts.dirOne1FilesLength).toEqual(2)
+      expect(counts.dirTwo1Length).toEqual(1)
+
+      // pods checking
+      expect(counts.pods1PodsLength).toStrictEqual(counts.deserializedPods1PodsLength)
+      expect(counts.pods1SharedPodsLength).toStrictEqual(counts.deserializedPods1SharedPodsLength)
+      expect(counts.pods1Name).toStrictEqual(counts.deserializedPods1Name)
+      expect(counts.pods1Index).toStrictEqual(counts.deserializedPods1Index)
+      expect(counts.pods1Password).toStrictEqual(counts.deserializedPods1Password)
     })
   })
 
@@ -623,6 +725,7 @@ describe('Fair Data Protocol class - in browser', () => {
       const { dataSmall, fdpList, fileInfoSmall } = await page.evaluate(
         async (pod: string, fullFilenameSmallPath: string, contentSmall: string) => {
           const fdp = eval(await window.initFdp()) as FdpStorage
+          const { wrapBytesWithHelpers } = window.fdp.Utils
           fdp.account.createWallet()
 
           await fdp.personalStorage.create(pod)
@@ -632,9 +735,9 @@ describe('Fair Data Protocol class - in browser', () => {
             `File "${fullFilenameSmallPath}" already uploaded to the network`,
           )
 
-          const dataSmall = (await fdp.file.downloadData(pod, fullFilenameSmallPath)).text()
+          const dataSmall = wrapBytesWithHelpers(await fdp.file.downloadData(pod, fullFilenameSmallPath)).text()
           const fdpList = await fdp.directory.read(pod, '/', true)
-          const fileInfoSmall = fdpList.getFiles()[0]
+          const fileInfoSmall = fdpList.files[0]
 
           return {
             dataSmall,
@@ -648,7 +751,7 @@ describe('Fair Data Protocol class - in browser', () => {
       )
 
       expect(dataSmall).toEqual(contentSmall)
-      expect(fdpList.content.length).toEqual(1)
+      expect(fdpList.files.length).toEqual(1)
       expect(fileInfoSmall.name).toEqual(filenameSmall)
       expect(fileInfoSmall.size).toEqual(fileSizeSmall)
     })
@@ -671,6 +774,7 @@ describe('Fair Data Protocol class - in browser', () => {
           incorrectFullPath: string,
         ) => {
           const fdp = eval(await window.initFdp()) as FdpStorage
+          const { wrapBytesWithHelpers } = window.fdp.Utils
           fdp.account.createWallet()
 
           await fdp.personalStorage.create(pod)
@@ -680,9 +784,9 @@ describe('Fair Data Protocol class - in browser', () => {
           )
           await fdp.file.uploadData(pod, fullFilenameBigPath, contentBig)
           await window.shouldFail(fdp.file.downloadData(pod, incorrectFullPath), 'Data not found')
-          const dataBig = (await fdp.file.downloadData(pod, fullFilenameBigPath)).text()
+          const dataBig = wrapBytesWithHelpers(await fdp.file.downloadData(pod, fullFilenameBigPath)).text()
           const fdpList = await fdp.directory.read(pod, '/', true)
-          const fileInfoBig = fdpList.getFiles()[0]
+          const fileInfoBig = fdpList.files[0]
 
           return {
             dataBig,
@@ -698,7 +802,7 @@ describe('Fair Data Protocol class - in browser', () => {
       )
 
       expect(dataBig).toEqual(contentBig)
-      expect(fdpList.content.length).toEqual(1)
+      expect(fdpList.files.length).toEqual(1)
       expect(fileInfoBig.name).toEqual(filenameBig)
       expect(fileInfoBig.size).toEqual(fileSizeBig)
     })
@@ -732,8 +836,8 @@ describe('Fair Data Protocol class - in browser', () => {
         contentSmall,
       )
 
-      expect(fdpList.content.length).toEqual(1)
-      expect(fdpListAfter.content.length).toEqual(0)
+      expect(fdpList.files.length).toEqual(1)
+      expect(fdpListAfter.files.length).toEqual(0)
     })
 
     it('should share a file', async () => {
@@ -822,6 +926,7 @@ describe('Fair Data Protocol class - in browser', () => {
         ) => {
           const fdp = eval(await window.initFdp()) as FdpStorage
           const fdp1 = eval(await window.initFdp()) as FdpStorage
+          const { wrapBytesWithHelpers } = window.fdp.Utils
           fdp.account.createWallet()
           fdp1.account.createWallet()
 
@@ -832,16 +937,16 @@ describe('Fair Data Protocol class - in browser', () => {
           const sharedData = await fdp1.file.saveShared(pod1, newFilePath, sharedReference)
 
           const list = await fdp1.directory.read(pod1, '/')
-          const files = list.getFiles()
+          const files = list.files
           const fileInfo = files[0]
           const meta = fileInfo.raw as RawFileMetadata
-          const data = (await fdp1.file.downloadData(pod1, fullFilenameSmallPath)).text()
+          const data = wrapBytesWithHelpers(await fdp1.file.downloadData(pod1, fullFilenameSmallPath)).text()
 
           // checking saving with custom name
           const sharedData1 = await fdp1.file.saveShared(pod1, newFilePath, sharedReference, { name: customName })
-          const data1 = (await fdp1.file.downloadData(pod1, '/' + customName)).text()
+          const data1 = wrapBytesWithHelpers(await fdp1.file.downloadData(pod1, '/' + customName)).text()
           const list1 = await fdp1.directory.read(pod1, '/')
-          const files1 = list1.getFiles()
+          const files1 = list1.files
 
           return {
             sharedData,

@@ -4,6 +4,7 @@ import { PrivateKeyBytes, Utils } from '@ethersphere/bee-js'
 import { bytesToHex } from './hex'
 import { bytesToString, bytesToWordArray, wordArrayToBytes } from './bytes'
 import { isArrayBufferView, isString } from './type'
+import { jsonParse } from './json'
 
 export const IV_LENGTH = 16
 export const POD_PASSWORD_LENGTH = 32
@@ -120,5 +121,5 @@ export function decryptJson(password: string | Uint8Array, data: Uint8Array): un
     throw new Error('Incorrect password type')
   }
 
-  return JSON.parse(bytesToString(decryptBytes(passwordString, data)))
+  return jsonParse(bytesToString(decryptBytes(passwordString, data)), 'decrypted json')
 }

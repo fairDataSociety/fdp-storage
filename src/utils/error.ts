@@ -9,9 +9,3 @@ export class BeeArgumentError extends BeeError {
     super(message)
   }
 }
-
-export class BeeResponseError extends BeeError {
-  public constructor(readonly status: number, message: string) {
-    super(message)
-  }
-}

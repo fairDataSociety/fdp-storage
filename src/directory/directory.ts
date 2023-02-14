@@ -1,7 +1,6 @@
 import { AccountData } from '../account/account-data'
 import { createDirectory, readDirectory, DEFAULT_UPLOAD_DIRECTORY_OPTIONS, UploadDirectoryOptions } from './handler'
 import { assertAccount } from '../account/utils'
-import { DirectoryItem } from '../content-items/directory-item'
 import { removeEntryFromDirectory } from '../content-items/handler'
 import { extractPathInfo, readBrowserFileAsBytes } from '../file/utils'
 import { assertPodName, getExtendedPodsListByAccountData } from '../pod/utils'
@@ -20,6 +19,7 @@ import {
 } from './utils'
 import { uploadData } from '../file/handler'
 import { assertNodeFileInfo, isBrowserFileInfo } from './types'
+import { DirectoryItem } from '../content-items/types'
 
 /**
  * Directory related class

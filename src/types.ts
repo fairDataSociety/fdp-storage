@@ -1,5 +1,7 @@
 import { RequestOptions } from '@ethersphere/bee-js'
-import { Environment } from '@fairdatasociety/fdp-contracts'
+import { Environment } from '@fairdatasociety/fdp-contracts-js'
+
+export { DirectoryItem, FileItem } from './content-items/types'
 
 /**
  * Fair Data Protocol options

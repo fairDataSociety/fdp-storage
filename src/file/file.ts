@@ -16,7 +16,7 @@ import { downloadData, uploadData } from './handler'
 import { getFileMetadataRawBytes, rawFileMetadataToFileMetadata } from './adapter'
 import { DataUploadOptions, FileReceiveOptions, FileShareInfo } from './types'
 import { addEntryToDirectory, DEFAULT_UPLOAD_OPTIONS, removeEntryFromDirectory } from '../content-items/handler'
-import { Data, Reference } from '@ethersphere/bee-js'
+import { Reference } from '@ethersphere/bee-js'
 import { getRawMetadata } from '../content-items/utils'
 import { assertRawFileMetadata, combine, splitPath } from '../directory/utils'
 import { assertEncryptedReference, EncryptedReference } from '../utils/hex'
@@ -33,7 +33,7 @@ export class File {
    * @param podName pod where file is stored
    * @param fullPath full path of the file
    */
-  async downloadData(podName: string, fullPath: string): Promise<Data> {
+  async downloadData(podName: string, fullPath: string): Promise<Uint8Array> {
     assertAccount(this.accountData)
     assertPodName(podName)
     assertFullPathWithName(fullPath)

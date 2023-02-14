@@ -1,4 +1,4 @@
-import { Pod, PodReceiveOptions, PodShareInfo, SharedPod } from './types'
+import { SharedPod, PodReceiveOptions, PodShareInfo, PodsList, Pod } from './types'
 import { assertAccount } from '../account/utils'
 import { writeFeedData } from '../feed/api'
 import { AccountData } from '../account/account-data'
@@ -11,13 +11,15 @@ import {
   createPodShareInfo,
   getSharedPodInfo,
   podListToBytes,
+  podsListPreparedToPodsList,
+  podPreparedToPod,
+  sharedPodPreparedToSharedPod,
 } from './utils'
 import { getUnixTimestamp } from '../utils/time'
 import { getExtendedPodsList, getPodsList } from './api'
 import { uploadBytes } from '../file/utils'
 import { stringToBytes } from '../utils/bytes'
 import { Reference, Utils } from '@ethersphere/bee-js'
-import { List } from './list'
 import { assertEncryptedReference, EncryptedReference } from '../utils/hex'
 import { prepareEthAddress, preparePrivateKey } from '../utils/wallet'
 
@@ -31,7 +33,7 @@ export class PersonalStorage {
    *
    * @returns list of pods
    */
-  async list(): Promise<List> {
+  async list(): Promise<PodsList> {
     assertAccount(this.accountData)
 
     const data = await getPodsList(
@@ -40,7 +42,7 @@ export class PersonalStorage {
       this.accountData.connection.options?.downloadOptions,
     )
 
-    return data.podsList
+    return podsListPreparedToPodsList(data.podsList)
   }
 
   /**
@@ -63,7 +65,7 @@ export class PersonalStorage {
 
     assertPod(pod)
 
-    return pod
+    return podPreparedToPod(pod)
   }
 
   /**
@@ -80,15 +82,15 @@ export class PersonalStorage {
       this.accountData.connection.options?.downloadOptions,
     )
 
-    assertPodsLength(podsInfo.podsList.getPods().length)
-    const pod = podsInfo.podsList.getPods().find(item => item.name === name)
+    assertPodsLength(podsInfo.podsList.pods.length)
+    const pod = podsInfo.podsList.pods.find(item => item.name === name)
 
     if (!pod) {
       throw new Error(`Pod "${name}" does not exist`)
     }
 
-    const podsFiltered = podsInfo.podsList.getPods().filter(item => item.name !== name)
-    const podsSharedFiltered = podsInfo.podsList.getSharedPods().filter(item => item.name !== name)
+    const podsFiltered = podsInfo.podsList.pods.filter(item => item.name !== name)
+    const podsSharedFiltered = podsInfo.podsList.sharedPods.filter(item => item.name !== name)
     const allPodsData = podListToBytes(podsFiltered, podsSharedFiltered)
     const wallet = this.accountData.wallet!
     await writeFeedData(
@@ -169,6 +171,6 @@ export class PersonalStorage {
 
     assertSharedPod(pod)
 
-    return pod
+    return sharedPodPreparedToSharedPod(pod)
   }
 }
