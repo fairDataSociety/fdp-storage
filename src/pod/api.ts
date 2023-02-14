@@ -5,7 +5,7 @@ import { POD_TOPIC } from './personal-storage'
 import { ExtendedPodInfo, extractPods, PodsInfo } from './utils'
 import { getWalletByIndex, prepareEthAddress, privateKeyToBytes } from '../utils/wallet'
 import { utils } from 'ethers'
-import { PodsList } from './types'
+import { PodsListPrepared } from './types'
 
 /**
  * Gets pods list with lookup answer
@@ -16,7 +16,7 @@ import { PodsList } from './types'
  */
 export async function getPodsList(bee: Bee, userWallet: utils.HDNode, options?: RequestOptions): Promise<PodsInfo> {
   let lookupAnswer: LookupAnswer | undefined
-  let podsList: PodsList = { pods: [], sharedPods: [] }
+  let podsList: PodsListPrepared = { pods: [], sharedPods: [] }
 
   try {
     lookupAnswer = await getFeedData(bee, POD_TOPIC, prepareEthAddress(userWallet.address), options)

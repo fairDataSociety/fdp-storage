@@ -6,8 +6,8 @@ import {
   RawDirectoryMetadata,
   SharedPod,
   SharedPodPrepared,
+  PodsListPrepared,
   PodsList,
-  PodsListSerializable,
 } from './types'
 import { Bee, Data, Utils } from '@ethersphere/bee-js'
 import { bytesToString, stringToBytes, wordArrayToBytes } from '../utils/bytes'
@@ -47,7 +47,7 @@ export const MAX_POD_NAME_LENGTH = 64
  * Information about pods list
  */
 export interface PodsInfo {
-  podsList: PodsList
+  podsList: PodsListPrepared
   lookupAnswer: LookupAnswer | undefined
 }
 
@@ -75,7 +75,7 @@ export interface PathInfo {
  * @param data raw data with pod information
  * @param podPassword bytes of pod password
  */
-export function extractPods(data: Data, podPassword: PodPasswordBytes): PodsList {
+export function extractPods(data: Data, podPassword: PodPasswordBytes): PodsListPrepared {
   return jsonToPodsList(bytesToString(decryptBytes(bytesToHex(podPassword), data)))
 }
 
@@ -172,16 +172,16 @@ export function assertPodName(value: unknown): asserts value is string {
 }
 
 /**
- * Converts Pod to JsonPod
+ * Converts internal `PodPrepared` to serializable `Pod`
  */
-export function podToPodSerializable(pod: PodPrepared): Pod {
+export function podPreparedToPod(pod: PodPrepared): Pod {
   return { ...pod, password: bytesToHex(pod.password) }
 }
 
 /**
- * Converts SharedPod to JsonSharedPod
+ * Converts internal `SharedPod` to serializable `SharedPod`
  */
-export function sharedPodToJsonSharedPod(pod: SharedPodPrepared): SharedPod {
+export function sharedPodPreparedToSharedPod(pod: SharedPodPrepared): SharedPod {
   return { ...pod, password: bytesToHex(pod.password), address: bytesToHex(pod.address) }
 }
 
@@ -193,8 +193,8 @@ export function podListToJSON(pods: PodPrepared[], sharedPods: SharedPodPrepared
   assertSharedPods(sharedPods)
 
   return JSON.stringify({
-    pods: pods.map(item => podToPodSerializable(item)),
-    sharedPods: sharedPods.map(item => sharedPodToJsonSharedPod(item)),
+    pods: pods.map(item => podPreparedToPod(item)),
+    sharedPods: sharedPods.map(item => sharedPodPreparedToSharedPod(item)),
   })
 }
 
@@ -448,19 +448,19 @@ export async function getSharedPodInfo(bee: Bee, reference: EncryptedReference):
 }
 
 /**
- * Converts internal `PodsList` to `PodsListSerializable` for external using
+ * Converts internal `PodsListPrepared` to serializable `PodsList`
  */
-export function podsListToPodsListSerializable(podsList: PodsList): PodsListSerializable {
+export function podsListPreparedToPodsList(podsList: PodsListPrepared): PodsList {
   return {
-    pods: podsList.pods.map(item => podToPodSerializable(item)),
-    sharedPods: podsList.sharedPods.map(item => sharedPodToJsonSharedPod(item)),
+    pods: podsList.pods.map(item => podPreparedToPod(item)),
+    sharedPods: podsList.sharedPods.map(item => sharedPodPreparedToSharedPod(item)),
   }
 }
 
 /**
- * Converts JSON to `PodsList`
+ * Converts JSON to `PodsListPrepared`
  */
-export function jsonToPodsList(json: string): PodsList {
+export function jsonToPodsList(json: string): PodsListPrepared {
   const object = jsonParse(json, 'pod list')
   assertPodsMetadata(object)
   const pods = object.pods.map((item: Pod) => jsonPodToPod(item))
@@ -472,7 +472,7 @@ export function jsonToPodsList(json: string): PodsList {
 }
 
 /**
- * Converts JsonPod to Pod
+ * Converts `Pod` to `PodPrepared`
  */
 export function jsonPodToPod(pod: Pod): PodPrepared {
   const password = Utils.hexToBytes(pod.password) as PodPasswordBytes
@@ -484,8 +484,8 @@ export function jsonPodToPod(pod: Pod): PodPrepared {
 /**
  * Asserts that pods are correct
  */
-export function assertPodsMetadata(value: unknown): asserts value is PodsListSerializable {
-  const data = value as PodsListSerializable
+export function assertPodsMetadata(value: unknown): asserts value is PodsList {
+  const data = value as PodsList
   assertJsonPods(data.pods)
   assertJsonSharedPods(data.sharedPods)
 }

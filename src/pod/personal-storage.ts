@@ -1,4 +1,4 @@
-import { SharedPod, PodReceiveOptions, PodShareInfo, PodsListSerializable, Pod } from './types'
+import { SharedPod, PodReceiveOptions, PodShareInfo, PodsList, Pod } from './types'
 import { assertAccount } from '../account/utils'
 import { writeFeedData } from '../feed/api'
 import { AccountData } from '../account/account-data'
@@ -11,9 +11,9 @@ import {
   createPodShareInfo,
   getSharedPodInfo,
   podListToBytes,
-  podsListToPodsListSerializable,
-  podToPodSerializable,
-  sharedPodToJsonSharedPod,
+  podsListPreparedToPodsList,
+  podPreparedToPod,
+  sharedPodPreparedToSharedPod,
 } from './utils'
 import { getUnixTimestamp } from '../utils/time'
 import { getExtendedPodsList, getPodsList } from './api'
@@ -33,7 +33,7 @@ export class PersonalStorage {
    *
    * @returns list of pods
    */
-  async list(): Promise<PodsListSerializable> {
+  async list(): Promise<PodsList> {
     assertAccount(this.accountData)
 
     const data = await getPodsList(
@@ -42,7 +42,7 @@ export class PersonalStorage {
       this.accountData.connection.options?.downloadOptions,
     )
 
-    return podsListToPodsListSerializable(data.podsList)
+    return podsListPreparedToPodsList(data.podsList)
   }
 
   /**
@@ -65,7 +65,7 @@ export class PersonalStorage {
 
     assertPod(pod)
 
-    return podToPodSerializable(pod)
+    return podPreparedToPod(pod)
   }
 
   /**
@@ -171,6 +171,6 @@ export class PersonalStorage {
 
     assertSharedPod(pod)
 
-    return sharedPodToJsonSharedPod(pod)
+    return sharedPodPreparedToSharedPod(pod)
   }
 }

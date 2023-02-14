@@ -3,17 +3,17 @@ import { PodPasswordBytes } from '../utils/encryption'
 import { HexString } from '../utils/hex'
 
 /**
- * Pods list for internal usage
+ * Pods information prepared for internal usage
  */
-export interface PodsList {
+export interface PodsListPrepared {
   pods: PodPrepared[]
   sharedPods: SharedPodPrepared[]
 }
 
 /**
- * Pods information for json serialization
+ * Pods information in serializable format
  */
-export interface PodsListSerializable {
+export interface PodsList {
   pods: Pod[]
   sharedPods: SharedPod[]
 }
