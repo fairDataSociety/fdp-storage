@@ -3,10 +3,9 @@ import { EthAddress } from '@ethersphere/bee-js/dist/types/utils/eth'
 import { RawDirectoryMetadata, RawFileMetadata } from '../pod/types'
 import { getFeedData } from '../feed/api'
 import { isRawDirectoryMetadata, isRawFileMetadata } from '../directory/utils'
-import { RawMetadataWithEpoch } from './types'
+import { DirectoryItem, FileItem, RawMetadataWithEpoch } from './types'
 import { decryptJson, PodPasswordBytes } from '../utils/encryption'
 import CryptoJS from 'crypto-js'
-import { DirectoryItemSerializable, FileItemSerializable } from './serialization'
 
 /**
  * Get raw metadata by path
@@ -87,11 +86,11 @@ export async function assertItemIsNotExists(
 }
 
 /**
- * Converts FairOS directory metadata to a `DirectoryItemSerializable`
+ * Converts FairOS directory metadata to a `DirectoryItem`
  *
  * @param item raw directory metadata from FairOS
  */
-export function rawDirectoryMetadataToDirectoryItemSerializable(item: RawDirectoryMetadata): DirectoryItemSerializable {
+export function rawDirectoryMetadataToDirectoryItem(item: RawDirectoryMetadata): DirectoryItem {
   return {
     name: item.meta.name,
     directories: [],
@@ -101,11 +100,11 @@ export function rawDirectoryMetadataToDirectoryItemSerializable(item: RawDirecto
 }
 
 /**
- * Converts FairOS file metadata to a `FileItemSerializable`
+ * Converts FairOS file metadata to a `FileItem`
  *
  * @param item raw file metadata from FairOS
  */
-export function rawFileMetadataToFileItemSerializable(item: RawFileMetadata): FileItemSerializable {
+export function rawFileMetadataToFileItem(item: RawFileMetadata): FileItem {
   let reference: Reference | undefined
 
   if (item.fileInodeReference) {

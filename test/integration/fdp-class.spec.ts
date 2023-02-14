@@ -1,4 +1,4 @@
-import { DirectoryItemSerializable, FdpContracts, FdpStorage } from '../../src'
+import { DirectoryItem, FdpContracts, FdpStorage } from '../../src'
 import {
   batchId,
   createFdp,
@@ -478,7 +478,7 @@ describe('Fair Data Protocol class', () => {
       expect(list1.files).toHaveLength(2)
 
       const serialized = JSON.stringify(list1)
-      const recovered = JSON.parse(serialized) as DirectoryItemSerializable
+      const recovered = JSON.parse(serialized) as DirectoryItem
       expect(recovered.directories).toHaveLength(3)
       expect(recovered.files).toHaveLength(2)
       const recoveredDirOne1 = recovered.directories.find(item => item.name === 'one')

@@ -19,7 +19,7 @@ import {
 } from './utils'
 import { uploadData } from '../file/handler'
 import { assertNodeFileInfo, isBrowserFileInfo } from './types'
-import { DirectoryItemSerializable } from '../content-items/serialization'
+import { DirectoryItem } from '../content-items/types'
 
 /**
  * Directory related class
@@ -34,7 +34,7 @@ export class Directory {
    * @param path path to start searching from
    * @param isRecursive search with recursion or not
    */
-  async read(podName: string, path: string, isRecursive?: boolean): Promise<DirectoryItemSerializable> {
+  async read(podName: string, path: string, isRecursive?: boolean): Promise<DirectoryItem> {
     assertAccount(this.accountData)
     assertPodName(podName)
     const { podAddress, pod } = await getExtendedPodsListByAccountData(this.accountData, podName)

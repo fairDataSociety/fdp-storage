@@ -639,7 +639,7 @@ describe('Fair Data Protocol class - in browser', () => {
       const { counts } = await page.evaluate(
         async (pod: string, directoriesToCreate: string[], filesToCreate: { path: string; data: string }[]) => {
           const fdp = eval(await window.initFdp()) as FdpStorage
-          const { DirectoryItemSerializable } = window.fdp
+          const { DirectoryItem } = window.fdp
           fdp.account.createWallet()
 
           await fdp.personalStorage.create(pod)
@@ -659,7 +659,7 @@ describe('Fair Data Protocol class - in browser', () => {
 
           const list1 = await fdp.directory.read(pod, '/', true)
           const serialized = JSON.stringify(list1)
-          const recovered = JSON.parse(serialized) as typeof DirectoryItemSerializable
+          const recovered = JSON.parse(serialized) as typeof DirectoryItem
           const recoveredDirOne1 = recovered.directories.find(item => item.name === 'one')
           const recoveredDirOneOne1 = recoveredDirOne1?.directories.find(item => item.name === 'one-one')
           const recoveredDirTwo1 = recovered.directories.find(item => item.name === 'two')

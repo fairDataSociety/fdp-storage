@@ -1,11 +1,11 @@
 import {
-  PodSerializable,
   Pod,
+  PodPrepared,
   PodName,
   PodShareInfo,
   RawDirectoryMetadata,
-  SharedPodSerializable,
   SharedPod,
+  SharedPodPrepared,
   PodsList,
   PodsListSerializable,
 } from './types'
@@ -55,7 +55,7 @@ export interface PodsInfo {
  * Extended information about specific pod
  */
 export interface ExtendedPodInfo {
-  pod: Pod
+  pod: PodPrepared
   podWallet: utils.HDNode
   podAddress: Utils.EthAddress
   lookupAnswer: LookupAnswer | undefined
@@ -125,7 +125,7 @@ export function assertPodsLength(value: unknown): asserts value is number {
  * @param value list of pods
  * @param name name of pod
  */
-export function assertPodNameAvailable(name: string, value: unknown): asserts value is Pod[] {
+export function assertPodNameAvailable(name: string, value: unknown): asserts value is PodPrepared[] {
   assertPods(value)
 
   value.forEach(pod => {
@@ -141,7 +141,7 @@ export function assertPodNameAvailable(name: string, value: unknown): asserts va
  * @param value list of shared pods
  * @param name name of pod
  */
-export function assertSharedPodNameAvailable(name: string, value: unknown): asserts value is SharedPod[] {
+export function assertSharedPodNameAvailable(name: string, value: unknown): asserts value is SharedPodPrepared[] {
   assertSharedPods(value)
 
   value.forEach(pod => {
@@ -174,21 +174,21 @@ export function assertPodName(value: unknown): asserts value is string {
 /**
  * Converts Pod to JsonPod
  */
-export function podToPodSerializable(pod: Pod): PodSerializable {
+export function podToPodSerializable(pod: PodPrepared): Pod {
   return { ...pod, password: bytesToHex(pod.password) }
 }
 
 /**
  * Converts SharedPod to JsonSharedPod
  */
-export function sharedPodToJsonSharedPod(pod: SharedPod): SharedPodSerializable {
+export function sharedPodToJsonSharedPod(pod: SharedPodPrepared): SharedPod {
   return { ...pod, password: bytesToHex(pod.password), address: bytesToHex(pod.address) }
 }
 
 /**
  * Converts pods list to JSON string
  */
-export function podListToJSON(pods: Pod[], sharedPods: SharedPod[]): string {
+export function podListToJSON(pods: PodPrepared[], sharedPods: SharedPodPrepared[]): string {
   assertPods(pods)
   assertSharedPods(sharedPods)
 
@@ -201,7 +201,7 @@ export function podListToJSON(pods: Pod[], sharedPods: SharedPod[]): string {
 /**
  * Converts pods list to bytes array
  */
-export function podListToBytes(pods: Pod[], sharedPods: SharedPod[]): Uint8Array {
+export function podListToBytes(pods: PodPrepared[], sharedPods: SharedPodPrepared[]): Uint8Array {
   if (pods.length === 0 && sharedPods.length === 0) {
     return new Uint8Array()
   }
@@ -221,8 +221,8 @@ export function isPodNameType(value: unknown): value is PodName {
 /**
  * Pod guard
  */
-export function isPod(value: unknown): value is Pod {
-  const { index, password } = value as Pod
+export function isPod(value: unknown): value is PodPrepared {
+  const { index, password } = value as PodPrepared
 
   return typeof isPodNameType(value) && isNumber(index) && isPodPassword(password)
 }
@@ -230,8 +230,8 @@ export function isPod(value: unknown): value is Pod {
 /**
  * Json pod guard
  */
-export function isJsonPod(value: unknown): value is PodSerializable {
-  const { index, password } = value as PodSerializable
+export function isJsonPod(value: unknown): value is Pod {
+  const { index, password } = value as Pod
 
   return isPodNameType(value) && isNumber(index) && Utils.isHexString(password)
 }
@@ -239,8 +239,8 @@ export function isJsonPod(value: unknown): value is PodSerializable {
 /**
  * Shared pod guard
  */
-export function isSharedPod(value: unknown): value is SharedPod {
-  const { address, password } = value as SharedPod
+export function isSharedPod(value: unknown): value is SharedPodPrepared {
+  const { address, password } = value as SharedPodPrepared
 
   return isPodNameType(value) && isObject(address) && isEthAddress(bytesToHex(address)) && isPodPassword(password)
 }
@@ -248,8 +248,8 @@ export function isSharedPod(value: unknown): value is SharedPod {
 /**
  * Json shared pod guard
  */
-export function isJsonSharedPod(value: unknown): value is SharedPodSerializable {
-  const { address, password } = value as SharedPodSerializable
+export function isJsonSharedPod(value: unknown): value is SharedPod {
+  const { address, password } = value as SharedPod
 
   return isPodNameType(value) && isEthAddress(address) && Utils.isHexString(password)
 }
@@ -266,7 +266,7 @@ export function assertPodNameType(value: unknown): asserts value is PodName {
 /**
  * Asserts that pod is correct
  */
-export function assertPod(value: unknown): asserts value is Pod {
+export function assertPod(value: unknown): asserts value is PodPrepared {
   if (!isPod(value)) {
     throw new Error(`Invalid pod: ${JSON.stringify(value)}`)
   }
@@ -275,7 +275,7 @@ export function assertPod(value: unknown): asserts value is Pod {
 /**
  * Asserts that shared pod is correct
  */
-export function assertSharedPod(value: unknown): asserts value is SharedPod {
+export function assertSharedPod(value: unknown): asserts value is SharedPodPrepared {
   if (!isSharedPod(value)) {
     throw new Error(`Invalid shared pod: ${JSON.stringify(value)}`)
   }
@@ -284,9 +284,9 @@ export function assertSharedPod(value: unknown): asserts value is SharedPod {
 /**
  * Asserts that pods are correct
  */
-export function assertPods(value: unknown): asserts value is Pod[] {
+export function assertPods(value: unknown): asserts value is PodPrepared[] {
   assertArray(value)
-  for (const pod of value as Pod[]) {
+  for (const pod of value as PodPrepared[]) {
     assertPod(pod)
   }
 }
@@ -294,9 +294,9 @@ export function assertPods(value: unknown): asserts value is Pod[] {
 /**
  * Asserts that shared pods are correct
  */
-export function assertSharedPods(value: unknown): asserts value is SharedPod[] {
+export function assertSharedPods(value: unknown): asserts value is SharedPodPrepared[] {
   assertArray(value)
-  for (const pod of value as SharedPod[]) {
+  for (const pod of value as SharedPodPrepared[]) {
     assertSharedPod(pod)
   }
 }
@@ -359,8 +359,8 @@ export async function createPod(
   connection: Connection,
   userWallet: utils.HDNode,
   seed: Uint8Array,
-  pod: PodName | SharedPod,
-): Promise<Pod | SharedPod> {
+  pod: PodName | SharedPodPrepared,
+): Promise<PodPrepared | SharedPodPrepared> {
   assertPodNameType(pod)
   pod.name = pod.name.trim()
   assertPodName(pod.name)
@@ -382,7 +382,7 @@ export async function createPod(
     epoch = getFirstEpoch(currentTime)
   }
 
-  let realPod: Pod | SharedPod
+  let realPod: PodPrepared | SharedPodPrepared
 
   if (isSharedPod(pod)) {
     realPod = pod
@@ -463,8 +463,8 @@ export function podsListToPodsListSerializable(podsList: PodsList): PodsListSeri
 export function jsonToPodsList(json: string): PodsList {
   const object = jsonParse(json, 'pod list')
   assertPodsMetadata(object)
-  const pods = object.pods.map((item: PodSerializable) => jsonPodToPod(item))
-  const sharedPods = object.sharedPods.map((item: SharedPodSerializable) => jsonSharedPodToSharedPod(item))
+  const pods = object.pods.map((item: Pod) => jsonPodToPod(item))
+  const sharedPods = object.sharedPods.map((item: SharedPod) => jsonSharedPodToSharedPod(item))
   assertPods(pods)
   assertSharedPods(sharedPods)
 
@@ -474,7 +474,7 @@ export function jsonToPodsList(json: string): PodsList {
 /**
  * Converts JsonPod to Pod
  */
-export function jsonPodToPod(pod: PodSerializable): Pod {
+export function jsonPodToPod(pod: Pod): PodPrepared {
   const password = Utils.hexToBytes(pod.password) as PodPasswordBytes
   assertPodPasswordBytes(password)
 
@@ -493,9 +493,9 @@ export function assertPodsMetadata(value: unknown): asserts value is PodsListSer
 /**
  * Asserts that json pods are correct
  */
-export function assertJsonPods(value: unknown): asserts value is PodSerializable[] {
+export function assertJsonPods(value: unknown): asserts value is Pod[] {
   assertArray(value)
-  for (const pod of value as PodSerializable[]) {
+  for (const pod of value as Pod[]) {
     assertJsonPod(pod)
   }
 }
@@ -503,9 +503,9 @@ export function assertJsonPods(value: unknown): asserts value is PodSerializable
 /**
  * Asserts that json shared pods are correct
  */
-export function assertJsonSharedPods(value: unknown): asserts value is SharedPodSerializable[] {
+export function assertJsonSharedPods(value: unknown): asserts value is SharedPod[] {
   assertArray(value)
-  for (const pod of value as SharedPodSerializable[]) {
+  for (const pod of value as SharedPod[]) {
     assertJsonSharedPod(pod)
   }
 }
@@ -513,7 +513,7 @@ export function assertJsonSharedPods(value: unknown): asserts value is SharedPod
 /**
  * Asserts that json pod is correct
  */
-export function assertJsonPod(value: unknown): asserts value is PodSerializable {
+export function assertJsonPod(value: unknown): asserts value is Pod {
   if (!isJsonPod(value)) {
     throw new Error(`Invalid json pod: ${JSON.stringify(value)}`)
   }
@@ -522,7 +522,7 @@ export function assertJsonPod(value: unknown): asserts value is PodSerializable 
 /**
  * Asserts that json shared pod is correct
  */
-export function assertJsonSharedPod(value: unknown): asserts value is SharedPodSerializable {
+export function assertJsonSharedPod(value: unknown): asserts value is SharedPod {
   if (!isJsonSharedPod(value)) {
     throw new Error(`Invalid json shared pod: ${JSON.stringify(value)}`)
   }
@@ -531,7 +531,7 @@ export function assertJsonSharedPod(value: unknown): asserts value is SharedPodS
 /**
  * Converts JsonSharedPod to SharedPod
  */
-export function jsonSharedPodToSharedPod(pod: SharedPodSerializable): SharedPod {
+export function jsonSharedPodToSharedPod(pod: SharedPod): SharedPodPrepared {
   const password = Utils.hexToBytes(pod.password) as PodPasswordBytes
   const address = Utils.hexToBytes(pod.address) as Utils.EthAddress
   assertPodPasswordBytes(password)

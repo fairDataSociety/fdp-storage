@@ -17,15 +17,11 @@ import { createRawDirectoryMetadata, META_VERSION } from '../pod/utils'
 import { Connection } from '../connection/connection'
 import { utils } from 'ethers'
 import { addEntryToDirectory, DEFAULT_UPLOAD_OPTIONS } from '../content-items/handler'
-import {
-  rawDirectoryMetadataToDirectoryItemSerializable,
-  rawFileMetadataToFileItemSerializable,
-  getRawMetadata,
-} from '../content-items/utils'
+import { rawDirectoryMetadataToDirectoryItem, rawFileMetadataToFileItem, getRawMetadata } from '../content-items/utils'
 import { PodPasswordBytes } from '../utils/encryption'
 import { preparePrivateKey } from '../utils/wallet'
 import { DataUploadOptions } from '../file/types'
-import { DirectoryItemSerializable } from '../content-items/serialization'
+import { DirectoryItem } from '../content-items/types'
 
 /**
  * Options for uploading a directory
@@ -67,10 +63,10 @@ export async function readDirectory(
   podPassword: PodPasswordBytes,
   isRecursive?: boolean,
   downloadOptions?: RequestOptions,
-): Promise<DirectoryItemSerializable> {
+): Promise<DirectoryItem> {
   const parentRawDirectoryMetadata = (await getRawMetadata(bee, path, address, podPassword, downloadOptions)).metadata
   assertRawDirectoryMetadata(parentRawDirectoryMetadata)
-  const resultDirectoryItem = rawDirectoryMetadataToDirectoryItemSerializable(parentRawDirectoryMetadata)
+  const resultDirectoryItem = rawDirectoryMetadataToDirectoryItem(parentRawDirectoryMetadata)
 
   if (!parentRawDirectoryMetadata.fileOrDirNames) {
     return resultDirectoryItem
@@ -84,12 +80,12 @@ export async function readDirectory(
       item = combine(...splitPath(path), item.substring(FILE_TOKEN.length))
       const data = (await getRawMetadata(bee, item, address, podPassword, downloadOptions)).metadata
       assertRawFileMetadata(data)
-      resultDirectoryItem.files.push(rawFileMetadataToFileItemSerializable(data))
+      resultDirectoryItem.files.push(rawFileMetadataToFileItem(data))
     } else if (isDirectory) {
       item = combine(...splitPath(path), item.substring(DIRECTORY_TOKEN.length))
       const data = (await getRawMetadata(bee, item, address, podPassword, downloadOptions)).metadata
       assertRawDirectoryMetadata(data)
-      const currentMetadata = rawDirectoryMetadataToDirectoryItemSerializable(data)
+      const currentMetadata = rawDirectoryMetadataToDirectoryItem(data)
 
       if (isRecursive) {
         const content = await readDirectory(bee, item, address, podPassword, isRecursive, downloadOptions)

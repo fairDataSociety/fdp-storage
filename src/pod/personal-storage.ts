@@ -1,4 +1,4 @@
-import { SharedPodSerializable, PodReceiveOptions, PodShareInfo, PodsListSerializable, PodSerializable } from './types'
+import { SharedPod, PodReceiveOptions, PodShareInfo, PodsListSerializable, Pod } from './types'
 import { assertAccount } from '../account/utils'
 import { writeFeedData } from '../feed/api'
 import { AccountData } from '../account/account-data'
@@ -50,7 +50,7 @@ export class PersonalStorage {
    *
    * @param name pod name
    */
-  async create(name: string): Promise<PodSerializable> {
+  async create(name: string): Promise<Pod> {
     assertAccount(this.accountData)
 
     const pod = await createPod(
@@ -151,10 +151,7 @@ export class PersonalStorage {
    *
    * @returns shared pod information
    */
-  async saveShared(
-    reference: string | EncryptedReference,
-    options?: PodReceiveOptions,
-  ): Promise<SharedPodSerializable> {
+  async saveShared(reference: string | EncryptedReference, options?: PodReceiveOptions): Promise<SharedPod> {
     assertAccount(this.accountData)
     assertEncryptedReference(reference)
 

@@ -4,6 +4,7 @@ import { AccountData } from './account/account-data'
 import { PersonalStorage } from './pod/personal-storage'
 import { Directory } from './directory/directory'
 import * as FdpContracts from '@fairdatasociety/fdp-contracts-js'
+import { DirectoryItem, FileItem } from './content-items/types'
 
 export { FdpStorage, AccountData, PersonalStorage, Directory, FdpContracts }
 export * from './types'
@@ -20,8 +21,8 @@ declare global {
       Directory: typeof import('./directory/directory').Directory
       FdpContracts: typeof FdpContracts
       Utils: typeof import('./utils/expose')
-      DirectoryItemSerializable: import('./content-items/serialization').DirectoryItemSerializable
-      FileItemSerializable: import('./content-items/serialization').FileItemSerializable
+      DirectoryItem: DirectoryItem
+      FileItem: FileItem
     }
   }
 }

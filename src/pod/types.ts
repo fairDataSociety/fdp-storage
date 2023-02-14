@@ -6,16 +6,16 @@ import { HexString } from '../utils/hex'
  * Pods list for internal usage
  */
 export interface PodsList {
-  pods: Pod[]
-  sharedPods: SharedPod[]
+  pods: PodPrepared[]
+  sharedPods: SharedPodPrepared[]
 }
 
 /**
  * Pods information for json serialization
  */
 export interface PodsListSerializable {
-  pods: PodSerializable[]
-  sharedPods: SharedPodSerializable[]
+  pods: Pod[]
+  sharedPods: SharedPod[]
 }
 
 /**
@@ -26,33 +26,33 @@ export interface PodName {
 }
 
 /**
- * Pod information
+ * Pod information prepared for internal usage
  */
-export interface Pod extends PodName {
+export interface PodPrepared extends PodName {
   password: PodPasswordBytes
   index: number
 }
 
 /**
- * Pod information for json serialization
+ * Pod information in serializable format
  */
-export interface PodSerializable extends PodName {
+export interface Pod extends PodName {
   password: HexString
   index: number
 }
 
 /**
- * Shared pod information for json serialization
+ * Shared pod information in serializable format
  */
-export interface SharedPodSerializable extends PodName {
+export interface SharedPod extends PodName {
   password: HexString
   address: HexString
 }
 
 /**
- * Shared pod information
+ * Shared pod information prepared for internal usage
  */
-export interface SharedPod extends PodName {
+export interface SharedPodPrepared extends PodName {
   password: PodPasswordBytes
   address: Utils.EthAddress
 }
