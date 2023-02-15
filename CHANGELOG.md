@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.7.0](https://github.com/fairDataSociety/fdp-storage/compare/v0.6.0...v0.7.0) (2023-02-15)
+
+
+### ⚠ BREAKING CHANGES
+
+* added ability to serialize/deserialize returned data ([#213](https://github.com/fairDataSociety/fdp-storage/issues/213))
+
+### Features
+
+* added permissions metadata for directories and files ([#214](https://github.com/fairDataSociety/fdp-storage/issues/214)) ([1c4a487](https://github.com/fairDataSociety/fdp-storage/commit/1c4a4871074f80ef6bf496640e66f0ee75f51257))
+* directory uploading ([#208](https://github.com/fairDataSociety/fdp-storage/issues/208)) ([4a3a9b9](https://github.com/fairDataSociety/fdp-storage/commit/4a3a9b9f71df398da47e2fdf71a26414fa3fd061))
+
+
+### Code Refactoring
+
+* added ability to serialize/deserialize returned data ([#213](https://github.com/fairDataSociety/fdp-storage/issues/213)) ([6ecc7f6](https://github.com/fairDataSociety/fdp-storage/commit/6ecc7f66969c53f70504b00a4835424736fe6369))
+
 ## [0.6.0](https://github.com/fairDataSociety/fdp-storage/compare/v0.5.1...v0.6.0) (2022-12-19)
 
 
