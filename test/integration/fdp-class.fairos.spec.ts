@@ -2,6 +2,11 @@ import { createFdp, generateRandomHexString, generateUser, topUpAddress, topUpFd
 import { Directories, FairOSApi, PodsList } from '../utils/fairos-api'
 import { Wallet, utils } from 'ethers'
 import { wrapBytesWithHelpers } from '../../src/utils/bytes'
+import { getExtendedPodsListByAccountData } from '../../src/pod/utils'
+import { getRawMetadata } from '../../src/content-items/utils'
+import { RawDirectoryMetadata, RawFileMetadata } from '../../src/pod/types'
+import { DEFAULT_FILE_PERMISSIONS, getFileMode } from '../../src/file/utils'
+import { DEFAULT_DIRECTORY_PERMISSIONS, getDirectoryMode } from '../../src/directory/utils'
 
 jest.setTimeout(400000)
 describe('Fair Data Protocol with FairOS-dfs', () => {
@@ -470,6 +475,89 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
       expect(fdpResponse3.files).toHaveLength(0)
       const fairosDirs = await fairos.dirLs(podName1)
       expect(fairosDirs.data).toEqual({})
+    })
+  })
+
+  describe('Metadata', () => {
+    it('should exists fields for file and directory in fairos and fdp', async () => {
+      const fairos = new FairOSApi()
+      const fdp = createFdp()
+      const user = generateUser(fdp)
+      const podName1 = generateRandomHexString()
+      const fileSizeBig = 1000015
+      const contentBig = generateRandomHexString(fileSizeBig)
+      const contentBig2 = generateRandomHexString(fileSizeBig)
+      const filenameBig = generateRandomHexString() + '.txt'
+      const filenameBig2 = generateRandomHexString() + '.txt'
+      const fullFilenameBigPath = '/' + filenameBig
+      const fullFilenameBigPath2 = '/' + filenameBig2
+      const newDirectory1 = generateRandomHexString()
+      const newDirectory2 = generateRandomHexString()
+      const fullNewDirectory1 = '/' + newDirectory1
+      const fullNewDirectory2 = '/' + newDirectory2
+
+      const checkDirectoryMetadata = (rawDirectoryMetadata: RawDirectoryMetadata, directoryName: string) => {
+        expect(Object.keys(rawDirectoryMetadata)).toHaveLength(2)
+        expect(Object.keys(rawDirectoryMetadata.meta)).toHaveLength(7)
+        expect(rawDirectoryMetadata.fileOrDirNames).toBeDefined()
+        const meta = rawDirectoryMetadata.meta
+        expect(meta.version).toEqual(2)
+        expect(meta.path).toEqual('/')
+        expect(meta.name).toEqual(directoryName)
+        expect(meta.creationTime).toBeDefined()
+        expect(meta.accessTime).toBeDefined()
+        expect(meta.modificationTime).toBeDefined()
+        expect(meta.mode).toEqual(getDirectoryMode(DEFAULT_DIRECTORY_PERMISSIONS))
+      }
+
+      const checkFileMetadata = (
+        rawFileMetadata: RawFileMetadata,
+        filename: string,
+        filesize: number,
+        contentType: string,
+      ) => {
+        expect(Object.keys(rawFileMetadata)).toHaveLength(12)
+        expect(rawFileMetadata.version).toEqual(2)
+        expect(rawFileMetadata.filePath).toEqual('/')
+        expect(rawFileMetadata.fileName).toEqual(filename)
+        expect(rawFileMetadata.fileSize).toEqual(filesize)
+        expect(rawFileMetadata.blockSize).toEqual(1000000)
+        expect(rawFileMetadata.contentType).toEqual(contentType)
+        expect(rawFileMetadata.compression).toEqual('')
+        expect(rawFileMetadata.creationTime).toBeDefined()
+        expect(rawFileMetadata.accessTime).toBeDefined()
+        expect(rawFileMetadata.modificationTime).toBeDefined()
+        expect(rawFileMetadata.fileInodeReference).toBeDefined()
+        expect(rawFileMetadata.mode).toEqual(getFileMode(DEFAULT_FILE_PERMISSIONS))
+      }
+
+      await topUpFdp(fdp)
+      await fairos.register(user.username, user.password, user.mnemonic)
+      await fairos.podNew(podName1, user.password)
+      await fairos.dirMkdir(podName1, fullNewDirectory1, user.password)
+      await fairos.fileUpload(podName1, '/', contentBig, filenameBig)
+
+      const { podAddress, pod } = await getExtendedPodsListByAccountData(fdp.account, podName1)
+      const rawDirectoryMetadata = (
+        await getRawMetadata(fdp.connection.bee, fullNewDirectory1, podAddress, pod.password)
+      ).metadata as RawDirectoryMetadata
+      checkDirectoryMetadata(rawDirectoryMetadata, newDirectory1)
+
+      const rawFileMetadata = (await getRawMetadata(fdp.connection.bee, fullFilenameBigPath, podAddress, pod.password))
+        .metadata as RawFileMetadata
+      checkFileMetadata(rawFileMetadata, filenameBig, fileSizeBig, 'text/plain; charset=utf-8')
+
+      await fdp.directory.create(podName1, fullNewDirectory2)
+      await fdp.file.uploadData(podName1, fullFilenameBigPath2, contentBig2)
+      const rawDirectoryMetadata1 = (
+        await getRawMetadata(fdp.connection.bee, fullNewDirectory2, podAddress, pod.password)
+      ).metadata as RawDirectoryMetadata
+      checkDirectoryMetadata(rawDirectoryMetadata1, newDirectory2)
+
+      const rawFileMetadata1 = (
+        await getRawMetadata(fdp.connection.bee, fullFilenameBigPath2, podAddress, pod.password)
+      ).metadata as RawFileMetadata
+      checkFileMetadata(rawFileMetadata1, filenameBig2, fileSizeBig, '')
     })
   })
 })

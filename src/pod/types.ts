@@ -72,6 +72,7 @@ export interface RawFileMetadata {
   accessTime: number
   modificationTime: number
   fileInodeReference: string
+  mode: number
 }
 
 /**
@@ -89,6 +90,7 @@ export interface FileMetadata {
   accessTime: number
   modificationTime: number
   blocksReference: Reference
+  mode: number
 }
 
 /**
@@ -102,6 +104,7 @@ export interface RawDirectoryMetadata {
     creationTime: number
     modificationTime: number
     accessTime: number
+    mode: number
   }
   fileOrDirNames: string[] | null
 }

@@ -1,7 +1,14 @@
 import { stringToBytes, wrapBytesWithHelpers } from '../utils/bytes'
 import { Bee, Data, RequestOptions } from '@ethersphere/bee-js'
 import { EthAddress } from '@ethersphere/bee-js/dist/types/utils/eth'
-import { assertFullPathWithName, downloadBlocksManifest, extractPathInfo, uploadBytes } from './utils'
+import {
+  assertFullPathWithName,
+  DEFAULT_FILE_PERMISSIONS,
+  downloadBlocksManifest,
+  extractPathInfo,
+  getFileMode,
+  uploadBytes,
+} from './utils'
 import { FileMetadata } from '../pod/types'
 import { blocksToManifest, getFileMetadataRawBytes, rawFileMetadataToFileMetadata } from './adapter'
 import { assertRawFileMetadata } from '../directory/utils'
@@ -116,7 +123,6 @@ export async function uploadData(
   data = typeof data === 'string' ? stringToBytes(data) : data
   const connection = accountData.connection
   const { podWallet, pod } = await getExtendedPodsListByAccountData(accountData, podName)
-
   const pathInfo = extractPathInfo(fullPath)
   const now = getUnixTimestamp()
   const blocksCount = Math.ceil(data.length / options.blockSize)
@@ -145,6 +151,7 @@ export async function uploadData(
     accessTime: now,
     modificationTime: now,
     blocksReference,
+    mode: getFileMode(DEFAULT_FILE_PERMISSIONS),
   }
 
   await addEntryToDirectory(connection, podWallet, pod.password, pathInfo.path, pathInfo.filename, true)

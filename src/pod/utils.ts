@@ -38,6 +38,7 @@ import { AccountData } from '../account/account-data'
 import { decryptBytes, POD_PASSWORD_LENGTH, PodPasswordBytes } from '../utils/encryption'
 import CryptoJS from 'crypto-js'
 import { jsonParse } from '../utils/json'
+import { DEFAULT_DIRECTORY_PERMISSIONS, getDirectoryMode } from '../directory/utils'
 
 export const META_VERSION = 2
 export const MAX_PODS_COUNT = 65536
@@ -99,6 +100,7 @@ export function createRawDirectoryMetadata(
       creationTime,
       modificationTime,
       accessTime,
+      mode: getDirectoryMode(DEFAULT_DIRECTORY_PERMISSIONS),
     },
     fileOrDirNames: fileOrDirNames ?? null,
   }
