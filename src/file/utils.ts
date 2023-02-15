@@ -15,7 +15,7 @@ import { jsonParse } from '../utils/json'
 /**
  * Default file permission in octal format
  */
-export const DEFAULT_FILE_PERMISSIONS = 0o666
+export const DEFAULT_FILE_PERMISSIONS = 0o600
 
 /**
  * File indication in octal format
@@ -62,13 +62,10 @@ export function assertFullPathWithName(value: unknown): asserts value is string 
  *
  * @param connection Bee connection
  * @param data data to upload
- * @param tag tag for tracking data uploading
  */
-export async function uploadBytes(connection: Connection, data: Uint8Array, tag?: number): Promise<UploadResult> {
+export async function uploadBytes(connection: Connection, data: Uint8Array): Promise<UploadResult> {
   return connection.bee.uploadData(connection.postageBatchId, data, {
-    pin: true,
     encrypt: true,
-    tag,
   })
 }
 

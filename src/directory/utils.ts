@@ -10,7 +10,7 @@ import { getBaseName } from '../file/utils'
 /**
  * Default directory permission in octal format
  */
-export const DEFAULT_DIRECTORY_PERMISSIONS = 0o777
+export const DEFAULT_DIRECTORY_PERMISSIONS = 0o700
 
 /**
  * Directory indication in octal format

@@ -82,7 +82,6 @@ export function rawFileMetadataToFileMetadata(data: RawFileMetadata): FileMetada
     accessTime: data.accessTime,
     modificationTime: data.modificationTime,
     blocksReference: base64toReference(data.fileInodeReference),
-    tag: data.tag,
     mode: data.mode,
   }
 }
@@ -103,7 +102,6 @@ export function fileMetadataToRawFileMetadata(data: FileMetadata): RawFileMetada
     accessTime: data.accessTime,
     modificationTime: data.modificationTime,
     fileInodeReference: referenceToBase64(data.blocksReference),
-    tag: data.tag,
     mode: data.mode,
   }
 }

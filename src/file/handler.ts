@@ -122,12 +122,6 @@ export async function uploadData(
 
   data = typeof data === 'string' ? stringToBytes(data) : data
   const connection = accountData.connection
-  // tag can be equal 0 in case of gateway
-  let tag = 0
-  try {
-    tag = (await connection.bee.createTag()).uid
-    // eslint-disable-next-line no-empty
-  } catch (e) {}
   const { podWallet, pod } = await getExtendedPodsListByAccountData(accountData, podName)
   const pathInfo = extractPathInfo(fullPath)
   const now = getUnixTimestamp()
@@ -135,7 +129,7 @@ export async function uploadData(
   const blocks: Blocks = { blocks: [] }
   for (let i = 0; i < blocksCount; i++) {
     const currentBlock = data.slice(i * options.blockSize, (i + 1) * options.blockSize)
-    const result = await uploadBytes(connection, currentBlock, tag)
+    const result = await uploadBytes(connection, currentBlock)
     blocks.blocks.push({
       size: currentBlock.length,
       compressedSize: currentBlock.length,
@@ -144,7 +138,7 @@ export async function uploadData(
   }
 
   const manifestBytes = stringToBytes(blocksToManifest(blocks))
-  const blocksReference = (await uploadBytes(connection, manifestBytes, tag)).reference
+  const blocksReference = (await uploadBytes(connection, manifestBytes)).reference
   const meta: FileMetadata = {
     version: META_VERSION,
     filePath: pathInfo.path,
@@ -157,7 +151,6 @@ export async function uploadData(
     accessTime: now,
     modificationTime: now,
     blocksReference,
-    tag,
     mode: getFileMode(DEFAULT_FILE_PERMISSIONS),
   }
 

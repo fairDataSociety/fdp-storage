@@ -5,6 +5,8 @@ import { wrapBytesWithHelpers } from '../../src/utils/bytes'
 import { getExtendedPodsListByAccountData } from '../../src/pod/utils'
 import { getRawMetadata } from '../../src/content-items/utils'
 import { RawDirectoryMetadata, RawFileMetadata } from '../../src/pod/types'
+import { DEFAULT_FILE_PERMISSIONS, getFileMode } from '../../src/file/utils'
+import { DEFAULT_DIRECTORY_PERMISSIONS, getDirectoryMode } from '../../src/directory/utils'
 
 jest.setTimeout(400000)
 describe('Fair Data Protocol with FairOS-dfs', () => {
@@ -494,12 +496,6 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
       const fullNewDirectory1 = '/' + newDirectory1
       const fullNewDirectory2 = '/' + newDirectory2
 
-      await topUpFdp(fdp)
-      await fairos.register(user.username, user.password, user.mnemonic)
-      await fairos.podNew(podName1, user.password)
-      await fairos.dirMkdir(podName1, fullNewDirectory1, user.password)
-      await fairos.fileUpload(podName1, '/', contentBig, filenameBig)
-
       const checkDirectoryMetadata = (rawDirectoryMetadata: RawDirectoryMetadata, directoryName: string) => {
         expect(Object.keys(rawDirectoryMetadata)).toHaveLength(2)
         expect(Object.keys(rawDirectoryMetadata.meta)).toHaveLength(7)
@@ -511,7 +507,7 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
         expect(meta.creationTime).toBeDefined()
         expect(meta.accessTime).toBeDefined()
         expect(meta.modificationTime).toBeDefined()
-        expect(meta.mode).toEqual(16895)
+        expect(meta.mode).toEqual(getDirectoryMode(DEFAULT_DIRECTORY_PERMISSIONS))
       }
 
       const checkFileMetadata = (
@@ -520,7 +516,7 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
         filesize: number,
         contentType: string,
       ) => {
-        expect(Object.keys(rawFileMetadata)).toHaveLength(13)
+        expect(Object.keys(rawFileMetadata)).toHaveLength(12)
         expect(rawFileMetadata.version).toEqual(2)
         expect(rawFileMetadata.filePath).toEqual('/')
         expect(rawFileMetadata.fileName).toEqual(filename)
@@ -532,9 +528,14 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
         expect(rawFileMetadata.accessTime).toBeDefined()
         expect(rawFileMetadata.modificationTime).toBeDefined()
         expect(rawFileMetadata.fileInodeReference).toBeDefined()
-        expect(rawFileMetadata.tag).toBeDefined()
-        expect(rawFileMetadata.mode).toEqual(33206)
+        expect(rawFileMetadata.mode).toEqual(getFileMode(DEFAULT_FILE_PERMISSIONS))
       }
+
+      await topUpFdp(fdp)
+      await fairos.register(user.username, user.password, user.mnemonic)
+      await fairos.podNew(podName1, user.password)
+      await fairos.dirMkdir(podName1, fullNewDirectory1, user.password)
+      await fairos.fileUpload(podName1, '/', contentBig, filenameBig)
 
       const { podAddress, pod } = await getExtendedPodsListByAccountData(fdp.account, podName1)
       const rawDirectoryMetadata = (
