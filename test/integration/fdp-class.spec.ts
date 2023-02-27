@@ -819,9 +819,12 @@ describe('Fair Data Protocol class', () => {
       const writeFeedDataSpy = jest.spyOn(feedApi, 'writeFeedData')
       const getFeedDataSpy = jest.spyOn(feedApi, 'getFeedData')
       const getWalletByIndexSpy = jest.spyOn(walletApi, 'getWalletByIndex')
-
+      let cache = ''
       const fdpWithCache = createFdp({
         isUseCache: true,
+        onSaveCache: async cacheObject => {
+          cache = JSON.stringify(cacheObject)
+        },
       })
 
       const pod1 = generateRandomHexString()
@@ -830,7 +833,7 @@ describe('Fair Data Protocol class', () => {
       const fileContent = generateRandomHexString(fileSize)
       const filename = generateRandomHexString() + '.txt'
       const fullFilename = '/' + filename
-      fdpWithCache.account.createWallet()
+      const wallet = fdpWithCache.account.createWallet()
 
       // with cache - create first pod
       await fdpWithCache.personalStorage.create(pod1)
@@ -889,6 +892,16 @@ describe('Fair Data Protocol class', () => {
       // should not get pods info
       expect(getFeedDataSpy).toBeCalledTimes(0)
       expect(getWalletByIndexSpy).toBeCalledTimes(0)
+
+      // recovering cache data
+      const fdpRecovered = createFdp({
+        isUseCache: true,
+      })
+      fdpRecovered.cache.object = JSON.parse(cache)
+      fdpRecovered.account.setAccountFromMnemonic(wallet.mnemonic.phrase)
+      const pods = await fdpRecovered.personalStorage.list()
+      expect(pods.pods).toHaveLength(1)
+      expect(pods.pods[0].name).toEqual(pod2)
 
       jest.restoreAllMocks()
     })
