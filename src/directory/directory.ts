@@ -45,7 +45,7 @@ export class Directory {
       podAddress,
       pod.password,
       isRecursive,
-      this.accountData.connection.options?.downloadOptions,
+      this.accountData.connection.options?.requestOptions,
     )
   }
 
@@ -58,10 +58,15 @@ export class Directory {
   async create(podName: string, fullPath: string): Promise<void> {
     assertAccount(this.accountData)
     assertPodName(podName)
-    const downloadOptions = this.accountData.connection.options?.downloadOptions
     const { podWallet, pod } = await getExtendedPodsListByAccountData(this.accountData, podName)
 
-    return createDirectory(this.accountData.connection, fullPath, podWallet, pod.password, downloadOptions)
+    return createDirectory(
+      this.accountData.connection,
+      fullPath,
+      podWallet,
+      pod.password,
+      this.accountData.connection.options?.requestOptions,
+    )
   }
 
   /**
@@ -75,7 +80,6 @@ export class Directory {
     assertPodName(podName)
     const pathInfo = extractPathInfo(fullPath)
     const connection = this.accountData.connection
-    const downloadOptions = connection.options?.downloadOptions
     const { podWallet, pod } = await getExtendedPodsListByAccountData(this.accountData, podName)
 
     await removeEntryFromDirectory(
@@ -85,7 +89,7 @@ export class Directory {
       pathInfo.path,
       pathInfo.filename,
       false,
-      downloadOptions,
+      connection.options?.requestOptions,
     )
   }
 
@@ -99,7 +103,6 @@ export class Directory {
   async upload(podName: string, filesSource: string | FileList, options?: UploadDirectoryOptions): Promise<void> {
     assertAccount(this.accountData)
     assertPodName(podName)
-    const downloadOptions = this.accountData.connection.options?.downloadOptions
     const { podWallet, pod } = await getExtendedPodsListByAccountData(this.accountData, podName)
     options = { ...DEFAULT_UPLOAD_DIRECTORY_OPTIONS, ...options }
 
@@ -131,7 +134,13 @@ export class Directory {
     )
     for (const directory of directoriesToCreate) {
       try {
-        await createDirectory(this.accountData.connection, directory, podWallet, pod.password, downloadOptions)
+        await createDirectory(
+          this.accountData.connection,
+          directory,
+          podWallet,
+          pod.password,
+          this.accountData.connection.options?.requestOptions,
+        )
       } catch (e) {
         const error = e as Error
 

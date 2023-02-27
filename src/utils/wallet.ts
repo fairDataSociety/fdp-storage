@@ -3,7 +3,7 @@ import { PrivateKeyBytes, Utils } from '@ethersphere/bee-js'
 import { removeZeroFromHex } from '../account/utils'
 
 /**
- * Get Hierarchal Deterministic Wallet from seed by index
+ * Get Hierarchical Deterministic Wallet from seed by index
  *
  * @param seed data for wallet creation
  * @param index wallet index

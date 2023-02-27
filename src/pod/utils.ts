@@ -11,7 +11,6 @@ import {
 } from './types'
 import { Bee, Data, Utils } from '@ethersphere/bee-js'
 import { bytesToString, stringToBytes, wordArrayToBytes } from '../utils/bytes'
-import { LookupAnswer } from '../feed/types'
 import { utils } from 'ethers'
 import { getRawDirectoryMetadataBytes } from '../directory/adapter'
 import {
@@ -26,11 +25,11 @@ import {
   isString,
 } from '../utils/type'
 import { bytesToHex, EncryptedReference, isHexEthAddress } from '../utils/hex'
-import { getExtendedPodsList, getPodsList } from './api'
+import { getExtendedPodsList } from './api'
 import { Epoch, getFirstEpoch } from '../feed/lookup/epoch'
 import { getUnixTimestamp } from '../utils/time'
 import { writeFeedData } from '../feed/api'
-import { getWalletByIndex, preparePrivateKey } from '../utils/wallet'
+import { preparePrivateKey } from '../utils/wallet'
 import { createRootDirectory } from '../directory/handler'
 import { POD_TOPIC } from './personal-storage'
 import { Connection } from '../connection/connection'
@@ -39,6 +38,9 @@ import { decryptBytes, POD_PASSWORD_LENGTH, PodPasswordBytes } from '../utils/en
 import CryptoJS from 'crypto-js'
 import { jsonParse } from '../utils/json'
 import { DEFAULT_DIRECTORY_PERMISSIONS, getDirectoryMode } from '../directory/utils'
+import { getCacheKey, setEpochCache } from '../cache/utils'
+import { getWalletByIndex } from '../utils/cache/wallet'
+import { getPodsList } from './cache/api'
 
 export const META_VERSION = 2
 export const MAX_PODS_COUNT = 65536
@@ -49,7 +51,7 @@ export const MAX_POD_NAME_LENGTH = 64
  */
 export interface PodsInfo {
   podsList: PodsListPrepared
-  lookupAnswer: LookupAnswer | undefined
+  epoch: Epoch
 }
 
 /**
@@ -59,7 +61,7 @@ export interface ExtendedPodInfo {
   pod: PodPrepared
   podWallet: utils.HDNode
   podAddress: Utils.EthAddress
-  lookupAnswer: LookupAnswer | undefined
+  epoch: Epoch
 }
 
 /*
@@ -367,23 +369,26 @@ export async function createPod(
   pod.name = pod.name.trim()
   assertPodName(pod.name)
 
-  const podsInfo = await getPodsList(bee, userWallet, connection.options?.downloadOptions)
-  const nextIndex = podsInfo.podsList.pods.length + 1
+  const { cacheInfo } = connection
+  let podsList: PodsListPrepared = { pods: [], sharedPods: [] }
+  let podsInfo
+  try {
+    podsInfo = await getPodsList(bee, userWallet, {
+      requestOptions: connection.options?.requestOptions,
+      cacheInfo,
+    })
+    podsList = podsInfo.podsList
+    // eslint-disable-next-line no-empty
+  } catch (e) {}
+  const nextIndex = podsList.pods.length + 1
   assertPodsLength(nextIndex)
-  const pods = podsInfo.podsList.pods
-  const sharedPods = podsInfo.podsList.sharedPods
+  const pods = podsList.pods
+  const sharedPods = podsList.sharedPods
   assertPodNameAvailable(pod.name, pods)
   assertSharedPodNameAvailable(pod.name, sharedPods)
 
-  let epoch: Epoch
   const currentTime = getUnixTimestamp()
-
-  if (podsInfo.lookupAnswer) {
-    epoch = podsInfo.lookupAnswer.epoch.getNextEpoch(currentTime)
-  } else {
-    epoch = getFirstEpoch(currentTime)
-  }
-
+  const epoch = podsInfo ? podsInfo.epoch.getNextEpoch(currentTime) : getFirstEpoch(currentTime)
   let realPod: PodPrepared | SharedPodPrepared
 
   if (isSharedPod(pod)) {
@@ -409,9 +414,14 @@ export async function createPod(
   )
 
   if (isPod(realPod)) {
-    const podWallet = getWalletByIndex(seed, nextIndex)
+    const podWallet = await getWalletByIndex(seed, nextIndex, cacheInfo)
     await createRootDirectory(connection, realPod.password, preparePrivateKey(podWallet.privateKey))
   }
+
+  await setEpochCache(cacheInfo, getCacheKey(userWallet.address), {
+    epoch,
+    data: podListToJSON(pods, sharedPods),
+  })
 
   return realPod
 }
@@ -426,13 +436,10 @@ export async function getExtendedPodsListByAccountData(
   accountData: AccountData,
   podName: string,
 ): Promise<ExtendedPodInfo> {
-  return getExtendedPodsList(
-    accountData.connection.bee,
-    podName,
-    accountData.wallet!,
-    accountData.seed!,
-    accountData.connection.options?.downloadOptions,
-  )
+  return getExtendedPodsList(accountData.connection.bee, podName, accountData.wallet!, accountData.seed!, {
+    requestOptions: accountData.connection.options?.requestOptions,
+    cacheInfo: accountData.connection.cacheInfo,
+  })
 }
 
 /**

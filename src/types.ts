@@ -1,5 +1,6 @@
 import { RequestOptions } from '@ethersphere/bee-js'
 import { Environment } from '@fairdatasociety/fdp-contracts-js'
+import { CacheOptions } from './cache/types'
 
 export { DirectoryItem, FileItem } from './content-items/types'
 
@@ -8,9 +9,9 @@ export { DirectoryItem, FileItem } from './content-items/types'
  */
 export interface Options {
   /**
-   * Downloads options for requests
+   * Request options
    */
-  downloadOptions?: RequestOptions
+  requestOptions?: RequestOptions
   /**
    * FDP-contracts options
    */
@@ -19,4 +20,8 @@ export interface Options {
    * ENS domain for usernames
    */
   ensDomain?: string
+  /**
+   * Cache options
+   */
+  cacheOptions?: CacheOptions
 }

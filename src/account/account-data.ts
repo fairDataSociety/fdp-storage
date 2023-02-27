@@ -1,8 +1,8 @@
 import { utils, Wallet } from 'ethers'
 import {
+  assertAccount,
   assertMnemonic,
   assertPassword,
-  assertRegistrationAccount,
   assertUsername,
   CHUNK_ALREADY_EXISTS_ERROR,
   HD_PATH,
@@ -47,15 +47,13 @@ export class AccountData {
   }
 
   /**
-   * Sets FDP account from seed
-   *
-   * With the help of the seed, account data can be managed, but cannot register a new account
+   * Sets FDP account from a seed
    *
    * @param seed data extracted from mnemonic phrase or from uploaded account
    */
   setAccountFromSeed(seed: Uint8Array): void {
-    // correct public key can't be extracted from seed
-    this.publicKey = undefined
+    const hdNode = utils.HDNode.fromSeed(seed).derivePath(HD_PATH)
+    this.publicKey = new utils.SigningKey(hdNode.privateKey).publicKey
     this.connectWalletWithENS(seed)
   }
 
@@ -171,7 +169,7 @@ export class AccountData {
   async register(username: string, password: string): Promise<Reference> {
     assertUsername(username)
     assertPassword(password)
-    assertRegistrationAccount(this)
+    assertAccount(this)
 
     const wallet = this.wallet!
 
@@ -203,7 +201,7 @@ export class AccountData {
    * @param username FDP username
    */
   async isPublicKeyEqual(username: string): Promise<boolean> {
-    assertRegistrationAccount(this)
+    assertAccount(this)
 
     try {
       return (await this.ens.getPublicKey(username)) === this.publicKey
@@ -219,7 +217,7 @@ export class AccountData {
    * @param password FDP password
    */
   async reuploadPortableAccount(username: string, password: string): Promise<void> {
-    assertRegistrationAccount(this)
+    assertAccount(this)
 
     const wallet = this.wallet!
     const seed = CryptoJS.enc.Hex.parse(removeZeroFromHex(bytesToHex(this.seed!)))

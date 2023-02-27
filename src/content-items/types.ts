@@ -1,5 +1,15 @@
 import { Epoch } from '../feed/lookup/epoch'
 import { RawDirectoryMetadata, RawFileMetadata } from '../pod/types'
+import { RequestOptions } from '@ethersphere/bee-js'
+import { CacheInfo } from '../cache/types'
+
+/**
+ * Download data options
+ */
+export interface DownloadOptions {
+  requestOptions?: RequestOptions
+  cacheInfo?: CacheInfo
+}
 
 /**
  * Metadata of a file or directory with epoch

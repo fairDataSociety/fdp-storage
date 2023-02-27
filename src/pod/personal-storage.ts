@@ -1,4 +1,4 @@
-import { SharedPod, PodReceiveOptions, PodShareInfo, PodsList, Pod } from './types'
+import { SharedPod, PodReceiveOptions, PodShareInfo, PodsList, Pod, PodsListPrepared } from './types'
 import { assertAccount } from '../account/utils'
 import { writeFeedData } from '../feed/api'
 import { AccountData } from '../account/account-data'
@@ -14,14 +14,17 @@ import {
   podsListPreparedToPodsList,
   podPreparedToPod,
   sharedPodPreparedToSharedPod,
+  podListToJSON,
 } from './utils'
 import { getUnixTimestamp } from '../utils/time'
-import { getExtendedPodsList, getPodsList } from './api'
+import { getExtendedPodsList } from './api'
 import { uploadBytes } from '../file/utils'
 import { stringToBytes } from '../utils/bytes'
 import { Reference, Utils } from '@ethersphere/bee-js'
 import { assertEncryptedReference, EncryptedReference } from '../utils/hex'
 import { prepareEthAddress, preparePrivateKey } from '../utils/wallet'
+import { getCacheKey, setEpochCache } from '../cache/utils'
+import { getPodsList } from './cache/api'
 
 export const POD_TOPIC = 'Pods'
 
@@ -36,13 +39,22 @@ export class PersonalStorage {
   async list(): Promise<PodsList> {
     assertAccount(this.accountData)
 
-    const data = await getPodsList(
-      this.accountData.connection.bee,
-      this.accountData.wallet!,
-      this.accountData.connection.options?.downloadOptions,
-    )
+    let podsList: PodsListPrepared = {
+      pods: [],
+      sharedPods: [],
+    }
 
-    return podsListPreparedToPodsList(data.podsList)
+    try {
+      podsList = (
+        await getPodsList(this.accountData.connection.bee, this.accountData.wallet!, {
+          requestOptions: this.accountData.connection.options?.requestOptions,
+          cacheInfo: this.accountData.connection.cacheInfo,
+        })
+      ).podsList
+      // eslint-disable-next-line no-empty
+    } catch (e) {}
+
+    return podsListPreparedToPodsList(podsList)
   }
 
   /**
@@ -76,11 +88,10 @@ export class PersonalStorage {
   async delete(name: string): Promise<void> {
     assertAccount(this.accountData)
     name = name.trim()
-    const podsInfo = await getPodsList(
-      this.accountData.connection.bee,
-      this.accountData.wallet!,
-      this.accountData.connection.options?.downloadOptions,
-    )
+    const podsInfo = await getPodsList(this.accountData.connection.bee, this.accountData.wallet!, {
+      requestOptions: this.accountData.connection.options?.requestOptions,
+      cacheInfo: this.accountData.connection.cacheInfo,
+    })
 
     assertPodsLength(podsInfo.podsList.pods.length)
     const pod = podsInfo.podsList.pods.find(item => item.name === name)
@@ -93,14 +104,19 @@ export class PersonalStorage {
     const podsSharedFiltered = podsInfo.podsList.sharedPods.filter(item => item.name !== name)
     const allPodsData = podListToBytes(podsFiltered, podsSharedFiltered)
     const wallet = this.accountData.wallet!
+    const epoch = podsInfo.epoch.getNextEpoch(getUnixTimestamp())
     await writeFeedData(
       this.accountData.connection,
       POD_TOPIC,
       allPodsData,
       wallet.privateKey,
       preparePrivateKey(wallet.privateKey),
-      podsInfo.lookupAnswer!.epoch.getNextEpoch(getUnixTimestamp()),
+      epoch,
     )
+    await setEpochCache(this.accountData.connection.cacheInfo, getCacheKey(wallet.address), {
+      epoch,
+      data: podListToJSON(podsFiltered, podsSharedFiltered),
+    })
   }
 
   /**
@@ -115,13 +131,10 @@ export class PersonalStorage {
     assertPodName(name)
     const wallet = this.accountData.wallet!
     const address = prepareEthAddress(wallet.address)
-    const podInfo = await getExtendedPodsList(
-      this.accountData.connection.bee,
-      name,
-      wallet,
-      this.accountData.seed!,
-      this.accountData.connection.options?.downloadOptions,
-    )
+    const podInfo = await getExtendedPodsList(this.accountData.connection.bee, name, wallet, this.accountData.seed!, {
+      requestOptions: this.accountData.connection.options?.requestOptions,
+      cacheInfo: this.accountData.connection.cacheInfo,
+    })
 
     const data = stringToBytes(
       JSON.stringify(createPodShareInfo(name, podInfo.podAddress, address, podInfo.pod.password)),

@@ -15,13 +15,13 @@ import { encryptBytes, PodPasswordBytes } from '../utils/encryption'
  * @param bee Bee client
  * @param topic topic for calculation swarm chunk
  * @param address Ethereum address for calculation swarm chunk
- * @param options download chunk options
+ * @param requestOptions download chunk requestOptions
  */
 export async function getFeedData(
   bee: Bee,
   topic: string,
   address: Utils.EthAddress | Uint8Array,
-  options?: RequestOptions,
+  requestOptions?: RequestOptions,
 ): Promise<LookupAnswer> {
   const topicHash = bmtHashString(topic)
 
@@ -29,7 +29,7 @@ export async function getFeedData(
     const tempId = getId(topicHash, time, epoch.level)
     const chunkReference = bytesToHex(Utils.keccak256Hash(tempId.buffer, address.buffer))
 
-    return bee.downloadChunk(chunkReference, options)
+    return bee.downloadChunk(chunkReference, requestOptions)
   })
 }
 

@@ -1,9 +1,10 @@
 import crypto from 'crypto'
 import { BATCH_ID_HEX_LENGTH, BatchId, Bee, BeeDebug, Utils } from '@ethersphere/bee-js'
-import { FdpStorage } from '../src'
+import { FdpStorage, Options } from '../src'
 import { utils, Wallet } from 'ethers'
 import { Environments, getEnvironmentConfig } from '@fairdatasociety/fdp-contracts-js'
 import axios from 'axios'
+import { CacheOptions } from '../src/cache/types'
 
 export interface TestUser {
   username: string
@@ -97,21 +98,24 @@ export function numbersToSegment(numbers: number[]): Utils.Bytes<32> {
 /**
  * Options for FDP initialization
  */
-export const fdpOptions = {
-  downloadOptions: {
+export const fdpOptions: Options = {
+  requestOptions: {
     timeout: GET_FEED_DATA_TIMEOUT,
   },
   ensOptions: {
     ...getEnvironmentConfig(Environments.LOCALHOST),
     performChecks: true,
   },
+  cacheOptions: {
+    isUseCache: false,
+  },
 }
 
 /**
  * Creates FDP instance with default configuration for testing
  */
-export function createFdp(): FdpStorage {
-  return new FdpStorage(beeUrl(), batchId(), fdpOptions)
+export function createFdp(cacheOptions?: CacheOptions): FdpStorage {
+  return new FdpStorage(beeUrl(), batchId(), { ...fdpOptions, ...(cacheOptions ? { cacheOptions } : undefined) })
 }
 
 /**
