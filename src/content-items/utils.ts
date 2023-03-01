@@ -14,16 +14,16 @@ import CryptoJS from 'crypto-js'
  * @param path path with information
  * @param address Ethereum address of the pod which owns the path
  * @param podPassword bytes for data encryption from pod metadata
- * @param downloadOptions options for downloading
+ * @param requestOptions options for downloading
  */
 export async function getRawMetadata(
   bee: Bee,
   path: string,
   address: EthAddress,
   podPassword: PodPasswordBytes,
-  downloadOptions?: RequestOptions,
+  requestOptions?: RequestOptions,
 ): Promise<RawMetadataWithEpoch> {
-  const feedData = await getFeedData(bee, path, address, downloadOptions)
+  const feedData = await getFeedData(bee, path, address, requestOptions)
   const data = decryptJson(podPassword, feedData.data.chunkContent())
   let metadata
 
@@ -47,16 +47,16 @@ export async function getRawMetadata(
  * @param bee Bee instance
  * @param fullPath full path to the item
  * @param address uploader address
- * @param downloadOptions options for downloading
+ * @param requestOptions options for downloading
  */
 export async function isItemExists(
   bee: Bee,
   fullPath: string,
   address: EthAddress,
-  downloadOptions: RequestOptions | undefined,
+  requestOptions: RequestOptions | undefined,
 ): Promise<boolean> {
   try {
-    await getFeedData(bee, fullPath, address, downloadOptions)
+    await getFeedData(bee, fullPath, address, requestOptions)
 
     return true
   } catch (e) {

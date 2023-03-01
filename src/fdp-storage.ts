@@ -6,6 +6,7 @@ import { Options } from './types'
 import { Directory } from './directory/directory'
 import { File } from './file/file'
 import { ENS } from '@fairdatasociety/fdp-contracts-js'
+import { CacheInfo, DEFAULT_CACHE_OPTIONS } from './cache/types'
 
 export class FdpStorage {
   public readonly connection: Connection
@@ -14,9 +15,14 @@ export class FdpStorage {
   public readonly directory: Directory
   public readonly file: File
   public readonly ens: ENS
+  public readonly cache: CacheInfo
 
   constructor(beeUrl: string, postageBatchId: BatchId, options?: Options) {
-    this.connection = new Connection(new Bee(beeUrl), postageBatchId, options)
+    this.cache = {
+      object: {},
+      options: options?.cacheOptions || DEFAULT_CACHE_OPTIONS,
+    }
+    this.connection = new Connection(new Bee(beeUrl), postageBatchId, this.cache, options)
     this.ens = new ENS(options?.ensOptions, null, options?.ensDomain)
     this.account = new AccountData(this.connection, this.ens)
     this.personalStorage = new PersonalStorage(this.account)

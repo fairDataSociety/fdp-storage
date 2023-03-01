@@ -13,23 +13,27 @@ import { createUserV1 } from '../../src/account/account'
 import { PodShareInfo, RawFileMetadata } from '../../src/pod/types'
 import { FileShareInfo } from '../../src/file/types'
 import { getFeedData } from '../../src/feed/api'
+import * as feedApi from '../../src/feed/api'
 import { POD_TOPIC } from '../../src/pod/personal-storage'
 import { decryptBytes } from '../../src/utils/encryption'
 import { Wallet } from 'ethers'
 import { removeZeroFromHex } from '../../src/account/utils'
 import { bytesToString, wrapBytesWithHelpers } from '../../src/utils/bytes'
-import { getWalletByIndex, mnemonicToSeed, prepareEthAddress } from '../../src/utils/wallet'
+import { mnemonicToSeed, prepareEthAddress } from '../../src/utils/wallet'
 import { assertEncryptedReference } from '../../src/utils/hex'
 import { base64toReference } from '../../src/file/utils'
 import path from 'path'
 import { getNodeFileContent } from '../../src/directory/utils'
 import { ETH_ADDR_HEX_LENGTH } from '../../src/utils/type'
+import * as walletApi from '../../src/utils/wallet'
+import { HIGHEST_LEVEL } from '../../src/feed/lookup/epoch'
+import { getWalletByIndex } from '../../src/utils/cache/wallet'
 
 jest.setTimeout(400000)
 describe('Fair Data Protocol class', () => {
   it('should strip trailing slash', () => {
     const fdp = new FdpStorage('http://localhost:1633/', batchId(), {
-      downloadOptions: {
+      requestOptions: {
         timeout: GET_FEED_DATA_TIMEOUT,
       },
     })
@@ -679,7 +683,7 @@ describe('Fair Data Protocol class', () => {
       expect(encryptedText1).not.toContain(pod)
       expect(decryptedText1).toContain(pod)
       // HDNode with index 1 is for first pod
-      const node1 = getWalletByIndex(seed, 1)
+      const node1 = await getWalletByIndex(seed, 1)
       const rootDirectoryData = await getFeedData(bee, '/', prepareEthAddress(node1.address))
       const encryptedText2 = rootDirectoryData.data.chunkContent().text()
       const encryptedBytes2 = rootDirectoryData.data.chunkContent()
@@ -732,6 +736,174 @@ describe('Fair Data Protocol class', () => {
       const encryptedData6 = await bee.downloadData(blockReference)
       const decryptedText6 = encryptedData6.text()
       expect(decryptedText6).toEqual(contentSmall)
+    })
+  })
+
+  describe('Caching', () => {
+    it('should collect correct metrics without cache', async () => {
+      const writeFeedDataSpy = jest.spyOn(feedApi, 'writeFeedData')
+      const getFeedDataSpy = jest.spyOn(feedApi, 'getFeedData')
+      const getWalletByIndexSpy = jest.spyOn(walletApi, 'getWalletByIndex')
+
+      const fdpNoCache = createFdp({
+        isUseCache: false,
+      })
+
+      const pod1 = generateRandomHexString()
+      const pod2 = generateRandomHexString()
+      const fileSize = 100
+      const fileContent = generateRandomHexString(fileSize)
+      const filename = generateRandomHexString() + '.txt'
+      const fullFilename = '/' + filename
+      fdpNoCache.account.createWallet()
+
+      // no cache - create first pod
+      await fdpNoCache.personalStorage.create(pod1)
+      // for the first feed write it should be the highest level
+      expect(writeFeedDataSpy.mock.calls[0][5]?.level).toEqual(HIGHEST_LEVEL)
+      // getting info about pods from the network
+      expect(getFeedDataSpy).toBeCalledTimes(1)
+      // calculating wallet by index for the pod
+      expect(getWalletByIndexSpy).toBeCalledTimes(1)
+
+      jest.clearAllMocks()
+      await fdpNoCache.personalStorage.create(pod2)
+      expect(writeFeedDataSpy.mock.calls[0][5]?.level).toEqual(HIGHEST_LEVEL - 1)
+      expect(getFeedDataSpy).toBeCalledTimes(1)
+      expect(getWalletByIndexSpy).toBeCalledTimes(1)
+
+      jest.clearAllMocks()
+      await fdpNoCache.personalStorage.list()
+      // getting info about pods from the network
+      expect(getFeedDataSpy).toBeCalledTimes(1)
+
+      jest.clearAllMocks()
+      await fdpNoCache.directory.read(pod1, '/', true)
+      // should not write any info
+      expect(writeFeedDataSpy).toBeCalledTimes(0)
+      // getting info about pods from the network and getting root info of the pod
+      expect(getFeedDataSpy).toBeCalledTimes(2)
+      // calculating wallet by index for the pod
+      expect(getWalletByIndexSpy).toBeCalledTimes(1)
+
+      jest.clearAllMocks()
+      await fdpNoCache.file.uploadData(pod1, fullFilename, fileContent)
+      // write file metadata + update root dir
+      expect(writeFeedDataSpy).toBeCalledTimes(2)
+      // get pods info + check file exists + get parent metadata
+      expect(getFeedDataSpy).toBeCalledTimes(3)
+      // calc the pod wallet
+      expect(getWalletByIndexSpy).toBeCalledTimes(1)
+
+      jest.clearAllMocks()
+      await fdpNoCache.file.delete(pod1, fullFilename)
+      // update root dir metadata
+      expect(writeFeedDataSpy).toBeCalledTimes(1)
+      // get pods info + update root dir metadata
+      expect(getFeedDataSpy).toBeCalledTimes(2)
+      // calc the pod wallet
+      expect(getWalletByIndexSpy).toBeCalledTimes(1)
+
+      jest.clearAllMocks()
+      await fdpNoCache.personalStorage.delete(pod1)
+      // writing info about pods to the network
+      expect(writeFeedDataSpy).toBeCalledTimes(1)
+      // get pods info
+      expect(getFeedDataSpy).toBeCalledTimes(1)
+      expect(getWalletByIndexSpy).toBeCalledTimes(0)
+
+      jest.restoreAllMocks()
+    })
+
+    it('should collect correct metrics with cache', async () => {
+      const writeFeedDataSpy = jest.spyOn(feedApi, 'writeFeedData')
+      const getFeedDataSpy = jest.spyOn(feedApi, 'getFeedData')
+      const getWalletByIndexSpy = jest.spyOn(walletApi, 'getWalletByIndex')
+      let cache = ''
+      const fdpWithCache = createFdp({
+        isUseCache: true,
+        onSaveCache: async cacheObject => {
+          cache = JSON.stringify(cacheObject)
+        },
+      })
+
+      const pod1 = generateRandomHexString()
+      const pod2 = generateRandomHexString()
+      const fileSize = 100
+      const fileContent = generateRandomHexString(fileSize)
+      const filename = generateRandomHexString() + '.txt'
+      const fullFilename = '/' + filename
+      const wallet = fdpWithCache.account.createWallet()
+
+      // with cache - create first pod
+      await fdpWithCache.personalStorage.create(pod1)
+      // for the first feed write it should be the highest level
+      expect(writeFeedDataSpy.mock.calls[0][5]?.level).toEqual(HIGHEST_LEVEL)
+      // getting info about pods from the network
+      expect(getFeedDataSpy).toBeCalledTimes(1)
+      // calculating wallet by index for the pod
+      expect(getWalletByIndexSpy).toBeCalledTimes(1)
+
+      jest.clearAllMocks()
+      await fdpWithCache.personalStorage.create(pod2)
+      // data about pods shouldn't be retrieved
+      expect(getFeedDataSpy).toBeCalledTimes(0)
+      // should be calculated correct level without getting previous one from the network
+      expect(writeFeedDataSpy.mock.calls[0][5]?.level).toEqual(HIGHEST_LEVEL - 1)
+      // calc a wallet for the new pod
+      expect(getWalletByIndexSpy).toBeCalledTimes(1)
+
+      jest.clearAllMocks()
+      await fdpWithCache.personalStorage.list()
+      // the list cached
+      expect(getFeedDataSpy).toBeCalledTimes(0)
+
+      jest.clearAllMocks()
+      await fdpWithCache.directory.read(pod1, '/', true)
+      // should not write any info
+      expect(writeFeedDataSpy).toBeCalledTimes(0)
+      // should get root info of the pod only. should not get info about pods from the network
+      expect(getFeedDataSpy).toBeCalledTimes(1)
+      // shouldn't calculate the pod wallet again
+      expect(getWalletByIndexSpy).toBeCalledTimes(0)
+
+      jest.clearAllMocks()
+      await fdpWithCache.file.uploadData(pod1, fullFilename, fileContent)
+      // write file metadata + update root dir
+      expect(writeFeedDataSpy).toBeCalledTimes(2)
+      // check file exists + get parent metadata. pods info is cached
+      expect(getFeedDataSpy).toBeCalledTimes(2)
+      // the pod wallet is cached
+      expect(getWalletByIndexSpy).toBeCalledTimes(0)
+
+      jest.clearAllMocks()
+      await fdpWithCache.file.delete(pod1, fullFilename)
+      // update root dir metadata
+      expect(writeFeedDataSpy).toBeCalledTimes(1)
+      // update root dir metadata only. should not get pods info
+      expect(getFeedDataSpy).toBeCalledTimes(1)
+      // the pod wallet is cached
+      expect(getWalletByIndexSpy).toBeCalledTimes(0)
+
+      jest.clearAllMocks()
+      await fdpWithCache.personalStorage.delete(pod1)
+      // writing info about pods to the network
+      expect(writeFeedDataSpy).toBeCalledTimes(1)
+      // should not get pods info
+      expect(getFeedDataSpy).toBeCalledTimes(0)
+      expect(getWalletByIndexSpy).toBeCalledTimes(0)
+
+      // recovering cache data
+      const fdpRecovered = createFdp({
+        isUseCache: true,
+      })
+      fdpRecovered.cache.object = JSON.parse(cache)
+      fdpRecovered.account.setAccountFromMnemonic(wallet.mnemonic.phrase)
+      const pods = await fdpRecovered.personalStorage.list()
+      expect(pods.pods).toHaveLength(1)
+      expect(pods.pods[0].name).toEqual(pod2)
+
+      jest.restoreAllMocks()
     })
   })
 })

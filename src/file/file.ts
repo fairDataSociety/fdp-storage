@@ -45,7 +45,7 @@ export class File {
       fullPath,
       podAddress,
       pod.password,
-      this.accountData.connection.options?.downloadOptions,
+      this.accountData.connection.options?.requestOptions,
     )
   }
 

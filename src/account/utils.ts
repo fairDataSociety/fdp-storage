@@ -141,19 +141,9 @@ export function assertAccount(value: unknown): asserts value is AccountData {
   if (!data.seed) {
     throw new Error('Account seed not found')
   }
-}
-
-/**
- * Asserts whether an account is defined
- *
- * @param value instance of AccountData to check
- */
-export function assertRegistrationAccount(value: unknown): asserts value is AccountData {
-  const data = value as AccountData
-  assertAccount(value)
 
   if (!data.publicKey) {
-    throw new Error('Account public key not found')
+    throw new Error('Public key is empty')
   }
 }
 

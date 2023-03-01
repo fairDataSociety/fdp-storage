@@ -292,6 +292,31 @@ await fdp.account.migrate('oldusername', 'oldpassword', {
 })
 ```
 
+Using FDP instance with cache
+
+```js
+const fdpCache = new FdpStorage('https://localhost:1633', batchId, {
+  cacheOptions: {
+    isUseCache: true,
+    onSaveCache: async cacheObject => {
+      const cache = JSON.stringify(cacheObject)
+      console.log('cache updated', cache)
+    },
+  }
+})
+```
+
+Recovering FDP instance with saved cache
+
+```js
+const fdpCache = new FdpStorage('https://localhost:1633', batchId, {
+  cacheOptions: {
+    isUseCache: true,
+  }
+})
+fdpCache.cache.object = JSON.parse(cache)
+```
+
 ## Documentation
 
 You can generate API docs locally with:
