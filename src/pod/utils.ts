@@ -408,7 +408,7 @@ export async function createPod(
 
   if (isPod(realPod)) {
     const podWallet = await getWalletByIndex(seed, nextIndex, cacheInfo)
-    await createRootDirectory(connection, realPod.password, preparePrivateKey(podWallet.privateKey))
+    await createRootDirectory(connection, realPod.password, podWallet)
   }
 
   await setEpochCache(cacheInfo, getCacheKey(userWallet.address), {

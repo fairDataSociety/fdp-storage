@@ -56,7 +56,7 @@ export async function isItemExists(
   requestOptions: RequestOptions | undefined,
 ): Promise<boolean> {
   try {
-    return (await getFeedData(bee, fullPath, address, downloadOptions)).data.text() === DELETE_FEED_MAGIC_WORD
+    return (await getFeedData(bee, fullPath, address, requestOptions)).data.text() === DELETE_FEED_MAGIC_WORD
   } catch (e) {
     return false
   }
