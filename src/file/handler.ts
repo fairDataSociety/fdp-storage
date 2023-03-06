@@ -12,7 +12,7 @@ import {
 import { FileMetadata } from '../pod/types'
 import { blocksToManifest, getFileMetadataRawBytes, rawFileMetadataToFileMetadata } from './adapter'
 import { assertRawFileMetadata } from '../directory/utils'
-import { getRawMetadata } from '../content-items/utils'
+import { getCreationPathInfo, getRawMetadata } from '../content-items/utils'
 import { PodPasswordBytes } from '../utils/encryption'
 import { Blocks, DataUploadOptions } from './types'
 import { assertPodName, getExtendedPodsListByAccountData, META_VERSION } from '../pod/utils'
@@ -20,6 +20,9 @@ import { getUnixTimestamp } from '../utils/time'
 import { addEntryToDirectory } from '../content-items/handler'
 import { writeFeedData } from '../feed/api'
 import { AccountData } from '../account/account-data'
+import { prepareEthAddress } from '../utils/wallet'
+import { assertWallet } from '../utils/type'
+import { getNextEpoch } from '../feed/lookup/utils'
 
 /**
  * File prefix
@@ -119,10 +122,18 @@ export async function uploadData(
   assertPodName(podName)
   assertFullPathWithName(fullPath)
   assertPodName(podName)
+  assertWallet(accountData.wallet)
 
   data = typeof data === 'string' ? stringToBytes(data) : data
   const connection = accountData.connection
   const { podWallet, pod } = await getExtendedPodsListByAccountData(accountData, podName)
+
+  const fullPathInfo = await getCreationPathInfo(
+    connection.bee,
+    fullPath,
+    prepareEthAddress(podWallet.address),
+    connection.options?.requestOptions,
+  )
   const pathInfo = extractPathInfo(fullPath)
   const now = getUnixTimestamp()
   const blocksCount = Math.ceil(data.length / options.blockSize)
@@ -155,7 +166,14 @@ export async function uploadData(
   }
 
   await addEntryToDirectory(connection, podWallet, pod.password, pathInfo.path, pathInfo.filename, true)
-  await writeFeedData(connection, fullPath, getFileMetadataRawBytes(meta), podWallet, pod.password)
+  await writeFeedData(
+    connection,
+    fullPath,
+    getFileMetadataRawBytes(meta),
+    podWallet,
+    pod.password,
+    getNextEpoch(fullPathInfo?.lookupAnswer.epoch),
+  )
 
   return meta
 }

@@ -3,9 +3,10 @@ import { EthAddress } from '@ethersphere/bee-js/dist/types/utils/eth'
 import { RawDirectoryMetadata, RawFileMetadata } from '../pod/types'
 import { DELETE_FEED_MAGIC_WORD, getFeedData } from '../feed/api'
 import { isRawDirectoryMetadata, isRawFileMetadata } from '../directory/utils'
-import { DirectoryItem, FileItem, RawMetadataWithEpoch } from './types'
+import { DirectoryItem, FileItem, PathInformation, RawMetadataWithEpoch } from './types'
 import { decryptJson, PodPasswordBytes } from '../utils/encryption'
 import CryptoJS from 'crypto-js'
+import { isObject } from '../utils/type'
 
 /**
  * Get raw metadata by path
@@ -115,4 +116,55 @@ export function rawFileMetadataToFileItem(item: RawFileMetadata): FileItem {
     size: Number(item.fileSize),
     reference,
   }
+}
+
+/**
+ * Gets `PathInformation` under the path
+ */
+export async function getPathInfo(
+  bee: Bee,
+  path: string,
+  address: EthAddress,
+  requestOptions?: RequestOptions,
+): Promise<PathInformation> {
+  const lookupAnswer = await getFeedData(bee, path, address, requestOptions)
+
+  return {
+    isDeleted: lookupAnswer.data.text() === DELETE_FEED_MAGIC_WORD,
+    lookupAnswer,
+  }
+}
+
+/**
+ * Asserts that metadata marked as deleted with the magic word
+ */
+export function assertItemDeleted(value: PathInformation, path: string): asserts value is PathInformation {
+  const data = value as PathInformation
+
+  if (!(isObject(data) && data.isDeleted)) {
+    throw new Error(`Item under the path "${path}" is not deleted`)
+  }
+}
+
+/**
+ * Gets `PathInformation` for creation and uploading metadata purposes
+ *
+ * In case metadata is available for uploading under the path, the method will return `PathInformation`.
+ * In other case it will return `undefined`.
+ */
+export async function getCreationPathInfo(
+  bee: Bee,
+  fullPath: string,
+  address: EthAddress,
+  requestOptions?: RequestOptions,
+): Promise<PathInformation | undefined> {
+  // check that if directory uploaded - than it should be marked as deleted
+  let pathInfo
+  try {
+    pathInfo = await getPathInfo(bee, fullPath, address, requestOptions)
+    assertItemDeleted(pathInfo, fullPath)
+    // eslint-disable-next-line no-empty
+  } catch (e) {}
+
+  return pathInfo
 }

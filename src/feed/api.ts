@@ -8,8 +8,7 @@ import { getUnixTimestamp } from '../utils/time'
 import { LookupAnswer } from './types'
 import { Connection } from '../connection/connection'
 import { encryptBytes, PodPasswordBytes } from '../utils/encryption'
-import { utils } from 'ethers'
-import { prepareEthAddress } from '../utils/wallet'
+import { utils, Wallet } from 'ethers'
 import { stringToBytes } from '../utils/bytes'
 
 /**
@@ -55,7 +54,7 @@ export async function writeFeedData(
   connection: Connection,
   topic: string,
   data: Uint8Array,
-  wallet: utils.HDNode,
+  wallet: utils.HDNode | Wallet,
   podPassword: PodPasswordBytes,
   epoch?: Epoch,
 ): Promise<Reference> {
@@ -79,11 +78,11 @@ export async function writeFeedDataRaw(
   connection: Connection,
   topic: string,
   data: Uint8Array,
-  wallet: utils.HDNode,
+  wallet: utils.HDNode | Wallet,
   epoch?: Epoch,
 ): Promise<Reference> {
   if (!epoch) {
-    epoch = await getLastEpoch(connection.bee, topic, prepareEthAddress(wallet.address))
+    epoch = new Epoch(HIGHEST_LEVEL, getUnixTimestamp())
   }
 
   const topicHash = bmtHashString(topic)
@@ -114,7 +113,7 @@ export async function getLastEpoch(bee: Bee, topic: string, address: Utils.EthAd
 export async function deleteFeedData(
   connection: Connection,
   topic: string,
-  wallet: utils.HDNode,
+  wallet: utils.HDNode | Wallet,
   podPassword: PodPasswordBytes,
   epoch?: Epoch,
 ): Promise<Reference> {

@@ -7,11 +7,12 @@ import { getRawDirectoryMetadataBytes } from '../directory/adapter'
 import { DIRECTORY_TOKEN, FILE_TOKEN } from '../file/handler'
 import { assertRawDirectoryMetadata, combine, splitPath } from '../directory/utils'
 import { RawDirectoryMetadata } from '../pod/types'
-import { assertItemIsNotExists, getRawMetadata } from './utils'
+import { getPathInfo, getRawMetadata } from './utils'
 import { RawMetadataWithEpoch } from './types'
 import { prepareEthAddress } from '../utils/wallet'
 import { PodPasswordBytes } from '../utils/encryption'
 import { DataUploadOptions } from '../file/types'
+import { getNextEpoch } from '../feed/lookup/utils'
 
 export const DEFAULT_UPLOAD_OPTIONS: DataUploadOptions = {
   blockSize: 1000000,
@@ -49,7 +50,6 @@ export async function addEntryToDirectory(
   const address = prepareEthAddress(wallet.address)
   const itemText = isFile ? 'File' : 'Directory'
   const fullPath = combine(...splitPath(parentPath), entryPath)
-  await assertItemIsNotExists(itemText, connection.bee, fullPath, address, downloadOptions)
 
   let parentData: RawDirectoryMetadata | undefined
   let metadataWithEpoch: RawMetadataWithEpoch | undefined
@@ -77,8 +77,46 @@ export async function addEntryToDirectory(
     getRawDirectoryMetadataBytes(parentData),
     wallet,
     podPassword,
-    metadataWithEpoch.epoch.getNextEpoch(getUnixTimestamp()),
+    getNextEpoch(metadataWithEpoch.epoch),
   )
+}
+
+/**
+ * Uploads magic word data on the next epoch's level
+ *
+ * Magic word should be uploaded if data is not found (in case of data pruning) or not deleted
+ */
+export async function deleteItem(
+  connection: Connection,
+  itemMetaPath: string,
+  wallet: utils.HDNode,
+  podPassword: PodPasswordBytes,
+): Promise<void> {
+  let pathInfo
+  try {
+    pathInfo = await getPathInfo(
+      connection.bee,
+      itemMetaPath,
+      prepareEthAddress(wallet.address),
+      connection.options?.requestOptions,
+    )
+    // eslint-disable-next-line no-empty
+  } catch (e) {}
+
+  // if the item already deleted - do nothing
+  if (pathInfo?.isDeleted) {
+    return
+  }
+
+  let metaPathEpoch
+
+  // if information is stored under the path, calculate the next level of epoch
+  if (pathInfo) {
+    pathInfo.lookupAnswer.epoch.level = pathInfo.lookupAnswer.epoch.getNextLevel(pathInfo.lookupAnswer.epoch.time)
+    metaPathEpoch = pathInfo.lookupAnswer.epoch
+  }
+
+  await deleteFeedData(connection, itemMetaPath, wallet, podPassword, metaPathEpoch)
 }
 
 /**
@@ -111,13 +149,23 @@ export async function removeEntryFromDirectory(
   const parentData = metadataWithEpoch.metadata
   assertRawDirectoryMetadata(parentData)
   const itemToRemove = (isFile ? FILE_TOKEN : DIRECTORY_TOKEN) + entryPath
+  const fileOrDirNames = parentData.fileOrDirNames || []
 
-  if (parentData.fileOrDirNames) {
-    parentData.fileOrDirNames = parentData.fileOrDirNames.filter(name => name !== itemToRemove)
+  const fullPath = combine(parentPath, entryPath)
+
+  if (!fileOrDirNames.includes(itemToRemove)) {
+    throw new Error(`Item "${fullPath}" not found in the list of items`)
   }
 
-  const nextEpoch = metadataWithEpoch.epoch.getNextEpoch(getUnixTimestamp())
-  await deleteFeedData(connection, entryPath, wallet, podPassword, nextEpoch)
+  parentData.fileOrDirNames = fileOrDirNames.filter(name => name !== itemToRemove)
+  await deleteItem(connection, fullPath, wallet, podPassword)
 
-  return writeFeedData(connection, parentPath, getRawDirectoryMetadataBytes(parentData), wallet, podPassword, nextEpoch)
+  return writeFeedData(
+    connection,
+    parentPath,
+    getRawDirectoryMetadataBytes(parentData),
+    wallet,
+    podPassword,
+    getNextEpoch(metadataWithEpoch.epoch),
+  )
 }

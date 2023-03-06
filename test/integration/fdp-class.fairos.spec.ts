@@ -330,7 +330,9 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
       expect(fdpResponse2.directories).toHaveLength(0)
 
       // test mixed interaction (directory created from fairos and deleted with fdp)
-      await fdp.directory.delete(podName1, fullDirectoryName1)
+      await expect(fdp.directory.delete(podName1, fullDirectoryName1)).rejects.toThrow(
+        `Item "${fullDirectoryName1}" not found in the list of items`,
+      )
       const fdpResponse3 = await fdp.directory.read(podName1, '/', true)
       expect(fdpResponse3.directories).toHaveLength(0)
       const fairosDirs = await fairos.dirLs(podName1)

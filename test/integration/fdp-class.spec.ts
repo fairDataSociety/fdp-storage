@@ -865,8 +865,8 @@ describe('Fair Data Protocol class', () => {
       await fdpNoCache.file.delete(pod1, fullFilename)
       // update root dir metadata
       expect(writeFeedDataSpy).toBeCalledTimes(1)
-      // get pods info + update root dir metadata
-      expect(getFeedDataSpy).toBeCalledTimes(2)
+      // get pods info + check is file available + update root dir metadata
+      expect(getFeedDataSpy).toBeCalledTimes(3)
       // calc the pod wallet
       expect(getWalletByIndexSpy).toBeCalledTimes(1)
 
@@ -946,8 +946,8 @@ describe('Fair Data Protocol class', () => {
       await fdpWithCache.file.delete(pod1, fullFilename)
       // update root dir metadata
       expect(writeFeedDataSpy).toBeCalledTimes(1)
-      // update root dir metadata only. should not get pods info
-      expect(getFeedDataSpy).toBeCalledTimes(1)
+      // update root dir metadata + check is file deleted. should not get pods info
+      expect(getFeedDataSpy).toBeCalledTimes(2)
       // the pod wallet is cached
       expect(getWalletByIndexSpy).toBeCalledTimes(0)
 
