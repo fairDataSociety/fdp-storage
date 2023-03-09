@@ -9,14 +9,14 @@ import {
   assertSharedPod,
   createPod,
   createPodShareInfo,
-  getSharedPodInfo,
+  getPodShareInfo,
   podListToBytes,
   podsListPreparedToPodsList,
   podPreparedToPod,
   sharedPodPreparedToSharedPod,
   podListToJSON,
+  getReadablePodInfo,
 } from './utils'
-import { getExtendedPodsList } from './api'
 import { uploadBytes } from '../file/utils'
 import { stringToBytes } from '../utils/bytes'
 import { Reference, Utils } from '@ethersphere/bee-js'
@@ -129,15 +129,10 @@ export class PersonalStorage {
   async share(name: string): Promise<Reference> {
     assertAccount(this.accountData)
     assertPodName(name)
-    const wallet = this.accountData.wallet!
-    const address = prepareEthAddress(wallet.address)
-    const podInfo = await getExtendedPodsList(this.accountData.connection.bee, name, wallet, this.accountData.seed!, {
-      requestOptions: this.accountData.connection.options?.requestOptions,
-      cacheInfo: this.accountData.connection.cacheInfo,
-    })
-
+    const address = prepareEthAddress(this.accountData.wallet!.address)
+    const podInfo = await getReadablePodInfo(this.accountData, name)
     const data = stringToBytes(
-      JSON.stringify(createPodShareInfo(name, podInfo.podAddress, address, podInfo.pod.password)),
+      JSON.stringify(createPodShareInfo(name, podInfo.podAddress, address, podInfo.podPassword)),
     )
 
     return (await uploadBytes(this.accountData.connection, data)).reference
@@ -155,7 +150,7 @@ export class PersonalStorage {
   async getSharedInfo(reference: string | EncryptedReference): Promise<PodShareInfo> {
     assertEncryptedReference(reference)
 
-    return getSharedPodInfo(this.accountData.connection.bee, reference)
+    return getPodShareInfo(this.accountData.connection.bee, reference)
   }
 
   /**

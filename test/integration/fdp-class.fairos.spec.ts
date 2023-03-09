@@ -1,10 +1,10 @@
 import { createFdp, generateRandomHexString, generateUser, topUpAddress, topUpFdp, waitFairOS } from '../utils'
-import { Directories, FairOSApi, PodsList } from '../utils/fairos-api'
+import { Directories, FairOSApi, PodsList, SharedPodInfo } from '../utils/fairos-api'
 import { Wallet, utils } from 'ethers'
-import { wrapBytesWithHelpers } from '../../src/utils/bytes'
-import { getExtendedPodsListByAccountData } from '../../src/pod/utils'
+import { bytesToString, wrapBytesWithHelpers } from '../../src/utils/bytes'
+import { getWritablePodInfo } from '../../src/pod/utils'
 import { getRawMetadata } from '../../src/content-items/utils'
-import { RawDirectoryMetadata, RawFileMetadata } from '../../src/pod/types'
+import { PodShareInfo, RawDirectoryMetadata, RawFileMetadata } from '../../src/pod/types'
 import { DEFAULT_FILE_PERMISSIONS, getFileMode } from '../../src/file/utils'
 import { DEFAULT_DIRECTORY_PERMISSIONS, getDirectoryMode } from '../../src/directory/utils'
 
@@ -56,6 +56,69 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
   })
 
   describe('Pod', () => {
+    it('should share a pod from fairos and it should be available via fdp', async () => {
+      const fairos = new FairOSApi()
+      const fdp = createFdp()
+      const user = generateUser()
+      const podName1 = generateRandomHexString()
+      const fileSizeBig = 100
+      const contentBig = generateRandomHexString(fileSizeBig)
+      const filenameBig = generateRandomHexString() + '.txt'
+      const filenameBigFull = `/${filenameBig}`
+
+      await topUpAddress(user.address)
+      await fairos.register(user.username, user.password, user.mnemonic)
+      await fairos.podNew(podName1, user.password)
+      await fairos.fileUpload(podName1, '/', contentBig, filenameBig)
+      const sharedPodInfo = (await fairos.podShare(podName1, user.password)).data as SharedPodInfo
+      const sharedReference = sharedPodInfo.podSharingReference
+      const fairosPodMeta = (await fairos.podReceiveInfo(sharedReference)).data as PodShareInfo
+      expect(Object.keys(fairosPodMeta)).toHaveLength(4)
+      expect(fairosPodMeta.podName).toEqual(podName1)
+      expect(fairosPodMeta.podAddress).toBeDefined()
+      expect(fairosPodMeta.password).toBeDefined()
+      expect(fairosPodMeta.userAddress).toBeDefined()
+
+      // getting info about a pod without auth
+      const fdpPodMeta = await fdp.personalStorage.getSharedInfo(sharedReference)
+      expect(fdpPodMeta.podName).toEqual(fairosPodMeta.podName)
+      expect(fdpPodMeta.podAddress).toEqual(fairosPodMeta.podAddress)
+      expect(fdpPodMeta.password).toEqual(fairosPodMeta.password)
+      expect(fdpPodMeta.userAddress).toEqual(fairosPodMeta.userAddress)
+
+      // getting list of files and directories from a shared pod
+      const sharedList1 = await fdp.directory.readShared(sharedReference, '/', true)
+      expect(sharedList1.directories).toHaveLength(0)
+      expect(sharedList1.files).toHaveLength(1)
+
+      // downloading a file from a pod without auth
+      const file1 = await fdp.file.downloadFromSharedPod(sharedReference, filenameBigFull)
+      expect(bytesToString(file1)).toEqual(contentBig)
+
+      fdp.account.createWallet()
+      const podsList1 = await fdp.personalStorage.list()
+      expect(podsList1.pods).toHaveLength(0)
+      expect(podsList1.sharedPods).toHaveLength(0)
+
+      // saving a pod to the personal storage
+      await fdp.personalStorage.saveShared(sharedReference)
+      const podsList2 = await fdp.personalStorage.list()
+      expect(podsList2.pods).toHaveLength(0)
+      expect(podsList2.sharedPods).toHaveLength(1)
+      const sharedPodInfo1 = podsList2.sharedPods[0]
+      expect(sharedPodInfo1.name).toEqual(podName1)
+      expect(sharedPodInfo1.address).toEqual(fairosPodMeta.podAddress)
+      expect(sharedPodInfo1.password).toEqual(fairosPodMeta.password)
+
+      // downloading a file from the saved pod
+      const list1 = await fdp.directory.read(podName1, '/', true)
+      expect(list1.files).toHaveLength(1)
+      const file2 = await fdp.file.downloadData(podName1, filenameBigFull)
+      expect(bytesToString(file2)).toEqual(contentBig)
+    })
+
+    // todo implement a test where i will share a pod from a fdp and download data from fairos instance
+
     it('should create pods in fdp and list them in fairos', async () => {
       const fairos = new FairOSApi()
       const fdp = createFdp()
@@ -341,6 +404,39 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
   })
 
   describe('File', () => {
+    // it('should share a file with fairos and it should available via fdp', async () => {
+    //   const fairos = new FairOSApi()
+    //   const fdp = createFdp()
+    //   const user = generateUser()
+    //   const podName1 = generateRandomHexString()
+    //   const fileSizeBig = 100
+    //   const contentBig = generateRandomHexString(fileSizeBig)
+    //   const contentBig2 = generateRandomHexString(fileSizeBig)
+    //   const filenameBig = generateRandomHexString() + '.txt'
+    //   const filenameBig2 = generateRandomHexString() + '.txt'
+    //   const fullFilenameBigPath = '/' + filenameBig
+    //   const fullFilenameBigPath2 = '/' + filenameBig2
+    //
+    //   await topUpAddress(user.address)
+    //   await fairos.register(user.username, user.password, user.mnemonic)
+    //   await fairos.podNew(podName1, user.password)
+    //   await fairos.fileUpload(podName1, '/', contentBig, filenameBig)
+    //   const data = (await fairos.fileShare(podName1, fullFilenameBigPath, 'any', user.password)).data as SharedFileInfo
+    //   const podData = (await fairos.podShare(podName1, user.password)).data as SharedPodInfo
+    //   // console.log('data', data)
+    //   // console.log('podData', podData)
+    //   const bee = new Bee('http://localhost:1633')
+    //   // const ref = data.fileSharingReference.substring(0, 128)
+    //   // console.log('ref', ref)
+    //   const beeData = await bee.downloadData(podData.podSharingReference)
+    //   // PodShareInfo
+    //   // console.log('beeData', beeData.text())
+    //   // const receiveInfo = (await fairos.fileReceiveInfo(podName1, data.fileSharingReference)).data
+    //   // console.log('receive info', receiveInfo)
+    //
+    //   // {"podName":"5c91e11382","podAddress":"02612e69e957f6d0c31f93a552000aa43f2d53ca","password":"396170724e6b5167376949364c513169314271464242643531556353694e5555","userAddress":"76f6fac71975f5badc4c49f302c3f700a267c0a2"}
+    // })
+
     it('should upload file with fdp and it should available via fairos', async () => {
       const fairos = new FairOSApi()
       const fdp = createFdp()
@@ -539,7 +635,7 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
       await fairos.dirMkdir(podName1, fullNewDirectory1, user.password)
       await fairos.fileUpload(podName1, '/', contentBig, filenameBig)
 
-      const { podAddress, pod } = await getExtendedPodsListByAccountData(fdp.account, podName1)
+      const { podAddress, pod } = await getWritablePodInfo(fdp.account, podName1)
       const rawDirectoryMetadata = (
         await getRawMetadata(fdp.connection.bee, fullNewDirectory1, podAddress, pod.password)
       ).metadata as RawDirectoryMetadata
