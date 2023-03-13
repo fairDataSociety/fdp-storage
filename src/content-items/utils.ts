@@ -1,12 +1,16 @@
 import { Bee, Reference, RequestOptions } from '@ethersphere/bee-js'
 import { EthAddress } from '@ethersphere/bee-js/dist/types/utils/eth'
 import { RawDirectoryMetadata, RawFileMetadata } from '../pod/types'
-import { DELETE_FEED_MAGIC_WORD, getFeedData } from '../feed/api'
+import { DELETE_FEED_MAGIC_WORD, getFeedData, writeFeedData } from '../feed/api'
 import { isRawDirectoryMetadata, isRawFileMetadata } from '../directory/utils'
 import { DirectoryItem, FileItem, PathInformation, RawMetadataWithEpoch } from './types'
 import { decryptJson, PodPasswordBytes } from '../utils/encryption'
 import CryptoJS from 'crypto-js'
 import { isObject } from '../utils/type'
+import { Connection } from '../connection/connection'
+import { utils, Wallet } from 'ethers'
+import { Epoch } from '../feed/lookup/epoch'
+import { stringToBytes } from '../utils/bytes'
 
 /**
  * Get raw metadata by path
@@ -167,4 +171,17 @@ export async function getCreationPathInfo(
   } catch (e) {}
 
   return pathInfo
+}
+
+/**
+ * Deletes feed data for `topic` using owner's `wallet`
+ */
+export async function deleteFeedData(
+  connection: Connection,
+  topic: string,
+  wallet: utils.HDNode | Wallet,
+  podPassword: PodPasswordBytes,
+  epoch?: Epoch,
+): Promise<Reference> {
+  return writeFeedData(connection, topic, stringToBytes(DELETE_FEED_MAGIC_WORD), wallet, podPassword, epoch)
 }

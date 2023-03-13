@@ -9,7 +9,6 @@ import { LookupAnswer } from './types'
 import { Connection } from '../connection/connection'
 import { encryptBytes, PodPasswordBytes } from '../utils/encryption'
 import { utils, Wallet } from 'ethers'
-import { stringToBytes } from '../utils/bytes'
 
 /**
  * Magic word for replacing content after deletion
@@ -90,32 +89,4 @@ export async function writeFeedDataRaw(
   const socWriter = connection.bee.makeSOCWriter(wallet.privateKey)
 
   return socWriter.upload(connection.postageBatchId, id, data)
-}
-
-/**
- * Gets last epoch for `topic` using owner's `address`
- */
-export async function getLastEpoch(bee: Bee, topic: string, address: Utils.EthAddress | Uint8Array): Promise<Epoch> {
-  let epoch = new Epoch(HIGHEST_LEVEL, getUnixTimestamp())
-  try {
-    const feedData = await getFeedData(bee, topic, address)
-    feedData.epoch.level = feedData.epoch.getNextLevel(feedData.epoch.time)
-    epoch = feedData.epoch
-    // eslint-disable-next-line no-empty
-  } catch (e) {}
-
-  return epoch
-}
-
-/**
- * Deletes feed data for `topic` using owner's `wallet`
- */
-export async function deleteFeedData(
-  connection: Connection,
-  topic: string,
-  wallet: utils.HDNode | Wallet,
-  podPassword: PodPasswordBytes,
-  epoch?: Epoch,
-): Promise<Reference> {
-  return writeFeedData(connection, topic, stringToBytes(DELETE_FEED_MAGIC_WORD), wallet, podPassword, epoch)
 }
