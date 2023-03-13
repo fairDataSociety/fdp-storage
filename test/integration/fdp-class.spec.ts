@@ -863,8 +863,8 @@ describe('Fair Data Protocol class', () => {
 
       jest.clearAllMocks()
       await fdpNoCache.file.delete(pod1, fullFilename)
-      // update root dir metadata
-      expect(writeFeedDataSpy).toBeCalledTimes(1)
+      // update root dir metadata + write magic word instead of the file
+      expect(writeFeedDataSpy).toBeCalledTimes(2)
       // get pods info + check is file available + update root dir metadata
       expect(getFeedDataSpy).toBeCalledTimes(3)
       // calc the pod wallet
@@ -944,8 +944,8 @@ describe('Fair Data Protocol class', () => {
 
       jest.clearAllMocks()
       await fdpWithCache.file.delete(pod1, fullFilename)
-      // update root dir metadata
-      expect(writeFeedDataSpy).toBeCalledTimes(1)
+      // update root dir metadata + write magic word instead of the file
+      expect(writeFeedDataSpy).toBeCalledTimes(2)
       // update root dir metadata + check is file deleted. should not get pods info
       expect(getFeedDataSpy).toBeCalledTimes(2)
       // the pod wallet is cached
