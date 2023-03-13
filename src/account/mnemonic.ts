@@ -41,5 +41,5 @@ export async function uploadEncryptedMnemonic(
   assertUsername(username)
   assertBase64UrlData(encryptedMnemonic)
 
-  return writeFeedDataRaw(connection, username, stringToBytes(encryptedMnemonic), wallet.privateKey)
+  return writeFeedDataRaw(connection, username, stringToBytes(encryptedMnemonic), wallet)
 }

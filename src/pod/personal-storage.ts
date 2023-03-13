@@ -16,7 +16,6 @@ import {
   sharedPodPreparedToSharedPod,
   podListToJSON,
 } from './utils'
-import { getUnixTimestamp } from '../utils/time'
 import { getExtendedPodsList } from './api'
 import { uploadBytes } from '../file/utils'
 import { stringToBytes } from '../utils/bytes'
@@ -25,6 +24,7 @@ import { assertEncryptedReference, EncryptedReference } from '../utils/hex'
 import { prepareEthAddress, preparePrivateKey } from '../utils/wallet'
 import { getCacheKey, setEpochCache } from '../cache/utils'
 import { getPodsList } from './cache/api'
+import { getNextEpoch } from '../feed/lookup/utils'
 
 export const POD_TOPIC = 'Pods'
 
@@ -104,12 +104,12 @@ export class PersonalStorage {
     const podsSharedFiltered = podsInfo.podsList.sharedPods.filter(item => item.name !== name)
     const allPodsData = podListToBytes(podsFiltered, podsSharedFiltered)
     const wallet = this.accountData.wallet!
-    const epoch = podsInfo.epoch.getNextEpoch(getUnixTimestamp())
+    const epoch = getNextEpoch(podsInfo.epoch)
     await writeFeedData(
       this.accountData.connection,
       POD_TOPIC,
       allPodsData,
-      wallet.privateKey,
+      wallet,
       preparePrivateKey(wallet.privateKey),
       epoch,
     )

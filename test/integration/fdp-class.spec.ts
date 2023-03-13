@@ -317,6 +317,32 @@ describe('Fair Data Protocol class', () => {
   })
 
   describe('Directory', () => {
+    it('should create directories after deletion', async () => {
+      const reuploadTimes = 3
+      const fdp = createFdp()
+      generateUser(fdp)
+      const pod = generateRandomHexString()
+      const path1Name = generateRandomHexString()
+      const path1Full = `/${path1Name}`
+
+      await fdp.personalStorage.create(pod)
+      await fdp.directory.create(pod, path1Full)
+      const list1 = await fdp.directory.read(pod, '/')
+      expect(list1.directories).toHaveLength(1)
+      expect(list1.directories[0].name).toEqual(path1Name)
+
+      for (let i = 0; i < reuploadTimes; i++) {
+        await fdp.directory.delete(pod, path1Full)
+        const list2 = await fdp.directory.read(pod, '/')
+        expect(list2.directories).toHaveLength(0)
+
+        await fdp.directory.create(pod, path1Full)
+        const list3 = await fdp.directory.read(pod, '/')
+        expect(list3.directories).toHaveLength(1)
+        expect(list3.directories[0].name).toEqual(path1Name)
+      }
+    })
+
     it('should create new directory', async () => {
       const fdp = createFdp()
       generateUser(fdp)
@@ -330,11 +356,11 @@ describe('Fair Data Protocol class', () => {
       await expect(fdp.directory.create(pod, directoryFull1)).rejects.toThrow('Parent directory does not exist')
       await fdp.directory.create(pod, directoryFull)
       await expect(fdp.directory.create(pod, directoryFull)).rejects.toThrow(
-        `Directory "${directoryFull}" already uploaded to the network`,
+        `Directory "${directoryFull}" already listed in the parent directory list`,
       )
       await fdp.directory.create(pod, directoryFull1)
-      await expect(fdp.directory.create(pod, directoryFull)).rejects.toThrow(
-        `Directory "${directoryFull}" already uploaded to the network`,
+      await expect(fdp.directory.create(pod, directoryFull1)).rejects.toThrow(
+        `Directory "${directoryFull1}" already listed in the parent directory list`,
       )
       const list = await fdp.directory.read(pod, '/', true)
       expect(list.directories).toHaveLength(1)
@@ -497,6 +523,46 @@ describe('Fair Data Protocol class', () => {
   })
 
   describe('File', () => {
+    it('should upload files after deletion', async () => {
+      const reuploadTimes = 3
+      const fdp = createFdp()
+      generateUser(fdp)
+      const pod = generateRandomHexString()
+      const fileSizeSmall = 100
+      const fileSizeSmall1 = 10
+      const fileSizeSmall2 = 1000
+      const contentSmall = generateRandomHexString(fileSizeSmall)
+      const filenameSmall = generateRandomHexString() + '.txt'
+      const fullFilenameSmallPath = '/' + filenameSmall
+
+      await fdp.personalStorage.create(pod)
+      await fdp.file.uploadData(pod, fullFilenameSmallPath, contentSmall)
+      const list1 = await fdp.directory.read(pod, '/')
+      expect(list1.files).toHaveLength(1)
+
+      const contentSamples = [
+        // the same content
+        contentSmall,
+        // less data
+        generateRandomHexString(fileSizeSmall1),
+        // more data
+        generateRandomHexString(fileSizeSmall2),
+      ]
+      for (let i = 0; i < reuploadTimes; i++) {
+        await fdp.file.delete(pod, fullFilenameSmallPath)
+        const list2 = await fdp.directory.read(pod, '/')
+        expect(list2.files).toHaveLength(0)
+
+        const content = contentSamples[i]
+        await fdp.file.uploadData(pod, fullFilenameSmallPath, content)
+        const list3 = await fdp.directory.read(pod, '/')
+        expect(list3.files).toHaveLength(1)
+        expect(list3.files[0].name).toEqual(filenameSmall)
+        const data1 = bytesToString(await fdp.file.downloadData(pod, fullFilenameSmallPath))
+        expect(data1).toEqual(content)
+      }
+    })
+
     it('should upload small text data as a file', async () => {
       const fdp = createFdp()
       generateUser(fdp)
@@ -509,7 +575,7 @@ describe('Fair Data Protocol class', () => {
       await fdp.personalStorage.create(pod)
       await fdp.file.uploadData(pod, fullFilenameSmallPath, contentSmall)
       await expect(fdp.file.uploadData(pod, fullFilenameSmallPath, contentSmall)).rejects.toThrow(
-        `File "${fullFilenameSmallPath}" already uploaded to the network`,
+        `File "${fullFilenameSmallPath}" already listed in the parent directory list`,
       )
       const dataSmall = wrapBytesWithHelpers(await fdp.file.downloadData(pod, fullFilenameSmallPath))
       expect(dataSmall.text()).toEqual(contentSmall)
@@ -797,10 +863,10 @@ describe('Fair Data Protocol class', () => {
 
       jest.clearAllMocks()
       await fdpNoCache.file.delete(pod1, fullFilename)
-      // update root dir metadata
-      expect(writeFeedDataSpy).toBeCalledTimes(1)
-      // get pods info + update root dir metadata
-      expect(getFeedDataSpy).toBeCalledTimes(2)
+      // update root dir metadata + write magic word instead of the file
+      expect(writeFeedDataSpy).toBeCalledTimes(2)
+      // get pods info + check is file available + update root dir metadata
+      expect(getFeedDataSpy).toBeCalledTimes(3)
       // calc the pod wallet
       expect(getWalletByIndexSpy).toBeCalledTimes(1)
 
@@ -878,10 +944,10 @@ describe('Fair Data Protocol class', () => {
 
       jest.clearAllMocks()
       await fdpWithCache.file.delete(pod1, fullFilename)
-      // update root dir metadata
-      expect(writeFeedDataSpy).toBeCalledTimes(1)
-      // update root dir metadata only. should not get pods info
-      expect(getFeedDataSpy).toBeCalledTimes(1)
+      // update root dir metadata + write magic word instead of the file
+      expect(writeFeedDataSpy).toBeCalledTimes(2)
+      // update root dir metadata + check is file deleted. should not get pods info
+      expect(getFeedDataSpy).toBeCalledTimes(2)
       // the pod wallet is cached
       expect(getWalletByIndexSpy).toBeCalledTimes(0)
 

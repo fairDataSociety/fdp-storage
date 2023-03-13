@@ -8,6 +8,12 @@ import { getUnixTimestamp } from '../utils/time'
 import { LookupAnswer } from './types'
 import { Connection } from '../connection/connection'
 import { encryptBytes, PodPasswordBytes } from '../utils/encryption'
+import { utils, Wallet } from 'ethers'
+
+/**
+ * Magic word for replacing content after deletion
+ */
+export const DELETE_FEED_MAGIC_WORD = '__Fair__'
 
 /**
  * Finds and downloads the latest feed content
@@ -39,7 +45,7 @@ export async function getFeedData(
  * @param connection connection information for data uploading
  * @param topic key for data
  * @param data data to upload
- * @param privateKey private key to sign data
+ * @param wallet feed owner's wallet
  * @param podPassword bytes for data encryption from pod metadata
  * @param epoch feed epoch
  */
@@ -47,13 +53,13 @@ export async function writeFeedData(
   connection: Connection,
   topic: string,
   data: Uint8Array,
-  privateKey: string | Uint8Array,
+  wallet: utils.HDNode | Wallet,
   podPassword: PodPasswordBytes,
   epoch?: Epoch,
 ): Promise<Reference> {
   data = encryptBytes(podPassword, data)
 
-  return writeFeedDataRaw(connection, topic, data, privateKey, epoch)
+  return writeFeedDataRaw(connection, topic, data, wallet, epoch)
 }
 
 /**
@@ -64,14 +70,14 @@ export async function writeFeedData(
  * @param connection connection information for data uploading
  * @param topic key for data
  * @param data data to upload
- * @param privateKey private key to sign data
+ * @param wallet feed owner's wallet
  * @param epoch feed epoch
  */
 export async function writeFeedDataRaw(
   connection: Connection,
   topic: string,
   data: Uint8Array,
-  privateKey: string | Uint8Array,
+  wallet: utils.HDNode | Wallet,
   epoch?: Epoch,
 ): Promise<Reference> {
   if (!epoch) {
@@ -80,7 +86,7 @@ export async function writeFeedDataRaw(
 
   const topicHash = bmtHashString(topic)
   const id = getId(topicHash, epoch.time, epoch.level)
-  const socWriter = connection.bee.makeSOCWriter(privateKey)
+  const socWriter = connection.bee.makeSOCWriter(wallet.privateKey)
 
   return socWriter.upload(connection.postageBatchId, id, data)
 }

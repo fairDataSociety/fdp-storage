@@ -150,7 +150,7 @@ export class File {
     meta = updateFileMetadata(meta, parentPath, fileName)
     const fullPath = combine(...splitPath(parentPath), fileName)
     await addEntryToDirectory(connection, podWallet, pod.password, parentPath, fileName, true)
-    await writeFeedData(connection, fullPath, getFileMetadataRawBytes(meta), podWallet.privateKey, pod.password)
+    await writeFeedData(connection, fullPath, getFileMetadataRawBytes(meta), podWallet, pod.password)
 
     return meta
   }
