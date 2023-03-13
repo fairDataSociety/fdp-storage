@@ -1,4 +1,4 @@
-import { Bee, Reference, RequestOptions } from '@ethersphere/bee-js'
+import { Bee, Reference, BeeRequestOptions } from '@ethersphere/bee-js'
 import { EthAddress } from '@ethersphere/bee-js/dist/types/utils/eth'
 import { RawDirectoryMetadata, RawFileMetadata } from '../pod/types'
 import { DELETE_FEED_MAGIC_WORD, getFeedData, writeFeedData } from '../feed/api'
@@ -26,7 +26,7 @@ export async function getRawMetadata(
   path: string,
   address: EthAddress,
   podPassword: PodPasswordBytes,
-  requestOptions?: RequestOptions,
+  requestOptions?: BeeRequestOptions,
 ): Promise<RawMetadataWithEpoch> {
   const feedData = await getFeedData(bee, path, address, requestOptions)
   const data = decryptJson(podPassword, feedData.data.chunkContent())
@@ -58,7 +58,7 @@ export async function isItemExists(
   bee: Bee,
   fullPath: string,
   address: EthAddress,
-  requestOptions: RequestOptions | undefined,
+  requestOptions: BeeRequestOptions | undefined,
 ): Promise<boolean> {
   try {
     return (await getFeedData(bee, fullPath, address, requestOptions)).data.text() === DELETE_FEED_MAGIC_WORD
@@ -81,7 +81,7 @@ export async function assertItemIsNotExists(
   bee: Bee,
   fullPath: string,
   address: EthAddress,
-  downloadOptions: RequestOptions | undefined,
+  downloadOptions: BeeRequestOptions | undefined,
 ): Promise<void> {
   if (await isItemExists(bee, fullPath, address, downloadOptions)) {
     throw new Error(`${contentType} "${fullPath}" already uploaded to the network`)
