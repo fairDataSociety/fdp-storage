@@ -1,6 +1,6 @@
 import { Utils } from '@ethersphere/bee-js'
-import { makeContentAddressedChunk } from '../chunk/cac'
 import { Epoch, HIGHEST_LEVEL } from './lookup/epoch'
+import { keccak256Hash } from '../utils/encryption'
 
 const TOPIC_LENGTH = 32
 
@@ -26,5 +26,5 @@ export function getId(topic: Utils.Bytes<32>, time = 0, level = HIGHEST_LEVEL): 
     bufId[cursor + i] = eid[i]
   }
 
-  return makeContentAddressedChunk(bufId).address()
+  return keccak256Hash(bufId)
 }
