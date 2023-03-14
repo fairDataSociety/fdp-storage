@@ -13,7 +13,7 @@ export const AUTH_VERSION = 'FDP-login-v1.0'
 export const CHUNK_SIZE = 4096
 export const SEED_SIZE = 64
 export const HD_PATH = `m/44'/60'/0'/0/0`
-export const CHUNK_ALREADY_EXISTS_ERROR = 'Conflict: chunk already exists'
+export const CHUNK_ALREADY_EXISTS_ERROR = 'chunk already exists'
 
 /**
  * Encode input data to Base64Url with Go lang compatible paddings

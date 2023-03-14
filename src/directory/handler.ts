@@ -1,6 +1,6 @@
 import { writeFeedData } from '../feed/api'
 import { EthAddress } from '@ethersphere/bee-js/dist/types/utils/eth'
-import { Bee, PrivateKeyBytes, Reference, BeeRequestOptions } from '@ethersphere/bee-js'
+import { Bee, Reference, BeeRequestOptions } from '@ethersphere/bee-js'
 import {
   assertDirectoryName,
   assertPartsLength,

@@ -129,7 +129,7 @@ export async function getPathInfo(
   bee: Bee,
   path: string,
   address: EthAddress,
-  requestOptions?: RequestOptions,
+  requestOptions?: BeeRequestOptions,
 ): Promise<PathInformation> {
   const lookupAnswer = await getFeedData(bee, path, address, requestOptions)
 
@@ -160,7 +160,7 @@ export async function getCreationPathInfo(
   bee: Bee,
   fullPath: string,
   address: EthAddress,
-  requestOptions?: RequestOptions,
+  requestOptions?: BeeRequestOptions,
 ): Promise<PathInformation | undefined> {
   // check that if directory uploaded - than it should be marked as deleted
   let pathInfo
