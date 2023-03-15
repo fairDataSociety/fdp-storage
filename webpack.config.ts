@@ -60,7 +60,7 @@ const base = async (env?: Partial<WebpackEnvParams>): Promise<Configuration> => 
     output: {
       path,
       filename,
-      // sourceMapFilename: filename + '.map',
+      sourceMapFilename: filename + '.map',
       library: 'fdp',
       libraryTarget: 'umd',
       globalObject: 'this',
