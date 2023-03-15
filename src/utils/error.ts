@@ -29,5 +29,5 @@ export class BeeArgumentError extends BeeError {
 export function isChunkAlreadyExistsError(e: unknown): boolean {
   const axiosError = e as AxiosError
 
-  return !axiosError?.response?.data?.message?.startsWith(CHUNK_ALREADY_EXISTS_ERROR)
+  return Boolean(axiosError?.response?.data?.message?.startsWith(CHUNK_ALREADY_EXISTS_ERROR))
 }
