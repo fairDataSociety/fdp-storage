@@ -1,5 +1,4 @@
 import { Bee, Data, Reference, RequestOptions, Utils } from '@ethersphere/bee-js'
-import { bmtHashString } from '../account/utils'
 import { getId } from './handler'
 import { lookup } from './lookup/linear'
 import { Epoch, HIGHEST_LEVEL } from './lookup/epoch'
@@ -7,7 +6,7 @@ import { bytesToHex } from '../utils/hex'
 import { getUnixTimestamp } from '../utils/time'
 import { LookupAnswer } from './types'
 import { Connection } from '../connection/connection'
-import { encryptBytes, PodPasswordBytes } from '../utils/encryption'
+import { encryptBytes, keccak256Hash, PodPasswordBytes } from '../utils/encryption'
 import { utils, Wallet } from 'ethers'
 
 /**
@@ -29,11 +28,11 @@ export async function getFeedData(
   address: Utils.EthAddress | Uint8Array,
   requestOptions?: RequestOptions,
 ): Promise<LookupAnswer> {
-  const topicHash = bmtHashString(topic)
+  const topicHash = keccak256Hash(topic)
 
   return lookup(0, async (epoch: Epoch, time: number): Promise<Data> => {
     const tempId = getId(topicHash, time, epoch.level)
-    const chunkReference = bytesToHex(Utils.keccak256Hash(tempId.buffer, address.buffer))
+    const chunkReference = bytesToHex(keccak256Hash(tempId.buffer, address.buffer))
 
     return bee.downloadChunk(chunkReference, requestOptions)
   })
@@ -84,7 +83,7 @@ export async function writeFeedDataRaw(
     epoch = new Epoch(HIGHEST_LEVEL, getUnixTimestamp())
   }
 
-  const topicHash = bmtHashString(topic)
+  const topicHash = keccak256Hash(topic)
   const id = getId(topicHash, epoch.time, epoch.level)
   const socWriter = connection.bee.makeSOCWriter(wallet.privateKey)
 

@@ -5,6 +5,7 @@ import { bytesToHex } from './hex'
 import { bytesToString, bytesToWordArray, wordArrayToBytes } from './bytes'
 import { isArrayBufferView, isString } from './type'
 import { jsonParse } from './json'
+import { keccak256, Message } from 'js-sha3'
 
 export const IV_LENGTH = 16
 export const POD_PASSWORD_LENGTH = 32
@@ -122,4 +123,15 @@ export function decryptJson(password: string | Uint8Array, data: Uint8Array): un
   }
 
   return jsonParse(bytesToString(decryptBytes(passwordString, data)), 'decrypted json')
+}
+
+/**
+ * Calculates the keccak256 hash with correct types
+ */
+export function keccak256Hash(...messages: Message[]): Utils.Bytes<32> {
+  const hasher = keccak256.create()
+
+  messages.forEach(bytes => hasher.update(bytes))
+
+  return Uint8Array.from(hasher.digest()) as Utils.Bytes<32>
 }

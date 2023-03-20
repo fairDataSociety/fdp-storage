@@ -26,7 +26,7 @@ import { getCacheKey, setEpochCache } from '../cache/utils'
 import { getPodsList } from './cache/api'
 import { getNextEpoch } from '../feed/lookup/utils'
 
-export const POD_TOPIC = 'Pods'
+export const POD_TOPIC = 'PODs'
 
 export class PersonalStorage {
   constructor(private accountData: AccountData) {}

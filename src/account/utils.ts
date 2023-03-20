@@ -1,11 +1,12 @@
 import { Data, Utils } from '@ethersphere/bee-js'
 import { bmtHash } from '../chunk/bmt'
-import { makeSpan, stringToBytes, wrapBytesWithHelpers } from '../utils/bytes'
+import { makeSpan, wrapBytesWithHelpers } from '../utils/bytes'
 import { AccountData } from './account-data'
 import { isValidMnemonic } from 'ethers/lib/utils'
 import CryptoJS from 'crypto-js'
 import { replaceAll } from '../utils/string'
 import { assertString } from '../utils/type'
+import { keccak256Hash } from '../utils/encryption'
 
 export const MNEMONIC_LENGTH = 12
 export const MAX_CHUNK_LENGTH = 4096
@@ -57,17 +58,6 @@ export function extractChunkContent(data: Data): Data {
   }
 
   return wrapBytesWithHelpers(data.slice(chunkContentPosition))
-}
-
-/**
- * Calculate a Binary Merkle Tree hash for a string
- *
- * @returns the keccak256 hash in a byte array
- */
-export function bmtHashString(stringData: string): Utils.Bytes<32> {
-  const payload = stringToBytes(stringData)
-
-  return bmtHashBytes(payload)
 }
 
 /**
@@ -183,7 +173,7 @@ export function removeZeroFromHex(value: string): string {
 export function createCredentialsTopic(username: string, password: string): Utils.Bytes<32> {
   const topic = AUTH_VERSION + username + password
 
-  return bmtHashString(topic)
+  return keccak256Hash(topic)
 }
 
 /**
