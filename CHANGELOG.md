@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.1](https://github.com/fairDataSociety/fdp-storage/compare/v0.7.0...v0.7.1) (2023-03-20)
+
+
+### Bug Fixes
+
+* ability to create deleted file/directory again ([#216](https://github.com/fairDataSociety/fdp-storage/issues/216)) ([988f9e8](https://github.com/fairDataSociety/fdp-storage/commit/988f9e80ef2d18eae6e1f2a9f243ebec7f33f4f6))
+
 ## [0.7.0](https://github.com/fairDataSociety/fdp-storage/compare/v0.6.0...v0.7.0) (2023-02-15)
 
 
