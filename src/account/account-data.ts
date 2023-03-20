@@ -175,7 +175,7 @@ export class AccountData {
 
     try {
       const seed = CryptoJS.enc.Hex.parse(removeZeroFromHex(bytesToHex(this.seed!)))
-      await this.ens.registerUsername(username, wallet.address, this.publicKey!)
+      await this.ens.registerUsername(this.ens.createRegisterUsernameRequest(username, wallet.address, this.publicKey!))
 
       return await uploadPortableAccount(
         this.connection,
