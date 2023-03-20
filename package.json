@@ -54,7 +54,7 @@
   },
   "dependencies": {
     "@ethersphere/bee-js": "^5.1.0",
-    "@fairdatasociety/fdp-contracts-js": "^2.0.1",
+    "@fairdatasociety/fdp-contracts-js": "^2.1.0",
     "crypto-js": "^4.1.1",
     "ethers": "^5.5.2",
     "js-sha3": "^0.8.0"
