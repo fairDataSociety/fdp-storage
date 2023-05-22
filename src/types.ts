@@ -1,5 +1,5 @@
 import { RequestOptions } from '@ethersphere/bee-js'
-import { Environments } from '@fairdatasociety/fdp-contracts-js'
+import { EnsEnvironment } from '@fairdatasociety/fdp-contracts-js'
 import { CacheOptions } from './cache/types'
 
 export { DirectoryItem, FileItem } from './content-items/types'
@@ -15,7 +15,7 @@ export interface Options {
   /**
    * FDP-contracts options
    */
-  ensOptions?: Environments
+  ensOptions?: EnsEnvironment
   /**
    * ENS domain for usernames
    */
