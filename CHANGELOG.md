@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.7.2](https://github.com/fairDataSociety/fdp-storage/compare/v0.7.1...v0.7.2) (2023-05-23)
+
+
+### Bug Fixes
+
+* add bee-v6-pre ([#179](https://github.com/fairDataSociety/fdp-storage/issues/179)) ([9422506](https://github.com/fairDataSociety/fdp-storage/commit/9422506ff9c6d092bd119cf4903ed58bf5ea427c))
+* upgraded fdp-contracts-js lib ([#239](https://github.com/fairDataSociety/fdp-storage/issues/239)) ([0bb905f](https://github.com/fairDataSociety/fdp-storage/commit/0bb905f6075f35b4410df422ad29be78a12eca20))
+
 ## [0.7.1](https://github.com/fairDataSociety/fdp-storage/compare/v0.7.0...v0.7.1) (2023-03-20)
 
 
