@@ -83,7 +83,6 @@ const base = async (env?: Partial<WebpackEnvParams>): Promise<Configuration> => 
         fs: false,
         stream: false,
         crypto: false,
-        'web-streams-polyfill/ponyfill/es2018': require.resolve('web-streams-polyfill/ponyfill')
       },
     },
     optimization: {
