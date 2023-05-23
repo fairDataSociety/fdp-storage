@@ -1,6 +1,6 @@
 import { writeFeedData } from '../feed/api'
 import { EthAddress } from '@ethersphere/bee-js/dist/types/utils/eth'
-import { Bee, Reference, RequestOptions } from '@ethersphere/bee-js'
+import { Bee, Reference, BeeRequestOptions } from '@ethersphere/bee-js'
 import {
   assertDirectoryName,
   assertPartsLength,
@@ -69,7 +69,7 @@ export async function readDirectory(
   address: EthAddress,
   podPassword: PodPasswordBytes,
   isRecursive?: boolean,
-  downloadOptions?: RequestOptions,
+  downloadOptions?: BeeRequestOptions,
 ): Promise<DirectoryItem> {
   const parentRawDirectoryMetadata = (await getRawMetadata(bee, path, address, podPassword, downloadOptions)).metadata
   assertRawDirectoryMetadata(parentRawDirectoryMetadata)
@@ -160,7 +160,7 @@ export async function createDirectory(
   fullPath: string,
   podWallet: utils.HDNode,
   podPassword: PodPasswordBytes,
-  downloadOptions?: RequestOptions,
+  downloadOptions?: BeeRequestOptions,
 ): Promise<void> {
   const parts = getPathParts(fullPath)
   assertPartsLength(parts)
