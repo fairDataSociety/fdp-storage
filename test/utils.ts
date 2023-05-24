@@ -2,7 +2,7 @@ import crypto from 'crypto'
 import { BATCH_ID_HEX_LENGTH, BatchId, Bee, BeeDebug, Utils } from '@ethersphere/bee-js'
 import { FdpStorage, Options } from '../src'
 import { utils, Wallet } from 'ethers'
-import { Environments, getEnvironmentConfig } from '@fairdatasociety/fdp-contracts-js'
+import { Environments, getEnsEnvironmentConfig } from '@fairdatasociety/fdp-contracts-js'
 import axios from 'axios'
 import { CacheOptions } from '../src/cache/types'
 
@@ -103,7 +103,7 @@ export const fdpOptions: Options = {
     timeout: GET_FEED_DATA_TIMEOUT,
   },
   ensOptions: {
-    ...getEnvironmentConfig(Environments.LOCALHOST),
+    ...getEnsEnvironmentConfig(Environments.LOCALHOST),
     performChecks: true,
   },
   cacheOptions: {
