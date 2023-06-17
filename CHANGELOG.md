@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.3](https://github.com/fairDataSociety/fdp-storage/compare/v0.7.2...v0.7.3) (2023-06-17)
+
+
+### Bug Fixes
+
+* upgraded fdp-contracts-js lib ([#242](https://github.com/fairDataSociety/fdp-storage/issues/242)) ([7d3eb2f](https://github.com/fairDataSociety/fdp-storage/commit/7d3eb2f87888bdc90af355c0dd81065b533e91a5))
+
 ## [0.7.2](https://github.com/fairDataSociety/fdp-storage/compare/v0.7.1...v0.7.2) (2023-05-23)
 
 
