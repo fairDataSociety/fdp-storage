@@ -10,7 +10,7 @@ import { Reference, Utils } from '@ethersphere/bee-js'
 import CryptoJS from 'crypto-js'
 import { bytesToHex } from '../utils/hex'
 import { mnemonicToSeed, prepareEthAddress, privateKeyToBytes } from '../utils/wallet'
-import { isChunkAlreadyExistsError } from '../utils/error'
+import { isChunkAlreadyExistsError, isInsufficientFundsError } from '../utils/error'
 
 export class AccountData {
   /**
@@ -180,6 +180,8 @@ export class AccountData {
     } catch (e) {
       if (isChunkAlreadyExistsError(e)) {
         throw new Error('User account already uploaded')
+      } else if (isInsufficientFundsError(e)) {
+        throw new Error('Not enough funds')
       } else {
         throw e
       }
