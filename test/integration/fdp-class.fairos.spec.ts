@@ -25,12 +25,11 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
       await fdp.account.register(user.username, user.password)
       const response = await fairos.login(user.username, user.password)
       expect(response.status).toEqual(200)
-      expect(response.data).toStrictEqual({
-        address: user.address,
-        nameHash,
-        publicKey,
-        message: 'user logged-in successfully',
-      })
+      expect(response.data.accessToken).toBeDefined()
+      expect(response.data.address).toEqual(user.address)
+      expect(response.data.nameHash).toEqual(nameHash)
+      expect(response.data.publicKey).toEqual(publicKey)
+      expect(response.data.message).toEqual('user logged-in successfully')
     })
 
     it('should register in fairos and login in fdp', async () => {
