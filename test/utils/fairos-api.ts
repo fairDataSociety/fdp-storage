@@ -10,6 +10,20 @@ export interface PodsList {
   sharedPods: SharedPod[]
 }
 
+/**
+ * Shared file information
+ */
+export interface SharedFileInfo {
+  fileSharingReference: string
+}
+
+/**
+ * Shared pod information
+ */
+export interface SharedPodInfo {
+  podSharingReference: string
+}
+
 export interface Directory {
   name: string
   contentType: string
@@ -109,6 +123,21 @@ export class FairOSApi {
    */
   async podNew(name: string, password: string): Promise<AxiosResponse> {
     const url = this.getV1Url('pod/new')
+
+    return axios.post(url, {
+      podName: name,
+      password,
+    })
+  }
+
+  /**
+   * Shares a pod
+   *
+   * @param name pod name
+   * @param password account password
+   */
+  async podShare(name: string, password: string): Promise<AxiosResponse> {
+    const url = this.getV1Url('pod/share')
 
     return axios.post(url, {
       podName: name,
@@ -220,6 +249,33 @@ export class FairOSApi {
         podName: podName,
         sharingRef: sharingReference,
       },
+    })
+  }
+
+  /**
+   * Gets information about shared file
+   */
+  async podReceiveInfo(sharingReference: string): Promise<AxiosResponse> {
+    const url = this.getV1Url('pod/receiveinfo')
+
+    return axios.get(url, {
+      params: {
+        sharingRef: sharingReference,
+      },
+    })
+  }
+
+  /**
+   * Shares a file
+   */
+  async fileShare(podName: string, filePath: string, destUser: string, password: string): Promise<AxiosResponse> {
+    const url = this.getV1Url('file/share')
+
+    return axios.post(url, {
+      podName,
+      filePath,
+      destUser,
+      password,
     })
   }
 

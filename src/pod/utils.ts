@@ -25,11 +25,10 @@ import {
   isString,
 } from '../utils/type'
 import { bytesToHex, EncryptedReference, isHexEthAddress } from '../utils/hex'
-import { getExtendedPodsList } from './api'
 import { Epoch, getFirstEpoch } from '../feed/lookup/epoch'
 import { getUnixTimestamp } from '../utils/time'
 import { writeFeedData } from '../feed/api'
-import { preparePrivateKey } from '../utils/wallet'
+import { prepareEthAddress, preparePrivateKey } from '../utils/wallet'
 import { createRootDirectory } from '../directory/handler'
 import { POD_TOPIC } from './personal-storage'
 import { Connection } from '../connection/connection'
@@ -40,14 +39,14 @@ import { jsonParse } from '../utils/json'
 import { DEFAULT_DIRECTORY_PERMISSIONS, getDirectoryMode } from '../directory/utils'
 import { getCacheKey, setEpochCache } from '../cache/utils'
 import { getWalletByIndex } from '../utils/cache/wallet'
-import { getPodsList } from './cache/api'
+import { getPodsList as getPodsListCached, getPodsList } from './cache/api'
 
 export const META_VERSION = 2
 export const MAX_PODS_COUNT = 65536
 export const MAX_POD_NAME_LENGTH = 64
 
 /**
- * Information about pods list
+ * Information about a list of pods
  */
 export interface PodsInfo {
   podsList: PodsListPrepared
@@ -55,11 +54,20 @@ export interface PodsInfo {
 }
 
 /**
- * Extended information about specific pod
+ * Extended information about a specific pod
  */
-export interface ExtendedPodInfo {
+export interface WritablePodInfo {
   pod: PodPrepared
   podWallet: utils.HDNode
+  podAddress: Utils.EthAddress
+  epoch: Epoch
+}
+
+/**
+ * Simplified information about a specific pod
+ */
+export interface ReadablePodInfo {
+  podPassword: PodPasswordBytes
   podAddress: Utils.EthAddress
   epoch: Epoch
 }
@@ -420,19 +428,77 @@ export async function createPod(
 }
 
 /**
- * Gets extended information about pods using AccountData instance and pod name
+ * Gets information about a pod to make write operations
  *
- * @param accountData AccountData instance
+ * The method differs from `getReadablePodInfo` in that it looks for a pod only in the list
+ * of pods that were created by the user and return more extended information about a pod
+ *
+ * @param accountData `AccountData` instance
  * @param podName pod name
  */
-export async function getExtendedPodsListByAccountData(
-  accountData: AccountData,
-  podName: string,
-): Promise<ExtendedPodInfo> {
-  return getExtendedPodsList(accountData.connection.bee, podName, accountData.wallet!, accountData.seed!, {
+export async function getWritablePodInfo(accountData: AccountData, podName: string): Promise<WritablePodInfo> {
+  const {
+    connection: { bee },
+    wallet,
+    seed,
+  } = accountData
+  const downloadOptions = {
     requestOptions: accountData.connection.options?.requestOptions,
     cacheInfo: accountData.connection.cacheInfo,
-  })
+  }
+
+  const { podsList, epoch } = await getPodsListCached(bee, wallet!, downloadOptions)
+  const pod = podsList.pods.find(item => item.name === podName)
+
+  if (!pod) {
+    throw new Error(`Pod for writing "${podName}" does not exist`)
+  }
+
+  const podWallet = await getWalletByIndex(seed!, pod.index, downloadOptions?.cacheInfo)
+
+  return {
+    pod,
+    podAddress: prepareEthAddress(podWallet.address),
+    podWallet,
+    epoch,
+  }
+}
+
+/**
+ * Gets information about a pod to make read operations
+ *
+ * The method differs from `getWritablePodInfo` in that it looks for a pod in the shared list
+ * of pods and pods that were created by the user and return simplified information about a pod
+ *
+ * @param accountData `AccountData` instance
+ * @param podName pod name
+ */
+export async function getReadablePodInfo(accountData: AccountData, podName: string): Promise<ReadablePodInfo> {
+  const downloadOptions = {
+    requestOptions: accountData.connection.options?.requestOptions,
+    cacheInfo: accountData.connection.cacheInfo,
+  }
+  const {
+    connection: { bee },
+    wallet,
+    seed,
+  } = accountData
+  const { podsList, epoch } = await getPodsListCached(bee, wallet!, downloadOptions)
+  const pod = [...podsList.pods, ...podsList.sharedPods].find(pod => pod.name === podName)
+
+  if (!pod) {
+    throw new Error(`Pod for reading "${podName}" does not exist`)
+  }
+
+  const podAddress = isPod(pod)
+    ? (await getWalletByIndex(seed!, pod.index, downloadOptions.cacheInfo)).address
+    : pod.address
+
+  return {
+    podPassword: pod.password,
+    podAddress: prepareEthAddress(podAddress),
+    epoch,
+  }
 }
 
 /**
@@ -441,7 +507,7 @@ export async function getExtendedPodsListByAccountData(
  * @param bee Bee instance
  * @param reference reference to shared information
  */
-export async function getSharedPodInfo(bee: Bee, reference: EncryptedReference): Promise<PodShareInfo> {
+export async function getPodShareInfo(bee: Bee, reference: EncryptedReference): Promise<PodShareInfo> {
   const data = (await bee.downloadData(reference)).json()
 
   assertPodShareInfo(data)
@@ -477,10 +543,17 @@ export function jsonToPodsList(json: string): PodsListPrepared {
  * Converts `Pod` to `PodPrepared`
  */
 export function jsonPodToPod(pod: Pod): PodPrepared {
-  const password = Utils.hexToBytes(pod.password) as PodPasswordBytes
+  const password = hexToPodPasswordBytes(pod.password)
   assertPodPasswordBytes(password)
 
   return { ...pod, password }
+}
+
+/**
+ * Converts hex password to `PodPasswordBytes`
+ */
+export function hexToPodPasswordBytes(hexPassword: string): PodPasswordBytes {
+  return Utils.hexToBytes(hexPassword) as PodPasswordBytes
 }
 
 /**
@@ -534,7 +607,7 @@ export function assertJsonSharedPod(value: unknown): asserts value is SharedPod 
  * Converts JsonSharedPod to SharedPod
  */
 export function jsonSharedPodToSharedPod(pod: SharedPod): SharedPodPrepared {
-  const password = Utils.hexToBytes(pod.password) as PodPasswordBytes
+  const password = hexToPodPasswordBytes(pod.password)
   const address = Utils.hexToBytes(pod.address) as Utils.EthAddress
   assertPodPasswordBytes(password)
 

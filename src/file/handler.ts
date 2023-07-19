@@ -15,7 +15,7 @@ import { assertRawFileMetadata } from '../directory/utils'
 import { getCreationPathInfo, getRawMetadata } from '../content-items/utils'
 import { PodPasswordBytes } from '../utils/encryption'
 import { Blocks, DataUploadOptions } from './types'
-import { assertPodName, getExtendedPodsListByAccountData, META_VERSION } from '../pod/utils'
+import { assertPodName, getWritablePodInfo, META_VERSION } from '../pod/utils'
 import { getUnixTimestamp } from '../utils/time'
 import { addEntryToDirectory } from '../content-items/handler'
 import { writeFeedData } from '../feed/api'
@@ -126,8 +126,7 @@ export async function uploadData(
 
   data = typeof data === 'string' ? stringToBytes(data) : data
   const connection = accountData.connection
-  const { podWallet, pod } = await getExtendedPodsListByAccountData(accountData, podName)
-
+  const { podWallet, pod } = await getWritablePodInfo(accountData, podName)
   const fullPathInfo = await getCreationPathInfo(
     connection.bee,
     fullPath,

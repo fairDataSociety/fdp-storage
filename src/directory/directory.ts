@@ -3,7 +3,13 @@ import { createDirectory, readDirectory, DEFAULT_UPLOAD_DIRECTORY_OPTIONS, Uploa
 import { assertAccount } from '../account/utils'
 import { removeEntryFromDirectory } from '../content-items/handler'
 import { extractPathInfo, readBrowserFileAsBytes } from '../file/utils'
-import { assertPodName, getExtendedPodsListByAccountData } from '../pod/utils'
+import {
+  assertPodName,
+  getReadablePodInfo,
+  getPodShareInfo,
+  getWritablePodInfo,
+  hexToPodPasswordBytes,
+} from '../pod/utils'
 import { isNode } from '../shim/utils'
 import {
   assertBrowserFilesWithPath,
@@ -20,6 +26,8 @@ import {
 import { uploadData } from '../file/handler'
 import { assertNodeFileInfo, isBrowserFileInfo } from './types'
 import { DirectoryItem } from '../content-items/types'
+import { assertEncryptedReference, EncryptedReference } from '../utils/hex'
+import { prepareEthAddress } from '../utils/wallet'
 
 /**
  * Directory related class
@@ -37,13 +45,14 @@ export class Directory {
   async read(podName: string, path: string, isRecursive?: boolean): Promise<DirectoryItem> {
     assertAccount(this.accountData)
     assertPodName(podName)
-    const { podAddress, pod } = await getExtendedPodsListByAccountData(this.accountData, podName)
+
+    const { podAddress, podPassword } = await getReadablePodInfo(this.accountData, podName)
 
     return readDirectory(
       this.accountData.connection.bee,
       path,
       podAddress,
-      pod.password,
+      podPassword,
       isRecursive,
       this.accountData.connection.options?.requestOptions,
     )
@@ -58,7 +67,7 @@ export class Directory {
   async create(podName: string, fullPath: string): Promise<void> {
     assertAccount(this.accountData)
     assertPodName(podName)
-    const { podWallet, pod } = await getExtendedPodsListByAccountData(this.accountData, podName)
+    const { podWallet, pod } = await getWritablePodInfo(this.accountData, podName)
 
     return createDirectory(
       this.accountData.connection,
@@ -80,7 +89,7 @@ export class Directory {
     assertPodName(podName)
     const pathInfo = extractPathInfo(fullPath)
     const connection = this.accountData.connection
-    const { podWallet, pod } = await getExtendedPodsListByAccountData(this.accountData, podName)
+    const { podWallet, pod } = await getWritablePodInfo(this.accountData, podName)
 
     await removeEntryFromDirectory(
       connection,
@@ -103,7 +112,7 @@ export class Directory {
   async upload(podName: string, filesSource: string | FileList, options?: UploadDirectoryOptions): Promise<void> {
     assertAccount(this.accountData)
     assertPodName(podName)
-    const { podWallet, pod } = await getExtendedPodsListByAccountData(this.accountData, podName)
+    const { podWallet, pod } = await getWritablePodInfo(this.accountData, podName)
     options = { ...DEFAULT_UPLOAD_DIRECTORY_OPTIONS, ...options }
 
     const isNodePath = typeof filesSource === 'string'
@@ -165,5 +174,32 @@ export class Directory {
       const uploadPath = getUploadPath(file, options.isIncludeDirectoryName!)
       await uploadData(podName, uploadPath, bytes, this.accountData, options.uploadOptions!)
     }
+  }
+
+  /**
+   * Get files and directories under the given path in a shared pod
+   *
+   * Can be executed without authentication
+   *
+   * @param reference reference of a shared pod
+   * @param path path to start searching from
+   * @param isRecursive search with recursion or not
+   */
+  async readShared(
+    reference: string | EncryptedReference,
+    path: string,
+    isRecursive?: boolean,
+  ): Promise<DirectoryItem> {
+    assertEncryptedReference(reference)
+    const info = await getPodShareInfo(this.accountData.connection.bee, reference)
+
+    return readDirectory(
+      this.accountData.connection.bee,
+      path,
+      prepareEthAddress(info.podAddress),
+      hexToPodPasswordBytes(info.password),
+      isRecursive,
+      this.accountData.connection.options?.requestOptions,
+    )
   }
 }
