@@ -4,7 +4,7 @@ import { getEncryptedMnemonic } from './mnemonic'
 import { decryptText } from '../utils/encryption'
 import { downloadPortableAccount, uploadPortableAccount, UserAccountWithMnemonic } from './account'
 import { Connection } from '../connection/connection'
-import { AddressOptions, isAddressOptions, isMnemonicOptions, MnemonicOptions } from './types'
+import { AddressOptions, isAddressOptions, isMnemonicOptions, MnemonicOptions, RegistrationRequest } from './types'
 import { ENS, PublicKey } from '@fairdatasociety/fdp-contracts-js'
 import { Reference, Utils } from '@ethersphere/bee-js'
 import CryptoJS from 'crypto-js'
@@ -122,7 +122,7 @@ export class AccountData {
     const exported = await this.exportWallet(username, password, options)
     this.setAccountFromMnemonic(exported.mnemonic)
 
-    return this.register(username, password)
+    return this.register(this.createRegistrationRequest(username, password))
   }
 
   /**
@@ -154,12 +154,32 @@ export class AccountData {
   }
 
   /**
-   * Creates new FDP account and gives back user account with swarm reference
+   * Creates a request object that is used to invoke the 'register' method. This object
+   * encapsulates the complete state of registration process. In case when registration
+   * fails in any of the steps, the 'register' method can be safely invoked again with
+   * the existing RegistrationRequest object. The process will contine from the failed
+   * step.
    *
    * @param username FDP username
    * @param password FDP password
+   *
    */
-  async register(username: string, password: string): Promise<Reference> {
+  createRegistrationRequest(username: string, password: string): RegistrationRequest {
+    return {
+      username,
+      password,
+      ensCompleted: false,
+    }
+  }
+
+  /**
+   * Creates new FDP account and gives back user account with swarm reference
+   *
+   * @param request a RegistrationRequest object that contains the state of registration process
+   */
+  async register(request: RegistrationRequest): Promise<Reference> {
+    const { username, password, ensCompleted } = request
+
     assertUsername(username)
     assertPassword(password)
     assertAccount(this)
@@ -168,7 +188,16 @@ export class AccountData {
 
     try {
       const seed = CryptoJS.enc.Hex.parse(removeZeroFromHex(bytesToHex(this.seed!)))
-      await this.ens.registerUsername(this.ens.createRegisterUsernameRequest(username, wallet.address, this.publicKey!))
+
+      if (!ensCompleted) {
+        if (!request.ensRequest) {
+          request.ensRequest = this.ens.createRegisterUsernameRequest(username, wallet.address, this.publicKey!)
+        }
+
+        await this.ens.registerUsername(request.ensRequest)
+      }
+
+      request.ensCompleted = true
 
       return await uploadPortableAccount(
         this.connection,
