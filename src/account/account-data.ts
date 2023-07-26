@@ -157,7 +157,7 @@ export class AccountData {
    * Creates a request object that is used to invoke the 'register' method. This object
    * encapsulates the complete state of registration process. In case when registration
    * fails in any of the steps, the 'register' method can be safely invoked again with
-   * the existing RegistrationRequest object. The process will contine from the failed
+   * the existing RegistrationRequest object. The process will continue from the failed
    * step.
    *
    * @param username FDP username
