@@ -1,4 +1,4 @@
-import { Epoch } from '../feed/lookup/epoch'
+import { Epoch } from '../feed/epoch'
 
 export const DEFAULT_CACHE_OPTIONS: CacheOptions = {
   isUseCache: true,

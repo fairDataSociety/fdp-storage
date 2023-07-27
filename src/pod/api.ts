@@ -7,17 +7,20 @@ import { utils } from 'ethers'
 import { DownloadOptions } from '../content-items/types'
 import { getWalletByIndex } from '../utils/cache/wallet'
 import { getPodsList as getPodsListCached } from './cache/api'
+import { FeedType } from '../feed/types'
 
 /**
  * Gets pods list with lookup answer
  *
  * @param bee Bee instance
  * @param userWallet root wallet for downloading and decrypting data
+ * @param feedType feed type
  * @param downloadOptions request download
  */
 export async function getPodsList(
   bee: Bee,
   userWallet: utils.HDNode,
+  feedType: FeedType,
   downloadOptions?: DownloadOptions,
 ): Promise<PodsInfo> {
   let lookupAnswer
@@ -26,6 +29,7 @@ export async function getPodsList(
       bee,
       POD_TOPIC,
       prepareEthAddress(userWallet.address),
+      feedType,
       downloadOptions?.requestOptions,
     )
     // eslint-disable-next-line no-empty
@@ -50,6 +54,7 @@ export async function getPodsList(
  * @param podName pod to find
  * @param userWallet root wallet for downloading and decrypting data
  * @param seed seed of wallet owns the FDP account
+ * @param feedType feed type
  * @param downloadOptions request options
  */
 export async function getExtendedPodsList(
@@ -57,9 +62,10 @@ export async function getExtendedPodsList(
   podName: string,
   userWallet: utils.HDNode,
   seed: Uint8Array,
+  feedType: FeedType,
   downloadOptions?: DownloadOptions,
 ): Promise<ExtendedPodInfo> {
-  const { podsList, epoch } = await getPodsListCached(bee, userWallet, downloadOptions)
+  const { podsList, epoch } = await getPodsListCached(bee, userWallet, feedType, downloadOptions)
   const pod = podsList.pods.find(item => item.name === podName)
 
   if (!pod) {

@@ -20,6 +20,7 @@ import { Reference } from '@ethersphere/bee-js'
 import { getRawMetadata } from '../content-items/utils'
 import { assertRawFileMetadata, combine, splitPath } from '../directory/utils'
 import { assertEncryptedReference, EncryptedReference } from '../utils/hex'
+import { FeedType } from '../feed/types'
 
 /**
  * Files management class
@@ -45,6 +46,7 @@ export class File {
       fullPath,
       podAddress,
       pod.password,
+      this.accountData.connection.options?.feedType ?? FeedType.Epoch,
       this.accountData.connection.options?.requestOptions,
     )
   }
@@ -104,7 +106,15 @@ export class File {
 
     const connection = this.accountData.connection
     const { podAddress, pod } = await getExtendedPodsListByAccountData(this.accountData, podName)
-    const meta = (await getRawMetadata(connection.bee, fullPath, podAddress, pod.password)).metadata
+    const meta = (
+      await getRawMetadata(
+        connection.bee,
+        fullPath,
+        podAddress,
+        pod.password,
+        this.accountData.connection.options?.feedType ?? FeedType.Epoch,
+      )
+    ).metadata
     assertRawFileMetadata(meta)
     const data = JSON.stringify(createFileShareInfo(meta))
 
@@ -149,8 +159,11 @@ export class File {
     const fileName = options?.name ?? sharedInfo.meta.fileName
     meta = updateFileMetadata(meta, parentPath, fileName)
     const fullPath = combine(...splitPath(parentPath), fileName)
-    await addEntryToDirectory(connection, podWallet, pod.password, parentPath, fileName, true)
-    await writeFeedData(connection, fullPath, getFileMetadataRawBytes(meta), podWallet, pod.password)
+    const feedType = this.accountData.connection.options?.feedType ?? FeedType.Epoch
+    await addEntryToDirectory(connection, podWallet, pod.password, parentPath, fileName, true, feedType)
+    await writeFeedData(connection, fullPath, getFileMetadataRawBytes(meta), podWallet, pod.password, {
+      feedType,
+    })
 
     return meta
   }

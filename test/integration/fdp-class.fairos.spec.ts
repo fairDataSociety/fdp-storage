@@ -1,12 +1,13 @@
 import { createFdp, generateRandomHexString, generateUser, topUpAddress, topUpFdp, waitFairOS } from '../utils'
 import { Directories, FairOSApi, PodsList } from '../utils/fairos-api'
-import { Wallet, utils } from 'ethers'
+import { utils, Wallet } from 'ethers'
 import { wrapBytesWithHelpers } from '../../src/utils/bytes'
 import { getExtendedPodsListByAccountData } from '../../src/pod/utils'
 import { getRawMetadata } from '../../src/content-items/utils'
 import { RawDirectoryMetadata, RawFileMetadata } from '../../src/pod/types'
 import { DEFAULT_FILE_PERMISSIONS, getFileMode } from '../../src/file/utils'
 import { DEFAULT_DIRECTORY_PERMISSIONS, getDirectoryMode } from '../../src/directory/utils'
+import { FeedType } from '../../src/feed/types'
 
 jest.setTimeout(400000)
 describe('Fair Data Protocol with FairOS-dfs', () => {
@@ -540,23 +541,24 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
 
       const { podAddress, pod } = await getExtendedPodsListByAccountData(fdp.account, podName1)
       const rawDirectoryMetadata = (
-        await getRawMetadata(fdp.connection.bee, fullNewDirectory1, podAddress, pod.password)
+        await getRawMetadata(fdp.connection.bee, fullNewDirectory1, podAddress, pod.password, FeedType.Epoch)
       ).metadata as RawDirectoryMetadata
       checkDirectoryMetadata(rawDirectoryMetadata, newDirectory1)
 
-      const rawFileMetadata = (await getRawMetadata(fdp.connection.bee, fullFilenameBigPath, podAddress, pod.password))
-        .metadata as RawFileMetadata
+      const rawFileMetadata = (
+        await getRawMetadata(fdp.connection.bee, fullFilenameBigPath, podAddress, pod.password, FeedType.Epoch)
+      ).metadata as RawFileMetadata
       checkFileMetadata(rawFileMetadata, filenameBig, fileSizeBig, 'text/plain; charset=utf-8')
 
       await fdp.directory.create(podName1, fullNewDirectory2)
       await fdp.file.uploadData(podName1, fullFilenameBigPath2, contentBig2)
       const rawDirectoryMetadata1 = (
-        await getRawMetadata(fdp.connection.bee, fullNewDirectory2, podAddress, pod.password)
+        await getRawMetadata(fdp.connection.bee, fullNewDirectory2, podAddress, pod.password, FeedType.Epoch)
       ).metadata as RawDirectoryMetadata
       checkDirectoryMetadata(rawDirectoryMetadata1, newDirectory2)
 
       const rawFileMetadata1 = (
-        await getRawMetadata(fdp.connection.bee, fullFilenameBigPath2, podAddress, pod.password)
+        await getRawMetadata(fdp.connection.bee, fullFilenameBigPath2, podAddress, pod.password, FeedType.Epoch)
       ).metadata as RawFileMetadata
       checkFileMetadata(rawFileMetadata1, filenameBig2, fileSizeBig, '')
     })

@@ -1,5 +1,5 @@
 import { stringToBytes, wrapBytesWithHelpers } from '../utils/bytes'
-import { Bee, Data, BeeRequestOptions } from '@ethersphere/bee-js'
+import { Bee, BeeRequestOptions, Data } from '@ethersphere/bee-js'
 import { EthAddress } from '@ethersphere/bee-js/dist/types/utils/eth'
 import {
   assertFullPathWithName,
@@ -22,7 +22,7 @@ import { writeFeedData } from '../feed/api'
 import { AccountData } from '../account/account-data'
 import { prepareEthAddress } from '../utils/wallet'
 import { assertWallet } from '../utils/type'
-import { getNextEpoch } from '../feed/lookup/utils'
+import { FeedType, WriteFeedOptions } from '../feed/types'
 
 /**
  * File prefix
@@ -40,6 +40,7 @@ export const DIRECTORY_TOKEN = '_D_'
  * @param path path with information
  * @param address Ethereum address of the pod which contains the path
  * @param podPassword bytes for data encryption from pod metadata
+ * @param feedType type of the feed
  * @param downloadOptions options for downloading
  */
 export async function getFileMetadata(
@@ -47,9 +48,10 @@ export async function getFileMetadata(
   path: string,
   address: EthAddress,
   podPassword: PodPasswordBytes,
+  feedType: FeedType,
   downloadOptions?: BeeRequestOptions,
 ): Promise<FileMetadata> {
-  const data = (await getRawMetadata(bee, path, address, podPassword, downloadOptions)).metadata
+  const data = (await getRawMetadata(bee, path, address, podPassword, feedType, downloadOptions)).metadata
   assertRawFileMetadata(data)
 
   return rawFileMetadataToFileMetadata(data)
@@ -62,6 +64,7 @@ export async function getFileMetadata(
  * @param fullPath full path to the file
  * @param address address of the pod
  * @param podPassword bytes for data encryption from pod metadata
+ * @param feedType type of the feed
  * @param downloadOptions download options
  */
 export async function downloadData(
@@ -69,12 +72,12 @@ export async function downloadData(
   fullPath: string,
   address: EthAddress,
   podPassword: PodPasswordBytes,
+  feedType: FeedType,
   downloadOptions?: BeeRequestOptions,
 ): Promise<Data> {
-  const fileMetadata = await getFileMetadata(bee, fullPath, address, podPassword, downloadOptions)
+  const fileMetadata = await getFileMetadata(bee, fullPath, address, podPassword, feedType, downloadOptions)
 
   if (fileMetadata.compression) {
-    // TODO: implement compression support
     throw new Error('Compressed data is not supported yet')
   }
 
@@ -132,6 +135,7 @@ export async function uploadData(
     connection.bee,
     fullPath,
     prepareEthAddress(podWallet.address),
+    connection.options?.feedType ?? FeedType.Epoch,
     connection.options?.requestOptions,
   )
   const pathInfo = extractPathInfo(fullPath)
@@ -165,15 +169,22 @@ export async function uploadData(
     mode: getFileMode(DEFAULT_FILE_PERMISSIONS),
   }
 
-  await addEntryToDirectory(connection, podWallet, pod.password, pathInfo.path, pathInfo.filename, true)
-  await writeFeedData(
-    connection,
-    fullPath,
-    getFileMetadataRawBytes(meta),
-    podWallet,
-    pod.password,
-    getNextEpoch(fullPathInfo?.lookupAnswer.epoch),
-  )
+  const feedType = connection.options?.feedType ?? FeedType.Epoch
+  const writeFeedOptions: WriteFeedOptions = {
+    feedType,
+  }
+
+  const epoch = fullPathInfo?.lookupAnswer.epoch
+
+  if (feedType === FeedType.Epoch && epoch) {
+    writeFeedOptions.epochOptions = {
+      epoch: epoch,
+      isGetNextEpoch: true,
+    }
+  }
+
+  await addEntryToDirectory(connection, podWallet, pod.password, pathInfo.path, pathInfo.filename, true, feedType)
+  await writeFeedData(connection, fullPath, getFileMetadataRawBytes(meta), podWallet, pod.password, writeFeedOptions)
 
   return meta
 }

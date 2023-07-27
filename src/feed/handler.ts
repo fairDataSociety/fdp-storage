@@ -1,6 +1,6 @@
 import { Utils } from '@ethersphere/bee-js'
 import { makeContentAddressedChunk } from '../chunk/cac'
-import { Epoch, HIGHEST_LEVEL } from './lookup/epoch'
+import { Epoch, HIGHEST_LEVEL } from './epoch'
 
 const TOPIC_LENGTH = 32
 

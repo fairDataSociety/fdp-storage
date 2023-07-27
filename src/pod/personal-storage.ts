@@ -1,4 +1,4 @@
-import { SharedPod, PodReceiveOptions, PodShareInfo, PodsList, Pod, PodsListPrepared } from './types'
+import { Pod, PodReceiveOptions, PodShareInfo, PodsList, PodsListPrepared, SharedPod } from './types'
 import { assertAccount } from '../account/utils'
 import { writeFeedData } from '../feed/api'
 import { AccountData } from '../account/account-data'
@@ -11,10 +11,10 @@ import {
   createPodShareInfo,
   getSharedPodInfo,
   podListToBytes,
-  podsListPreparedToPodsList,
-  podPreparedToPod,
-  sharedPodPreparedToSharedPod,
   podListToJSON,
+  podPreparedToPod,
+  podsListPreparedToPodsList,
+  sharedPodPreparedToSharedPod,
 } from './utils'
 import { getExtendedPodsList } from './api'
 import { uploadBytes } from '../file/utils'
@@ -24,7 +24,7 @@ import { assertEncryptedReference, EncryptedReference } from '../utils/hex'
 import { prepareEthAddress, preparePrivateKey } from '../utils/wallet'
 import { getCacheKey, setEpochCache } from '../cache/utils'
 import { getPodsList } from './cache/api'
-import { getNextEpoch } from '../feed/lookup/utils'
+import { FeedType, WriteFeedOptions } from '../feed/types'
 
 export const POD_TOPIC = 'Pods'
 
@@ -46,10 +46,15 @@ export class PersonalStorage {
 
     try {
       podsList = (
-        await getPodsList(this.accountData.connection.bee, this.accountData.wallet!, {
-          requestOptions: this.accountData.connection.options?.requestOptions,
-          cacheInfo: this.accountData.connection.cacheInfo,
-        })
+        await getPodsList(
+          this.accountData.connection.bee,
+          this.accountData.wallet!,
+          this.accountData.connection.options?.feedType ?? FeedType.Epoch,
+          {
+            requestOptions: this.accountData.connection.options?.requestOptions,
+            cacheInfo: this.accountData.connection.cacheInfo,
+          },
+        )
       ).podsList
       // eslint-disable-next-line no-empty
     } catch (e) {}
@@ -88,10 +93,15 @@ export class PersonalStorage {
   async delete(name: string): Promise<void> {
     assertAccount(this.accountData)
     name = name.trim()
-    const podsInfo = await getPodsList(this.accountData.connection.bee, this.accountData.wallet!, {
-      requestOptions: this.accountData.connection.options?.requestOptions,
-      cacheInfo: this.accountData.connection.cacheInfo,
-    })
+    const podsInfo = await getPodsList(
+      this.accountData.connection.bee,
+      this.accountData.wallet!,
+      this.accountData.connection.options?.feedType ?? FeedType.Epoch,
+      {
+        requestOptions: this.accountData.connection.options?.requestOptions,
+        cacheInfo: this.accountData.connection.cacheInfo,
+      },
+    )
 
     assertPodsLength(podsInfo.podsList.pods.length)
     const pod = podsInfo.podsList.pods.find(item => item.name === name)
@@ -104,14 +114,27 @@ export class PersonalStorage {
     const podsSharedFiltered = podsInfo.podsList.sharedPods.filter(item => item.name !== name)
     const allPodsData = podListToBytes(podsFiltered, podsSharedFiltered)
     const wallet = this.accountData.wallet!
-    const epoch = getNextEpoch(podsInfo.epoch)
+
+    const writeFeedOptions: WriteFeedOptions = {
+      feedType: this.accountData.connection.options?.feedType ?? FeedType.Epoch,
+    }
+
+    const epoch = podsInfo.epoch
+
+    if (writeFeedOptions.feedType === FeedType.Epoch && epoch) {
+      writeFeedOptions.epochOptions = {
+        epoch,
+        isGetNextEpoch: true,
+      }
+    }
+
     await writeFeedData(
       this.accountData.connection,
       POD_TOPIC,
       allPodsData,
       wallet,
       preparePrivateKey(wallet.privateKey),
-      epoch,
+      writeFeedOptions,
     )
     await setEpochCache(this.accountData.connection.cacheInfo, getCacheKey(wallet.address), {
       epoch,
@@ -131,10 +154,17 @@ export class PersonalStorage {
     assertPodName(name)
     const wallet = this.accountData.wallet!
     const address = prepareEthAddress(wallet.address)
-    const podInfo = await getExtendedPodsList(this.accountData.connection.bee, name, wallet, this.accountData.seed!, {
-      requestOptions: this.accountData.connection.options?.requestOptions,
-      cacheInfo: this.accountData.connection.cacheInfo,
-    })
+    const podInfo = await getExtendedPodsList(
+      this.accountData.connection.bee,
+      name,
+      wallet,
+      this.accountData.seed!,
+      this.accountData.connection.options?.feedType ?? FeedType.Epoch,
+      {
+        requestOptions: this.accountData.connection.options?.requestOptions,
+        cacheInfo: this.accountData.connection.cacheInfo,
+      },
+    )
 
     const data = stringToBytes(
       JSON.stringify(createPodShareInfo(name, podInfo.podAddress, address, podInfo.pod.password)),

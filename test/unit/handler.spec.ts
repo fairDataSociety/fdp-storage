@@ -1,5 +1,5 @@
 import { getId } from '../../src/feed/handler'
-import { Epoch } from '../../src/feed/lookup/epoch'
+import { Epoch } from '../../src/feed/epoch'
 import { numbersToSegment } from '../utils'
 
 describe('handler', () => {

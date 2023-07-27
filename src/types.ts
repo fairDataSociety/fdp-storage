@@ -1,6 +1,7 @@
 import { BeeRequestOptions } from '@ethersphere/bee-js'
 import { EnsEnvironment } from '@fairdatasociety/fdp-contracts-js'
 import { CacheOptions } from './cache/types'
+import { FeedType } from './feed/types'
 
 export { DirectoryItem, FileItem } from './content-items/types'
 
@@ -24,4 +25,8 @@ export interface Options {
    * Cache options
    */
   cacheOptions?: CacheOptions
+  /**
+   * Feed type
+   */
+  feedType?: FeedType
 }
