@@ -4,7 +4,7 @@ import { FeedType } from '../../src/feed/types'
 import { BatchId } from '@ethersphere/bee-js'
 
 jest.setTimeout(400000)
-describe('feed/sequential', () => {
+describe('feeds speed check', () => {
   it('check', async () => {
     const beeNodeUrl = 'https://bee-1.fairdatasociety.org/'
     const stamp = '0'.repeat(64) as BatchId
