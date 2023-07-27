@@ -1,11 +1,69 @@
 import { Data } from '@ethersphere/bee-js'
 import { Epoch } from './epoch'
+import { bytesToHex, HexString } from '../utils/hex'
+
+/**
+ * Lookup data with chunk content
+ */
+export class LookupDataWithChunkContent extends Uint8Array implements LookupData {
+  constructor(array: Uint8Array) {
+    super(array.buffer)
+  }
+
+  /**
+   * Data as string
+   */
+  text(): string {
+    return new TextDecoder('utf-8').decode(this)
+  }
+
+  /**
+   * Data as hex string
+   */
+  hex(): HexString<number> {
+    return JSON.parse(new TextDecoder('utf-8').decode(this))
+  }
+
+  /**
+   * Data as JSON
+   */
+  json(): any {
+    return bytesToHex(this)
+  }
+
+  /**
+   * Chunk content
+   */
+  chunkContent() {
+    return this
+  }
+}
 
 /**
  * Lookup data with possibility to get chunk content
  */
 export interface LookupData extends Data {
   chunkContent(): Data
+}
+
+/**
+ * Sequence info
+ */
+export interface SequenceInfo {
+  /**
+   * Reference
+   */
+  reference: string
+
+  /**
+   * Feed index
+   */
+  feedIndex: string
+
+  /**
+   * Feed index next
+   */
+  feedIndexNext: string
 }
 
 /**
@@ -21,6 +79,11 @@ export interface LookupAnswer {
    * Epoch info only for epoch feed
    */
   epoch?: Epoch
+
+  /**
+   * Sequence info only for sequence feed
+   */
+  sequenceInfo?: SequenceInfo
 }
 
 /**

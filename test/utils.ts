@@ -5,6 +5,7 @@ import { utils, Wallet } from 'ethers'
 import { Environments, getEnsEnvironmentConfig } from '@fairdatasociety/fdp-contracts-js'
 import axios from 'axios'
 import { CacheOptions } from '../src/cache/types'
+import { FeedType } from '../src/feed/types'
 
 export interface TestUser {
   username: string
@@ -109,13 +110,18 @@ export const fdpOptions: Options = {
   cacheOptions: {
     isUseCache: false,
   },
+  feedType: FeedType.Epoch,
 }
 
 /**
  * Creates FDP instance with default configuration for testing
  */
-export function createFdp(cacheOptions?: CacheOptions): FdpStorage {
-  return new FdpStorage(beeUrl(), batchId(), { ...fdpOptions, ...(cacheOptions ? { cacheOptions } : undefined) })
+export function createFdp(cacheOptions?: CacheOptions, feedType = FeedType.Epoch): FdpStorage {
+  return new FdpStorage(beeUrl(), batchId(), {
+    ...fdpOptions,
+    ...{ feedType },
+    ...(cacheOptions ? { cacheOptions } : undefined),
+  })
 }
 
 /**

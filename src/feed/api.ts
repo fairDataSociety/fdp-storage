@@ -5,7 +5,7 @@ import { assertWriteFeedOptions, FeedType, LookupAnswer, WriteFeedOptions } from
 import { Connection } from '../connection/connection'
 import { encryptBytes, PodPasswordBytes } from '../utils/encryption'
 import { utils, Wallet } from 'ethers'
-import { writeSequenceFeedData } from './sequence'
+import { getSequenceFeedData, writeSequenceFeedData } from './sequence'
 import { lookupWithEpoch } from './lookup/linear'
 import { getNextEpoch } from './lookup/utils'
 
@@ -35,8 +35,7 @@ export async function getFeedData(
   if (feedType === FeedType.Epoch) {
     return lookupWithEpoch(bee, topicHash, address, requestOptions)
   } else if (feedType === FeedType.Sequence) {
-    // todo implement with sequence feed reader
-    throw new Error('Sequence feed not implemented yet')
+    return getSequenceFeedData(bee, topicHash, address, requestOptions)
   } else {
     throw new Error('Unknown feed type')
   }

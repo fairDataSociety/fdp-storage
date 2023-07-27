@@ -80,13 +80,20 @@ export async function addEntryToDirectory(
   parentData.fileOrDirNames.push(itemToAdd)
   parentData.meta.modificationTime = getUnixTimestamp()
 
-  return writeFeedData(connection, parentPath, getRawDirectoryMetadataBytes(parentData), wallet, podPassword, {
+  const epoch = metadataWithEpoch.epoch
+  const writeFeedOptions: WriteFeedOptions = {
     feedType,
-    epochOptions: {
-      epoch: metadataWithEpoch.epoch,
-      isGetNextEpoch: true,
-    },
-  })
+    ...(feedType === FeedType.Epoch && epoch ? { epochOptions: { epoch, isGetNextEpoch: true } } : {}),
+  }
+
+  return writeFeedData(
+    connection,
+    parentPath,
+    getRawDirectoryMetadataBytes(parentData),
+    wallet,
+    podPassword,
+    writeFeedOptions,
+  )
 }
 
 /**

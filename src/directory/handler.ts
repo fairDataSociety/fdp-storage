@@ -27,7 +27,6 @@ import { PodPasswordBytes } from '../utils/encryption'
 import { DataUploadOptions } from '../file/types'
 import { DirectoryItem } from '../content-items/types'
 import { prepareEthAddress } from '../utils/wallet'
-import { getNextEpoch } from '../feed/lookup/utils'
 import { FeedType, WriteFeedOptions } from '../feed/types'
 
 /**
@@ -185,7 +184,7 @@ export async function createDirectory(
   const epoch = pathInfo?.lookupAnswer.epoch
   const writeFeedOptions: WriteFeedOptions = {
     feedType,
-    ...(feedType === FeedType.Epoch && epoch ? { epochOptions: { epoch: getNextEpoch(epoch) } } : {}),
+    ...(feedType === FeedType.Epoch && epoch ? { epochOptions: { epoch, isGetNextEpoch: true } } : {}),
   }
   await createDirectoryInfo(connection, parentPath, name, podPassword, podWallet, writeFeedOptions)
 }

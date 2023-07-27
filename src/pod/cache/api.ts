@@ -32,7 +32,7 @@ export async function getPodsList(
       }
     },
     onRecoverData: async (data): Promise<PodsInfo> => {
-      if (!(data.data && data.epoch)) {
+      if (!data.data) {
         throw new Error('Incorrect recovered cache data for pods list')
       }
 
