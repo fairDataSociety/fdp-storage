@@ -20,6 +20,7 @@ import {
 import { uploadData } from '../file/handler'
 import { assertNodeFileInfo, isBrowserFileInfo } from './types'
 import { DirectoryItem } from '../content-items/types'
+import { FeedType } from '../feed/types'
 
 /**
  * Directory related class
@@ -44,6 +45,7 @@ export class Directory {
       path,
       podAddress,
       pod.password,
+      this.accountData.connection?.options?.feedType ?? FeedType.Epoch,
       isRecursive,
       this.accountData.connection.options?.requestOptions,
     )

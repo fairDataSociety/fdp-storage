@@ -1,4 +1,4 @@
-import { Epoch, getBaseTime } from '../../../src/feed/lookup/epoch'
+import { Epoch, getBaseTime } from '../../../src/feed/epoch'
 
 describe('feed/epoch', () => {
   it('getBaseTime', () => {

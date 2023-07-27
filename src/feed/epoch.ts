@@ -1,5 +1,10 @@
-import { Utils } from '@ethersphere/bee-js'
-import { longToByteArray } from '../../utils/bytes'
+import { Reference, Utils } from '@ethersphere/bee-js'
+import { longToByteArray } from '../utils/bytes'
+import { Connection } from '../connection/connection'
+import { utils, Wallet } from 'ethers'
+import { getUnixTimestamp } from '../utils/time'
+import { bmtHashString } from '../account/utils'
+import { getId } from './handler'
 
 const EPOCH_LENGTH = 8
 
@@ -110,4 +115,33 @@ export class Epoch {
   getNextEpoch(time: number): Epoch {
     return new Epoch(this.getNextLevel(time), time)
   }
+}
+
+/**
+ * Writes data without encryption to feed using `topic` and `epoch` as a key and signed data with `privateKey` as a value
+ *
+ * @deprecated required for deprecated methods
+ *
+ * @param connection connection information for data uploading
+ * @param topic key for data
+ * @param data data to upload
+ * @param wallet feed owner's wallet
+ * @param epoch feed epoch
+ */
+export async function writeEpochFeedDataRaw(
+  connection: Connection,
+  topic: string,
+  data: Uint8Array,
+  wallet: utils.HDNode | Wallet,
+  epoch?: Epoch,
+): Promise<Reference> {
+  if (!epoch) {
+    epoch = new Epoch(HIGHEST_LEVEL, getUnixTimestamp())
+  }
+
+  const topicHash = bmtHashString(topic)
+  const id = getId(topicHash, epoch.time, epoch.level)
+  const socWriter = connection.bee.makeSOCWriter(wallet.privateKey)
+
+  return socWriter.upload(connection.postageBatchId, id, data)
 }

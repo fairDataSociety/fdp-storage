@@ -1,6 +1,6 @@
 import CryptoJS from 'crypto-js'
 import { CacheEpochData, CacheEpochDataPrepared, CacheInfo, CacheObject, ProcessCacheDataOptions } from './types'
-import { Epoch } from '../feed/lookup/epoch'
+import { Epoch } from '../feed/epoch'
 
 /**
  * Creates cache key

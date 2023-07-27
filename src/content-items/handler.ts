@@ -1,6 +1,6 @@
 import { Connection } from '../connection/connection'
 import { utils } from 'ethers'
-import { Reference, BeeRequestOptions } from '@ethersphere/bee-js'
+import { BeeRequestOptions, Reference } from '@ethersphere/bee-js'
 import { getUnixTimestamp } from '../utils/time'
 import { writeFeedData } from '../feed/api'
 import { getRawDirectoryMetadataBytes } from '../directory/adapter'
@@ -12,7 +12,7 @@ import { RawMetadataWithEpoch } from './types'
 import { prepareEthAddress } from '../utils/wallet'
 import { PodPasswordBytes } from '../utils/encryption'
 import { DataUploadOptions } from '../file/types'
-import { getNextEpoch } from '../feed/lookup/utils'
+import { FeedType, WriteFeedOptions } from '../feed/types'
 
 export const DEFAULT_UPLOAD_OPTIONS: DataUploadOptions = {
   blockSize: 1000000,
@@ -28,6 +28,7 @@ export const DEFAULT_UPLOAD_OPTIONS: DataUploadOptions = {
  * @param parentPath parent path
  * @param entryPath entry path
  * @param isFile define if entry is file or directory
+ * @param feedType feed type
  * @param downloadOptions download options
  */
 export async function addEntryToDirectory(
@@ -37,6 +38,7 @@ export async function addEntryToDirectory(
   parentPath: string,
   entryPath: string,
   isFile: boolean,
+  feedType: FeedType,
   downloadOptions?: BeeRequestOptions,
 ): Promise<Reference> {
   if (!parentPath) {
@@ -54,7 +56,14 @@ export async function addEntryToDirectory(
   let parentData: RawDirectoryMetadata | undefined
   let metadataWithEpoch: RawMetadataWithEpoch | undefined
   try {
-    metadataWithEpoch = await getRawMetadata(connection.bee, parentPath, address, podPassword, downloadOptions)
+    metadataWithEpoch = await getRawMetadata(
+      connection.bee,
+      parentPath,
+      address,
+      podPassword,
+      connection.options?.feedType ?? FeedType.Epoch,
+      downloadOptions,
+    )
     assertRawDirectoryMetadata(metadataWithEpoch.metadata)
     parentData = metadataWithEpoch.metadata
   } catch (e) {
@@ -71,14 +80,13 @@ export async function addEntryToDirectory(
   parentData.fileOrDirNames.push(itemToAdd)
   parentData.meta.modificationTime = getUnixTimestamp()
 
-  return writeFeedData(
-    connection,
-    parentPath,
-    getRawDirectoryMetadataBytes(parentData),
-    wallet,
-    podPassword,
-    getNextEpoch(metadataWithEpoch.epoch),
-  )
+  return writeFeedData(connection, parentPath, getRawDirectoryMetadataBytes(parentData), wallet, podPassword, {
+    feedType,
+    epochOptions: {
+      epoch: metadataWithEpoch.epoch,
+      isGetNextEpoch: true,
+    },
+  })
 }
 
 /**
@@ -91,6 +99,7 @@ export async function deleteItem(
   itemMetaPath: string,
   wallet: utils.HDNode,
   podPassword: PodPasswordBytes,
+  writeFeedOptions: WriteFeedOptions,
 ): Promise<void> {
   let pathInfo
   try {
@@ -98,6 +107,7 @@ export async function deleteItem(
       connection.bee,
       itemMetaPath,
       prepareEthAddress(wallet.address),
+      connection.options?.feedType ?? FeedType.Epoch,
       connection.options?.requestOptions,
     )
     // eslint-disable-next-line no-empty
@@ -108,15 +118,24 @@ export async function deleteItem(
     return
   }
 
-  let metaPathEpoch
+  // for epoch feed additionally calculate the next epoch level
+  if (writeFeedOptions.feedType === FeedType.Epoch) {
+    // if information is stored under the path, calculate the next level of epoch
+    if (pathInfo) {
+      if (!pathInfo.lookupAnswer.epoch) {
+        throw new Error('Epoch is not defined')
+      }
 
-  // if information is stored under the path, calculate the next level of epoch
-  if (pathInfo) {
-    pathInfo.lookupAnswer.epoch.level = pathInfo.lookupAnswer.epoch.getNextLevel(pathInfo.lookupAnswer.epoch.time)
-    metaPathEpoch = pathInfo.lookupAnswer.epoch
+      if (!writeFeedOptions.epochOptions) {
+        writeFeedOptions.epochOptions = {}
+      }
+
+      writeFeedOptions.epochOptions.epoch = pathInfo.lookupAnswer.epoch
+      writeFeedOptions.epochOptions.isGetNextLevel = true
+    }
   }
 
-  await deleteFeedData(connection, itemMetaPath, wallet, podPassword, metaPathEpoch)
+  await deleteFeedData(connection, itemMetaPath, wallet, podPassword, writeFeedOptions)
 }
 
 /**
@@ -139,11 +158,13 @@ export async function removeEntryFromDirectory(
   isFile: boolean,
   downloadOptions?: BeeRequestOptions,
 ): Promise<Reference> {
+  const feedType = connection.options?.feedType ?? FeedType.Epoch
   const metadataWithEpoch = await getRawMetadata(
     connection.bee,
     parentPath,
     prepareEthAddress(wallet.address),
     podPassword,
+    connection.options?.feedType ?? FeedType.Epoch,
     downloadOptions,
   )
   const parentData = metadataWithEpoch.metadata
@@ -158,14 +179,15 @@ export async function removeEntryFromDirectory(
   }
 
   parentData.fileOrDirNames = fileOrDirNames.filter(name => name !== itemToRemove)
-  await deleteItem(connection, fullPath, wallet, podPassword)
+  await deleteItem(connection, fullPath, wallet, podPassword, {
+    feedType,
+  })
 
-  return writeFeedData(
-    connection,
-    parentPath,
-    getRawDirectoryMetadataBytes(parentData),
-    wallet,
-    podPassword,
-    getNextEpoch(metadataWithEpoch.epoch),
-  )
+  return writeFeedData(connection, parentPath, getRawDirectoryMetadataBytes(parentData), wallet, podPassword, {
+    feedType,
+    epochOptions: {
+      epoch: metadataWithEpoch.epoch,
+      isGetNextEpoch: true,
+    },
+  })
 }

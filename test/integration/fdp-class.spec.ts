@@ -12,22 +12,23 @@ import { MAX_POD_NAME_LENGTH } from '../../src/pod/utils'
 import { createUserV1 } from '../../src/account/account'
 import { PodShareInfo, RawFileMetadata } from '../../src/pod/types'
 import { FileShareInfo } from '../../src/file/types'
-import { getFeedData } from '../../src/feed/api'
 import * as feedApi from '../../src/feed/api'
+import { getFeedData } from '../../src/feed/api'
 import { POD_TOPIC } from '../../src/pod/personal-storage'
 import { decryptBytes } from '../../src/utils/encryption'
 import { Wallet } from 'ethers'
 import { removeZeroFromHex } from '../../src/account/utils'
 import { bytesToString, wrapBytesWithHelpers } from '../../src/utils/bytes'
+import * as walletApi from '../../src/utils/wallet'
 import { mnemonicToSeed, prepareEthAddress } from '../../src/utils/wallet'
 import { assertEncryptedReference } from '../../src/utils/hex'
 import { base64toReference } from '../../src/file/utils'
 import path from 'path'
 import { getNodeFileContent } from '../../src/directory/utils'
 import { ETH_ADDR_HEX_LENGTH } from '../../src/utils/type'
-import * as walletApi from '../../src/utils/wallet'
-import { HIGHEST_LEVEL } from '../../src/feed/lookup/epoch'
+import { HIGHEST_LEVEL } from '../../src/feed/epoch'
 import { getWalletByIndex } from '../../src/utils/cache/wallet'
+import { FeedType } from '../../src/feed/types'
 
 jest.setTimeout(400000)
 describe('Fair Data Protocol class', () => {
@@ -741,7 +742,7 @@ describe('Fair Data Protocol class', () => {
 
       // check pod metadata
       const pod1 = await fdp.personalStorage.create(pod)
-      const podData = await getFeedData(bee, POD_TOPIC, prepareEthAddress(user.address))
+      const podData = await getFeedData(bee, POD_TOPIC, prepareEthAddress(user.address), FeedType.Epoch)
       const encryptedText1 = podData.data.chunkContent().text()
       const encryptedBytes1 = podData.data.chunkContent()
       // data decrypts with wallet for the pod. Data inside the pod will be encrypted with a password stored in the pod
@@ -750,7 +751,7 @@ describe('Fair Data Protocol class', () => {
       expect(decryptedText1).toContain(pod)
       // HDNode with index 1 is for first pod
       const node1 = await getWalletByIndex(seed, 1)
-      const rootDirectoryData = await getFeedData(bee, '/', prepareEthAddress(node1.address))
+      const rootDirectoryData = await getFeedData(bee, '/', prepareEthAddress(node1.address), FeedType.Epoch)
       const encryptedText2 = rootDirectoryData.data.chunkContent().text()
       const encryptedBytes2 = rootDirectoryData.data.chunkContent()
       // data decrypts with password stored in the pod
@@ -764,7 +765,7 @@ describe('Fair Data Protocol class', () => {
 
       // check directory metadata
       await fdp.directory.create(pod, fullDirectory)
-      const fullDirectoryData = await getFeedData(bee, fullDirectory, prepareEthAddress(node1.address))
+      const fullDirectoryData = await getFeedData(bee, fullDirectory, prepareEthAddress(node1.address), FeedType.Epoch)
       const encryptedText3 = fullDirectoryData.data.chunkContent().text()
       const encryptedBytes3 = fullDirectoryData.data.chunkContent()
       const decryptedText3 = bytesToString(decryptBytes(pod1.password, encryptedBytes3))
@@ -775,7 +776,12 @@ describe('Fair Data Protocol class', () => {
       }
 
       await fdp.file.uploadData(pod, fullFilenameSmallPath, contentSmall)
-      const fileManifestData = await getFeedData(bee, fullFilenameSmallPath, prepareEthAddress(node1.address))
+      const fileManifestData = await getFeedData(
+        bee,
+        fullFilenameSmallPath,
+        prepareEthAddress(node1.address),
+        FeedType.Epoch,
+      )
       const encryptedText4 = fileManifestData.data.chunkContent().text()
       const encryptedBytes4 = fileManifestData.data.chunkContent()
       const decryptedText4 = bytesToString(decryptBytes(pod1.password, encryptedBytes4))
@@ -826,7 +832,7 @@ describe('Fair Data Protocol class', () => {
       // no cache - create first pod
       await fdpNoCache.personalStorage.create(pod1)
       // for the first feed write it should be the highest level
-      expect(writeFeedDataSpy.mock.calls[0][5]?.level).toEqual(HIGHEST_LEVEL)
+      expect(writeFeedDataSpy.mock.calls[0][5]?.epochOptions?.epoch?.level).toEqual(HIGHEST_LEVEL)
       // getting info about pods from the network
       expect(getFeedDataSpy).toBeCalledTimes(1)
       // calculating wallet by index for the pod
@@ -834,7 +840,7 @@ describe('Fair Data Protocol class', () => {
 
       jest.clearAllMocks()
       await fdpNoCache.personalStorage.create(pod2)
-      expect(writeFeedDataSpy.mock.calls[0][5]?.level).toEqual(HIGHEST_LEVEL - 1)
+      expect(writeFeedDataSpy.mock.calls[0][5]?.epochOptions?.epoch?.level).toEqual(HIGHEST_LEVEL - 1)
       expect(getFeedDataSpy).toBeCalledTimes(1)
       expect(getWalletByIndexSpy).toBeCalledTimes(1)
 
@@ -904,7 +910,7 @@ describe('Fair Data Protocol class', () => {
       // with cache - create first pod
       await fdpWithCache.personalStorage.create(pod1)
       // for the first feed write it should be the highest level
-      expect(writeFeedDataSpy.mock.calls[0][5]?.level).toEqual(HIGHEST_LEVEL)
+      expect(writeFeedDataSpy.mock.calls[0][5]?.epochOptions?.epoch?.level).toEqual(HIGHEST_LEVEL)
       // getting info about pods from the network
       expect(getFeedDataSpy).toBeCalledTimes(1)
       // calculating wallet by index for the pod
@@ -915,7 +921,7 @@ describe('Fair Data Protocol class', () => {
       // data about pods shouldn't be retrieved
       expect(getFeedDataSpy).toBeCalledTimes(0)
       // should be calculated correct level without getting previous one from the network
-      expect(writeFeedDataSpy.mock.calls[0][5]?.level).toEqual(HIGHEST_LEVEL - 1)
+      expect(writeFeedDataSpy.mock.calls[0][5]?.epochOptions?.epoch?.level).toEqual(HIGHEST_LEVEL - 1)
       // calc a wallet for the new pod
       expect(getWalletByIndexSpy).toBeCalledTimes(1)
 

@@ -9,8 +9,8 @@ import CryptoJS from 'crypto-js'
 import { isObject } from '../utils/type'
 import { Connection } from '../connection/connection'
 import { utils, Wallet } from 'ethers'
-import { Epoch } from '../feed/lookup/epoch'
 import { stringToBytes } from '../utils/bytes'
+import { FeedType, WriteFeedOptions } from '../feed/types'
 
 /**
  * Get raw metadata by path
@@ -19,6 +19,7 @@ import { stringToBytes } from '../utils/bytes'
  * @param path path with information
  * @param address Ethereum address of the pod which owns the path
  * @param podPassword bytes for data encryption from pod metadata
+ * @param feedType feed type
  * @param requestOptions options for downloading
  */
 export async function getRawMetadata(
@@ -26,9 +27,10 @@ export async function getRawMetadata(
   path: string,
   address: EthAddress,
   podPassword: PodPasswordBytes,
+  feedType: FeedType,
   requestOptions?: BeeRequestOptions,
 ): Promise<RawMetadataWithEpoch> {
-  const feedData = await getFeedData(bee, path, address, requestOptions)
+  const feedData = await getFeedData(bee, path, address, feedType, requestOptions)
   const data = decryptJson(podPassword, feedData.data.chunkContent())
   let metadata
 
@@ -52,16 +54,18 @@ export async function getRawMetadata(
  * @param bee Bee instance
  * @param fullPath full path to the item
  * @param address uploader address
+ * @param feedType feed type
  * @param requestOptions options for downloading
  */
 export async function isItemExists(
   bee: Bee,
   fullPath: string,
   address: EthAddress,
+  feedType: FeedType,
   requestOptions: BeeRequestOptions | undefined,
 ): Promise<boolean> {
   try {
-    return (await getFeedData(bee, fullPath, address, requestOptions)).data.text() === DELETE_FEED_MAGIC_WORD
+    return (await getFeedData(bee, fullPath, address, feedType, requestOptions)).data.text() === DELETE_FEED_MAGIC_WORD
   } catch (e) {
     return false
   }
@@ -74,6 +78,7 @@ export async function isItemExists(
  * @param bee Bee instance
  * @param fullPath full path to the item
  * @param address uploader address
+ * @param feedType feed type
  * @param downloadOptions options for downloading
  */
 export async function assertItemIsNotExists(
@@ -81,9 +86,10 @@ export async function assertItemIsNotExists(
   bee: Bee,
   fullPath: string,
   address: EthAddress,
+  feedType: FeedType,
   downloadOptions: BeeRequestOptions | undefined,
 ): Promise<void> {
-  if (await isItemExists(bee, fullPath, address, downloadOptions)) {
+  if (await isItemExists(bee, fullPath, address, feedType, downloadOptions)) {
     throw new Error(`${contentType} "${fullPath}" already uploaded to the network`)
   }
 }
@@ -129,9 +135,10 @@ export async function getPathInfo(
   bee: Bee,
   path: string,
   address: EthAddress,
+  feedType: FeedType,
   requestOptions?: BeeRequestOptions,
 ): Promise<PathInformation> {
-  const lookupAnswer = await getFeedData(bee, path, address, requestOptions)
+  const lookupAnswer = await getFeedData(bee, path, address, feedType, requestOptions)
 
   return {
     isDeleted: lookupAnswer.data.text() === DELETE_FEED_MAGIC_WORD,
@@ -160,12 +167,13 @@ export async function getCreationPathInfo(
   bee: Bee,
   fullPath: string,
   address: EthAddress,
+  feedType: FeedType,
   requestOptions?: BeeRequestOptions,
 ): Promise<PathInformation | undefined> {
   // check that if directory uploaded - than it should be marked as deleted
   let pathInfo
   try {
-    pathInfo = await getPathInfo(bee, fullPath, address, requestOptions)
+    pathInfo = await getPathInfo(bee, fullPath, address, feedType, requestOptions)
     assertItemDeleted(pathInfo, fullPath)
     // eslint-disable-next-line no-empty
   } catch (e) {}
@@ -181,7 +189,7 @@ export async function deleteFeedData(
   topic: string,
   wallet: utils.HDNode | Wallet,
   podPassword: PodPasswordBytes,
-  epoch?: Epoch,
+  writeFeedOptions: WriteFeedOptions,
 ): Promise<Reference> {
-  return writeFeedData(connection, topic, stringToBytes(DELETE_FEED_MAGIC_WORD), wallet, podPassword, epoch)
+  return writeFeedData(connection, topic, stringToBytes(DELETE_FEED_MAGIC_WORD), wallet, podPassword, writeFeedOptions)
 }

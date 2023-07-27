@@ -1,4 +1,4 @@
-import { Epoch } from '../feed/lookup/epoch'
+import { Epoch } from '../feed/epoch'
 import { RawDirectoryMetadata, RawFileMetadata } from '../pod/types'
 import { BeeRequestOptions } from '@ethersphere/bee-js'
 import { CacheInfo } from '../cache/types'
@@ -26,8 +26,15 @@ export interface DownloadOptions {
  * Metadata of a file or directory with epoch
  */
 export interface RawMetadataWithEpoch {
-  epoch: Epoch
+  /**
+   * Metadata of a file or directory
+   */
   metadata: RawDirectoryMetadata | RawFileMetadata
+
+  /**
+   * Epoch of the metadata from the epoch feed
+   */
+  epoch?: Epoch
 }
 
 /**

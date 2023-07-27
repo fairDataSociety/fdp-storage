@@ -1,6 +1,6 @@
 import { writeFeedData } from '../feed/api'
 import { EthAddress } from '@ethersphere/bee-js/dist/types/utils/eth'
-import { Bee, Reference, BeeRequestOptions } from '@ethersphere/bee-js'
+import { Bee, BeeRequestOptions, Reference } from '@ethersphere/bee-js'
 import {
   assertDirectoryName,
   assertPartsLength,
@@ -18,17 +18,17 @@ import { Connection } from '../connection/connection'
 import { utils } from 'ethers'
 import { addEntryToDirectory, DEFAULT_UPLOAD_OPTIONS } from '../content-items/handler'
 import {
+  getCreationPathInfo,
+  getRawMetadata,
   rawDirectoryMetadataToDirectoryItem,
   rawFileMetadataToFileItem,
-  getRawMetadata,
-  getCreationPathInfo,
 } from '../content-items/utils'
 import { PodPasswordBytes } from '../utils/encryption'
 import { DataUploadOptions } from '../file/types'
 import { DirectoryItem } from '../content-items/types'
 import { prepareEthAddress } from '../utils/wallet'
-import { Epoch } from '../feed/lookup/epoch'
 import { getNextEpoch } from '../feed/lookup/utils'
+import { FeedType, WriteFeedOptions } from '../feed/types'
 
 /**
  * Options for uploading a directory
@@ -60,6 +60,7 @@ export const DEFAULT_UPLOAD_DIRECTORY_OPTIONS: UploadDirectoryOptions = {
  * @param path path to start searching from
  * @param address Ethereum address of the pod which owns the path
  * @param podPassword bytes for data encryption from pod metadata
+ * @param feedType type of feed
  * @param isRecursive search with recursion or not
  * @param downloadOptions options for downloading
  */
@@ -68,10 +69,12 @@ export async function readDirectory(
   path: string,
   address: EthAddress,
   podPassword: PodPasswordBytes,
+  feedType: FeedType,
   isRecursive?: boolean,
   downloadOptions?: BeeRequestOptions,
 ): Promise<DirectoryItem> {
-  const parentRawDirectoryMetadata = (await getRawMetadata(bee, path, address, podPassword, downloadOptions)).metadata
+  const parentRawDirectoryMetadata = (await getRawMetadata(bee, path, address, podPassword, feedType, downloadOptions))
+    .metadata
   assertRawDirectoryMetadata(parentRawDirectoryMetadata)
   const resultDirectoryItem = rawDirectoryMetadataToDirectoryItem(parentRawDirectoryMetadata)
 
@@ -85,17 +88,17 @@ export async function readDirectory(
 
     if (isFile) {
       item = combine(...splitPath(path), item.substring(FILE_TOKEN.length))
-      const data = (await getRawMetadata(bee, item, address, podPassword, downloadOptions)).metadata
+      const data = (await getRawMetadata(bee, item, address, podPassword, feedType, downloadOptions)).metadata
       assertRawFileMetadata(data)
       resultDirectoryItem.files.push(rawFileMetadataToFileItem(data))
     } else if (isDirectory) {
       item = combine(...splitPath(path), item.substring(DIRECTORY_TOKEN.length))
-      const data = (await getRawMetadata(bee, item, address, podPassword, downloadOptions)).metadata
+      const data = (await getRawMetadata(bee, item, address, podPassword, feedType, downloadOptions)).metadata
       assertRawDirectoryMetadata(data)
       const currentMetadata = rawDirectoryMetadataToDirectoryItem(data)
 
       if (isRecursive) {
-        const content = await readDirectory(bee, item, address, podPassword, isRecursive, downloadOptions)
+        const content = await readDirectory(bee, item, address, podPassword, feedType, isRecursive, downloadOptions)
         currentMetadata.files = content.files
         currentMetadata.directories = content.directories
       }
@@ -115,7 +118,7 @@ export async function readDirectory(
  * @param name name of the directory
  * @param podPassword bytes for data encryption from pod metadata
  * @param wallet feed owner's wallet
- * @param epoch epoch where directory info should be uploaded
+ * @param writeFeedOptions options for writing to feed
  */
 async function createDirectoryInfo(
   connection: Connection,
@@ -123,12 +126,12 @@ async function createDirectoryInfo(
   name: string,
   podPassword: PodPasswordBytes,
   wallet: utils.HDNode,
-  epoch?: Epoch,
+  writeFeedOptions: WriteFeedOptions,
 ): Promise<Reference> {
   const now = getUnixTimestamp()
   const metadata = createRawDirectoryMetadata(META_VERSION, path, name, now, now, now)
 
-  return writeFeedData(connection, combine(...splitPath(path), name), metadata, wallet, podPassword, epoch)
+  return writeFeedData(connection, combine(...splitPath(path), name), metadata, wallet, podPassword, writeFeedOptions)
 }
 
 /**
@@ -137,13 +140,15 @@ async function createDirectoryInfo(
  * @param connection Bee connection
  * @param podPassword bytes for data encryption
  * @param wallet feed owner's wallet
+ * @param writeFeedOptions options for writing to feed
  */
 export async function createRootDirectory(
   connection: Connection,
   podPassword: PodPasswordBytes,
   wallet: utils.HDNode,
+  writeFeedOptions: WriteFeedOptions,
 ): Promise<Reference> {
-  return createDirectoryInfo(connection, '', '/', podPassword, wallet)
+  return createDirectoryInfo(connection, '', '/', podPassword, wallet, writeFeedOptions)
 }
 
 /**
@@ -168,19 +173,19 @@ export async function createDirectory(
   assertDirectoryName(name)
 
   const parentPath = getPathFromParts(parts, 1)
+  const feedType = connection.options?.feedType ?? FeedType.Epoch
   const pathInfo = await getCreationPathInfo(
     connection.bee,
     fullPath,
     prepareEthAddress(podWallet.address),
+    feedType,
     connection.options?.requestOptions,
   )
-  await addEntryToDirectory(connection, podWallet, podPassword, parentPath, name, false, downloadOptions)
-  await createDirectoryInfo(
-    connection,
-    parentPath,
-    name,
-    podPassword,
-    podWallet,
-    getNextEpoch(pathInfo?.lookupAnswer.epoch),
-  )
+  await addEntryToDirectory(connection, podWallet, podPassword, parentPath, name, false, feedType, downloadOptions)
+  const epoch = pathInfo?.lookupAnswer.epoch
+  const writeFeedOptions: WriteFeedOptions = {
+    feedType,
+    ...(feedType === FeedType.Epoch && epoch ? { epochOptions: { epoch: getNextEpoch(epoch) } } : {}),
+  }
+  await createDirectoryInfo(connection, parentPath, name, podPassword, podWallet, writeFeedOptions)
 }

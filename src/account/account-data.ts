@@ -11,6 +11,7 @@ import CryptoJS from 'crypto-js'
 import { bytesToHex } from '../utils/hex'
 import { mnemonicToSeed, prepareEthAddress, privateKeyToBytes } from '../utils/wallet'
 import { isChunkAlreadyExistsError, isInsufficientFundsError } from '../utils/error'
+import { FeedType } from '../feed/types'
 
 export class AccountData {
   /**
@@ -95,7 +96,13 @@ export class AccountData {
 
     if (isAddressOptions(options)) {
       const address = prepareEthAddress(options.address)
-      const encryptedMnemonic = await getEncryptedMnemonic(this.connection.bee, username, address)
+      const encryptedMnemonic = await getEncryptedMnemonic(
+        this.connection.bee,
+        username,
+        address,
+        this.connection.options?.feedType ?? FeedType.Epoch,
+        this.connection.options?.requestOptions,
+      )
       mnemonic = decryptText(password, encryptedMnemonic)
     }
 

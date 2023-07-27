@@ -1,9 +1,11 @@
-import { Bee, Reference, Utils } from '@ethersphere/bee-js'
+import { Bee, BeeRequestOptions, Reference, Utils } from '@ethersphere/bee-js'
 import { assertBase64UrlData, assertUsername } from './utils'
 import { Wallet } from 'ethers'
-import { getFeedData, writeFeedDataRaw } from '../feed/api'
+import { getFeedData } from '../feed/api'
 import { Connection } from '../connection/connection'
 import { stringToBytes } from '../utils/bytes'
+import { writeEpochFeedDataRaw } from '../feed/epoch'
+import { FeedType } from '../feed/types'
 
 /**
  * Downloads encrypted mnemonic phrase from swarm chunk for version 1 account
@@ -13,13 +15,20 @@ import { stringToBytes } from '../utils/bytes'
  * @param bee Bee client
  * @param username FDP account username
  * @param address FDP account address
- *
+ * @param feedType
+ * @param requestOptions download data requestOptions
  * @returns encrypted mnemonic phrase in Base64url format
  */
-export async function getEncryptedMnemonic(bee: Bee, username: string, address: Utils.EthAddress): Promise<string> {
+export async function getEncryptedMnemonic(
+  bee: Bee,
+  username: string,
+  address: Utils.EthAddress,
+  feedType: FeedType,
+  requestOptions?: BeeRequestOptions,
+): Promise<string> {
   assertUsername(username)
 
-  return (await getFeedData(bee, username, address)).data.chunkContent().text()
+  return (await getFeedData(bee, username, address, feedType, requestOptions)).data.chunkContent().text()
 }
 
 /**
@@ -41,5 +50,5 @@ export async function uploadEncryptedMnemonic(
   assertUsername(username)
   assertBase64UrlData(encryptedMnemonic)
 
-  return writeFeedDataRaw(connection, username, stringToBytes(encryptedMnemonic), wallet)
+  return writeEpochFeedDataRaw(connection, username, stringToBytes(encryptedMnemonic), wallet)
 }

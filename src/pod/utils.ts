@@ -26,7 +26,7 @@ import {
 } from '../utils/type'
 import { bytesToHex, EncryptedReference, isHexEthAddress } from '../utils/hex'
 import { getExtendedPodsList } from './api'
-import { Epoch, getFirstEpoch } from '../feed/lookup/epoch'
+import { Epoch, getFirstEpoch } from '../feed/epoch'
 import { getUnixTimestamp } from '../utils/time'
 import { writeFeedData } from '../feed/api'
 import { preparePrivateKey } from '../utils/wallet'
@@ -41,6 +41,7 @@ import { DEFAULT_DIRECTORY_PERMISSIONS, getDirectoryMode } from '../directory/ut
 import { getCacheKey, setEpochCache } from '../cache/utils'
 import { getWalletByIndex } from '../utils/cache/wallet'
 import { getPodsList } from './cache/api'
+import { FeedType, WriteFeedOptions } from '../feed/types'
 
 export const META_VERSION = 2
 export const MAX_PODS_COUNT = 65536
@@ -50,18 +51,40 @@ export const MAX_POD_NAME_LENGTH = 64
  * Information about pods list
  */
 export interface PodsInfo {
+  /**
+   * Pods list
+   */
   podsList: PodsListPrepared
-  epoch: Epoch
+
+  /**
+   * Epoch from the epoch feed
+   */
+  epoch?: Epoch
 }
 
 /**
  * Extended information about specific pod
  */
 export interface ExtendedPodInfo {
+  /**
+   * Pod
+   */
   pod: PodPrepared
+
+  /**
+   * Pod wallet
+   */
   podWallet: utils.HDNode
+
+  /**
+   * Pod address
+   */
   podAddress: Utils.EthAddress
-  epoch: Epoch
+
+  /**
+   * Epoch from the epoch feed
+   */
+  epoch?: Epoch
 }
 
 /*
@@ -369,11 +392,12 @@ export async function createPod(
   pod.name = pod.name.trim()
   assertPodName(pod.name)
 
+  const feedType = connection.options?.feedType ?? FeedType.Epoch
   const { cacheInfo } = connection
   let podsList: PodsListPrepared = { pods: [], sharedPods: [] }
   let podsInfo
   try {
-    podsInfo = await getPodsList(bee, userWallet, {
+    podsInfo = await getPodsList(bee, userWallet, feedType, {
       requestOptions: connection.options?.requestOptions,
       cacheInfo,
     })
@@ -388,7 +412,18 @@ export async function createPod(
   assertSharedPodNameAvailable(pod.name, sharedPods)
 
   const currentTime = getUnixTimestamp()
-  const epoch = podsInfo ? podsInfo.epoch.getNextEpoch(currentTime) : getFirstEpoch(currentTime)
+  let epoch
+  const writeFeedOptions: WriteFeedOptions = {
+    feedType,
+  }
+
+  if (writeFeedOptions.feedType === FeedType.Epoch) {
+    epoch = podsInfo && podsInfo.epoch ? podsInfo.epoch.getNextEpoch(currentTime) : getFirstEpoch(currentTime)
+    writeFeedOptions.epochOptions = {
+      epoch,
+    }
+  }
+
   let realPod: PodPrepared | SharedPodPrepared
 
   if (isSharedPod(pod)) {
@@ -404,11 +439,21 @@ export async function createPod(
   }
 
   const allPodsData = podListToBytes(pods, sharedPods)
-  await writeFeedData(connection, POD_TOPIC, allPodsData, userWallet, preparePrivateKey(userWallet.privateKey), epoch)
+  await writeFeedData(
+    connection,
+    POD_TOPIC,
+    allPodsData,
+    userWallet,
+    preparePrivateKey(userWallet.privateKey),
+    writeFeedOptions,
+  )
 
   if (isPod(realPod)) {
     const podWallet = await getWalletByIndex(seed, nextIndex, cacheInfo)
-    await createRootDirectory(connection, realPod.password, podWallet)
+    const writeFeedOptions: WriteFeedOptions = {
+      feedType,
+    }
+    await createRootDirectory(connection, realPod.password, podWallet, writeFeedOptions)
   }
 
   await setEpochCache(cacheInfo, getCacheKey(userWallet.address), {
@@ -429,10 +474,17 @@ export async function getExtendedPodsListByAccountData(
   accountData: AccountData,
   podName: string,
 ): Promise<ExtendedPodInfo> {
-  return getExtendedPodsList(accountData.connection.bee, podName, accountData.wallet!, accountData.seed!, {
-    requestOptions: accountData.connection.options?.requestOptions,
-    cacheInfo: accountData.connection.cacheInfo,
-  })
+  return getExtendedPodsList(
+    accountData.connection.bee,
+    podName,
+    accountData.wallet!,
+    accountData.seed!,
+    accountData.connection.options?.feedType ?? FeedType.Epoch,
+    {
+      requestOptions: accountData.connection.options?.requestOptions,
+      cacheInfo: accountData.connection.cacheInfo,
+    },
+  )
 }
 
 /**
