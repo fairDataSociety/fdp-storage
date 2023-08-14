@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.0](https://github.com/fairDataSociety/fdp-storage/compare/v0.10.0...v0.11.0) (2023-08-14)
+
+
+### Features
+
+* bee-js 6.2.0 ([#253](https://github.com/fairDataSociety/fdp-storage/issues/253)) ([90dce10](https://github.com/fairDataSociety/fdp-storage/commit/90dce101dca7abd696f8c351c2d1ea74ff2e99d1))
+
 ## [0.10.0](https://github.com/fairDataSociety/fdp-storage/compare/v0.9.0...v0.10.0) (2023-08-09)
 
 
