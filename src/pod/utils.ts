@@ -228,7 +228,7 @@ export function isPodNameType(value: unknown): value is PodName {
 export function isPod(value: unknown): value is PodPrepared {
   const { index, password } = value as PodPrepared
 
-  return typeof isPodNameType(value) && isNumber(index) && isPodPassword(password)
+  return isPodNameType(value) && isNumber(index) && isPodPassword(password)
 }
 
 /**

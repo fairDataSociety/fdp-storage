@@ -1,5 +1,6 @@
-import { isSharedPod } from '../../../src/pod/utils'
+import { isPod, isSharedPod } from '../../../src/pod/utils'
 import { Utils } from '@ethersphere/bee-js'
+import { POD_PASSWORD_LENGTH } from '../../../src/utils/encryption'
 
 describe('pod/utils', () => {
   it('isSharedPod', () => {
@@ -75,5 +76,30 @@ describe('pod/utils', () => {
         expect(isSharedPod(example)).toBeFalsy()
       }
     }
+  })
+
+  it('isPod', () => {
+    const goodPod = {
+      name: 'Hello',
+      password: new Uint8Array(POD_PASSWORD_LENGTH),
+      index: 0,
+    }
+    const badPod = {
+      password: new Uint8Array(POD_PASSWORD_LENGTH),
+      index: 0,
+    }
+    expect(isPod(goodPod)).toBeTruthy()
+    expect(isPod({})).toBeFalsy()
+    expect(
+      isPod({
+        password: badPod.password,
+      }),
+    ).toBeFalsy()
+    expect(
+      isPod({
+        index: badPod.index,
+      }),
+    ).toBeFalsy()
+    expect(isPod(badPod)).toBeFalsy()
   })
 })
