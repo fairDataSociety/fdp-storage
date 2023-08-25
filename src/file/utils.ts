@@ -1,5 +1,5 @@
 import { Connection } from '../connection/connection'
-import { Bee, Reference, BeeRequestOptions, UploadResult } from '@ethersphere/bee-js'
+import { Bee, Reference, RequestOptions, UploadResult } from '@ethersphere/bee-js'
 import { PathInfo } from '../pod/utils'
 import { Blocks, FileShareInfo, RawBlock, RawBlocks } from './types'
 import { rawBlocksToBlocks } from './adapter'
@@ -109,7 +109,7 @@ export function getBaseName(path: string): string | undefined {
 export async function downloadBlocksManifest(
   bee: Bee,
   reference: Reference,
-  downloadOptions?: BeeRequestOptions,
+  downloadOptions?: RequestOptions,
 ): Promise<Blocks> {
   const data = (await bee.downloadData(reference, downloadOptions)).text()
   const rawBlocks = jsonParse(data, 'blocks manifest')

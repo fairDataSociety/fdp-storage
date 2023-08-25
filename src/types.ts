@@ -1,4 +1,4 @@
-import { BeeRequestOptions } from '@ethersphere/bee-js'
+import { RequestOptions } from '@ethersphere/bee-js'
 import { EnsEnvironment } from '@fairdatasociety/fdp-contracts-js'
 import { CacheOptions } from './cache/types'
 
@@ -11,7 +11,7 @@ export interface Options {
   /**
    * Request options
    */
-  requestOptions?: BeeRequestOptions
+  requestOptions?: RequestOptions
   /**
    * FDP-contracts options
    */

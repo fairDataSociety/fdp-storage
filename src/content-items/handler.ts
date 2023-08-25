@@ -1,6 +1,6 @@
 import { Connection } from '../connection/connection'
 import { utils } from 'ethers'
-import { Reference, BeeRequestOptions } from '@ethersphere/bee-js'
+import { Reference, RequestOptions } from '@ethersphere/bee-js'
 import { getUnixTimestamp } from '../utils/time'
 import { writeFeedData } from '../feed/api'
 import { getRawDirectoryMetadataBytes } from '../directory/adapter'
@@ -37,7 +37,7 @@ export async function addEntryToDirectory(
   parentPath: string,
   entryPath: string,
   isFile: boolean,
-  downloadOptions?: BeeRequestOptions,
+  downloadOptions?: RequestOptions,
 ): Promise<Reference> {
   if (!parentPath) {
     throw new Error('Incorrect parent path')
@@ -137,7 +137,7 @@ export async function removeEntryFromDirectory(
   parentPath: string,
   entryPath: string,
   isFile: boolean,
-  downloadOptions?: BeeRequestOptions,
+  downloadOptions?: RequestOptions,
 ): Promise<Reference> {
   const metadataWithEpoch = await getRawMetadata(
     connection.bee,

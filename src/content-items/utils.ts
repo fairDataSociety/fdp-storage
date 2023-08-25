@@ -1,4 +1,4 @@
-import { Bee, Reference, BeeRequestOptions } from '@ethersphere/bee-js'
+import { Bee, Reference, RequestOptions } from '@ethersphere/bee-js'
 import { EthAddress } from '@ethersphere/bee-js/dist/types/utils/eth'
 import { RawDirectoryMetadata, RawFileMetadata } from '../pod/types'
 import { DELETE_FEED_MAGIC_WORD, getFeedData, writeFeedData } from '../feed/api'
@@ -26,7 +26,7 @@ export async function getRawMetadata(
   path: string,
   address: EthAddress,
   podPassword: PodPasswordBytes,
-  requestOptions?: BeeRequestOptions,
+  requestOptions?: RequestOptions,
 ): Promise<RawMetadataWithEpoch> {
   const feedData = await getFeedData(bee, path, address, requestOptions)
   const data = decryptJson(podPassword, feedData.data.chunkContent())
@@ -58,7 +58,7 @@ export async function isItemExists(
   bee: Bee,
   fullPath: string,
   address: EthAddress,
-  requestOptions: BeeRequestOptions | undefined,
+  requestOptions: RequestOptions | undefined,
 ): Promise<boolean> {
   try {
     return (await getFeedData(bee, fullPath, address, requestOptions)).data.text() === DELETE_FEED_MAGIC_WORD
@@ -81,7 +81,7 @@ export async function assertItemIsNotExists(
   bee: Bee,
   fullPath: string,
   address: EthAddress,
-  downloadOptions: BeeRequestOptions | undefined,
+  downloadOptions: RequestOptions | undefined,
 ): Promise<void> {
   if (await isItemExists(bee, fullPath, address, downloadOptions)) {
     throw new Error(`${contentType} "${fullPath}" already uploaded to the network`)
@@ -129,7 +129,7 @@ export async function getPathInfo(
   bee: Bee,
   path: string,
   address: EthAddress,
-  requestOptions?: BeeRequestOptions,
+  requestOptions?: RequestOptions,
 ): Promise<PathInformation> {
   const lookupAnswer = await getFeedData(bee, path, address, requestOptions)
 
@@ -160,7 +160,7 @@ export async function getCreationPathInfo(
   bee: Bee,
   fullPath: string,
   address: EthAddress,
-  requestOptions?: BeeRequestOptions,
+  requestOptions?: RequestOptions,
 ): Promise<PathInformation | undefined> {
   // check that if directory uploaded - than it should be marked as deleted
   let pathInfo

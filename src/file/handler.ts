@@ -1,5 +1,5 @@
 import { stringToBytes, wrapBytesWithHelpers } from '../utils/bytes'
-import { Bee, Data, BeeRequestOptions } from '@ethersphere/bee-js'
+import { Bee, Data, RequestOptions } from '@ethersphere/bee-js'
 import { EthAddress } from '@ethersphere/bee-js/dist/types/utils/eth'
 import {
   assertFullPathWithName,
@@ -47,7 +47,7 @@ export async function getFileMetadata(
   path: string,
   address: EthAddress,
   podPassword: PodPasswordBytes,
-  downloadOptions?: BeeRequestOptions,
+  downloadOptions?: RequestOptions,
 ): Promise<FileMetadata> {
   const data = (await getRawMetadata(bee, path, address, podPassword, downloadOptions)).metadata
   assertRawFileMetadata(data)
@@ -69,7 +69,7 @@ export async function downloadData(
   fullPath: string,
   address: EthAddress,
   podPassword: PodPasswordBytes,
-  downloadOptions?: BeeRequestOptions,
+  downloadOptions?: RequestOptions,
 ): Promise<Data> {
   const fileMetadata = await getFileMetadata(bee, fullPath, address, podPassword, downloadOptions)
 

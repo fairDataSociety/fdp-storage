@@ -32,7 +32,7 @@
   ],
   "types": "dist/index.d.ts",
   "scripts": {
-    "prepare": "rimraf dist && npm run compile:types && npm run compile:browser --env mode=production && npm run compile:node --env mode=production",
+    "prepare": "rimraf dist && npm run compile:types && npm run compile:browser --env mode=production",
     "compile:node": "webpack --progress --env target=node",
     "compile:types": "tsc --emitDeclarationOnly --declaration",
     "compile:browser": "webpack --progress --env target=web",
@@ -53,7 +53,7 @@
     "depcheck": "depcheck ."
   },
   "dependencies": {
-    "@ethersphere/bee-js": "^6.2.0",
+    "@ethersphere/bee-js": "github:fairDataSociety/bee-js",
     "@fairdatasociety/fdp-contracts-js": "^3.7.1",
     "crypto-js": "^4.1.1",
     "ethers": "^5.5.2",
