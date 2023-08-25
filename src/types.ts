@@ -15,7 +15,7 @@ export interface Options {
   /**
    * FDP-contracts options
    */
-  ensOptions?: Environment
+  ensOptions?: EnsEnvironment
   /**
    * ENS domain for usernames
    */

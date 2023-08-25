@@ -1,6 +1,6 @@
 import { Epoch } from '../feed/lookup/epoch'
 import { RawDirectoryMetadata, RawFileMetadata } from '../pod/types'
-import { BeeRequestOptions } from '@ethersphere/bee-js'
+import { RequestOptions } from '@ethersphere/bee-js'
 import { CacheInfo } from '../cache/types'
 import { LookupAnswer } from '../feed/types'
 
@@ -18,7 +18,7 @@ export interface PathInformation {
  * Download data options
  */
 export interface DownloadOptions {
-  requestOptions?: BeeRequestOptions
+  requestOptions?: RequestOptions
   cacheInfo?: CacheInfo
 }
 
