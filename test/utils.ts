@@ -162,9 +162,7 @@ export async function createUsableBatch(): Promise<BatchId> {
     return getUsableBatch(beeDebug)
   }
 
-  await beeDebug.createPostageBatch('10000000', 24, {
-    retry: 5,
-  })
+  await beeDebug.createPostageBatch('10000000', 24)
   for (let i = 0; i < 100; i++) {
     if (await isUsableBatchExists()) {
       break

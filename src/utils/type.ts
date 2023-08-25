@@ -62,6 +62,16 @@ export function isObject(value: unknown): value is object {
 }
 
 /**
+ * Checks if the given value is an object and not empty
+ *
+ * @param value The value to check
+ * @returns True if the value is an object and not empty, false otherwise
+ */
+export function isNotEmptyObject(value: unknown): boolean {
+  return typeof value === 'object' && value !== null && Object.keys(value as Record<string, unknown>).length > 0
+}
+
+/**
  * Checks that value is a pod password
  */
 export function isPodPassword(value: PodPasswordBytes): value is PodPasswordBytes {

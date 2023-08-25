@@ -22,15 +22,14 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
       await topUpFdp(fdp)
       const nameHash = utils.namehash(`${user.username}.fds`)
       const publicKey = Wallet.fromMnemonic(user.mnemonic).publicKey.replace('0x', '')
-      await fdp.account.register(user.username, user.password)
+      await fdp.account.register(fdp.account.createRegistrationRequest(user.username, user.password))
       const response = await fairos.login(user.username, user.password)
       expect(response.status).toEqual(200)
-      expect(response.data).toStrictEqual({
-        address: user.address,
-        nameHash,
-        publicKey,
-        message: 'user logged-in successfully',
-      })
+      expect(response.data.accessToken).toBeDefined()
+      expect(response.data.address).toEqual(user.address)
+      expect(response.data.nameHash).toEqual(nameHash)
+      expect(response.data.publicKey).toEqual(publicKey)
+      expect(response.data.message).toEqual('user logged-in successfully')
     })
 
     it('should register in fairos and login in fdp', async () => {
@@ -64,7 +63,7 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
       const podName2 = generateRandomHexString()
 
       await topUpFdp(fdp)
-      await fdp.account.register(user.username, user.password)
+      await fdp.account.register(fdp.account.createRegistrationRequest(user.username, user.password))
       await fdp.personalStorage.create(podName1)
       await fairos.login(user.username, user.password)
       const response = await fairos.podLs()
@@ -131,7 +130,7 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
       const podName1 = generateRandomHexString()
 
       await topUpFdp(fdp)
-      await fdp.account.register(user.username, user.password)
+      await fdp.account.register(fdp.account.createRegistrationRequest(user.username, user.password))
       await fdp.personalStorage.create(podName1)
       await fairos.login(user.username, user.password)
       const fairosList1 = (await fairos.podLs()).data as PodsList
@@ -203,7 +202,7 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
       const fullDirectoryName2 = '/' + directoryName2
 
       await topUpFdp(fdp)
-      await fdp.account.register(user.username, user.password)
+      await fdp.account.register(fdp.account.createRegistrationRequest(user.username, user.password))
       await fdp.personalStorage.create(podName1)
       await fdp.directory.create(podName1, fullDirectoryName1)
       await fairos.login(user.username, user.password)
@@ -253,7 +252,7 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
       const fullDirectoryName3 = '/' + directoryName3
 
       await topUpFdp(fdp)
-      await fdp.account.register(user.username, user.password)
+      await fdp.account.register(fdp.account.createRegistrationRequest(user.username, user.password))
       await fairos.login(user.username, user.password)
       await fairos.podNew(podName1, user.password)
       await fairos.dirMkdir(podName1, fullDirectoryName1, user.password)
@@ -288,7 +287,7 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
       const fullDirectoryName1 = '/' + directoryName1
 
       await topUpFdp(fdp)
-      await fdp.account.register(user.username, user.password)
+      await fdp.account.register(fdp.account.createRegistrationRequest(user.username, user.password))
       await fdp.personalStorage.create(podName1)
       await fdp.directory.create(podName1, fullDirectoryName1)
       await fairos.login(user.username, user.password)
@@ -352,7 +351,7 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
       const fullFilenameBigPath = '/' + filenameBig
 
       await topUpFdp(fdp)
-      await fdp.account.register(user.username, user.password)
+      await fdp.account.register(fdp.account.createRegistrationRequest(user.username, user.password))
       await fdp.personalStorage.create(podName1)
       await fdp.file.uploadData(podName1, fullFilenameBigPath, contentBig)
 
@@ -384,7 +383,7 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
       const fullFilenameBigPath1 = '/' + filenameBig1
 
       await topUpFdp(fdp)
-      await fdp.account.register(user.username, user.password)
+      await fdp.account.register(fdp.account.createRegistrationRequest(user.username, user.password))
       await fairos.login(user.username, user.password)
       await fairos.podNew(podName1, user.password)
       const response1 = await fairos.fileUpload(podName1, '/', contentBig, filenameBig)
@@ -424,7 +423,7 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
       const fullFilenameBigPath = '/' + filenameBig
 
       await topUpFdp(fdp)
-      await fdp.account.register(user.username, user.password)
+      await fdp.account.register(fdp.account.createRegistrationRequest(user.username, user.password))
       await fdp.personalStorage.create(podName1)
       await fdp.file.uploadData(podName1, fullFilenameBigPath, contentBig)
       await fairos.login(user.username, user.password)

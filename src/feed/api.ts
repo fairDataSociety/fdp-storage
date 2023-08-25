@@ -1,4 +1,4 @@
-import { Bee, Data, Reference, RequestOptions, Utils } from '@ethersphere/bee-js'
+import { Bee, Data, Reference, BeeRequestOptions, Utils } from '@ethersphere/bee-js'
 import { bmtHashString } from '../account/utils'
 import { getId } from './handler'
 import { lookup } from './lookup/linear'
@@ -27,7 +27,7 @@ export async function getFeedData(
   bee: Bee,
   topic: string,
   address: Utils.EthAddress | Uint8Array,
-  requestOptions?: RequestOptions,
+  requestOptions?: BeeRequestOptions,
 ): Promise<LookupAnswer> {
   const topicHash = bmtHashString(topic)
 

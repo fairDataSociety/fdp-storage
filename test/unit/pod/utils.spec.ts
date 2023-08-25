@@ -1,5 +1,6 @@
-import { isSharedPod } from '../../../src/pod/utils'
+import { isPod, isSharedPod, MAX_POD_NAME_LENGTH } from '../../../src/pod/utils'
 import { Utils } from '@ethersphere/bee-js'
+import { POD_PASSWORD_LENGTH } from '../../../src/utils/encryption'
 
 describe('pod/utils', () => {
   it('isSharedPod', () => {
@@ -75,5 +76,55 @@ describe('pod/utils', () => {
         expect(isSharedPod(example)).toBeFalsy()
       }
     }
+  })
+
+  describe('isPod', () => {
+    const goodPod = {
+      name: 'Hello',
+      password: new Uint8Array(POD_PASSWORD_LENGTH),
+      index: 0,
+    }
+
+    const badPods = [
+      { password: new Uint8Array(POD_PASSWORD_LENGTH), index: 0 }, // Missing name
+      { name: 'Test', index: 0 }, // Missing password
+      { name: 'Test', password: new Uint8Array(POD_PASSWORD_LENGTH) }, // Missing index
+      { name: 'Test', password: new Uint8Array(POD_PASSWORD_LENGTH), index: '0' }, // Index is a string
+      { name: 'Test', password: 'password', index: 0 }, // Password is a string
+      { name: 'Test', password: new Uint8Array(POD_PASSWORD_LENGTH), index: -1 }, // Negative index
+      { name: 'Test', password: new Uint8Array(POD_PASSWORD_LENGTH), index: null }, // Index is null
+      { name: '', password: new Uint8Array(POD_PASSWORD_LENGTH), index: 0 }, // Empty name
+      { name: 'A'.repeat(MAX_POD_NAME_LENGTH + 1), password: new Uint8Array(POD_PASSWORD_LENGTH), index: 0 }, // Name too long
+      { name: 'Test', password: undefined, index: 0 }, // Password is undefined
+      { name: 'Test', password: null, index: 0 }, // Password is null
+      { name: 'Test', password: new Uint8Array(POD_PASSWORD_LENGTH - 1), index: 0 }, // Password too short
+      { name: 'Test', password: new Uint8Array(POD_PASSWORD_LENGTH + 1), index: 0 }, // Password too long
+    ]
+
+    it('should return true for a valid Pod', () => {
+      expect(isPod(goodPod)).toBeTruthy()
+    })
+
+    it('should return false for an empty object', () => {
+      expect(isPod({})).toBeFalsy()
+    })
+
+    badPods.forEach((badPod, index) => {
+      it(`should return false for badPod[${index}]`, () => {
+        expect(isPod(badPod)).toBeFalsy()
+      })
+    })
+
+    it('should return false for null', () => {
+      expect(isPod(null)).toBeFalsy()
+    })
+
+    it('should return false for undefined', () => {
+      expect(isPod(undefined)).toBeFalsy()
+    })
+
+    it('should return false for a string', () => {
+      expect(isPod('string')).toBeFalsy()
+    })
   })
 })

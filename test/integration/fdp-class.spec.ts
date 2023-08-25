@@ -61,20 +61,26 @@ describe('Fair Data Protocol class', () => {
       const fdp = createFdp()
       const user = generateUser(fdp)
 
-      await expect(fdp.account.register(user.username, user.password)).rejects.toThrow('Not enough funds')
+      await expect(
+        fdp.account.register(fdp.account.createRegistrationRequest(user.username, user.password)),
+      ).rejects.toThrow('Not enough funds')
     })
 
     it('should register users', async () => {
       const fdp = createFdp()
 
-      await expect(fdp.account.register('user', 'password')).rejects.toThrow('Account wallet not found')
+      await expect(fdp.account.register(fdp.account.createRegistrationRequest('user', 'password'))).rejects.toThrow(
+        'Account wallet not found',
+      )
 
       for (let i = 0; i < 2; i++) {
         const fdp = createFdp()
 
         const user = generateUser(fdp)
         await topUpFdp(fdp)
-        const reference = await fdp.account.register(user.username, user.password)
+        const reference = await fdp.account.register(
+          fdp.account.createRegistrationRequest(user.username, user.password),
+        )
         expect(reference).toBeDefined()
       }
     })
@@ -84,10 +90,10 @@ describe('Fair Data Protocol class', () => {
       const user = generateUser(fdp)
       await topUpFdp(fdp)
 
-      await fdp.account.register(user.username, user.password)
-      await expect(fdp.account.register(user.username, user.password)).rejects.toThrow(
-        `ENS: Username ${user.username} is not available`,
-      )
+      await fdp.account.register(fdp.account.createRegistrationRequest(user.username, user.password))
+      await expect(
+        fdp.account.register(fdp.account.createRegistrationRequest(user.username, user.password)),
+      ).rejects.toThrow(`ENS: Username ${user.username} is not available`)
     })
 
     it('should migrate v1 user to v2', async () => {
@@ -105,9 +111,9 @@ describe('Fair Data Protocol class', () => {
       const loggedWallet = await fdp.account.login(user.username, user.password)
       expect(loggedWallet.address).toEqual(user.address)
 
-      await expect(fdp2.account.register(user.username, user.password)).rejects.toThrow(
-        `ENS: Username ${user.username} is not available`,
-      )
+      await expect(
+        fdp2.account.register(fdp.account.createRegistrationRequest(user.username, user.password)),
+      ).rejects.toThrow(`ENS: Username ${user.username} is not available`)
     })
   })
 
@@ -118,7 +124,7 @@ describe('Fair Data Protocol class', () => {
       const user = generateUser(fdp)
       await topUpFdp(fdp)
 
-      const data = await fdp.account.register(user.username, user.password)
+      const data = await fdp.account.register(fdp.account.createRegistrationRequest(user.username, user.password))
       expect(data).toBeDefined()
 
       const wallet1 = await fdp1.account.login(user.username, user.password)
@@ -139,7 +145,7 @@ describe('Fair Data Protocol class', () => {
       const user = generateUser(fdp)
       await topUpFdp(fdp)
 
-      await fdp.account.register(user.username, user.password)
+      await fdp.account.register(fdp.account.createRegistrationRequest(user.username, user.password))
       await expect(fdp.account.login(user.username, generateUser().password)).rejects.toThrow('Incorrect password')
       await expect(fdp.account.login(user.username, '')).rejects.toThrow('Incorrect password')
     })
@@ -151,7 +157,7 @@ describe('Fair Data Protocol class', () => {
       const userFake = generateUser()
       await topUpFdp(fdp)
 
-      const data = await fdp.account.register(user.username, user.password)
+      const data = await fdp.account.register(fdp.account.createRegistrationRequest(user.username, user.password))
       expect(data).toBeDefined()
 
       fdp1.account.setAccountFromMnemonic(userFake.mnemonic)

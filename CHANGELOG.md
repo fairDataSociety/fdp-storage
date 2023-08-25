@@ -1,5 +1,52 @@
 # Changelog
 
+## [0.11.0](https://github.com/fairDataSociety/fdp-storage/compare/v0.10.0...v0.11.0) (2023-08-14)
+
+
+### Features
+
+* bee-js 6.2.0 ([#253](https://github.com/fairDataSociety/fdp-storage/issues/253)) ([90dce10](https://github.com/fairDataSociety/fdp-storage/commit/90dce101dca7abd696f8c351c2d1ea74ff2e99d1))
+
+## [0.10.0](https://github.com/fairDataSociety/fdp-storage/compare/v0.9.0...v0.10.0) (2023-08-09)
+
+
+### Features
+
+* fdp-contracts-js 3.7.1 ([#251](https://github.com/fairDataSociety/fdp-storage/issues/251)) ([b54a435](https://github.com/fairDataSociety/fdp-storage/commit/b54a4358fa9c1aab4159e6afc0a4cc5928950996))
+
+## [0.9.0](https://github.com/fairDataSociety/fdp-storage/compare/v0.8.0...v0.9.0) (2023-07-26)
+
+
+### ⚠ BREAKING CHANGES
+
+* retryable registration ([#247](https://github.com/fairDataSociety/fdp-storage/issues/247)) (#248)
+
+### Features
+
+* retryable registration ([#247](https://github.com/fairDataSociety/fdp-storage/issues/247)) ([#248](https://github.com/fairDataSociety/fdp-storage/issues/248)) ([ad13fa7](https://github.com/fairDataSociety/fdp-storage/commit/ad13fa7ef00eca58bfdf56b1828c3a5e79ed8c69))
+
+## [0.8.0](https://github.com/fairDataSociety/fdp-storage/compare/v0.7.3...v0.8.0) (2023-07-13)
+
+
+### Features
+
+* upgraded fdp-contracts-js to 3.7.0 ([#245](https://github.com/fairDataSociety/fdp-storage/issues/245)) ([46a1114](https://github.com/fairDataSociety/fdp-storage/commit/46a111462a10ff0561322e6dd20620556304ee64))
+
+## [0.7.3](https://github.com/fairDataSociety/fdp-storage/compare/v0.7.2...v0.7.3) (2023-06-17)
+
+
+### Bug Fixes
+
+* upgraded fdp-contracts-js lib ([#242](https://github.com/fairDataSociety/fdp-storage/issues/242)) ([7d3eb2f](https://github.com/fairDataSociety/fdp-storage/commit/7d3eb2f87888bdc90af355c0dd81065b533e91a5))
+
+## [0.7.2](https://github.com/fairDataSociety/fdp-storage/compare/v0.7.1...v0.7.2) (2023-05-23)
+
+
+### Bug Fixes
+
+* add bee-v6-pre ([#179](https://github.com/fairDataSociety/fdp-storage/issues/179)) ([9422506](https://github.com/fairDataSociety/fdp-storage/commit/9422506ff9c6d092bd119cf4903ed58bf5ea427c))
+* upgraded fdp-contracts-js lib ([#239](https://github.com/fairDataSociety/fdp-storage/issues/239)) ([0bb905f](https://github.com/fairDataSociety/fdp-storage/commit/0bb905f6075f35b4410df422ad29be78a12eca20))
+
 ## [0.7.1](https://github.com/fairDataSociety/fdp-storage/compare/v0.7.0...v0.7.1) (2023-03-20)
 
 

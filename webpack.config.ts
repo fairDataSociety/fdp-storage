@@ -117,6 +117,10 @@ const base = async (env?: Partial<WebpackEnvParams>): Promise<Configuration> => 
         }),
       ],
     },
+    experiments: {
+      // Module parse failed: The top-level-await experiment is not enabled (set experiments.topLevelAwait: true to enabled it)
+      topLevelAwait: true,
+    },
     plugins,
     target,
     node: {

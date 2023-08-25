@@ -19,6 +19,7 @@ import {
   assertPodPasswordBytes,
   assertString,
   isEthAddress,
+  isNotEmptyObject,
   isNumber,
   isObject,
   isPodPassword,
@@ -223,12 +224,28 @@ export function isPodNameType(value: unknown): value is PodName {
 }
 
 /**
+ * Pod name check
+ *
+ * @param value Pod name
+ */
+export function isPodName(value: unknown): value is string {
+  return isString(value) && value.length > 0 && value.length <= MAX_POD_NAME_LENGTH
+}
+
+/**
  * Pod guard
  */
 export function isPod(value: unknown): value is PodPrepared {
-  const { index, password } = value as PodPrepared
+  const data = value as PodPrepared
 
-  return typeof isPodNameType(value) && isNumber(index) && isPodPassword(password)
+  return (
+    isNotEmptyObject(value) &&
+    isPodNameType(value) &&
+    isPodName(data.name) &&
+    isNumber(data.index) &&
+    data.index >= 0 &&
+    isPodPassword(data.password)
+  )
 }
 
 /**

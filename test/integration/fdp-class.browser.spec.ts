@@ -6,9 +6,9 @@ import { JSONArray, JSONObject } from 'puppeteer'
 import { FdpStorage } from '../../src'
 import { MAX_POD_NAME_LENGTH } from '../../src/pod/utils'
 import { createUserV1 } from '../../src/account/account'
-import { PodShareInfo, RawFileMetadata } from '../../src/pod/types'
+import { Pod, PodShareInfo, RawFileMetadata } from '../../src/pod/types'
 import { FileShareInfo } from '../../src/file/types'
-import { BatchId } from '@ethersphere/bee-js'
+import { BatchId, Reference } from '@ethersphere/bee-js'
 import { ETH_ADDR_HEX_LENGTH } from '../../src/utils/type'
 
 jest.setTimeout(400000)
@@ -110,7 +110,10 @@ describe('Fair Data Protocol class - in browser', () => {
         const fdp = eval(await window.initFdp()) as FdpStorage
 
         fdp.account.createWallet()
-        await window.shouldFail(fdp.account.register(user.username, user.password), 'Not enough funds')
+        await window.shouldFail(
+          fdp.account.register(fdp.account.createRegistrationRequest(user.username, user.password)),
+          'Not enough funds',
+        )
       }, jsonUser)
     })
 
@@ -119,15 +122,18 @@ describe('Fair Data Protocol class - in browser', () => {
       const createdUsers = await page.evaluate(async users => {
         const fdp = eval(await window.initFdp()) as FdpStorage
 
-        await window.shouldFail(fdp.account.register('username', 'password'), 'Account wallet not found')
+        await window.shouldFail(
+          fdp.account.register(fdp.account.createRegistrationRequest('username', 'password')),
+          'Account wallet not found',
+        )
 
-        const result = []
+        const result: { reference: Reference }[] = []
         for (const user of users) {
           const fdp = eval(await window.initFdp()) as FdpStorage
 
           fdp.account.createWallet()
           await window.topUpAddress(fdp)
-          const data = await fdp.account.register(user.username, user.password)
+          const data = await fdp.account.register(fdp.account.createRegistrationRequest(user.username, user.password))
           result.push({
             reference: data,
           })
@@ -149,9 +155,9 @@ describe('Fair Data Protocol class - in browser', () => {
         fdp.account.createWallet()
         await window.topUpAddress(fdp)
 
-        await fdp.account.register(user.username, user.password)
+        await fdp.account.register(fdp.account.createRegistrationRequest(user.username, user.password))
         await window.shouldFail(
-          fdp.account.register(user.username, user.password),
+          fdp.account.register(fdp.account.createRegistrationRequest(user.username, user.password)),
           `ENS: Username ${user.username} is not available`,
         )
       }, generateUser() as unknown as JSONObject)
@@ -179,7 +185,7 @@ describe('Fair Data Protocol class - in browser', () => {
           })
           const loggedWallet = await fdp.account.login(user.username, user.password)
           await window.shouldFail(
-            fdp2.account.register(user.username, user.password),
+            fdp2.account.register(fdp.account.createRegistrationRequest(user.username, user.password)),
             `ENS: Username ${user.username} is not available`,
           )
 
@@ -209,7 +215,7 @@ describe('Fair Data Protocol class - in browser', () => {
         result.createdWallet = { address: wallet.address }
         await window.topUpAddress(fdp)
 
-        const data = await fdp.account.register(user.username, user.password)
+        const data = await fdp.account.register(fdp.account.createRegistrationRequest(user.username, user.password))
         result.result1 = { address: data }
 
         const data2 = await fdp1.account.login(user.username, user.password)
@@ -248,7 +254,7 @@ describe('Fair Data Protocol class - in browser', () => {
           fdp.account.createWallet()
           await window.topUpAddress(fdp)
 
-          await fdp.account.register(user.username, user.password)
+          await fdp.account.register(fdp.account.createRegistrationRequest(user.username, user.password))
 
           await window.shouldFail(fdp.account.login(user.username, user1.password), 'Incorrect password')
           await window.shouldFail(fdp.account.login(user.username, ''), 'Incorrect password')
@@ -308,7 +314,11 @@ describe('Fair Data Protocol class - in browser', () => {
           const fdp = eval(await window.initFdp()) as FdpStorage
           fdp.account.setAccountFromMnemonic(mnemonic)
 
-          const iterations = []
+          const iterations: {
+            result: Pod
+            example: unknown
+            list: unknown
+          }[] = []
           for (let i = 0; examples.length > i; i++) {
             const example = examples[i] as unknown as { name: string; index: number }
             const out = await fdp.personalStorage.create(example.name)
@@ -794,7 +804,7 @@ describe('Fair Data Protocol class - in browser', () => {
 
           let list2
           let list3
-          const results = []
+          const results: string[] = []
           for (let i = 0; i < reuploadTimes; i++) {
             await fdp.file.delete(pod, fullFilenameSmallPath)
             list2 = await fdp.directory.read(pod, '/')

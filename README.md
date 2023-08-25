@@ -104,7 +104,11 @@ const wallet = fdp.account.createWallet() // after creating a wallet, the user m
 // Associate the created wallet with the username in the smart contract.
 // This method makes the account portable.
 // Seed is saved encrypted in Swarm.
-await fdp.account.register('myusername', 'mypassword')
+// Registration is performed in two steps, first create a registration object
+const registrationRequest = fdp.account.createRegistrationRequest('myusername', 'mypassword')
+// Then pass this object to the register method
+await fdp.account.register(registrationRequest)
+// If registration fails, it can be safely retried by passing the same object again
 
 // If necessary, the account can be re-uploaded to Swarm.
 await fdp.personalStorage.reuploadPortableAccount('username', 'password')
