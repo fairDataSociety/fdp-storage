@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.12.0](https://github.com/fairDataSociety/fdp-storage/compare/v0.11.0...v0.12.0) (2023-09-11)
+
+
+### Features
+
+* fdp-contracts-js-3.8.0 ([#262](https://github.com/fairDataSociety/fdp-storage/issues/262)) ([e47be8d](https://github.com/fairDataSociety/fdp-storage/commit/e47be8dbf28432c423c9fe1c69ef5fbb0215ee98))
+
+
+### Bug Fixes
+
+* pod check structure improved ([#255](https://github.com/fairDataSociety/fdp-storage/issues/255)) ([3faaab6](https://github.com/fairDataSociety/fdp-storage/commit/3faaab6a94bcd3cc67714c17950b0b646e61c9a9))
+
 ## [0.11.0](https://github.com/fairDataSociety/fdp-storage/compare/v0.10.0...v0.11.0) (2023-08-14)
 
 
