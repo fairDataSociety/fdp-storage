@@ -138,7 +138,7 @@ export class AccountData {
     assertPassword(password)
 
     if (await this.ens.isUsernameAvailable(username)) {
-      throw new Error(`Username "${username}" does not exists`)
+      throw new Error(`Username "${username}" does not exist`)
     }
 
     const publicKey = await this.ens.getPublicKey(username)
