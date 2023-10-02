@@ -214,6 +214,14 @@ Uploading data as a file into a pod
 
 ```js
 await fdp.file.uploadData('my-new-pod', '/my-dir/myfile.txt', 'Hello world!')
+
+// you can also track the progress of data upload
+// using the callback, you can track not only the progress of uploaded blocks but also other time-consuming operations required for data upload
+await fdp.file.uploadData('my-new-pod', '/my-dir/myfile.txt', 'Hello world!', {
+  progressCallback: event => {
+    console.log(event)
+  }
+})
 ```
 
 Deleting a file from a pod

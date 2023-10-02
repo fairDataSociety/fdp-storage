@@ -1,12 +1,12 @@
-import { createFdp, generateRandomHexString, generateUser, topUpAddress, topUpFdp, waitFairOS } from '../utils'
-import { Directories, FairOSApi, PodsList } from '../utils/fairos-api'
+import { createFdp, generateRandomHexString, generateUser, topUpAddress, topUpFdp, waitFairOS } from '../../utils'
+import { Directories, FairOSApi, PodsList } from '../../utils/fairos-api'
 import { Wallet, utils } from 'ethers'
-import { wrapBytesWithHelpers } from '../../src/utils/bytes'
-import { getExtendedPodsListByAccountData } from '../../src/pod/utils'
-import { getRawMetadata } from '../../src/content-items/utils'
-import { RawDirectoryMetadata, RawFileMetadata } from '../../src/pod/types'
-import { DEFAULT_FILE_PERMISSIONS, getFileMode } from '../../src/file/utils'
-import { DEFAULT_DIRECTORY_PERMISSIONS, getDirectoryMode } from '../../src/directory/utils'
+import { wrapBytesWithHelpers } from '../../../src/utils/bytes'
+import { getExtendedPodsListByAccountData } from '../../../src/pod/utils'
+import { getRawMetadata } from '../../../src/content-items/utils'
+import { RawDirectoryMetadata, RawFileMetadata } from '../../../src/pod/types'
+import { DEFAULT_FILE_PERMISSIONS, getFileMode } from '../../../src/file/utils'
+import { DEFAULT_DIRECTORY_PERMISSIONS, getDirectoryMode } from '../../../src/directory/utils'
 
 jest.setTimeout(400000)
 describe('Fair Data Protocol with FairOS-dfs', () => {

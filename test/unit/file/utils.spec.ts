@@ -1,5 +1,5 @@
 import { Reference } from '@ethersphere/bee-js'
-import { assertFullPathWithName, extractPathInfo } from '../../../src/file/utils'
+import { assertFullPathWithName, calcUploadBlockPercentage, extractPathInfo } from '../../../src/file/utils'
 import { blocksToManifest } from '../../../src/file/adapter'
 import { Block, Blocks } from '../../../src/file/types'
 
@@ -194,6 +194,60 @@ describe('file/utils', () => {
       } else {
         expect(extractPathInfo(example.data)).toEqual(example.result)
       }
+    }
+  })
+
+  it('calcUploadBlockPercentage', () => {
+    const examples = [
+      {
+        blockId: 0,
+        totalBlocks: 6,
+        expectedPercentage: 17,
+      },
+      {
+        blockId: 1,
+        totalBlocks: 6,
+        expectedPercentage: 33,
+      },
+      {
+        blockId: 2,
+        totalBlocks: 6,
+        expectedPercentage: 50,
+      },
+      {
+        blockId: 3,
+        totalBlocks: 6,
+        expectedPercentage: 67,
+      },
+      {
+        blockId: 4,
+        totalBlocks: 6,
+        expectedPercentage: 83,
+      },
+      {
+        blockId: 5,
+        totalBlocks: 6,
+        expectedPercentage: 100,
+      },
+      {
+        blockId: 0,
+        totalBlocks: 0,
+        expectedPercentage: 0,
+      },
+      {
+        blockId: 0,
+        totalBlocks: -5,
+        expectedPercentage: 0,
+      },
+      {
+        blockId: -1,
+        totalBlocks: 1,
+        expectedPercentage: 0,
+      },
+    ]
+
+    for (const example of examples) {
+      expect(calcUploadBlockPercentage(example.blockId, example.totalBlocks)).toEqual(example.expectedPercentage)
     }
   })
 })

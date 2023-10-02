@@ -1,4 +1,4 @@
-import { DirectoryItem, FdpContracts, FdpStorage } from '../../src'
+import { DirectoryItem, FdpContracts, FdpStorage } from '../../../src'
 import {
   batchId,
   createFdp,
@@ -7,27 +7,27 @@ import {
   GET_FEED_DATA_TIMEOUT,
   getBee,
   topUpFdp,
-} from '../utils'
-import { MAX_POD_NAME_LENGTH } from '../../src/pod/utils'
-import { createUserV1 } from '../../src/account/account'
-import { PodShareInfo, RawFileMetadata } from '../../src/pod/types'
-import { FileShareInfo } from '../../src/file/types'
-import { getFeedData } from '../../src/feed/api'
-import * as feedApi from '../../src/feed/api'
-import { POD_TOPIC } from '../../src/pod/personal-storage'
-import { decryptBytes } from '../../src/utils/encryption'
+} from '../../utils'
+import { MAX_POD_NAME_LENGTH } from '../../../src/pod/utils'
+import { createUserV1 } from '../../../src/account/account'
+import { PodShareInfo, RawFileMetadata } from '../../../src/pod/types'
+import { FileShareInfo } from '../../../src/file/types'
+import { getFeedData } from '../../../src/feed/api'
+import * as feedApi from '../../../src/feed/api'
+import { POD_TOPIC } from '../../../src/pod/personal-storage'
+import { decryptBytes } from '../../../src/utils/encryption'
 import { Wallet } from 'ethers'
-import { removeZeroFromHex } from '../../src/account/utils'
-import { bytesToString, wrapBytesWithHelpers } from '../../src/utils/bytes'
-import { mnemonicToSeed, prepareEthAddress } from '../../src/utils/wallet'
-import { assertEncryptedReference } from '../../src/utils/hex'
-import { base64toReference } from '../../src/file/utils'
+import { removeZeroFromHex } from '../../../src/account/utils'
+import { bytesToString, wrapBytesWithHelpers } from '../../../src/utils/bytes'
+import { mnemonicToSeed, prepareEthAddress } from '../../../src/utils/wallet'
+import { assertEncryptedReference } from '../../../src/utils/hex'
+import { base64toReference } from '../../../src/file/utils'
 import path from 'path'
-import { getNodeFileContent } from '../../src/directory/utils'
-import { ETH_ADDR_HEX_LENGTH } from '../../src/utils/type'
-import * as walletApi from '../../src/utils/wallet'
-import { HIGHEST_LEVEL } from '../../src/feed/lookup/epoch'
-import { getWalletByIndex } from '../../src/utils/cache/wallet'
+import { getNodeFileContent } from '../../../src/directory/utils'
+import { ETH_ADDR_HEX_LENGTH } from '../../../src/utils/type'
+import * as walletApi from '../../../src/utils/wallet'
+import { HIGHEST_LEVEL } from '../../../src/feed/lookup/epoch'
+import { getWalletByIndex } from '../../../src/utils/cache/wallet'
 
 jest.setTimeout(400000)
 describe('Fair Data Protocol class', () => {
