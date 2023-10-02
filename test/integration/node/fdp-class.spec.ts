@@ -399,7 +399,7 @@ describe('Fair Data Protocol class', () => {
       generateUser(fdp)
       const pod1 = generateRandomHexString()
       const pod2 = generateRandomHexString()
-      const fullPath = path.resolve(__dirname, '../data-unit/directory-utils')
+      const fullPath = path.resolve(__dirname, '../../data-unit/directory-utils')
       const filesInfo = [
         {
           localPath: fullPath + '/file1.txt',
