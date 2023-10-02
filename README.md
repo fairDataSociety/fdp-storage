@@ -388,7 +388,7 @@ npm run test:unit
 npm run test:browser
 ```
 
-The test HTML file which Puppeteer uses is the [test/testpage/testpage.html](test/testpage/testpage.html).
+The test HTML file which Puppeteer uses is the [test/integration/testpage/testpage.html](test/integration/testpage/testpage.html).
 To open and manually test FDP with developer console, it is necessary to build the library first with `npm run compile:browser` (running the browser tests `npm run test:browser` also builds the library).
 
 ### Compile code
