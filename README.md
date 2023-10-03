@@ -214,6 +214,14 @@ Uploading data as a file into a pod
 
 ```js
 await fdp.file.uploadData('my-new-pod', '/my-dir/myfile.txt', 'Hello world!')
+
+// you can also track the progress of data upload
+// using the callback, you can track not only the progress of uploaded blocks but also other time-consuming operations required for data upload
+await fdp.file.uploadData('my-new-pod', '/my-dir/myfile.txt', 'Hello world!', {
+  progressCallback: event => {
+    console.log(event)
+  }
+})
 ```
 
 Deleting a file from a pod
@@ -380,7 +388,7 @@ npm run test:unit
 npm run test:browser
 ```
 
-The test HTML file which Puppeteer uses is the [test/testpage/testpage.html](test/testpage/testpage.html).
+The test HTML file which Puppeteer uses is the [test/integration/testpage/testpage.html](test/integration/testpage/testpage.html).
 To open and manually test FDP with developer console, it is necessary to build the library first with `npm run compile:browser` (running the browser tests `npm run test:browser` also builds the library).
 
 ### Compile code

@@ -1,7 +1,15 @@
 import { Connection } from '../connection/connection'
 import { Bee, Reference, BeeRequestOptions, UploadResult } from '@ethersphere/bee-js'
 import { PathInfo } from '../pod/utils'
-import { Blocks, FileShareInfo, RawBlock, RawBlocks } from './types'
+import {
+  Blocks,
+  DataUploadOptions,
+  FileShareInfo,
+  RawBlock,
+  RawBlocks,
+  UploadProgressBlockData,
+  UploadProgressType,
+} from './types'
 import { rawBlocksToBlocks } from './adapter'
 import CryptoJS from 'crypto-js'
 import { assertArray, assertString, isNumber, isObject, isString } from '../utils/type'
@@ -238,4 +246,35 @@ export async function readBrowserFileAsBytes(file: File): Promise<Uint8Array> {
  */
 export function getFileMode(mode: number): number {
   return FILE_MODE | mode
+}
+
+/**
+ * Updates upload progress
+ * @param options upload options
+ * @param progressType progress type
+ * @param data progress data
+ */
+export function updateUploadProgress(
+  options: DataUploadOptions,
+  progressType: UploadProgressType,
+  data?: UploadProgressBlockData,
+): void {
+  if (!options.progressCallback) {
+    return
+  }
+
+  options.progressCallback({ progressType, data })
+}
+
+/**
+ * Calculates upload block percentage
+ * @param blockId block id started from 0
+ * @param totalBlocks total blocks
+ */
+export function calcUploadBlockPercentage(blockId: number, totalBlocks: number): number {
+  if (totalBlocks <= 0 || blockId < 0) {
+    return 0
+  }
+
+  return Math.round(((blockId + 1) / totalBlocks) * 100)
 }

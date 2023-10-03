@@ -1,4 +1,4 @@
-import { createFdp, generateRandomHexString } from '../utils'
+import { createFdp, generateRandomHexString } from '../../utils'
 
 jest.setTimeout(400000)
 it('Fair Data Protocol speed check', async () => {

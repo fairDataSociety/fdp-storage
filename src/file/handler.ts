@@ -3,10 +3,12 @@ import { Bee, Data, BeeRequestOptions } from '@ethersphere/bee-js'
 import { EthAddress } from '@ethersphere/bee-js/dist/types/utils/eth'
 import {
   assertFullPathWithName,
+  calcUploadBlockPercentage,
   DEFAULT_FILE_PERMISSIONS,
   downloadBlocksManifest,
   extractPathInfo,
   getFileMode,
+  updateUploadProgress,
   uploadBytes,
 } from './utils'
 import { FileMetadata } from '../pod/types'
@@ -14,10 +16,10 @@ import { blocksToManifest, getFileMetadataRawBytes, rawFileMetadataToFileMetadat
 import { assertRawFileMetadata } from '../directory/utils'
 import { getCreationPathInfo, getRawMetadata } from '../content-items/utils'
 import { PodPasswordBytes } from '../utils/encryption'
-import { Blocks, DataUploadOptions } from './types'
+import { Blocks, DataUploadOptions, UploadProgressType } from './types'
 import { assertPodName, getExtendedPodsListByAccountData, META_VERSION } from '../pod/utils'
 import { getUnixTimestamp } from '../utils/time'
-import { addEntryToDirectory } from '../content-items/handler'
+import { addEntryToDirectory, DEFAULT_UPLOAD_OPTIONS } from '../content-items/handler'
 import { writeFeedData } from '../feed/api'
 import { AccountData } from '../account/account-data'
 import { prepareEthAddress } from '../utils/wallet'
@@ -124,10 +126,15 @@ export async function uploadData(
   assertPodName(podName)
   assertWallet(accountData.wallet)
 
+  const blockSize = options.blockSize ?? Number(DEFAULT_UPLOAD_OPTIONS!.blockSize)
+  const contentType = options.contentType ?? String(DEFAULT_UPLOAD_OPTIONS!.contentType)
+
   data = typeof data === 'string' ? stringToBytes(data) : data
   const connection = accountData.connection
+  updateUploadProgress(options, UploadProgressType.GetPodInfo)
   const { podWallet, pod } = await getExtendedPodsListByAccountData(accountData, podName)
 
+  updateUploadProgress(options, UploadProgressType.GetPathInfo)
   const fullPathInfo = await getCreationPathInfo(
     connection.bee,
     fullPath,
@@ -136,18 +143,29 @@ export async function uploadData(
   )
   const pathInfo = extractPathInfo(fullPath)
   const now = getUnixTimestamp()
-  const blocksCount = Math.ceil(data.length / options.blockSize)
+  const totalBlocks = Math.ceil(data.length / blockSize)
   const blocks: Blocks = { blocks: [] }
-  for (let i = 0; i < blocksCount; i++) {
-    const currentBlock = data.slice(i * options.blockSize, (i + 1) * options.blockSize)
+  for (let i = 0; i < totalBlocks; i++) {
+    updateUploadProgress(options, UploadProgressType.UploadBlockStart, {
+      totalBlocks,
+      currentBlockId: i,
+      uploadPercentage: calcUploadBlockPercentage(i, totalBlocks),
+    })
+    const currentBlock = data.slice(i * blockSize, (i + 1) * blockSize)
     const result = await uploadBytes(connection, currentBlock)
     blocks.blocks.push({
       size: currentBlock.length,
       compressedSize: currentBlock.length,
       reference: result.reference,
     })
+    updateUploadProgress(options, UploadProgressType.UploadBlockEnd, {
+      totalBlocks,
+      currentBlockId: i,
+      uploadPercentage: calcUploadBlockPercentage(i, totalBlocks),
+    })
   }
 
+  updateUploadProgress(options, UploadProgressType.UploadBlocksMeta)
   const manifestBytes = stringToBytes(blocksToManifest(blocks))
   const blocksReference = (await uploadBytes(connection, manifestBytes)).reference
   const meta: FileMetadata = {
@@ -155,8 +173,8 @@ export async function uploadData(
     filePath: pathInfo.path,
     fileName: pathInfo.filename,
     fileSize: data.length,
-    blockSize: options.blockSize,
-    contentType: options.contentType,
+    blockSize,
+    contentType,
     compression: '',
     creationTime: now,
     accessTime: now,
@@ -165,7 +183,9 @@ export async function uploadData(
     mode: getFileMode(DEFAULT_FILE_PERMISSIONS),
   }
 
+  updateUploadProgress(options, UploadProgressType.WriteDirectoryInfo)
   await addEntryToDirectory(connection, podWallet, pod.password, pathInfo.path, pathInfo.filename, true)
+  updateUploadProgress(options, UploadProgressType.WriteFileInfo)
   await writeFeedData(
     connection,
     fullPath,
@@ -174,6 +194,8 @@ export async function uploadData(
     pod.password,
     getNextEpoch(fullPathInfo?.lookupAnswer.epoch),
   )
+
+  updateUploadProgress(options, UploadProgressType.Done)
 
   return meta
 }
