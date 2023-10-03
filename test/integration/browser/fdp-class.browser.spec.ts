@@ -237,7 +237,7 @@ describe('Fair Data Protocol class - in browser', () => {
 
         await window.shouldFail(
           fdp.account.login(fakeUser.username, fakeUser.password),
-          `Username "${fakeUser.username}" does not exists`,
+          `Username "${fakeUser.username}" does not exist`,
         )
       }, jsonFakeUser)
     })
