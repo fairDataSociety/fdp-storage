@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.13.0](https://github.com/fairDataSociety/fdp-storage/compare/v0.12.0...v0.13.0) (2023-10-03)
+
+
+### Features
+
+* data uploading progress ([#266](https://github.com/fairDataSociety/fdp-storage/issues/266)) ([ccac6d5](https://github.com/fairDataSociety/fdp-storage/commit/ccac6d5f9b19190f4173e7ff61f4eeeec5fbb8aa))
+
+
+### Bug Fixes
+
+* username availability error text ([#263](https://github.com/fairDataSociety/fdp-storage/issues/263)) ([d104a8e](https://github.com/fairDataSociety/fdp-storage/commit/d104a8e73fdfe3ec1d6eb6abfd94f65c8ca7854c))
+
 ## [0.12.0](https://github.com/fairDataSociety/fdp-storage/compare/v0.11.0...v0.12.0) (2023-09-11)
 
 
