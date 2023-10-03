@@ -136,7 +136,7 @@ describe('Fair Data Protocol class', () => {
 
       const fakeUser = generateUser(fdp)
       await expect(fdp.account.login(fakeUser.username, fakeUser.password)).rejects.toThrow(
-        `Username "${fakeUser.username}" does not exists`,
+        `Username "${fakeUser.username}" does not exist`,
       )
     })
 
