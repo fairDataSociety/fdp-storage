@@ -3,7 +3,15 @@ import { EnsEnvironment } from '@fairdatasociety/fdp-contracts-js'
 import { CacheOptions } from './cache/types'
 
 export { DirectoryItem, FileItem } from './content-items/types'
-export { UploadProgressType, UploadProgressBlockData, UploadProgressInfo, DataUploadOptions } from './file/types'
+export {
+  UploadProgressType,
+  DownloadProgressType,
+  ProgressBlockData,
+  UploadProgressInfo,
+  DownloadProgressInfo,
+  DataUploadOptions,
+  DataDownloadOptions,
+} from './file/types'
 
 /**
  * Fair Data Protocol options
