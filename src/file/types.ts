@@ -2,6 +2,55 @@ import { Reference } from '@ethersphere/bee-js'
 import { RawFileMetadata } from '../pod/types'
 
 /**
+ * Download progress info
+ */
+export interface DownloadProgressInfo {
+  /**
+   * Type of the progress
+   */
+  progressType: DownloadProgressType
+  /**
+   * Data of the progress
+   */
+  data?: ProgressBlockData
+}
+
+/**
+ * Data download options
+ */
+export type DataDownloadOptions = ProgressCallback<DownloadProgressInfo>
+
+/**
+ * Download progress types
+ */
+export enum DownloadProgressType {
+  /**
+   * Getting pod info
+   */
+  GetPodInfo = 'get-pod-info',
+  /**
+   * Getting path info
+   */
+  GetPathInfo = 'get-path-info',
+  /**
+   * Downloading file blocks meta
+   */
+  DownloadBlocksMeta = 'download-blocks-meta',
+  /**
+   * Downloading a file block start
+   */
+  DownloadBlockStart = 'download-block-start',
+  /**
+   * Downloading a file block end
+   */
+  DownloadBlockEnd = 'download-block-end',
+  /**
+   * Done
+   */
+  Done = 'done',
+}
+
+/**
  * Uploading progress types
  */
 export enum UploadProgressType {
@@ -14,7 +63,7 @@ export enum UploadProgressType {
    */
   GetPathInfo = 'get-path-info',
   /**
-   * Uploading file block start
+   * Uploading a file block start
    */
   UploadBlockStart = 'upload-block-start',
   /**
@@ -40,11 +89,11 @@ export enum UploadProgressType {
 }
 
 /**
- * Uploading progress block data
+ * Processing progress block data
  */
-export interface UploadProgressBlockData {
+export interface ProgressBlockData {
   /**
-   * Total number of blocks that will be uploaded
+   * Total number of blocks that will be processed
    */
   totalBlocks: number
   /**
@@ -52,9 +101,9 @@ export interface UploadProgressBlockData {
    */
   currentBlockId: number
   /**
-   * Percentage of blocks uploaded
+   * Percentage of blocks processed
    */
-  uploadPercentage: number
+  percentage: number
 }
 
 /**
@@ -68,13 +117,20 @@ export interface UploadProgressInfo {
   /**
    * Data of the progress
    */
-  data?: UploadProgressBlockData
+  data?: ProgressBlockData
+}
+
+/**
+ * Progress callback
+ */
+export interface ProgressCallback<T> {
+  progressCallback?: (info: T) => void
 }
 
 /**
  * File upload options
  */
-export interface DataUploadOptions {
+export interface DataUploadOptions extends ProgressCallback<UploadProgressInfo> {
   /**
    * Size of blocks in bytes will the file be divided
    */
@@ -83,11 +139,6 @@ export interface DataUploadOptions {
    * Content type of the file
    */
   contentType?: string
-  /**
-   * Progress callback
-   * @param info progress info
-   */
-  progressCallback?: (info: UploadProgressInfo) => void
 }
 
 /**

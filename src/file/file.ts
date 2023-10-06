@@ -14,7 +14,7 @@ import {
 import { writeFeedData } from '../feed/api'
 import { downloadData, uploadData } from './handler'
 import { getFileMetadataRawBytes, rawFileMetadataToFileMetadata } from './adapter'
-import { DataUploadOptions, FileReceiveOptions, FileShareInfo } from './types'
+import { DataDownloadOptions, DataUploadOptions, FileReceiveOptions, FileShareInfo } from './types'
 import { addEntryToDirectory, DEFAULT_UPLOAD_OPTIONS, removeEntryFromDirectory } from '../content-items/handler'
 import { Reference } from '@ethersphere/bee-js'
 import { getRawMetadata } from '../content-items/utils'
@@ -32,20 +32,19 @@ export class File {
    *
    * @param podName pod where file is stored
    * @param fullPath full path of the file
+   * @param options download options
    */
-  async downloadData(podName: string, fullPath: string): Promise<Uint8Array> {
+  async downloadData(podName: string, fullPath: string, options?: DataDownloadOptions): Promise<Uint8Array> {
     assertAccount(this.accountData)
     assertPodName(podName)
     assertFullPathWithName(fullPath)
-    assertPodName(podName)
-    const { podAddress, pod } = await getExtendedPodsListByAccountData(this.accountData, podName)
 
     return downloadData(
-      this.accountData.connection.bee,
+      this.accountData,
+      podName,
       fullPath,
-      podAddress,
-      pod.password,
       this.accountData.connection.options?.requestOptions,
+      options,
     )
   }
 

@@ -265,6 +265,13 @@ Downloading data from a file path
 const data = await fdp.file.downloadData('my-new-pod', '/myfile.txt')
 console.log(data.text()) // prints data content in text format 'Hello world!'
 
+// you can also track the progress of data download
+// using the callback, you can track not only the progress of downloaded blocks but also other time-consuming operations required for data download
+await fdp.file.downloadData('my-new-pod', '/myfile.txt', {
+  progressCallback: event => {
+    console.log(event)
+  }
+})
 ```
 
 Deleting a pod

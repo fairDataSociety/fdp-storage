@@ -7,8 +7,10 @@ import {
   FileShareInfo,
   RawBlock,
   RawBlocks,
-  UploadProgressBlockData,
+  ProgressBlockData,
   UploadProgressType,
+  DataDownloadOptions,
+  DownloadProgressType,
 } from './types'
 import { rawBlocksToBlocks } from './adapter'
 import CryptoJS from 'crypto-js'
@@ -257,7 +259,25 @@ export function getFileMode(mode: number): number {
 export function updateUploadProgress(
   options: DataUploadOptions,
   progressType: UploadProgressType,
-  data?: UploadProgressBlockData,
+  data?: ProgressBlockData,
+): void {
+  if (!options.progressCallback) {
+    return
+  }
+
+  options.progressCallback({ progressType, data })
+}
+
+/**
+ * Updates download progress
+ * @param options download options
+ * @param progressType progress type
+ * @param data progress data
+ */
+export function updateDownloadProgress(
+  options: DataDownloadOptions,
+  progressType: DownloadProgressType,
+  data?: ProgressBlockData,
 ): void {
   if (!options.progressCallback) {
     return

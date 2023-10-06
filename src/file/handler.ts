@@ -8,6 +8,7 @@ import {
   downloadBlocksManifest,
   extractPathInfo,
   getFileMode,
+  updateDownloadProgress,
   updateUploadProgress,
   uploadBytes,
 } from './utils'
@@ -16,7 +17,7 @@ import { blocksToManifest, getFileMetadataRawBytes, rawFileMetadataToFileMetadat
 import { assertRawFileMetadata } from '../directory/utils'
 import { getCreationPathInfo, getRawMetadata } from '../content-items/utils'
 import { PodPasswordBytes } from '../utils/encryption'
-import { Blocks, DataUploadOptions, UploadProgressType } from './types'
+import { Blocks, DataDownloadOptions, DataUploadOptions, DownloadProgressType, UploadProgressType } from './types'
 import { assertPodName, getExtendedPodsListByAccountData, META_VERSION } from '../pod/utils'
 import { getUnixTimestamp } from '../utils/time'
 import { addEntryToDirectory, DEFAULT_UPLOAD_OPTIONS } from '../content-items/handler'
@@ -60,26 +61,32 @@ export async function getFileMetadata(
 /**
  * Downloads file parts and compile them into Data
  *
- * @param bee Bee client
+ * @param accountData account data
+ * @param podName pod name
  * @param fullPath full path to the file
- * @param address address of the pod
- * @param podPassword bytes for data encryption from pod metadata
  * @param downloadOptions download options
+ * @param dataDownloadOptions data download options
  */
 export async function downloadData(
-  bee: Bee,
+  accountData: AccountData,
+  podName: string,
   fullPath: string,
-  address: EthAddress,
-  podPassword: PodPasswordBytes,
   downloadOptions?: BeeRequestOptions,
+  dataDownloadOptions?: DataDownloadOptions,
 ): Promise<Data> {
-  const fileMetadata = await getFileMetadata(bee, fullPath, address, podPassword, downloadOptions)
+  dataDownloadOptions = dataDownloadOptions ?? {}
+  const bee = accountData.connection.bee
+  updateDownloadProgress(dataDownloadOptions, DownloadProgressType.GetPodInfo)
+  const { podAddress, pod } = await getExtendedPodsListByAccountData(accountData, podName)
+  updateDownloadProgress(dataDownloadOptions, DownloadProgressType.GetPathInfo)
+  const fileMetadata = await getFileMetadata(bee, fullPath, podAddress, pod.password, downloadOptions)
 
   if (fileMetadata.compression) {
     // TODO: implement compression support
     throw new Error('Compressed data is not supported yet')
   }
 
+  updateDownloadProgress(dataDownloadOptions, DownloadProgressType.DownloadBlocksMeta)
   const blocks = await downloadBlocksManifest(bee, fileMetadata.blocksReference, downloadOptions)
 
   let totalLength = 0
@@ -89,11 +96,21 @@ export async function downloadData(
 
   const result = new Uint8Array(totalLength)
   let offset = 0
-  for (const block of blocks.blocks) {
+  const totalBlocks = blocks.blocks.length
+  for (const [currentBlockId, block] of blocks.blocks.entries()) {
+    const blockData = {
+      totalBlocks,
+      currentBlockId,
+      percentage: calcUploadBlockPercentage(currentBlockId, totalBlocks),
+    }
+    updateDownloadProgress(dataDownloadOptions, DownloadProgressType.DownloadBlockStart, blockData)
     const data = await bee.downloadData(block.reference, downloadOptions)
+    updateDownloadProgress(dataDownloadOptions, DownloadProgressType.DownloadBlockEnd, blockData)
     result.set(data, offset)
     offset += data.length
   }
+
+  updateDownloadProgress(dataDownloadOptions, DownloadProgressType.Done)
 
   return wrapBytesWithHelpers(result)
 }
@@ -123,7 +140,6 @@ export async function uploadData(
 ): Promise<FileMetadata> {
   assertPodName(podName)
   assertFullPathWithName(fullPath)
-  assertPodName(podName)
   assertWallet(accountData.wallet)
 
   const blockSize = options.blockSize ?? Number(DEFAULT_UPLOAD_OPTIONS!.blockSize)
@@ -146,11 +162,12 @@ export async function uploadData(
   const totalBlocks = Math.ceil(data.length / blockSize)
   const blocks: Blocks = { blocks: [] }
   for (let i = 0; i < totalBlocks; i++) {
-    updateUploadProgress(options, UploadProgressType.UploadBlockStart, {
+    const blockData = {
       totalBlocks,
       currentBlockId: i,
-      uploadPercentage: calcUploadBlockPercentage(i, totalBlocks),
-    })
+      percentage: calcUploadBlockPercentage(i, totalBlocks),
+    }
+    updateUploadProgress(options, UploadProgressType.UploadBlockStart, blockData)
     const currentBlock = data.slice(i * blockSize, (i + 1) * blockSize)
     const result = await uploadBytes(connection, currentBlock)
     blocks.blocks.push({
@@ -158,11 +175,7 @@ export async function uploadData(
       compressedSize: currentBlock.length,
       reference: result.reference,
     })
-    updateUploadProgress(options, UploadProgressType.UploadBlockEnd, {
-      totalBlocks,
-      currentBlockId: i,
-      uploadPercentage: calcUploadBlockPercentage(i, totalBlocks),
-    })
+    updateUploadProgress(options, UploadProgressType.UploadBlockEnd, blockData)
   }
 
   updateUploadProgress(options, UploadProgressType.UploadBlocksMeta)
