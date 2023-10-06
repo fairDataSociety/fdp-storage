@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.14.0](https://github.com/fairDataSociety/fdp-storage/compare/v0.13.0...v0.14.0) (2023-10-06)
+
+
+### Features
+
+* download data progress ([#268](https://github.com/fairDataSociety/fdp-storage/issues/268)) ([7c260e4](https://github.com/fairDataSociety/fdp-storage/commit/7c260e41803df43138c8ce01114369748debab0b))
+
 ## [0.13.0](https://github.com/fairDataSociety/fdp-storage/compare/v0.12.0...v0.13.0) (2023-10-03)
 
 
