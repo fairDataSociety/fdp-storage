@@ -11,15 +11,18 @@ import {
   UploadProgressType,
   DataDownloadOptions,
   DownloadProgressType,
+  ExternalDataBlock,
+  Block,
 } from './types'
 import { rawBlocksToBlocks } from './adapter'
 import CryptoJS from 'crypto-js'
-import { assertArray, assertString, isNumber, isObject, isString } from '../utils/type'
+import { assertArray, assertNumber, assertString, isNumber, isObject, isString } from '../utils/type'
 import { FileMetadata, RawFileMetadata } from '../pod/types'
 import { EncryptedReference } from '../utils/hex'
 import { isRawFileMetadata, splitPath } from '../directory/utils'
 import { getUnixTimestamp } from '../utils/time'
 import { jsonParse } from '../utils/json'
+import { assertReference } from '../utils/string'
 
 /**
  * Default file permission in octal format
@@ -297,4 +300,75 @@ export function calcUploadBlockPercentage(blockId: number, totalBlocks: number):
   }
 
   return Math.round(((blockId + 1) / totalBlocks) * 100)
+}
+
+/**
+ * Asserts that a given value is an ExternalDataBlock
+ * @param value The value to assert
+ */
+export function assertExternalDataBlock(value: unknown): asserts value is ExternalDataBlock {
+  if (typeof value !== 'object' || value === null) {
+    throw new Error('Expected an object for ExternalDataBlock')
+  }
+
+  const block = value as ExternalDataBlock
+
+  assertNumber(block.size, 'Expected "size" to be a number')
+  assertNumber(block.compressedSize, 'Expected "compressedSize" to be a number')
+  assertReference(block.reference)
+  assertNumber(block.index, 'Expected "index" to be a number')
+}
+
+/**
+ * Checks if the given value is an ExternalDataBlock
+ * @param value The value to check
+ */
+export function isExternalDataBlock(value: unknown): boolean {
+  try {
+    assertExternalDataBlock(value)
+
+    return true
+  } catch (e) {
+    return false
+  }
+}
+
+/**
+ * Asserts that a given value is an array of ExternalDataBlock
+ * @param value The value to assert
+ */
+export function assertExternalDataBlocks(value: unknown): asserts value is ExternalDataBlock[] {
+  if (!Array.isArray(value)) {
+    throw new Error('Expected an array for ExternalDataBlocks')
+  }
+
+  for (const block of value) {
+    assertExternalDataBlock(block)
+  }
+}
+
+/**
+ * Checks if the given value is an array of ExternalDataBlock
+ * @param value The value to check
+ */
+export function isExternalDataBlocks(value: unknown): value is ExternalDataBlock[] {
+  try {
+    assertExternalDataBlocks(value)
+
+    return true
+  } catch (e) {
+    return false
+  }
+}
+
+/**
+ * Converts ExternalDataBlock[] to Block[]
+ * @param externalDataBlocks The ExternalDataBlock[] to convert
+ */
+export function externalDataBlocksToBlocks(externalDataBlocks: ExternalDataBlock[]): Block[] {
+  return externalDataBlocks.map(block => ({
+    size: block.size,
+    compressedSize: block.compressedSize,
+    reference: block.reference,
+  }))
 }

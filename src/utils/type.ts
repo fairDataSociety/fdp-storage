@@ -8,9 +8,9 @@ export const ETH_ADDR_HEX_LENGTH = 40
 /**
  * Asserts that the given value is a number
  */
-export function assertNumber(value: unknown): asserts value is number {
+export function assertNumber(value: unknown, customMessage?: string): asserts value is number {
   if (!isNumber(value)) {
-    throw new Error('Expected a number')
+    throw new Error(customMessage ? customMessage : 'Expected a number')
   }
 }
 

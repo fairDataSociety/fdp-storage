@@ -1,4 +1,5 @@
 import CryptoJS from 'crypto-js'
+import { ENCRYPTED_REFERENCE_HEX_LENGTH, Reference, REFERENCE_HEX_LENGTH, Utils } from '@ethersphere/bee-js'
 
 /**
  * Replace all occurrences of a string with another string
@@ -16,4 +17,16 @@ export function replaceAll(data: string, search: string, replacement: string): s
  */
 export function generateRandomBase64String(length = 10): string {
   return CryptoJS.lib.WordArray.random(length).toString(CryptoJS.enc.Base64).substring(0, length)
+}
+
+/**
+ * Asserts that the given value is a Reference
+ * @param value value to assert
+ */
+export function assertReference(value: unknown): asserts value is Reference {
+  try {
+    Utils.assertHexString(value, REFERENCE_HEX_LENGTH)
+  } catch (e) {
+    Utils.assertHexString(value, ENCRYPTED_REFERENCE_HEX_LENGTH)
+  }
 }
