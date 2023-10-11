@@ -11,7 +11,18 @@ export {
   DownloadProgressInfo,
   DataUploadOptions,
   DataDownloadOptions,
+  Block,
+  ExternalDataBlock,
 } from './file/types'
+export {
+  calcUploadBlockPercentage,
+  assertExternalDataBlock,
+  isExternalDataBlock,
+  assertExternalDataBlocks,
+  isExternalDataBlocks,
+  externalDataBlocksToBlocks,
+  getDataBlock,
+} from './file/utils'
 
 /**
  * Fair Data Protocol options

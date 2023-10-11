@@ -3,11 +3,12 @@ import { Bee, Data, BeeRequestOptions } from '@ethersphere/bee-js'
 import { EthAddress } from '@ethersphere/bee-js/dist/types/utils/eth'
 import {
   assertFullPathWithName,
+  assertSequenceOfExternalDataBlocksCorrect,
   calcUploadBlockPercentage,
   DEFAULT_FILE_PERMISSIONS,
   downloadBlocksManifest,
   externalDataBlocksToBlocks,
-  extractPathInfo,
+  extractPathInfo, getDataBlock,
   getFileMode,
   isExternalDataBlocks,
   updateDownloadProgress,
@@ -170,9 +171,12 @@ export async function uploadData(
   const now = getUnixTimestamp()
 
   const blocks: Blocks = { blocks: [] }
+  let fileSize = data.length
 
   if (isExternalDataBlocks(data)) {
+    assertSequenceOfExternalDataBlocksCorrect(data)
     blocks.blocks = externalDataBlocksToBlocks(data)
+    fileSize = data.reduce((acc, block) => acc + block.size, 0)
   } else {
     data = typeof data === 'string' ? stringToBytes(data) : data
     const totalBlocks = Math.ceil(data.length / blockSize)
@@ -183,7 +187,7 @@ export async function uploadData(
         percentage: calcUploadBlockPercentage(i, totalBlocks),
       }
       updateUploadProgress(options, UploadProgressType.UploadBlockStart, blockData)
-      const currentBlock = data.slice(i * blockSize, (i + 1) * blockSize)
+      const currentBlock = getDataBlock(data, blockSize, i)
       blocks.blocks.push(await uploadDataBlock(connection, currentBlock))
       updateUploadProgress(options, UploadProgressType.UploadBlockEnd, blockData)
     }
@@ -196,7 +200,7 @@ export async function uploadData(
     version: META_VERSION,
     filePath: pathInfo.path,
     fileName: pathInfo.filename,
-    fileSize: data.length,
+    fileSize,
     blockSize,
     contentType,
     compression: '',

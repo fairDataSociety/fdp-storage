@@ -23,6 +23,7 @@ import { isRawFileMetadata, splitPath } from '../directory/utils'
 import { getUnixTimestamp } from '../utils/time'
 import { jsonParse } from '../utils/json'
 import { assertReference } from '../utils/string'
+import { stringToBytes } from '../utils/bytes'
 
 /**
  * Default file permission in octal format
@@ -371,4 +372,40 @@ export function externalDataBlocksToBlocks(externalDataBlocks: ExternalDataBlock
     compressedSize: block.compressedSize,
     reference: block.reference,
   }))
+}
+
+/**
+ * Checks if the sequence of ExternalDataBlocks is correctly indexed and sorted.
+ * @param externalDataBlocks The array of ExternalDataBlocks to check.
+ */
+export function isSequenceOfExternalDataBlocksCorrect(externalDataBlocks: ExternalDataBlock[]): boolean {
+  for (let i = 0; i < externalDataBlocks.length; i++) {
+    if (externalDataBlocks[i].index !== i) {
+      return false
+    }
+  }
+
+  return true
+}
+
+/**
+ * Asserts that the sequence of ExternalDataBlocks is correctly indexed.
+ * @param externalDataBlocks The array of ExternalDataBlocks to assert.
+ */
+export function assertSequenceOfExternalDataBlocksCorrect(externalDataBlocks: ExternalDataBlock[]): void {
+  if (!isSequenceOfExternalDataBlocksCorrect(externalDataBlocks)) {
+    throw new Error('The sequence of `ExternalDataBlock` is not correctly indexed.')
+  }
+}
+
+/**
+ * Gets data block by index from data
+ * @param data Data
+ * @param blockSize Size of block
+ * @param blockIndex Index of block
+ */
+export function getDataBlock(data: string | Uint8Array, blockSize: number, blockIndex: number): Uint8Array {
+  data = typeof data === 'string' ? stringToBytes(data) : data
+
+  return data.slice(blockIndex * blockSize, (blockIndex + 1) * blockSize)
 }

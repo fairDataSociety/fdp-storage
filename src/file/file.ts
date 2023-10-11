@@ -53,7 +53,7 @@ export class File {
    *
    * @param podName pod where file is stored
    * @param fullPath full path of the file
-   * @param data file content
+   * @param data file content or ExternalDataBlock[] indexed in ascending order
    * @param options upload options
    */
   async uploadData(
