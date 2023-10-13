@@ -128,7 +128,14 @@ export async function downloadData(
 ): Promise<Data> {
   dataDownloadOptions = dataDownloadOptions ?? {}
   const bee = accountData.connection.bee
-  const { blocks } = await getFileMetadataWithBlocks(bee, accountData, podName, fullPath)
+  const { blocks } = await getFileMetadataWithBlocks(
+    bee,
+    accountData,
+    podName,
+    fullPath,
+    downloadOptions,
+    dataDownloadOptions,
+  )
 
   let totalLength = 0
   for (const block of blocks) {
