@@ -1,5 +1,5 @@
 import { Reference } from '@ethersphere/bee-js'
-import { RawFileMetadata } from '../pod/types'
+import { FileMetadata, RawFileMetadata } from '../pod/types'
 
 /**
  * Download progress info
@@ -163,6 +163,11 @@ export interface RawBlock {
 export interface Blocks {
   blocks: Block[]
 }
+
+/**
+ * FDP file metadata with blocks data
+ */
+export type FileMetadataWithBlocks = FileMetadata & Blocks
 
 /**
  * FDP file block format
