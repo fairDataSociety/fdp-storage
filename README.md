@@ -288,6 +288,14 @@ await fdp.file.downloadData('my-new-pod', '/myfile.txt', {
     console.log(event)
   }
 })
+
+// or you can download data block-by-block to combine it later
+const blockSize = 1000000
+const fileMeta = await fdp.file.getMetadata(pod, fullPath)
+const result = new Uint8Array(fileMeta.fileSize)
+for (let i = 0; i < blocksCount; i++) {
+  result.set(await fdp.file.downloadDataBlock(fileMeta, i), i * blockSize)
+}
 ```
 
 Deleting a pod
