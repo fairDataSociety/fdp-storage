@@ -224,6 +224,22 @@ await fdp.file.uploadData('my-new-pod', '/my-dir/myfile.txt', 'Hello world!', {
 })
 ```
 
+Data can also be uploaded block by block, even without an FDP account. Each block will be secured by a Swarm node. Later, with an FDP account, the data can be finalized in the form of a file.
+```js
+const data = '123'
+const blockSize = 1 // recommended value is 1000000 bytes
+const blocksCount = 3
+const blocks = []
+for (let i = 0; i < blocksCount; i++) {
+  const dataBlock = getDataBlock(data, blockSize, i)
+  // fdp instance with or without logged in user
+  blocks.push(await fdp.file.uploadDataBlock(dataBlock, i))
+}
+
+// fdp instance with logged in user
+const fileMeta = await fdp.file.uploadData(pod, fullPath, blocks)
+```
+
 Deleting a file from a pod
 
 ```js

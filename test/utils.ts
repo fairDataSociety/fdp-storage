@@ -5,6 +5,37 @@ import { utils, Wallet } from 'ethers'
 import { Environments, getEnsEnvironmentConfig } from '@fairdatasociety/fdp-contracts-js'
 import axios from 'axios'
 import { CacheOptions } from '../src/cache/types'
+import { DEFAULT_UPLOAD_OPTIONS } from '../src/content-items/handler'
+
+/**
+ * File content with information for testing
+ */
+export interface TestFileContent {
+  /**
+   * Size of file in bytes
+   */
+  size: number
+  /**
+   * Size of block in bytes
+   */
+  blockSize: number
+  /**
+   * Count of blocks
+   */
+  blocksCount: number
+  /**
+   * File content
+   */
+  content: string
+  /**
+   * File name
+   */
+  filename: string
+  /**
+   * Full path of file
+   */
+  fullPath: string
+}
 
 export interface TestUser {
   username: string
@@ -238,4 +269,25 @@ export async function topUpAddress(address: string, amountInEther = '0.01'): Pro
  */
 export function makeFileList(files: File[]): FileList {
   return files as unknown as FileList
+}
+
+/**
+ * Make file content with file info
+ * @param size Size of file in bytes
+ */
+export function makeFileContent(size: number): TestFileContent {
+  const blockSize = DEFAULT_UPLOAD_OPTIONS.blockSize!
+  const blocksCount = Math.ceil(size / blockSize)
+  const content = generateRandomHexString(size)
+  const filename = generateRandomHexString() + '.txt'
+  const fullPath = '/' + filename
+
+  return {
+    size,
+    blockSize,
+    blocksCount,
+    content,
+    filename,
+    fullPath,
+  }
 }

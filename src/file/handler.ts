@@ -3,11 +3,14 @@ import { Bee, Data, BeeRequestOptions } from '@ethersphere/bee-js'
 import { EthAddress } from '@ethersphere/bee-js/dist/types/utils/eth'
 import {
   assertFullPathWithName,
+  assertSequenceOfExternalDataBlocksCorrect,
   calcUploadBlockPercentage,
   DEFAULT_FILE_PERMISSIONS,
   downloadBlocksManifest,
-  extractPathInfo,
+  externalDataBlocksToBlocks,
+  extractPathInfo, getDataBlock,
   getFileMode,
+  isExternalDataBlocks,
   updateDownloadProgress,
   updateUploadProgress,
   uploadBytes,
@@ -17,7 +20,15 @@ import { blocksToManifest, getFileMetadataRawBytes, rawFileMetadataToFileMetadat
 import { assertRawFileMetadata } from '../directory/utils'
 import { getCreationPathInfo, getRawMetadata } from '../content-items/utils'
 import { PodPasswordBytes } from '../utils/encryption'
-import { Blocks, DataDownloadOptions, DataUploadOptions, DownloadProgressType, UploadProgressType } from './types'
+import {
+  Block,
+  Blocks,
+  DataDownloadOptions,
+  DataUploadOptions,
+  DownloadProgressType,
+  ExternalDataBlock,
+  UploadProgressType,
+} from './types'
 import { assertPodName, getExtendedPodsListByAccountData, META_VERSION } from '../pod/utils'
 import { getUnixTimestamp } from '../utils/time'
 import { addEntryToDirectory, DEFAULT_UPLOAD_OPTIONS } from '../content-items/handler'
@@ -26,6 +37,7 @@ import { AccountData } from '../account/account-data'
 import { prepareEthAddress } from '../utils/wallet'
 import { assertWallet } from '../utils/type'
 import { getNextEpoch } from '../feed/lookup/utils'
+import { Connection } from '../connection/connection'
 
 /**
  * File prefix
@@ -134,7 +146,7 @@ export function generateBlockName(blockNumber: number): string {
 export async function uploadData(
   podName: string,
   fullPath: string,
-  data: Uint8Array | string,
+  data: Uint8Array | string | ExternalDataBlock[],
   accountData: AccountData,
   options: DataUploadOptions,
 ): Promise<FileMetadata> {
@@ -144,8 +156,6 @@ export async function uploadData(
 
   const blockSize = options.blockSize ?? Number(DEFAULT_UPLOAD_OPTIONS!.blockSize)
   const contentType = options.contentType ?? String(DEFAULT_UPLOAD_OPTIONS!.contentType)
-
-  data = typeof data === 'string' ? stringToBytes(data) : data
   const connection = accountData.connection
   updateUploadProgress(options, UploadProgressType.GetPodInfo)
   const { podWallet, pod } = await getExtendedPodsListByAccountData(accountData, podName)
@@ -159,23 +169,28 @@ export async function uploadData(
   )
   const pathInfo = extractPathInfo(fullPath)
   const now = getUnixTimestamp()
-  const totalBlocks = Math.ceil(data.length / blockSize)
+
   const blocks: Blocks = { blocks: [] }
-  for (let i = 0; i < totalBlocks; i++) {
-    const blockData = {
-      totalBlocks,
-      currentBlockId: i,
-      percentage: calcUploadBlockPercentage(i, totalBlocks),
+  let fileSize = data.length
+
+  if (isExternalDataBlocks(data)) {
+    assertSequenceOfExternalDataBlocksCorrect(data)
+    blocks.blocks = externalDataBlocksToBlocks(data)
+    fileSize = data.reduce((acc, block) => acc + block.size, 0)
+  } else {
+    data = typeof data === 'string' ? stringToBytes(data) : data
+    const totalBlocks = Math.ceil(data.length / blockSize)
+    for (let i = 0; i < totalBlocks; i++) {
+      const blockData = {
+        totalBlocks,
+        currentBlockId: i,
+        percentage: calcUploadBlockPercentage(i, totalBlocks),
+      }
+      updateUploadProgress(options, UploadProgressType.UploadBlockStart, blockData)
+      const currentBlock = getDataBlock(data, blockSize, i)
+      blocks.blocks.push(await uploadDataBlock(connection, currentBlock))
+      updateUploadProgress(options, UploadProgressType.UploadBlockEnd, blockData)
     }
-    updateUploadProgress(options, UploadProgressType.UploadBlockStart, blockData)
-    const currentBlock = data.slice(i * blockSize, (i + 1) * blockSize)
-    const result = await uploadBytes(connection, currentBlock)
-    blocks.blocks.push({
-      size: currentBlock.length,
-      compressedSize: currentBlock.length,
-      reference: result.reference,
-    })
-    updateUploadProgress(options, UploadProgressType.UploadBlockEnd, blockData)
   }
 
   updateUploadProgress(options, UploadProgressType.UploadBlocksMeta)
@@ -185,7 +200,7 @@ export async function uploadData(
     version: META_VERSION,
     filePath: pathInfo.path,
     fileName: pathInfo.filename,
-    fileSize: data.length,
+    fileSize,
     blockSize,
     contentType,
     compression: '',
@@ -211,4 +226,17 @@ export async function uploadData(
   updateUploadProgress(options, UploadProgressType.Done)
 
   return meta
+}
+
+/**
+ * Upload data block
+ * @param connection connection
+ * @param block block to upload
+ */
+export async function uploadDataBlock(connection: Connection, block: Uint8Array): Promise<Block> {
+  return {
+    size: block.length,
+    compressedSize: block.length,
+    reference: (await uploadBytes(connection, block)).reference,
+  }
 }

@@ -174,6 +174,16 @@ export interface Block {
 }
 
 /**
+ * FDP file block format for external usage
+ */
+export interface ExternalDataBlock extends Block {
+  /**
+   * Block index
+   */
+  index: number
+}
+
+/**
  * File share information
  */
 export interface FileShareInfo {

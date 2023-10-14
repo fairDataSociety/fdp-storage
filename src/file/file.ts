@@ -12,9 +12,9 @@ import {
   uploadBytes,
 } from './utils'
 import { writeFeedData } from '../feed/api'
-import { downloadData, uploadData } from './handler'
+import { downloadData, uploadData, uploadDataBlock } from './handler'
 import { getFileMetadataRawBytes, rawFileMetadataToFileMetadata } from './adapter'
-import { DataDownloadOptions, DataUploadOptions, FileReceiveOptions, FileShareInfo } from './types'
+import { DataDownloadOptions, DataUploadOptions, ExternalDataBlock, FileReceiveOptions, FileShareInfo } from './types'
 import { addEntryToDirectory, DEFAULT_UPLOAD_OPTIONS, removeEntryFromDirectory } from '../content-items/handler'
 import { Reference } from '@ethersphere/bee-js'
 import { getRawMetadata } from '../content-items/utils'
@@ -53,13 +53,13 @@ export class File {
    *
    * @param podName pod where file is stored
    * @param fullPath full path of the file
-   * @param data file content
+   * @param data file content or ExternalDataBlock[] indexed in ascending order
    * @param options upload options
    */
   async uploadData(
     podName: string,
     fullPath: string,
-    data: Uint8Array | string,
+    data: Uint8Array | string | ExternalDataBlock[],
     options?: DataUploadOptions,
   ): Promise<FileMetadata> {
     options = { ...DEFAULT_UPLOAD_OPTIONS, ...options }
@@ -152,5 +152,18 @@ export class File {
     await writeFeedData(connection, fullPath, getFileMetadataRawBytes(meta), podWallet, pod.password)
 
     return meta
+  }
+
+  /**
+   * Uploads a data block without constructing a file metadata
+   *
+   * @param block block data
+   * @param blockIndex block index
+   */
+  async uploadDataBlock(block: Uint8Array, blockIndex: number): Promise<ExternalDataBlock> {
+    return {
+      ...(await uploadDataBlock(this.accountData.connection, block)),
+      index: blockIndex,
+    }
   }
 }
