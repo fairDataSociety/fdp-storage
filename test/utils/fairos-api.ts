@@ -37,13 +37,24 @@ export class FairOSApi {
 
       return config
     })
-    axios.interceptors.response.use(response => {
-      if (this.withCredentials && response.headers['set-cookie']) {
-        this.cookies = response.headers['set-cookie']?.[0] as string
-      }
+    axios.interceptors.response.use(
+      response => {
+        if (this.withCredentials && response.headers['set-cookie']) {
+          this.cookies = response.headers['set-cookie']?.[0] as string
+        }
 
-      return response
-    })
+        return response
+      },
+      error => {
+        if (error.response) {
+          // Append server response to error message
+          throw new Error(`AxiosError: ${error.message}. Server response: ${error.response?.data}`)
+        } else {
+          // Something happened while setting up the request
+          throw error
+        }
+      },
+    )
   }
 
   private getV2Url(method: string) {
@@ -73,7 +84,7 @@ export class FairOSApi {
   async login(username: string, password: string): Promise<AxiosResponse> {
     const url = this.getV2Url('user/login')
 
-    return await axios.post(url, {
+    return axios.post(url, {
       userName: username,
       password,
     })
@@ -85,7 +96,7 @@ export class FairOSApi {
   async register(username: string, password: string, mnemonic: string): Promise<AxiosResponse> {
     const url = this.getV2Url('user/signup')
 
-    return await axios.post(url, {
+    return axios.post(url, {
       userName: username,
       password,
       mnemonic,
