@@ -48,7 +48,7 @@ export class FairOSApi {
       error => {
         if (error.response) {
           // Append server response to error message
-          throw new Error(`AxiosError: ${error.message}. Server response: ${error.response?.data}`)
+          throw new Error(`AxiosError: ${error.message}. Server response: ${JSON.stringify(error.response?.data)}`)
         } else {
           // Something happened while setting up the request
           throw error
