@@ -12,11 +12,18 @@ import {
   uploadBytes,
 } from './utils'
 import { writeFeedData } from '../feed/api'
-import { downloadData, uploadData, uploadDataBlock } from './handler'
+import { downloadData, getFileMetadataWithBlocks, uploadData, uploadDataBlock } from './handler'
 import { getFileMetadataRawBytes, rawFileMetadataToFileMetadata } from './adapter'
-import { DataDownloadOptions, DataUploadOptions, ExternalDataBlock, FileReceiveOptions, FileShareInfo } from './types'
+import {
+  DataDownloadOptions,
+  DataUploadOptions,
+  ExternalDataBlock,
+  FileMetadataWithBlocks,
+  FileReceiveOptions,
+  FileShareInfo,
+} from './types'
 import { addEntryToDirectory, DEFAULT_UPLOAD_OPTIONS, removeEntryFromDirectory } from '../content-items/handler'
-import { Reference } from '@ethersphere/bee-js'
+import { BeeRequestOptions, Reference } from '@ethersphere/bee-js'
 import { getRawMetadata } from '../content-items/utils'
 import { assertRawFileMetadata, combine, splitPath } from '../directory/utils'
 import { assertEncryptedReference, EncryptedReference } from '../utils/hex'
@@ -64,6 +71,7 @@ export class File {
   ): Promise<FileMetadata> {
     options = { ...DEFAULT_UPLOAD_OPTIONS, ...options }
     assertAccount(this.accountData)
+    assertPodName(podName)
 
     return uploadData(podName, fullPath, data, this.accountData, options)
   }
@@ -165,5 +173,52 @@ export class File {
       ...(await uploadDataBlock(this.accountData.connection, block)),
       index: blockIndex,
     }
+  }
+
+  /**
+   * Downloads file metadata with blocks data
+   *
+   * @param podName pod where file is stored
+   * @param fullPath full path of the file
+   * @param downloadOptions bee download options
+   * @param options data download options
+   */
+  async getMetadata(
+    podName: string,
+    fullPath: string,
+    downloadOptions?: BeeRequestOptions,
+    options?: DataDownloadOptions,
+  ): Promise<FileMetadataWithBlocks> {
+    assertAccount(this.accountData)
+    assertPodName(podName)
+    assertFullPathWithName(fullPath)
+
+    return getFileMetadataWithBlocks(
+      this.accountData.connection.bee,
+      this.accountData,
+      podName,
+      fullPath,
+      downloadOptions,
+      options,
+    )
+  }
+
+  /**
+   * Downloads data block using file metadata
+   *
+   * @param meta file metadata
+   * @param blockIndex block index
+   * @param downloadOptions bee download options
+   */
+  async downloadDataBlock(
+    meta: FileMetadataWithBlocks,
+    blockIndex: number,
+    downloadOptions?: BeeRequestOptions,
+  ): Promise<Uint8Array> {
+    if (blockIndex < 0 || blockIndex >= meta.blocks.length) {
+      throw new Error('"blockIndex" is out of bounds')
+    }
+
+    return this.accountData.connection.bee.downloadData(meta.blocks[blockIndex].reference, downloadOptions)
   }
 }

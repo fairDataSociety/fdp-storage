@@ -13,6 +13,7 @@ export {
   DataDownloadOptions,
   Block,
   ExternalDataBlock,
+  FileMetadataWithBlocks,
 } from './file/types'
 export {
   calcUploadBlockPercentage,

@@ -1,6 +1,6 @@
 import { createFdp, generateRandomHexString, generateUser, makeFileContent } from '../../utils'
 import { wrapBytesWithHelpers } from '../../../src/utils/bytes'
-import { getDataBlock } from '../../../src/file/utils'
+import { getDataBlock } from '../../../src'
 
 jest.setTimeout(400000)
 it('Upload by index', async () => {

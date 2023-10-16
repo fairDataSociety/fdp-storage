@@ -8,7 +8,8 @@ import {
   DEFAULT_FILE_PERMISSIONS,
   downloadBlocksManifest,
   externalDataBlocksToBlocks,
-  extractPathInfo, getDataBlock,
+  extractPathInfo,
+  getDataBlock,
   getFileMode,
   isExternalDataBlocks,
   updateDownloadProgress,
@@ -27,6 +28,7 @@ import {
   DataUploadOptions,
   DownloadProgressType,
   ExternalDataBlock,
+  FileMetadataWithBlocks,
   UploadProgressType,
 } from './types'
 import { assertPodName, getExtendedPodsListByAccountData, META_VERSION } from '../pod/utils'
@@ -71,6 +73,44 @@ export async function getFileMetadata(
 }
 
 /**
+ * Gets file metadata with blocks
+ *
+ * @param bee Bee
+ * @param accountData account data
+ * @param podName pod name
+ * @param fullPath full path to the file
+ * @param downloadOptions download options
+ * @param dataDownloadOptions data download options
+ */
+export async function getFileMetadataWithBlocks(
+  bee: Bee,
+  accountData: AccountData,
+  podName: string,
+  fullPath: string,
+  downloadOptions?: BeeRequestOptions,
+  dataDownloadOptions?: DataDownloadOptions,
+): Promise<FileMetadataWithBlocks> {
+  dataDownloadOptions = dataDownloadOptions ?? {}
+  updateDownloadProgress(dataDownloadOptions, DownloadProgressType.GetPodInfo)
+  const { podAddress, pod } = await getExtendedPodsListByAccountData(accountData, podName)
+  updateDownloadProgress(dataDownloadOptions, DownloadProgressType.GetPathInfo)
+  const fileMetadata = await getFileMetadata(bee, fullPath, podAddress, pod.password, downloadOptions)
+
+  if (fileMetadata.compression) {
+    // TODO: implement compression support
+    throw new Error('Compressed data is not supported yet')
+  }
+
+  updateDownloadProgress(dataDownloadOptions, DownloadProgressType.DownloadBlocksMeta)
+  const blocks = await downloadBlocksManifest(bee, fileMetadata.blocksReference, downloadOptions)
+
+  return {
+    ...fileMetadata,
+    ...blocks,
+  }
+}
+
+/**
  * Downloads file parts and compile them into Data
  *
  * @param accountData account data
@@ -88,28 +128,24 @@ export async function downloadData(
 ): Promise<Data> {
   dataDownloadOptions = dataDownloadOptions ?? {}
   const bee = accountData.connection.bee
-  updateDownloadProgress(dataDownloadOptions, DownloadProgressType.GetPodInfo)
-  const { podAddress, pod } = await getExtendedPodsListByAccountData(accountData, podName)
-  updateDownloadProgress(dataDownloadOptions, DownloadProgressType.GetPathInfo)
-  const fileMetadata = await getFileMetadata(bee, fullPath, podAddress, pod.password, downloadOptions)
-
-  if (fileMetadata.compression) {
-    // TODO: implement compression support
-    throw new Error('Compressed data is not supported yet')
-  }
-
-  updateDownloadProgress(dataDownloadOptions, DownloadProgressType.DownloadBlocksMeta)
-  const blocks = await downloadBlocksManifest(bee, fileMetadata.blocksReference, downloadOptions)
+  const { blocks } = await getFileMetadataWithBlocks(
+    bee,
+    accountData,
+    podName,
+    fullPath,
+    downloadOptions,
+    dataDownloadOptions,
+  )
 
   let totalLength = 0
-  for (const block of blocks.blocks) {
+  for (const block of blocks) {
     totalLength += block.size
   }
 
   const result = new Uint8Array(totalLength)
   let offset = 0
-  const totalBlocks = blocks.blocks.length
-  for (const [currentBlockId, block] of blocks.blocks.entries()) {
+  const totalBlocks = blocks.length
+  for (const [currentBlockId, block] of blocks.entries()) {
     const blockData = {
       totalBlocks,
       currentBlockId,

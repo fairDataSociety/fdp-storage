@@ -10,6 +10,7 @@ on:
 
 env:
   BEE_VERSION: '1.11.1'
+  FAIROS_IMAGE: 'fairdatasociety/fairos-dfs:v0.9.6'
 
 jobs:
   nodejs:
@@ -38,7 +39,7 @@ jobs:
         run: npm install -g @fairdatasociety/fdp-play
 
       - name: Run fdp-play
-        run: fdp-play start -d --fairos --bee-version $BEE_VERSION
+        run: fdp-play start -d --fairos --fairos-image $FAIROS_IMAGE --bee-version $BEE_VERSION
 
       ## Try getting the node modules from cache, if failed npm ci
       - uses: actions/cache@v2
