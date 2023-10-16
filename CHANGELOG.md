@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.15.0](https://github.com/fairDataSociety/fdp-storage/compare/v0.14.0...v0.15.0) (2023-10-16)
+
+
+### Features
+
+* downloading blocks of a file by index ([#271](https://github.com/fairDataSociety/fdp-storage/issues/271)) ([c734585](https://github.com/fairDataSociety/fdp-storage/commit/c734585269e056ece93a8edeff8361bc13c69f9a))
+* uploading blocks of a file by index ([#270](https://github.com/fairDataSociety/fdp-storage/issues/270)) ([37f7207](https://github.com/fairDataSociety/fdp-storage/commit/37f7207ad33d331a3e0c29ef5ded19563a4e8a86))
+
 ## [0.14.0](https://github.com/fairDataSociety/fdp-storage/compare/v0.13.0...v0.14.0) (2023-10-06)
 
 
