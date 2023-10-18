@@ -24,7 +24,8 @@ export {
   externalDataBlocksToBlocks,
   getDataBlock,
 } from './file/utils'
-
+export { MAX_POD_NAME_LENGTH, MAX_PODS_COUNT } from './pod/utils'
+export { MAX_DIRECTORY_NAME_LENGTH } from './directory/handler'
 /**
  * Fair Data Protocol options
  */
