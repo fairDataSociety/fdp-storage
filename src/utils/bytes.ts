@@ -123,3 +123,15 @@ export function bytesToWordArray(data: Uint8Array): CryptoJS.lib.WordArray {
 export function wordArrayToBytes(data: CryptoJS.lib.WordArray): Uint8Array {
   return Utils.hexToBytes(CryptoJS.enc.Hex.stringify(data))
 }
+
+/**
+ * Asserts that length is less than or equal to max length
+ * @param currentLength currentLength
+ * @param maxLength max length
+ * @param customMessage custom error message
+ */
+export function assertMaxLength(currentLength: number, maxLength: number, customMessage?: string): void {
+  if (currentLength > maxLength) {
+    throw new Error(customMessage ? customMessage : `length ${currentLength} exceeds max length ${maxLength}`)
+  }
+}

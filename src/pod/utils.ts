@@ -10,7 +10,7 @@ import {
   PodsList,
 } from './types'
 import { Bee, Data, Utils } from '@ethersphere/bee-js'
-import { bytesToString, stringToBytes, wordArrayToBytes } from '../utils/bytes'
+import { assertMaxLength, bytesToString, stringToBytes, wordArrayToBytes } from '../utils/bytes'
 import { utils } from 'ethers'
 import { getRawDirectoryMetadataBytes } from '../directory/adapter'
 import {
@@ -42,6 +42,7 @@ import { DEFAULT_DIRECTORY_PERMISSIONS, getDirectoryMode } from '../directory/ut
 import { getCacheKey, setEpochCache } from '../cache/utils'
 import { getWalletByIndex } from '../utils/cache/wallet'
 import { getPodsList } from './cache/api'
+import { CHUNK_SIZE } from '../account/utils'
 
 export const META_VERSION = 2
 export const MAX_PODS_COUNT = 65536
@@ -421,6 +422,7 @@ export async function createPod(
   }
 
   const allPodsData = podListToBytes(pods, sharedPods)
+  assertMaxLength(allPodsData.length, CHUNK_SIZE, `Exceeded pod list size by ${allPodsData.length - CHUNK_SIZE} bytes`)
   await writeFeedData(connection, POD_TOPIC, allPodsData, userWallet, preparePrivateKey(userWallet.privateKey), epoch)
 
   if (isPod(realPod)) {
