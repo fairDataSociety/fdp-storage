@@ -26,6 +26,10 @@ export {
 } from './file/utils'
 export { MAX_POD_NAME_LENGTH, MAX_PODS_COUNT } from './pod/utils'
 export { MAX_DIRECTORY_NAME_LENGTH } from './directory/handler'
+export * as PodTypes from './pod/types'
+export * as Encryption from './utils/encryption'
+export * as Bytes from './utils/bytes'
+
 /**
  * Fair Data Protocol options
  */
