@@ -41,3 +41,13 @@ export function isAddressOptions(options: unknown): options is AddressOptions {
 export function isMnemonicOptions(options: unknown): options is MnemonicOptions {
   return isObject(options) && isValidMnemonic((options as MnemonicOptions).mnemonic)
 }
+
+/**
+ * Assert account options
+ */
+export interface AssertAccountOptions {
+  /**
+   * Check if write access is required
+   */
+  writeRequired?: boolean
+}

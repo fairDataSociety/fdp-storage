@@ -27,6 +27,7 @@ import { BeeRequestOptions, Reference } from '@ethersphere/bee-js'
 import { getRawMetadata } from '../content-items/utils'
 import { assertRawFileMetadata, combine, splitPath } from '../directory/utils'
 import { assertEncryptedReference, EncryptedReference } from '../utils/hex'
+import { assertBatchId } from '../utils/string'
 
 /**
  * Files management class
@@ -70,7 +71,7 @@ export class File {
     options?: DataUploadOptions,
   ): Promise<FileMetadata> {
     options = { ...DEFAULT_UPLOAD_OPTIONS, ...options }
-    assertAccount(this.accountData)
+    assertAccount(this.accountData, { writeRequired: true })
     assertPodName(podName)
 
     return uploadData(podName, fullPath, data, this.accountData, options)
@@ -83,7 +84,7 @@ export class File {
    * @param fullPath full path of the file
    */
   async delete(podName: string, fullPath: string): Promise<void> {
-    assertAccount(this.accountData)
+    assertAccount(this.accountData, { writeRequired: true })
     assertFullPathWithName(fullPath)
     assertPodName(podName)
     const pathInfo = extractPathInfo(fullPath)
@@ -105,7 +106,7 @@ export class File {
    * @param fullPath full path of the file
    */
   async share(podName: string, fullPath: string): Promise<Reference> {
-    assertAccount(this.accountData)
+    assertAccount(this.accountData, { writeRequired: true })
     assertFullPathWithName(fullPath)
     assertPodName(podName)
 
@@ -148,6 +149,7 @@ export class File {
     reference: string | EncryptedReference,
     options?: FileReceiveOptions,
   ): Promise<FileMetadata> {
+    assertAccount(this.accountData, { writeRequired: true })
     assertPodName(podName)
     const sharedInfo = await this.getSharedInfo(reference)
     const connection = this.accountData.connection
@@ -169,6 +171,9 @@ export class File {
    * @param blockIndex block index
    */
   async uploadDataBlock(block: Uint8Array, blockIndex: number): Promise<ExternalDataBlock> {
+    // batchId is required for uploading, but an account is not required
+    assertBatchId(this.accountData.connection.postageBatchId)
+
     return {
       ...(await uploadDataBlock(this.accountData.connection, block)),
       index: blockIndex,

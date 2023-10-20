@@ -56,7 +56,7 @@ export class Directory {
    * @param fullPath path for a directory
    */
   async create(podName: string, fullPath: string): Promise<void> {
-    assertAccount(this.accountData)
+    assertAccount(this.accountData, { writeRequired: true })
     assertPodName(podName)
     const { podWallet, pod } = await getExtendedPodsListByAccountData(this.accountData, podName)
 
@@ -76,7 +76,7 @@ export class Directory {
    * @param fullPath path for a directory
    */
   async delete(podName: string, fullPath: string): Promise<void> {
-    assertAccount(this.accountData)
+    assertAccount(this.accountData, { writeRequired: true })
     assertPodName(podName)
     const pathInfo = extractPathInfo(fullPath)
     const connection = this.accountData.connection
@@ -101,7 +101,7 @@ export class Directory {
    * @param options upload directory options
    */
   async upload(podName: string, filesSource: string | FileList, options?: UploadDirectoryOptions): Promise<void> {
-    assertAccount(this.accountData)
+    assertAccount(this.accountData, { writeRequired: true })
     assertPodName(podName)
     const { podWallet, pod } = await getExtendedPodsListByAccountData(this.accountData, podName)
     options = { ...DEFAULT_UPLOAD_DIRECTORY_OPTIONS, ...options }

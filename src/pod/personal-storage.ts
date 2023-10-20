@@ -63,7 +63,7 @@ export class PersonalStorage {
    * @param name pod name
    */
   async create(name: string): Promise<Pod> {
-    assertAccount(this.accountData)
+    assertAccount(this.accountData, { writeRequired: true })
 
     const pod = await createPod(
       this.accountData.connection.bee,
@@ -86,7 +86,7 @@ export class PersonalStorage {
    * @param name pod name
    */
   async delete(name: string): Promise<void> {
-    assertAccount(this.accountData)
+    assertAccount(this.accountData, { writeRequired: true })
     name = name.trim()
     const podsInfo = await getPodsList(this.accountData.connection.bee, this.accountData.wallet!, {
       requestOptions: this.accountData.connection.options?.requestOptions,
@@ -127,7 +127,7 @@ export class PersonalStorage {
    * @returns swarm reference of shared metadata about pod
    */
   async share(name: string): Promise<Reference> {
-    assertAccount(this.accountData)
+    assertAccount(this.accountData, { writeRequired: true })
     assertPodName(name)
     const wallet = this.accountData.wallet!
     const address = prepareEthAddress(wallet.address)
@@ -165,7 +165,7 @@ export class PersonalStorage {
    * @returns shared pod information
    */
   async saveShared(reference: string | EncryptedReference, options?: PodReceiveOptions): Promise<SharedPod> {
-    assertAccount(this.accountData)
+    assertAccount(this.accountData, { writeRequired: true })
     assertEncryptedReference(reference)
 
     const data = await this.getSharedInfo(reference)

@@ -182,7 +182,7 @@ export class AccountData {
 
     assertUsername(username)
     assertPassword(password)
-    assertAccount(this)
+    assertAccount(this, { writeRequired: true })
 
     const wallet = this.wallet!
 
@@ -239,7 +239,7 @@ export class AccountData {
    * @param password FDP password
    */
   async reuploadPortableAccount(username: string, password: string): Promise<void> {
-    assertAccount(this)
+    assertAccount(this, { writeRequired: true })
 
     const wallet = this.wallet!
     const seed = CryptoJS.enc.Hex.parse(removeZeroFromHex(bytesToHex(this.seed!)))
