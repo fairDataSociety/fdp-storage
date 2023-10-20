@@ -1,4 +1,4 @@
-import { stringToBytes, wrapBytesWithHelpers } from '../utils/bytes'
+import { assertMinLength, stringToBytes, wrapBytesWithHelpers } from '../utils/bytes'
 import { Bee, Data, BeeRequestOptions } from '@ethersphere/bee-js'
 import { EthAddress } from '@ethersphere/bee-js/dist/types/utils/eth'
 import {
@@ -33,7 +33,7 @@ import {
 } from './types'
 import { assertPodName, getExtendedPodsListByAccountData, META_VERSION } from '../pod/utils'
 import { getUnixTimestamp } from '../utils/time'
-import { addEntryToDirectory, DEFAULT_UPLOAD_OPTIONS } from '../content-items/handler'
+import { addEntryToDirectory, DEFAULT_UPLOAD_OPTIONS, MINIMUM_BLOCK_SIZE } from '../content-items/handler'
 import { writeFeedData } from '../feed/api'
 import { AccountData } from '../account/account-data'
 import { prepareEthAddress } from '../utils/wallet'
@@ -191,6 +191,7 @@ export async function uploadData(
   assertWallet(accountData.wallet)
 
   const blockSize = options.blockSize ?? Number(DEFAULT_UPLOAD_OPTIONS!.blockSize)
+  assertMinLength(blockSize, MINIMUM_BLOCK_SIZE, `Block size is too small. Minimum is ${MINIMUM_BLOCK_SIZE} bytes.`)
   const contentType = options.contentType ?? String(DEFAULT_UPLOAD_OPTIONS!.contentType)
   const connection = accountData.connection
   updateUploadProgress(options, UploadProgressType.GetPodInfo)

@@ -125,6 +125,18 @@ export function wordArrayToBytes(data: CryptoJS.lib.WordArray): Uint8Array {
 }
 
 /**
+ * Asserts that length is greater than or equal to min length
+ * @param currentLength current length
+ * @param minLength min length
+ * @param customMessage custom error message
+ */
+export function assertMinLength(currentLength: number, minLength: number, customMessage?: string): void {
+  if (currentLength < minLength) {
+    throw new Error(customMessage ? customMessage : `length ${currentLength} is less than min length ${minLength}`)
+  }
+}
+
+/**
  * Asserts that length is less than or equal to max length
  * @param currentLength currentLength
  * @param maxLength max length

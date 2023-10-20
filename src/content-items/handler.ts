@@ -14,8 +14,13 @@ import { PodPasswordBytes } from '../utils/encryption'
 import { DataUploadOptions } from '../file/types'
 import { getNextEpoch } from '../feed/lookup/utils'
 
+/**
+ * Minimum block size for uploading data
+ */
+export const MINIMUM_BLOCK_SIZE = 1000000
+
 export const DEFAULT_UPLOAD_OPTIONS: DataUploadOptions = {
-  blockSize: 1000000,
+  blockSize: MINIMUM_BLOCK_SIZE,
   contentType: '',
 }
 
