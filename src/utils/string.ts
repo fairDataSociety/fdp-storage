@@ -36,5 +36,9 @@ export function assertReference(value: unknown): asserts value is Reference {
  * @param value value to assert
  */
 export function assertBatchId(value: unknown): asserts value is BatchId {
-  Utils.assertHexString(value, REFERENCE_HEX_LENGTH)
+  try {
+    Utils.assertHexString(value, REFERENCE_HEX_LENGTH)
+  } catch (e) {
+    throw new Error(`Batch ID must be a valid hexadecimal string with a length of ${REFERENCE_HEX_LENGTH}`)
+  }
 }

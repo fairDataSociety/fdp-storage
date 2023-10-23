@@ -34,6 +34,8 @@ export class PersonalStorage {
   /**
    * Gets the list of pods for the active account
    *
+   * Account is required, postage batch id is not required
+   *
    * @returns list of pods
    */
   async list(): Promise<PodsList> {
@@ -60,6 +62,8 @@ export class PersonalStorage {
   /**
    * Creates new pod with passed name
    *
+   * Account and postage batch id are required
+   *
    * @param name pod name
    */
   async create(name: string): Promise<Pod> {
@@ -82,6 +86,8 @@ export class PersonalStorage {
 
   /**
    * Deletes pod with passed name
+   *
+   * Account and postage batch id are required
    *
    * @param name pod name
    */
@@ -122,6 +128,8 @@ export class PersonalStorage {
   /**
    * Shares pod information
    *
+   * Account and postage batch id are required
+   *
    * @param name pod name
    *
    * @returns swarm reference of shared metadata about pod
@@ -146,6 +154,8 @@ export class PersonalStorage {
   /**
    * Gets shared pod information
    *
+   * Account and postage batch id are not required
+   *
    * @param reference swarm reference with shared pod information
    *
    * @returns shared pod information
@@ -158,6 +168,8 @@ export class PersonalStorage {
 
   /**
    * Receive and save shared pod information to user's account
+   *
+   * Account and postage batch id are required
    *
    * @param reference swarm reference with shared pod information
    * @param options options for receiving pod

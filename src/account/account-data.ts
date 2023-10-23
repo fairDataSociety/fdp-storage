@@ -77,6 +77,8 @@ export class AccountData {
   /**
    * Exports wallet from version 1 account
    *
+   * Account and postage batch id are not required
+   *
    * @deprecated the method will be removed after an accounts' migration process is completed
    *
    * @param username username from version 1 account
@@ -109,6 +111,8 @@ export class AccountData {
   /**
    * Migrates from FDP account without ENS to account with ENS
    *
+   * Account and postage batch id are not required
+   *
    * @deprecated the method will be removed after an accounts' migration process is completed
    *
    * @param username username from version 1 account
@@ -127,6 +131,8 @@ export class AccountData {
 
   /**
    * Logs in with the FDP credentials and gives back ethers wallet
+   *
+   * Account and postage batch id are not required
    *
    * @param username FDP username
    * @param password password of the wallet
@@ -160,6 +166,8 @@ export class AccountData {
    * the existing RegistrationRequest object. The process will continue from the failed
    * step.
    *
+   * Account and postage batch id are not required
+   *
    * @param username FDP username
    * @param password FDP password
    *
@@ -173,16 +181,18 @@ export class AccountData {
   }
 
   /**
-   * Creates new FDP account and gives back user account with swarm reference
+   * Creates a new FDP account and gives back user account with swarm reference
+   *
+   * Account and postage batch id are required
    *
    * @param request a RegistrationRequest object that contains the state of registration process
    */
   async register(request: RegistrationRequest): Promise<Reference> {
     const { username, password, ensCompleted } = request
 
+    assertAccount(this, { writeRequired: true })
     assertUsername(username)
     assertPassword(password)
-    assertAccount(this, { writeRequired: true })
 
     const wallet = this.wallet!
 
@@ -234,6 +244,8 @@ export class AccountData {
 
   /**
    * Re-uploads portable account without registration in ENS
+   *
+   * Account and postage batch id are required
    *
    * @param username FDP username
    * @param password FDP password

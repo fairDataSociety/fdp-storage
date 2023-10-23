@@ -30,6 +30,8 @@ export class Directory {
   /**
    * Get files and directories under the given path
    *
+   * Account is required, postage batch id is not required
+   *
    * @param podName pod for content search
    * @param path path to start searching from
    * @param isRecursive search with recursion or not
@@ -52,6 +54,8 @@ export class Directory {
   /**
    * Creates a directory
    *
+   * Account and postage batch id are required
+   *
    * @param podName pod where to create a directory
    * @param fullPath path for a directory
    */
@@ -71,6 +75,8 @@ export class Directory {
 
   /**
    * Deletes a directory
+   *
+   * Account and postage batch id are required
    *
    * @param podName pod where to delete a directory
    * @param fullPath path for a directory
@@ -95,6 +101,8 @@ export class Directory {
 
   /**
    * Uploads a directory with files
+   *
+   * Account and postage batch id are required
    *
    * @param podName pod where to upload a directory
    * @param filesSource files source. path for Node.js, `FileList` for browser
