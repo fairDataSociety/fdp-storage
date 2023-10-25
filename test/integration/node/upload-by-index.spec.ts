@@ -1,6 +1,7 @@
 import { createFdp, generateRandomHexString, generateUser, makeFileContent } from '../../utils'
 import { wrapBytesWithHelpers } from '../../../src/utils/bytes'
 import { getDataBlock } from '../../../src'
+import { MINIMUM_BLOCK_SIZE } from '../../../src/content-items/handler'
 
 jest.setTimeout(400000)
 it('Upload by index', async () => {
@@ -24,6 +25,11 @@ it('Upload by index', async () => {
   await expect(fdp.file.uploadData(pod, fullPath, mixedBlocks)).rejects.toThrow(
     'The sequence of `ExternalDataBlock` is not correctly indexed.',
   )
+  await expect(
+    fdp.file.uploadData(pod, fullPath, mixedBlocks, {
+      blockSize: 100,
+    }),
+  ).rejects.toThrow(`Block size is too small. Minimum is ${MINIMUM_BLOCK_SIZE} bytes.`)
 
   const fileMeta = await fdp.file.uploadData(pod, fullPath, blocks)
   expect(fileMeta.fileName).toEqual(filename)
