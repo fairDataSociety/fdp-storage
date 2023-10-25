@@ -8,6 +8,16 @@ import { CacheOptions } from '../src/cache/types'
 import { DEFAULT_UPLOAD_OPTIONS } from '../src/content-items/handler'
 
 /**
+ * Options for FDP initialization
+ */
+export interface CreateFdpOptions {
+  /**
+   * Options for FDP initialization
+   */
+  batchId?: BatchId
+}
+
+/**
  * File content with information for testing
  */
 export interface TestFileContent {
@@ -145,8 +155,11 @@ export const fdpOptions: Options = {
 /**
  * Creates FDP instance with default configuration for testing
  */
-export function createFdp(cacheOptions?: CacheOptions): FdpStorage {
-  return new FdpStorage(beeUrl(), batchId(), { ...fdpOptions, ...(cacheOptions ? { cacheOptions } : undefined) })
+export function createFdp(cacheOptions?: CacheOptions, options?: CreateFdpOptions): FdpStorage {
+  return new FdpStorage(beeUrl(), options?.batchId ?? batchId(), {
+    ...fdpOptions,
+    ...(cacheOptions ? { cacheOptions } : undefined),
+  })
 }
 
 /**

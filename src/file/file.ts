@@ -27,6 +27,7 @@ import { BeeRequestOptions, Reference } from '@ethersphere/bee-js'
 import { getRawMetadata } from '../content-items/utils'
 import { assertRawFileMetadata, combine, splitPath } from '../directory/utils'
 import { assertEncryptedReference, EncryptedReference } from '../utils/hex'
+import { assertBatchId } from '../utils/string'
 
 /**
  * Files management class
@@ -36,6 +37,8 @@ export class File {
 
   /**
    * Downloads file content
+   *
+   * Account is required, postage batch id is not required
    *
    * @param podName pod where file is stored
    * @param fullPath full path of the file
@@ -58,6 +61,8 @@ export class File {
   /**
    * Uploads file content
    *
+   * Account and postage batch id are required
+   *
    * @param podName pod where file is stored
    * @param fullPath full path of the file
    * @param data file content or ExternalDataBlock[] indexed in ascending order
@@ -70,7 +75,7 @@ export class File {
     options?: DataUploadOptions,
   ): Promise<FileMetadata> {
     options = { ...DEFAULT_UPLOAD_OPTIONS, ...options }
-    assertAccount(this.accountData)
+    assertAccount(this.accountData, { writeRequired: true })
     assertPodName(podName)
 
     return uploadData(podName, fullPath, data, this.accountData, options)
@@ -79,11 +84,13 @@ export class File {
   /**
    * Deletes a file
    *
+   * Account and postage batch id are required
+   *
    * @param podName pod where file is located
    * @param fullPath full path of the file
    */
   async delete(podName: string, fullPath: string): Promise<void> {
-    assertAccount(this.accountData)
+    assertAccount(this.accountData, { writeRequired: true })
     assertFullPathWithName(fullPath)
     assertPodName(podName)
     const pathInfo = extractPathInfo(fullPath)
@@ -101,11 +108,13 @@ export class File {
   /**
    * Shares file information
    *
+   * Account and postage batch id are required
+   *
    * @param podName pod where file is stored
    * @param fullPath full path of the file
    */
   async share(podName: string, fullPath: string): Promise<Reference> {
-    assertAccount(this.accountData)
+    assertAccount(this.accountData, { writeRequired: true })
     assertFullPathWithName(fullPath)
     assertPodName(podName)
 
@@ -121,12 +130,13 @@ export class File {
   /**
    * Gets shared file information
    *
+   * Account and postage batch id are not required
+   *
    * @param reference swarm reference with shared file information
    *
    * @returns shared file information
    */
   async getSharedInfo(reference: string | EncryptedReference): Promise<FileShareInfo> {
-    assertAccount(this.accountData)
     assertEncryptedReference(reference)
 
     return getSharedFileInfo(this.accountData.connection.bee, reference)
@@ -134,6 +144,8 @@ export class File {
 
   /**
    * Saves shared file to a personal account
+   *
+   * Account and postage batch id are required
    *
    * @param podName pod where file is stored
    * @param parentPath the path to the file to save
@@ -148,6 +160,7 @@ export class File {
     reference: string | EncryptedReference,
     options?: FileReceiveOptions,
   ): Promise<FileMetadata> {
+    assertAccount(this.accountData, { writeRequired: true })
     assertPodName(podName)
     const sharedInfo = await this.getSharedInfo(reference)
     const connection = this.accountData.connection
@@ -165,10 +178,14 @@ export class File {
   /**
    * Uploads a data block without constructing a file metadata
    *
+   * Account is not required, postage batch id is required
+   *
    * @param block block data
    * @param blockIndex block index
    */
   async uploadDataBlock(block: Uint8Array, blockIndex: number): Promise<ExternalDataBlock> {
+    assertBatchId(this.accountData.connection.postageBatchId)
+
     return {
       ...(await uploadDataBlock(this.accountData.connection, block)),
       index: blockIndex,
@@ -177,6 +194,8 @@ export class File {
 
   /**
    * Downloads file metadata with blocks data
+   *
+   * Account is required, postage batch id is not required
    *
    * @param podName pod where file is stored
    * @param fullPath full path of the file
@@ -205,6 +224,8 @@ export class File {
 
   /**
    * Downloads data block using file metadata
+   *
+   * No account or postage batch id is required
    *
    * @param meta file metadata
    * @param blockIndex block index

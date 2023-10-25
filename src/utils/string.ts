@@ -1,5 +1,5 @@
 import CryptoJS from 'crypto-js'
-import { ENCRYPTED_REFERENCE_HEX_LENGTH, Reference, REFERENCE_HEX_LENGTH, Utils } from '@ethersphere/bee-js'
+import { BatchId, ENCRYPTED_REFERENCE_HEX_LENGTH, Reference, REFERENCE_HEX_LENGTH, Utils } from '@ethersphere/bee-js'
 
 /**
  * Replace all occurrences of a string with another string
@@ -28,5 +28,17 @@ export function assertReference(value: unknown): asserts value is Reference {
     Utils.assertHexString(value, REFERENCE_HEX_LENGTH)
   } catch (e) {
     Utils.assertHexString(value, ENCRYPTED_REFERENCE_HEX_LENGTH)
+  }
+}
+
+/**
+ * Asserts that the given value is a BatchId
+ * @param value value to assert
+ */
+export function assertBatchId(value: unknown): asserts value is BatchId {
+  try {
+    Utils.assertHexString(value, REFERENCE_HEX_LENGTH)
+  } catch (e) {
+    throw new Error(`Batch ID must be a valid hexadecimal string with a length of ${REFERENCE_HEX_LENGTH}`)
   }
 }

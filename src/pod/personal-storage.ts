@@ -34,6 +34,8 @@ export class PersonalStorage {
   /**
    * Gets the list of pods for the active account
    *
+   * Account is required, postage batch id is not required
+   *
    * @returns list of pods
    */
   async list(): Promise<PodsList> {
@@ -60,10 +62,12 @@ export class PersonalStorage {
   /**
    * Creates new pod with passed name
    *
+   * Account and postage batch id are required
+   *
    * @param name pod name
    */
   async create(name: string): Promise<Pod> {
-    assertAccount(this.accountData)
+    assertAccount(this.accountData, { writeRequired: true })
 
     const pod = await createPod(
       this.accountData.connection.bee,
@@ -83,10 +87,12 @@ export class PersonalStorage {
   /**
    * Deletes pod with passed name
    *
+   * Account and postage batch id are required
+   *
    * @param name pod name
    */
   async delete(name: string): Promise<void> {
-    assertAccount(this.accountData)
+    assertAccount(this.accountData, { writeRequired: true })
     name = name.trim()
     const podsInfo = await getPodsList(this.accountData.connection.bee, this.accountData.wallet!, {
       requestOptions: this.accountData.connection.options?.requestOptions,
@@ -122,12 +128,14 @@ export class PersonalStorage {
   /**
    * Shares pod information
    *
+   * Account and postage batch id are required
+   *
    * @param name pod name
    *
    * @returns swarm reference of shared metadata about pod
    */
   async share(name: string): Promise<Reference> {
-    assertAccount(this.accountData)
+    assertAccount(this.accountData, { writeRequired: true })
     assertPodName(name)
     const wallet = this.accountData.wallet!
     const address = prepareEthAddress(wallet.address)
@@ -146,6 +154,8 @@ export class PersonalStorage {
   /**
    * Gets shared pod information
    *
+   * Account and postage batch id are not required
+   *
    * @param reference swarm reference with shared pod information
    *
    * @returns shared pod information
@@ -159,13 +169,15 @@ export class PersonalStorage {
   /**
    * Receive and save shared pod information to user's account
    *
+   * Account and postage batch id are required
+   *
    * @param reference swarm reference with shared pod information
    * @param options options for receiving pod
    *
    * @returns shared pod information
    */
   async saveShared(reference: string | EncryptedReference, options?: PodReceiveOptions): Promise<SharedPod> {
-    assertAccount(this.accountData)
+    assertAccount(this.accountData, { writeRequired: true })
     assertEncryptedReference(reference)
 
     const data = await this.getSharedInfo(reference)

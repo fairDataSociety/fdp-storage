@@ -30,6 +30,8 @@ export class Directory {
   /**
    * Get files and directories under the given path
    *
+   * Account is required, postage batch id is not required
+   *
    * @param podName pod for content search
    * @param path path to start searching from
    * @param isRecursive search with recursion or not
@@ -52,11 +54,13 @@ export class Directory {
   /**
    * Creates a directory
    *
+   * Account and postage batch id are required
+   *
    * @param podName pod where to create a directory
    * @param fullPath path for a directory
    */
   async create(podName: string, fullPath: string): Promise<void> {
-    assertAccount(this.accountData)
+    assertAccount(this.accountData, { writeRequired: true })
     assertPodName(podName)
     const { podWallet, pod } = await getExtendedPodsListByAccountData(this.accountData, podName)
 
@@ -72,11 +76,13 @@ export class Directory {
   /**
    * Deletes a directory
    *
+   * Account and postage batch id are required
+   *
    * @param podName pod where to delete a directory
    * @param fullPath path for a directory
    */
   async delete(podName: string, fullPath: string): Promise<void> {
-    assertAccount(this.accountData)
+    assertAccount(this.accountData, { writeRequired: true })
     assertPodName(podName)
     const pathInfo = extractPathInfo(fullPath)
     const connection = this.accountData.connection
@@ -96,12 +102,14 @@ export class Directory {
   /**
    * Uploads a directory with files
    *
+   * Account and postage batch id are required
+   *
    * @param podName pod where to upload a directory
    * @param filesSource files source. path for Node.js, `FileList` for browser
    * @param options upload directory options
    */
   async upload(podName: string, filesSource: string | FileList, options?: UploadDirectoryOptions): Promise<void> {
-    assertAccount(this.accountData)
+    assertAccount(this.accountData, { writeRequired: true })
     assertPodName(podName)
     const { podWallet, pod } = await getExtendedPodsListByAccountData(this.accountData, podName)
     options = { ...DEFAULT_UPLOAD_DIRECTORY_OPTIONS, ...options }

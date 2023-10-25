@@ -4,8 +4,9 @@ import { makeSpan, stringToBytes, wrapBytesWithHelpers } from '../utils/bytes'
 import { AccountData } from './account-data'
 import { isValidMnemonic } from 'ethers/lib/utils'
 import CryptoJS from 'crypto-js'
-import { replaceAll } from '../utils/string'
+import { assertBatchId, replaceAll } from '../utils/string'
 import { assertString } from '../utils/type'
+import { AssertAccountOptions } from './types'
 
 export const MNEMONIC_LENGTH = 12
 export const MAX_CHUNK_LENGTH = 4096
@@ -131,8 +132,9 @@ export function assertMnemonic(value: unknown): asserts value is string {
  * Asserts whether an account is defined
  *
  * @param value instance of AccountData to check
+ * @param options options to check
  */
-export function assertAccount(value: unknown): asserts value is AccountData {
+export function assertAccount(value: unknown, options?: AssertAccountOptions): asserts value is AccountData {
   const data = value as AccountData
 
   if (!data.wallet) {
@@ -145,6 +147,10 @@ export function assertAccount(value: unknown): asserts value is AccountData {
 
   if (!data.publicKey) {
     throw new Error('Public key is empty')
+  }
+
+  if (options?.writeRequired) {
+    assertBatchId(data.connection.postageBatchId)
   }
 }
 
