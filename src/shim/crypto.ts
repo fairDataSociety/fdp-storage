@@ -2,7 +2,9 @@ import crypto from 'crypto'
 import { isNode } from './utils'
 
 const getRandomValuesNode = <T extends ArrayBufferView | null>(array: T): T => {
-  if (!(array instanceof Uint8Array || array instanceof Uint32Array)) {
+  const isUint32Array = array instanceof Uint32Array
+
+  if (!(array instanceof Uint8Array || isUint32Array)) {
     throw new TypeError('Expected Uint8Array or Uint32Array')
   }
 
@@ -13,8 +15,11 @@ const getRandomValuesNode = <T extends ArrayBufferView | null>(array: T): T => {
     throw e
   }
 
-  const bytes = crypto.randomBytes(array.length)
-  array.set(bytes)
+  if (isUint32Array) {
+    array.set(new Uint32Array(crypto.randomBytes(array.byteLength).buffer))
+  } else {
+    array.set(crypto.randomBytes(array.length))
+  }
 
   return array
 }
