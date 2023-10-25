@@ -10,7 +10,14 @@ import {
   PodsList,
 } from './types'
 import { Bee, Data, Utils } from '@ethersphere/bee-js'
-import { assertMaxLength, bytesToString, stringToBytes, wordArrayToBytes } from '../utils/bytes'
+import {
+  assertAllowedZeroBytes,
+  assertMaxLength,
+  bytesToString,
+  MAX_ZEROS_PERCENTAGE_ALLOWED,
+  stringToBytes,
+  wordArrayToBytes,
+} from '../utils/bytes'
 import { utils } from 'ethers'
 import { getRawDirectoryMetadataBytes } from '../directory/adapter'
 import {
@@ -364,7 +371,10 @@ export function assertPodShareInfo(value: unknown): asserts value is PodShareInf
  * Generates random password for a pod
  */
 export function getRandomPodPassword(): PodPasswordBytes {
-  return wordArrayToBytes(CryptoJS.lib.WordArray.random(POD_PASSWORD_LENGTH)) as PodPasswordBytes
+  const password = wordArrayToBytes(CryptoJS.lib.WordArray.random(POD_PASSWORD_LENGTH)) as PodPasswordBytes
+  assertAllowedZeroBytes(password, MAX_ZEROS_PERCENTAGE_ALLOWED)
+
+  return password
 }
 
 /**

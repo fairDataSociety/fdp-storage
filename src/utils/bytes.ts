@@ -12,6 +12,11 @@ import CryptoJS from 'crypto-js'
 
 export const SPAN_SIZE = 8
 
+/**
+ * Max percentage of zero bytes allowed in the array
+ */
+export const MAX_ZEROS_PERCENTAGE_ALLOWED = 20
+
 // we limit the maximum span size in 32 bits to avoid BigInt compatibility issues
 const MAX_SPAN_LENGTH = 2 ** 32 - 1
 
@@ -146,4 +151,35 @@ export function assertMaxLength(currentLength: number, maxLength: number, custom
   if (currentLength > maxLength) {
     throw new Error(customMessage ? customMessage : `length ${currentLength} exceeds max length ${maxLength}`)
   }
+}
+
+/**
+ * Asserts if the percentage of zero bytes in the array is less or equal than allowed
+ * @param bytes
+ * @param allowedPercentage
+ */
+export function assertAllowedZeroBytes(bytes: Uint8Array, allowedPercentage: number): void {
+  if (!isAllowedZeroBytes(bytes, allowedPercentage)) {
+    throw new Error(
+      `bytes contain more than ${allowedPercentage}% of zero bytes. The reason could be a poor source of random numbers.`,
+    )
+  }
+}
+
+/**
+ * Checks if the percentage of zero bytes in the array is less or equal than allowed
+ * @param bytes bytes to check
+ * @param allowedPercentage allowed percentage of zero bytes
+ */
+export function isAllowedZeroBytes(bytes: Uint8Array, allowedPercentage: number): boolean {
+  const allowedZeroBytes = Math.floor((bytes.length * allowedPercentage) / 100)
+  let zeroBytes = 0
+
+  for (const byte of bytes) {
+    if (byte === 0) {
+      zeroBytes++
+    }
+  }
+
+  return zeroBytes <= allowedZeroBytes
 }

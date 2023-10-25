@@ -1,6 +1,7 @@
-import { isPod, isSharedPod, MAX_POD_NAME_LENGTH } from '../../../src/pod/utils'
+import { getRandomPodPassword, isPod, isSharedPod, MAX_POD_NAME_LENGTH } from '../../../src/pod/utils'
 import { Utils } from '@ethersphere/bee-js'
 import { POD_PASSWORD_LENGTH } from '../../../src/utils/encryption'
+import { isAllowedZeroBytes } from '../../../src/utils/bytes'
 
 describe('pod/utils', () => {
   it('isSharedPod', () => {
@@ -126,5 +127,17 @@ describe('pod/utils', () => {
     it('should return false for a string', () => {
       expect(isPod('string')).toBeFalsy()
     })
+  })
+
+  it('getRandomPodPassword', () => {
+    // created to check https://github.com/fairDataSociety/fdp-storage/issues/212
+    expect(isAllowedZeroBytes(new Uint8Array([0, 1, 1, 1, 1, 1, 1, 1, 1, 1]), 10)).toBeTruthy()
+    expect(isAllowedZeroBytes(new Uint8Array([0, 0, 1, 1, 1, 1, 1, 1, 1, 1]), 10)).toBeFalsy()
+    expect(isAllowedZeroBytes(new Uint8Array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]), 10)).toBeFalsy()
+
+    for (let i = 0; i < 100; i++) {
+      const password = getRandomPodPassword()
+      expect(password).toHaveLength(POD_PASSWORD_LENGTH)
+    }
   })
 })
