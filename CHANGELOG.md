@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.16.0](https://github.com/fairDataSociety/fdp-storage/compare/v0.15.0...v0.16.0) (2023-10-25)
+
+
+### Features
+
+* add length assertion for pod list size ([#273](https://github.com/fairDataSociety/fdp-storage/issues/273)) ([0735ded](https://github.com/fairDataSociety/fdp-storage/commit/0735ded12f1db0bb5d7d6b8f9bc4cb1bda9c3066))
+* clear postage batch error ([#280](https://github.com/fairDataSociety/fdp-storage/issues/280)) ([776eb83](https://github.com/fairDataSociety/fdp-storage/commit/776eb83a1e8bc40e5c9a4bfd7e85e4dab2df61d5))
+* enforce minimum block size for data upload ([#279](https://github.com/fairDataSociety/fdp-storage/issues/279)) ([b1f89a1](https://github.com/fairDataSociety/fdp-storage/commit/b1f89a14b007094ed15779a7acac595064222bca))
+* export length constants for pod and directory names ([#276](https://github.com/fairDataSociety/fdp-storage/issues/276)) ([8d1caa9](https://github.com/fairDataSociety/fdp-storage/commit/8d1caa9e490d9fb041f5d285c1b2b311edb40c76))
+* export PodTypes, Encryption, and Bytes ([#278](https://github.com/fairDataSociety/fdp-storage/issues/278)) ([f64cb0e](https://github.com/fairDataSociety/fdp-storage/commit/f64cb0e7e68f9d86d21284116b24f18e67d5efe6))
+
+
+### Bug Fixes
+
+* enhance pod password generation with zero byte check and update crypto-js to 4.2.0 ([#281](https://github.com/fairDataSociety/fdp-storage/issues/281)) ([589df71](https://github.com/fairDataSociety/fdp-storage/commit/589df712d9c0f496b48dd1db2b8e44ee58df306e))
+
 ## [0.15.0](https://github.com/fairDataSociety/fdp-storage/compare/v0.14.0...v0.15.0) (2023-10-16)
 
 
