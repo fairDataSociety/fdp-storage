@@ -3,7 +3,8 @@
   "include": [
     "src",
     "test",
-    "jest.config.ts"
+    "jest.config.ts",
+    ".eslintrc.js",
   ],
   "compilerOptions": {
     "noEmit": true,

@@ -14,6 +14,7 @@ module.exports = {
   },
   plugins: ['jest', 'unused-imports'],
   rules: {
+    '@typescript-eslint/await-thenable': 'error',
     'array-bracket-newline': ['error', 'consistent'],
     strict: ['error', 'safe'],
     'block-scoped-var': 'error',
