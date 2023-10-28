@@ -36,7 +36,10 @@ export class Epoch {
    * @param level level that identify a specific epoch
    * @param time time that identify a specific epoch
    */
-  constructor(public level: number, public time: number) {}
+  constructor(
+    public level: number,
+    public time: number,
+  ) {}
 
   /**
    * Calculates base time in form of number for `level` and `time`

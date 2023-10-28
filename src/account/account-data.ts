@@ -28,7 +28,10 @@ export class AccountData {
    */
   public publicKey?: PublicKey
 
-  constructor(public readonly connection: Connection, public readonly ens: ENS) {}
+  constructor(
+    public readonly connection: Connection,
+    public readonly ens: ENS,
+  ) {}
 
   /**
    * Connects wallet with ENS
