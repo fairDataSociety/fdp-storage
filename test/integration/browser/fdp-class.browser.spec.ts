@@ -1,10 +1,8 @@
 import { join } from 'path'
-import { batchId, beeUrl, createFdp, fdpOptions, generateRandomHexString, generateUser, TestUser } from '../../utils'
+import { batchId, beeUrl, createFdp, fdpOptions, generateRandomHexString, generateUser } from '../../utils'
 import '../../../src'
 import '../../index'
-import { JSONArray, JSONObject } from 'puppeteer'
-import { FdpStorage } from '../../../src'
-import { MAX_POD_NAME_LENGTH } from '../../../src/pod/utils'
+import { FdpStorage, MAX_POD_NAME_LENGTH } from '../../../src'
 import { createUserV1 } from '../../../src/account/account'
 import { Pod, PodShareInfo, RawFileMetadata } from '../../../src/pod/types'
 import { FileShareInfo } from '../../../src/file/types'
@@ -104,9 +102,9 @@ describe('Fair Data Protocol class - in browser', () => {
 
     it('should fail on zero balance', async () => {
       const user = generateUser()
-      const jsonUser = user as unknown as JSONObject
 
       await page.evaluate(async user => {
+        user = JSON.parse(user)
         const fdp = eval(await window.initFdp()) as FdpStorage
 
         fdp.account.createWallet()
@@ -114,12 +112,13 @@ describe('Fair Data Protocol class - in browser', () => {
           fdp.account.register(fdp.account.createRegistrationRequest(user.username, user.password)),
           'Not enough funds',
         )
-      }, jsonUser)
+      }, JSON.stringify(user))
     })
 
     it('should register users', async () => {
-      const usersList = [generateUser(), generateUser()] as unknown as JSONArray
+      const usersList = [generateUser(), generateUser()]
       const createdUsers = await page.evaluate(async users => {
+        users = JSON.parse(users)
         const fdp = eval(await window.initFdp()) as FdpStorage
 
         await window.shouldFail(
@@ -142,7 +141,7 @@ describe('Fair Data Protocol class - in browser', () => {
         }
 
         return result
-      }, usersList)
+      }, JSON.stringify(usersList))
 
       for (const createdUser of createdUsers) {
         expect(createdUser).toBeDefined()
@@ -150,7 +149,8 @@ describe('Fair Data Protocol class - in browser', () => {
     })
 
     it('should throw when registering already registered user', async () => {
-      await page.evaluate(async (user: TestUser) => {
+      await page.evaluate(async user => {
+        user = JSON.parse(user)
         const fdp = eval(await window.initFdp()) as FdpStorage
         fdp.account.createWallet()
         await window.topUpAddress(fdp)
@@ -160,19 +160,19 @@ describe('Fair Data Protocol class - in browser', () => {
           fdp.account.register(fdp.account.createRegistrationRequest(user.username, user.password)),
           `ENS: Username ${user.username} is not available`,
         )
-      }, generateUser() as unknown as JSONObject)
+      }, JSON.stringify(generateUser()))
     })
 
     it('should migrate v1 user to v2', async () => {
       const fdp = createFdp()
       const user = generateUser()
       const user2 = generateUser()
-      const jsonUser = user as unknown as JSONObject
-      const jsonUser2 = user2 as unknown as JSONObject
       await createUserV1(fdp.connection, user.username, user.password, user.mnemonic)
 
       const result = await page.evaluate(
-        async (user: TestUser, user2: TestUser) => {
+        async (user, user2) => {
+          user = JSON.parse(user)
+          user2 = JSON.parse(user2)
           const fdp = eval(await window.initFdp()) as FdpStorage
           const fdp2 = eval(await window.initFdp()) as FdpStorage
           fdp.account.setAccountFromMnemonic(user.mnemonic)
@@ -191,8 +191,8 @@ describe('Fair Data Protocol class - in browser', () => {
 
           return { address: loggedWallet.address }
         },
-        jsonUser,
-        jsonUser2,
+        JSON.stringify(user),
+        JSON.stringify(user2),
       )
 
       expect(result.address).toEqual(user.address)
@@ -202,8 +202,8 @@ describe('Fair Data Protocol class - in browser', () => {
   describe('Login', () => {
     it('should login with existing user', async () => {
       const user = generateUser()
-      const jsonUser = user as unknown as JSONObject
-      const answer = await page.evaluate(async (user: TestUser) => {
+      const answer = await page.evaluate(async user => {
+        user = JSON.parse(user)
         const result = {} as {
           result1: { address: string }
           result2: { address: string }
@@ -222,7 +222,7 @@ describe('Fair Data Protocol class - in browser', () => {
         result.result2 = { address: data2.address }
 
         return result
-      }, jsonUser)
+      }, JSON.stringify(user))
 
       expect(answer.result1.address).toBeDefined()
       expect(answer.result2.address).toEqual(answer.createdWallet.address)
@@ -230,26 +230,26 @@ describe('Fair Data Protocol class - in browser', () => {
 
     it('should throw when username is not registered', async () => {
       const user = generateUser()
-      const jsonFakeUser = user as unknown as JSONObject
 
-      await page.evaluate(async (fakeUser: TestUser) => {
+      await page.evaluate(async fakeUser => {
+        fakeUser = JSON.parse(fakeUser)
         const fdp = eval(await window.initFdp()) as FdpStorage
 
         await window.shouldFail(
           fdp.account.login(fakeUser.username, fakeUser.password),
           `Username "${fakeUser.username}" does not exist`,
         )
-      }, jsonFakeUser)
+      }, JSON.stringify(user))
     })
 
     it('should throw when password is not correct', async () => {
       const user = generateUser()
       const user1 = generateUser()
-      const jsonUser = user as unknown as JSONObject
-      const jsonUser1 = user1 as unknown as JSONObject
 
       await page.evaluate(
-        async (user: TestUser, user1: TestUser) => {
+        async (user, user1) => {
+          user = JSON.parse(user)
+          user1 = JSON.parse(user1)
           const fdp = eval(await window.initFdp()) as FdpStorage
           fdp.account.createWallet()
           await window.topUpAddress(fdp)
@@ -259,8 +259,8 @@ describe('Fair Data Protocol class - in browser', () => {
           await window.shouldFail(fdp.account.login(user.username, user1.password), 'Incorrect password')
           await window.shouldFail(fdp.account.login(user.username, ''), 'Incorrect password')
         },
-        jsonUser,
-        jsonUser1,
+        JSON.stringify(user),
+        JSON.stringify(user1),
       )
     })
   })
@@ -280,6 +280,15 @@ describe('Fair Data Protocol class - in browser', () => {
     it('should create pods', async () => {
       const longPodName = generateRandomHexString(MAX_POD_NAME_LENGTH + 1)
       const commaPodName = generateRandomHexString() + ', ' + generateRandomHexString()
+
+      interface IterationResult {
+        result: { name: string; index: number }
+        example: {
+          name: string
+          index: number
+        }
+        list: unknown[]
+      }
 
       const { result, mnemonic } = await page.evaluate(
         async (longPodName: string, commaPodName: string) => {
@@ -310,7 +319,8 @@ describe('Fair Data Protocol class - in browser', () => {
       ]
 
       const result1 = await page.evaluate(
-        async (examples: JSONArray, mnemonic: string) => {
+        async (examples, mnemonic: string) => {
+          examples = JSON.parse(examples)
           const fdp = eval(await window.initFdp()) as FdpStorage
           fdp.account.setAccountFromMnemonic(mnemonic)
 
@@ -337,13 +347,9 @@ describe('Fair Data Protocol class - in browser', () => {
             `Pod with name "${failPod.name}" already exists`,
           )
 
-          return iterations as unknown as {
-            result: JSONObject
-            example: { name: string; index: number }
-            list: JSONArray
-          }[]
+          return iterations as unknown as IterationResult[]
         },
-        examples as unknown as JSONArray,
+        JSON.stringify(examples),
         mnemonic,
       )
 
