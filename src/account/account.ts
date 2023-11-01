@@ -1,38 +1,10 @@
 import { Bee, PrivateKeyBytes, Reference, Utils } from '@ethersphere/bee-js'
 import { utils, Wallet } from 'ethers'
-import { encryptText, IV_LENGTH, decryptBytes, encryptBytes } from '../utils/encryption'
-import { uploadEncryptedMnemonic } from './mnemonic'
-import {
-  assertChunkSizeLength,
-  assertMnemonic,
-  assertPassword,
-  CHUNK_SIZE,
-  SEED_SIZE,
-  createCredentialsTopic,
-  HD_PATH,
-} from './utils'
+import { IV_LENGTH, decryptBytes, encryptBytes } from '../utils/encryption'
+import { assertChunkSizeLength, CHUNK_SIZE, SEED_SIZE, createCredentialsTopic, HD_PATH } from './utils'
 import { Connection } from '../connection/connection'
 import CryptoJS from 'crypto-js'
 import { wordArrayToBytes } from '../utils/bytes'
-
-/**
- * Created and encrypted user account to upload to the network
- * @deprecated interface for v1 accounts
- */
-interface UserAccount {
-  wallet: Wallet
-  mnemonic: string
-  encryptedMnemonic: string
-}
-
-/**
- * Account and mnemonic phrase
- * @deprecated interface for v1 accounts
- */
-export interface UserAccountWithMnemonic {
-  wallet: Wallet
-  mnemonic: string
-}
 
 /**
  * User account with seed phrase
@@ -40,62 +12,6 @@ export interface UserAccountWithMnemonic {
 export interface UserAccountWithSeed {
   wallet: Wallet
   seed: Uint8Array
-}
-
-/**
- * Encrypted account uploaded to the network
- */
-export interface UserAccountWithReference extends UserAccount {
-  reference: Reference
-}
-
-/**
- * Creates a new user account based on the passed mnemonic phrase or without it, encrypted with a password
- *
- * @deprecated method for v1 accounts
- *
- * @param password FDP password
- * @param mnemonic mnemonic phrase
- */
-async function createUserAccount(password: string, mnemonic?: string): Promise<UserAccount> {
-  assertPassword(password)
-
-  if (mnemonic) {
-    assertMnemonic(mnemonic)
-  } else {
-    mnemonic = Wallet.createRandom().mnemonic.phrase
-  }
-
-  const wallet = Wallet.fromMnemonic(mnemonic)
-  const encryptedMnemonic = encryptText(password, mnemonic)
-
-  return {
-    wallet,
-    mnemonic,
-    encryptedMnemonic,
-  }
-}
-
-/**
- * Creates a new user (version 1) and uploads the encrypted account to the network
- *
- * @deprecated use `createUser` method instead to create the latest version of an account
- *
- * @param connection connection information for data uploading
- * @param username FDP username
- * @param password FDP password
- * @param mnemonic mnemonic phrase
- */
-export async function createUserV1(
-  connection: Connection,
-  username: string,
-  password: string,
-  mnemonic?: string,
-): Promise<UserAccountWithReference> {
-  const account = await createUserAccount(password, mnemonic)
-  const reference = await uploadEncryptedMnemonic(connection, account.wallet, username, account.encryptedMnemonic)
-
-  return { ...account, reference }
 }
 
 /**
