@@ -15,7 +15,7 @@ import { DIRECTORY_TOKEN, FILE_TOKEN } from '../file/handler'
 import { getUnixTimestamp } from '../utils/time'
 import { createRawDirectoryMetadata, META_VERSION } from '../pod/utils'
 import { Connection } from '../connection/connection'
-import { utils } from 'ethers'
+import { HDNodeWallet } from 'ethers'
 import { addEntryToDirectory, DEFAULT_UPLOAD_OPTIONS } from '../content-items/handler'
 import {
   rawDirectoryMetadataToDirectoryItem,
@@ -122,7 +122,7 @@ async function createDirectoryInfo(
   path: string,
   name: string,
   podPassword: PodPasswordBytes,
-  wallet: utils.HDNode,
+  wallet: HDNodeWallet,
   epoch?: Epoch,
 ): Promise<Reference> {
   const now = getUnixTimestamp()
@@ -141,7 +141,7 @@ async function createDirectoryInfo(
 export async function createRootDirectory(
   connection: Connection,
   podPassword: PodPasswordBytes,
-  wallet: utils.HDNode,
+  wallet: HDNodeWallet,
 ): Promise<Reference> {
   return createDirectoryInfo(connection, '', '/', podPassword, wallet)
 }
@@ -158,7 +158,7 @@ export async function createRootDirectory(
 export async function createDirectory(
   connection: Connection,
   fullPath: string,
-  podWallet: utils.HDNode,
+  podWallet: HDNodeWallet,
   podPassword: PodPasswordBytes,
   downloadOptions?: BeeRequestOptions,
 ): Promise<void> {

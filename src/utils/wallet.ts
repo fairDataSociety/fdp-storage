@@ -1,4 +1,4 @@
-import { utils } from 'ethers'
+import { HDNodeWallet, Mnemonic } from 'ethers'
 import { PrivateKeyBytes, Utils } from '@ethersphere/bee-js'
 import { removeZeroFromHex } from '../account/utils'
 
@@ -8,8 +8,8 @@ import { removeZeroFromHex } from '../account/utils'
  * @param seed data for wallet creation
  * @param index wallet index
  */
-export function getWalletByIndex(seed: Uint8Array, index: number): utils.HDNode {
-  const node = utils.HDNode.fromSeed(seed)
+export function getWalletByIndex(seed: Uint8Array, index: number): HDNodeWallet {
+  const node = HDNodeWallet.fromSeed(seed)
 
   return node.derivePath(`m/44'/60'/0'/0/${index}`)
 }
@@ -29,7 +29,7 @@ export function privateKeyToBytes(privateKey: string): PrivateKeyBytes {
  * @param mnemonic mnemonic phrase
  */
 export function mnemonicToSeed(mnemonic: string): Uint8Array {
-  return Utils.hexToBytes(removeZeroFromHex(utils.mnemonicToSeed(mnemonic)))
+  return Utils.hexToBytes(removeZeroFromHex(Mnemonic.fromPhrase(mnemonic).computeSeed()))
 }
 
 /**

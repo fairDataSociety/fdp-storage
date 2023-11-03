@@ -8,7 +8,7 @@ import { getUnixTimestamp } from '../utils/time'
 import { LookupAnswer } from './types'
 import { Connection } from '../connection/connection'
 import { encryptBytes, PodPasswordBytes } from '../utils/encryption'
-import { utils, Wallet } from 'ethers'
+import { HDNodeWallet } from 'ethers'
 
 /**
  * Magic word for replacing content after deletion
@@ -53,7 +53,7 @@ export async function writeFeedData(
   connection: Connection,
   topic: string,
   data: Uint8Array,
-  wallet: utils.HDNode | Wallet,
+  wallet: HDNodeWallet,
   podPassword: PodPasswordBytes,
   epoch?: Epoch,
 ): Promise<Reference> {

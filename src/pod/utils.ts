@@ -18,7 +18,7 @@ import {
   stringToBytes,
   wordArrayToBytes,
 } from '../utils/bytes'
-import { utils } from 'ethers'
+import { HDNodeWallet } from 'ethers'
 import { getRawDirectoryMetadataBytes } from '../directory/adapter'
 import {
   assertArray,
@@ -68,7 +68,7 @@ export interface PodsInfo {
  */
 export interface ExtendedPodInfo {
   pod: PodPrepared
-  podWallet: utils.HDNode
+  podWallet: HDNodeWallet
   podAddress: Utils.EthAddress
   epoch: Epoch
 }
@@ -389,7 +389,7 @@ export function getRandomPodPassword(): PodPasswordBytes {
 export async function createPod(
   bee: Bee,
   connection: Connection,
-  userWallet: utils.HDNode,
+  userWallet: HDNodeWallet,
   seed: Uint8Array,
   pod: PodName | SharedPodPrepared,
 ): Promise<PodPrepared | SharedPodPrepared> {

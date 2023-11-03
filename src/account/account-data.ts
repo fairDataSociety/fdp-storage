@@ -1,4 +1,4 @@
-import { utils, Wallet } from 'ethers'
+import { computeAddress, HDNodeWallet, SigningKey, Wallet } from 'ethers'
 import { assertAccount, assertPassword, assertUsername, HD_PATH, removeZeroFromHex } from './utils'
 import { downloadPortableAccount, uploadPortableAccount } from './account'
 import { Connection } from '../connection/connection'
@@ -14,7 +14,7 @@ export class AccountData {
   /**
    * Active FDP account wallet
    */
-  public wallet?: utils.HDNode
+  public wallet?: HDNodeWallet
 
   /**
    * Active FDP account's seed for entity creation
@@ -36,7 +36,7 @@ export class AccountData {
    */
   private connectWalletWithENS(seed: Uint8Array) {
     this.seed = seed
-    this.wallet = utils.HDNode.fromSeed(seed).derivePath(HD_PATH)
+    this.wallet = HDNodeWallet.fromSeed(seed).derivePath(HD_PATH)
     this.ens.connect(new Wallet(this.wallet!.privateKey).connect(this.ens.provider))
   }
 
@@ -46,8 +46,8 @@ export class AccountData {
    * @param seed data extracted from mnemonic phrase or from uploaded account
    */
   setAccountFromSeed(seed: Uint8Array): void {
-    const hdNode = utils.HDNode.fromSeed(seed).derivePath(HD_PATH)
-    this.publicKey = new utils.SigningKey(hdNode.privateKey).publicKey
+    const hdNode = HDNodeWallet.fromSeed(seed).derivePath(HD_PATH)
+    this.publicKey = new SigningKey(hdNode.privateKey).publicKey
     this.connectWalletWithENS(seed)
   }
 
@@ -57,20 +57,20 @@ export class AccountData {
    * @param mnemonic phrase from BIP-039/BIP-044 wallet
    */
   setAccountFromMnemonic(mnemonic: string): void {
-    this.publicKey = Wallet.fromMnemonic(mnemonic).publicKey
+    this.publicKey = Wallet.fromPhrase(mnemonic).publicKey
     this.connectWalletWithENS(mnemonicToSeed(mnemonic))
   }
 
   /**
    * Creates a new FDP account wallet
    */
-  createWallet(): Wallet {
+  createWallet(): HDNodeWallet {
     if (this.wallet) {
       throw new Error('Wallet already created')
     }
 
     const wallet = Wallet.createRandom()
-    this.setAccountFromMnemonic(wallet.mnemonic.phrase)
+    this.setAccountFromMnemonic(wallet.mnemonic!.phrase)
 
     return wallet
   }
@@ -95,7 +95,7 @@ export class AccountData {
 
     const publicKey = await this.ens.getPublicKey(username)
     try {
-      const address = prepareEthAddress(utils.computeAddress(publicKey))
+      const address = prepareEthAddress(computeAddress(publicKey))
       const account = await downloadPortableAccount(this.connection.bee, address, username, password)
       this.setAccountFromSeed(account.seed)
 

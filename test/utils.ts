@@ -1,7 +1,7 @@
 import crypto from 'crypto'
 import { BATCH_ID_HEX_LENGTH, BatchId, Bee, BeeDebug, Utils } from '@ethersphere/bee-js'
 import { FdpStorage, Options } from '../src'
-import { utils, Wallet } from 'ethers'
+import { parseEther, toBeHex, Wallet } from 'ethers'
 import { Environments, getEnsEnvironmentConfig } from '@fairdatasociety/fdp-contracts-js'
 import axios from 'axios'
 import { CacheOptions } from '../src/cache/types'
@@ -69,7 +69,7 @@ export function generateUser(fdp?: FdpStorage): TestUser {
   return {
     username: crypto.randomBytes(USERNAME_LENGTH).toString('hex'),
     password: crypto.randomBytes(PASSWORD_LENGTH).toString('hex'),
-    mnemonic: wallet.mnemonic.phrase,
+    mnemonic: wallet.mnemonic!.phrase,
     address: wallet.address,
   }
 }
@@ -270,7 +270,7 @@ export async function topUpAddress(address: string, amountInEther = '0.01'): Pro
     {
       from: account,
       to: address,
-      value: utils.hexlify(utils.parseEther(amountInEther)),
+      value: toBeHex(parseEther(amountInEther)),
     },
   ])
 

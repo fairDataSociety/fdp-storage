@@ -48,7 +48,7 @@ describe('Fair Data Protocol class', () => {
       const fdp = createFdp()
 
       const wallet = fdp.account.createWallet()
-      expect(wallet.mnemonic.phrase).toBeDefined()
+      expect(wallet.mnemonic!.phrase).toBeDefined()
       expect(wallet.address).toBeDefined()
       expect(wallet.privateKey).toBeDefined()
 
@@ -720,7 +720,7 @@ describe('Fair Data Protocol class', () => {
       const filenameSmall = generateRandomHexString() + '.txt'
       const fullFilenameSmallPath = '/' + filenameSmall
 
-      const privateKey = removeZeroFromHex(Wallet.fromMnemonic(user.mnemonic).privateKey)
+      const privateKey = removeZeroFromHex(Wallet.fromPhrase(user.mnemonic).privateKey)
       const seed = mnemonicToSeed(user.mnemonic)
 
       // check pod metadata
@@ -948,7 +948,7 @@ describe('Fair Data Protocol class', () => {
         isUseCache: true,
       })
       fdpRecovered.cache.object = JSON.parse(cache)
-      fdpRecovered.account.setAccountFromMnemonic(wallet.mnemonic.phrase)
+      fdpRecovered.account.setAccountFromMnemonic(wallet.mnemonic!.phrase)
       const pods = await fdpRecovered.personalStorage.list()
       expect(pods.pods).toHaveLength(1)
       expect(pods.pods[0].name).toEqual(pod2)

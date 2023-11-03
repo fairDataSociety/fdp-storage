@@ -8,7 +8,7 @@ import { decryptJson, PodPasswordBytes } from '../utils/encryption'
 import CryptoJS from 'crypto-js'
 import { isObject } from '../utils/type'
 import { Connection } from '../connection/connection'
-import { utils, Wallet } from 'ethers'
+import { HDNodeWallet } from 'ethers'
 import { Epoch } from '../feed/lookup/epoch'
 import { stringToBytes } from '../utils/bytes'
 
@@ -137,7 +137,7 @@ export async function getCreationPathInfo(
 export async function deleteFeedData(
   connection: Connection,
   topic: string,
-  wallet: utils.HDNode | Wallet,
+  wallet: HDNodeWallet,
   podPassword: PodPasswordBytes,
   epoch?: Epoch,
 ): Promise<Reference> {

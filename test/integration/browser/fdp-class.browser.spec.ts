@@ -343,7 +343,7 @@ describe('Fair Data Protocol class - in browser', () => {
 
           return {
             list: (await fdp.personalStorage.list()).pods,
-            mnemonic: wallet.mnemonic.phrase,
+            mnemonic: wallet.mnemonic!.phrase,
           }
         },
         podName,

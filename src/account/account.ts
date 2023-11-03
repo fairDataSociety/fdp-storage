@@ -1,5 +1,5 @@
 import { Bee, PrivateKeyBytes, Reference, Utils } from '@ethersphere/bee-js'
-import { utils, Wallet } from 'ethers'
+import { HDNodeWallet, Wallet } from 'ethers'
 import { IV_LENGTH, decryptBytes, encryptBytes } from '../utils/encryption'
 import { assertChunkSizeLength, CHUNK_SIZE, SEED_SIZE, createCredentialsTopic, HD_PATH } from './utils'
 import { Connection } from '../connection/connection'
@@ -62,7 +62,7 @@ export async function downloadPortableAccount(
   const socReader = bee.makeSOCReader(address)
   const encryptedData = (await socReader.download(topic)).payload()
   const seed = decryptBytes(password, encryptedData).slice(0, SEED_SIZE)
-  const node = utils.HDNode.fromSeed(seed).derivePath(HD_PATH)
+  const node = HDNodeWallet.fromSeed(seed).derivePath(HD_PATH)
   const wallet = new Wallet(node.privateKey)
 
   return { wallet, seed }
