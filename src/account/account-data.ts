@@ -1,10 +1,8 @@
-import { utils, Wallet } from 'ethers'
-import { assertAccount, assertMnemonic, assertPassword, assertUsername, HD_PATH, removeZeroFromHex } from './utils'
-import { getEncryptedMnemonic } from './mnemonic'
-import { decryptText } from '../utils/encryption'
-import { downloadPortableAccount, uploadPortableAccount, UserAccountWithMnemonic } from './account'
+import { computeAddress, HDNodeWallet, SigningKey, Wallet } from 'ethers'
+import { assertAccount, assertPassword, assertUsername, HD_PATH, removeZeroFromHex } from './utils'
+import { downloadPortableAccount, uploadPortableAccount } from './account'
 import { Connection } from '../connection/connection'
-import { AddressOptions, isAddressOptions, isMnemonicOptions, MnemonicOptions, RegistrationRequest } from './types'
+import { RegistrationRequest } from './types'
 import { ENS, PublicKey } from '@fairdatasociety/fdp-contracts-js'
 import { Reference, Utils } from '@ethersphere/bee-js'
 import CryptoJS from 'crypto-js'
@@ -16,7 +14,7 @@ export class AccountData {
   /**
    * Active FDP account wallet
    */
-  public wallet?: utils.HDNode
+  public wallet?: HDNodeWallet
 
   /**
    * Active FDP account's seed for entity creation
@@ -38,7 +36,7 @@ export class AccountData {
    */
   private connectWalletWithENS(seed: Uint8Array) {
     this.seed = seed
-    this.wallet = utils.HDNode.fromSeed(seed).derivePath(HD_PATH)
+    this.wallet = HDNodeWallet.fromSeed(seed).derivePath(HD_PATH)
     this.ens.connect(new Wallet(this.wallet!.privateKey).connect(this.ens.provider))
   }
 
@@ -48,8 +46,8 @@ export class AccountData {
    * @param seed data extracted from mnemonic phrase or from uploaded account
    */
   setAccountFromSeed(seed: Uint8Array): void {
-    const hdNode = utils.HDNode.fromSeed(seed).derivePath(HD_PATH)
-    this.publicKey = new utils.SigningKey(hdNode.privateKey).publicKey
+    const hdNode = HDNodeWallet.fromSeed(seed).derivePath(HD_PATH)
+    this.publicKey = new SigningKey(hdNode.privateKey).publicKey
     this.connectWalletWithENS(seed)
   }
 
@@ -59,77 +57,22 @@ export class AccountData {
    * @param mnemonic phrase from BIP-039/BIP-044 wallet
    */
   setAccountFromMnemonic(mnemonic: string): void {
-    this.publicKey = Wallet.fromMnemonic(mnemonic).publicKey
+    this.publicKey = Wallet.fromPhrase(mnemonic).publicKey
     this.connectWalletWithENS(mnemonicToSeed(mnemonic))
   }
 
   /**
    * Creates a new FDP account wallet
    */
-  createWallet(): Wallet {
+  createWallet(): HDNodeWallet {
     if (this.wallet) {
       throw new Error('Wallet already created')
     }
 
     const wallet = Wallet.createRandom()
-    this.setAccountFromMnemonic(wallet.mnemonic.phrase)
+    this.setAccountFromMnemonic(wallet.mnemonic!.phrase)
 
     return wallet
-  }
-
-  /**
-   * Exports wallet from version 1 account
-   *
-   * Account and postage batch id are not required
-   *
-   * @deprecated the method will be removed after an accounts' migration process is completed
-   *
-   * @param username username from version 1 account
-   * @param password password from version 1 account
-   * @param options migration options with address or mnemonic from version 1 account
-   */
-  async exportWallet(
-    username: string,
-    password: string,
-    options: AddressOptions | MnemonicOptions,
-  ): Promise<UserAccountWithMnemonic> {
-    assertUsername(username)
-    assertPassword(password)
-
-    let mnemonic = isMnemonicOptions(options) ? options.mnemonic : undefined
-
-    if (isAddressOptions(options)) {
-      const address = prepareEthAddress(options.address)
-      const encryptedMnemonic = await getEncryptedMnemonic(this.connection.bee, username, address)
-      mnemonic = decryptText(password, encryptedMnemonic)
-    }
-
-    assertMnemonic(mnemonic)
-
-    const wallet = Wallet.fromMnemonic(mnemonic)
-
-    return { wallet, mnemonic }
-  }
-
-  /**
-   * Migrates from FDP account without ENS to account with ENS
-   *
-   * Account and postage batch id are not required
-   *
-   * @deprecated the method will be removed after an accounts' migration process is completed
-   *
-   * @param username username from version 1 account
-   * @param password password from version 1 account
-   * @param options migration options with address or mnemonic from version 1 account
-   */
-  async migrate(username: string, password: string, options: AddressOptions | MnemonicOptions): Promise<Reference> {
-    assertUsername(username)
-    assertPassword(password)
-
-    const exported = await this.exportWallet(username, password, options)
-    this.setAccountFromMnemonic(exported.mnemonic)
-
-    return this.register(this.createRegistrationRequest(username, password))
   }
 
   /**
@@ -152,7 +95,7 @@ export class AccountData {
 
     const publicKey = await this.ens.getPublicKey(username)
     try {
-      const address = prepareEthAddress(utils.computeAddress(publicKey))
+      const address = prepareEthAddress(computeAddress(publicKey))
       const account = await downloadPortableAccount(this.connection.bee, address, username, password)
       this.setAccountFromSeed(account.seed)
 

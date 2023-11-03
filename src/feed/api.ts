@@ -8,7 +8,7 @@ import { getUnixTimestamp } from '../utils/time'
 import { LookupAnswer } from './types'
 import { Connection } from '../connection/connection'
 import { encryptBytes, PodPasswordBytes } from '../utils/encryption'
-import { utils, Wallet } from 'ethers'
+import { HDNodeWallet } from 'ethers'
 
 /**
  * Magic word for replacing content after deletion
@@ -53,36 +53,14 @@ export async function writeFeedData(
   connection: Connection,
   topic: string,
   data: Uint8Array,
-  wallet: utils.HDNode | Wallet,
+  wallet: HDNodeWallet,
   podPassword: PodPasswordBytes,
-  epoch?: Epoch,
-): Promise<Reference> {
-  data = encryptBytes(podPassword, data)
-
-  return writeFeedDataRaw(connection, topic, data, wallet, epoch)
-}
-
-/**
- * Writes data without encryption to feed using `topic` and `epoch` as a key and signed data with `privateKey` as a value
- *
- * @deprecated required for deprecated methods
- *
- * @param connection connection information for data uploading
- * @param topic key for data
- * @param data data to upload
- * @param wallet feed owner's wallet
- * @param epoch feed epoch
- */
-export async function writeFeedDataRaw(
-  connection: Connection,
-  topic: string,
-  data: Uint8Array,
-  wallet: utils.HDNode | Wallet,
   epoch?: Epoch,
 ): Promise<Reference> {
   if (!epoch) {
     epoch = new Epoch(HIGHEST_LEVEL, getUnixTimestamp())
   }
+  data = encryptBytes(podPassword, data)
 
   const topicHash = bmtHashString(topic)
   const id = getId(topicHash, epoch.time, epoch.level)

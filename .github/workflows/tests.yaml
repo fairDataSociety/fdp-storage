@@ -22,12 +22,12 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           fetch-depth: 1
 
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
 
@@ -42,7 +42,7 @@ jobs:
         run: fdp-play start -d --fairos --fairos-image $FAIROS_IMAGE --bee-version $BEE_VERSION
 
       ## Try getting the node modules from cache, if failed npm ci
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         id: cache-npm
         with:
           path: node_modules
@@ -70,12 +70,12 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           fetch-depth: 1
 
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
 
@@ -90,7 +90,7 @@ jobs:
         run: fdp-play start -d --bee-version $BEE_VERSION
 
       ## Try getting the node modules from cache, if failed npm ci
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         id: cache-npm
         with:
           path: node_modules

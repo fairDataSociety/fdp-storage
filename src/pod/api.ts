@@ -3,7 +3,7 @@ import { getFeedData } from '../feed/api'
 import { POD_TOPIC } from './personal-storage'
 import { ExtendedPodInfo, extractPods, PodsInfo } from './utils'
 import { prepareEthAddress, privateKeyToBytes } from '../utils/wallet'
-import { utils } from 'ethers'
+import { HDNodeWallet } from 'ethers'
 import { DownloadOptions } from '../content-items/types'
 import { getWalletByIndex } from '../utils/cache/wallet'
 import { getPodsList as getPodsListCached } from './cache/api'
@@ -17,7 +17,7 @@ import { getPodsList as getPodsListCached } from './cache/api'
  */
 export async function getPodsList(
   bee: Bee,
-  userWallet: utils.HDNode,
+  userWallet: HDNodeWallet,
   downloadOptions?: DownloadOptions,
 ): Promise<PodsInfo> {
   let lookupAnswer
@@ -55,7 +55,7 @@ export async function getPodsList(
 export async function getExtendedPodsList(
   bee: Bee,
   podName: string,
-  userWallet: utils.HDNode,
+  userWallet: HDNodeWallet,
   seed: Uint8Array,
   downloadOptions?: DownloadOptions,
 ): Promise<ExtendedPodInfo> {

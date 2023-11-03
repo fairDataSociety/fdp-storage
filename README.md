@@ -310,31 +310,6 @@ Checks whether the public key associated with the username in ENS is identical w
 await fdp.account.isPublicKeyEqual('username')
 ```
 
-### Migrate from v1 to v2 account
-
-Export old wallet with mnemonic
-
-```js
-const wallet = await fdp.account.exportWallet('oldusername', 'oldpassword', {
-  mnemonic: 'one two three one two three one two three one two three'
-})
-```
-
-or with address
-
-```js
-const wallet = await fdp.account.exportWallet('oldusername', 'oldpassword', {
-  address: '0x...'
-})
-```
-
-```js
-// ask user to top up his account, then can be started the migration process
-await fdp.account.migrate('oldusername', 'oldpassword', {
-  mnemonic: wallet.mnemonic.phrase
-})
-```
-
 Using FDP instance with cache
 
 ```js

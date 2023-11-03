@@ -1,6 +1,6 @@
 import { Utils } from '@ethersphere/bee-js'
 import { POD_PASSWORD_LENGTH, PodPasswordBytes } from './encryption'
-import { utils, Wallet } from 'ethers'
+import { HDNodeWallet } from 'ethers'
 
 export type { PublicKey } from '@fairdatasociety/fdp-contracts-js'
 export const ETH_ADDR_HEX_LENGTH = 40
@@ -97,7 +97,7 @@ export function isArrayBufferView(value: unknown): value is ArrayBufferView {
 /**
  * Asserts that the given value is a wallet
  */
-export function assertWallet(value: unknown): asserts value is utils.HDNode | Wallet {
+export function assertWallet(value: unknown): asserts value is HDNodeWallet {
   if (!value) {
     throw new Error('Empty wallet')
   }

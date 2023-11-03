@@ -1,6 +1,6 @@
 import { createFdp, generateRandomHexString, generateUser, topUpAddress, topUpFdp, waitFairOS } from '../../utils'
 import { Directories, FairOSApi, PodsList } from '../../utils/fairos-api'
-import { Wallet, utils } from 'ethers'
+import { namehash, Wallet } from 'ethers'
 import { wrapBytesWithHelpers } from '../../../src/utils/bytes'
 import { getExtendedPodsListByAccountData } from '../../../src/pod/utils'
 import { getRawMetadata } from '../../../src/content-items/utils'
@@ -20,8 +20,8 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
       const fdp = createFdp()
       const user = generateUser(fdp)
       await topUpFdp(fdp)
-      const nameHash = utils.namehash(`${user.username}.fds`)
-      const publicKey = Wallet.fromMnemonic(user.mnemonic).publicKey.replace('0x', '')
+      const nameHash = namehash(`${user.username}.fds`)
+      const publicKey = Wallet.fromPhrase(user.mnemonic).publicKey.replace('0x', '')
       await fdp.account.register(fdp.account.createRegistrationRequest(user.username, user.password))
       const response = await fairos.login(user.username, user.password)
       expect(response.status).toEqual(200)
@@ -36,8 +36,8 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
       const fairos = new FairOSApi()
       const fdp = createFdp()
       const user = generateUser()
-      const nameHash = utils.namehash(`${user.username}.fds`)
-      const publicKey = Wallet.fromMnemonic(user.mnemonic).publicKey.replace('0x', '')
+      const nameHash = namehash(`${user.username}.fds`)
+      const publicKey = Wallet.fromPhrase(user.mnemonic).publicKey.replace('0x', '')
       await topUpAddress(user.address)
 
       const response = await fairos.register(user.username, user.password, user.mnemonic)

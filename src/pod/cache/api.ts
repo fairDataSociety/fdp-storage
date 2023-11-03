@@ -1,5 +1,5 @@
 import { Bee } from '@ethersphere/bee-js'
-import { utils } from 'ethers'
+import { HDNodeWallet } from 'ethers'
 import { DownloadOptions } from '../../content-items/types'
 import { jsonToPodsList, podListToJSON, PodsInfo } from '../utils'
 import { CacheEpochData } from '../../cache/types'
@@ -15,7 +15,7 @@ import { getPodsList as getPodsNoCache } from '../api'
  */
 export async function getPodsList(
   bee: Bee,
-  userWallet: utils.HDNode,
+  userWallet: HDNodeWallet,
   downloadOptions?: DownloadOptions,
 ): Promise<PodsInfo> {
   return processCacheData({

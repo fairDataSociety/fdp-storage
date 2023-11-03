@@ -1,5 +1,5 @@
 import { Connection } from '../connection/connection'
-import { utils } from 'ethers'
+import { HDNodeWallet } from 'ethers'
 import { Reference, BeeRequestOptions } from '@ethersphere/bee-js'
 import { getUnixTimestamp } from '../utils/time'
 import { writeFeedData } from '../feed/api'
@@ -37,7 +37,7 @@ export const DEFAULT_UPLOAD_OPTIONS: DataUploadOptions = {
  */
 export async function addEntryToDirectory(
   connection: Connection,
-  wallet: utils.HDNode,
+  wallet: HDNodeWallet,
   podPassword: PodPasswordBytes,
   parentPath: string,
   entryPath: string,
@@ -94,7 +94,7 @@ export async function addEntryToDirectory(
 export async function deleteItem(
   connection: Connection,
   itemMetaPath: string,
-  wallet: utils.HDNode,
+  wallet: HDNodeWallet,
   podPassword: PodPasswordBytes,
 ): Promise<void> {
   let pathInfo
@@ -137,7 +137,7 @@ export async function deleteItem(
  */
 export async function removeEntryFromDirectory(
   connection: Connection,
-  wallet: utils.HDNode,
+  wallet: HDNodeWallet,
   podPassword: PodPasswordBytes,
   parentPath: string,
   entryPath: string,

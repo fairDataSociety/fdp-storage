@@ -1,4 +1,4 @@
-import { DirectoryItem, FdpContracts, FdpStorage } from '../../../src'
+import { DirectoryItem, FdpContracts, FdpStorage, MAX_POD_NAME_LENGTH } from '../../../src'
 import {
   batchId,
   createFdp,
@@ -8,8 +8,6 @@ import {
   getBee,
   topUpFdp,
 } from '../../utils'
-import { MAX_POD_NAME_LENGTH } from '../../../src/pod/utils'
-import { createUserV1 } from '../../../src/account/account'
 import { PodShareInfo, RawFileMetadata } from '../../../src/pod/types'
 import { FileShareInfo } from '../../../src/file/types'
 import { getFeedData } from '../../../src/feed/api'
@@ -50,7 +48,7 @@ describe('Fair Data Protocol class', () => {
       const fdp = createFdp()
 
       const wallet = fdp.account.createWallet()
-      expect(wallet.mnemonic.phrase).toBeDefined()
+      expect(wallet.mnemonic!.phrase).toBeDefined()
       expect(wallet.address).toBeDefined()
       expect(wallet.privateKey).toBeDefined()
 
@@ -93,26 +91,6 @@ describe('Fair Data Protocol class', () => {
       await fdp.account.register(fdp.account.createRegistrationRequest(user.username, user.password))
       await expect(
         fdp.account.register(fdp.account.createRegistrationRequest(user.username, user.password)),
-      ).rejects.toThrow(`ENS: Username ${user.username} is not available`)
-    })
-
-    it('should migrate v1 user to v2', async () => {
-      const fdp = createFdp()
-      const fdp2 = createFdp()
-
-      const user = generateUser(fdp)
-      generateUser(fdp2)
-      await topUpFdp(fdp)
-      await topUpFdp(fdp2)
-      await createUserV1(fdp.connection, user.username, user.password, user.mnemonic)
-      await fdp.account.migrate(user.username, user.password, {
-        mnemonic: user.mnemonic,
-      })
-      const loggedWallet = await fdp.account.login(user.username, user.password)
-      expect(loggedWallet.address).toEqual(user.address)
-
-      await expect(
-        fdp2.account.register(fdp.account.createRegistrationRequest(user.username, user.password)),
       ).rejects.toThrow(`ENS: Username ${user.username} is not available`)
     })
   })
@@ -742,7 +720,7 @@ describe('Fair Data Protocol class', () => {
       const filenameSmall = generateRandomHexString() + '.txt'
       const fullFilenameSmallPath = '/' + filenameSmall
 
-      const privateKey = removeZeroFromHex(Wallet.fromMnemonic(user.mnemonic).privateKey)
+      const privateKey = removeZeroFromHex(Wallet.fromPhrase(user.mnemonic).privateKey)
       const seed = mnemonicToSeed(user.mnemonic)
 
       // check pod metadata
@@ -970,7 +948,7 @@ describe('Fair Data Protocol class', () => {
         isUseCache: true,
       })
       fdpRecovered.cache.object = JSON.parse(cache)
-      fdpRecovered.account.setAccountFromMnemonic(wallet.mnemonic.phrase)
+      fdpRecovered.account.setAccountFromMnemonic(wallet.mnemonic!.phrase)
       const pods = await fdpRecovered.personalStorage.list()
       expect(pods.pods).toHaveLength(1)
       expect(pods.pods[0].name).toEqual(pod2)
