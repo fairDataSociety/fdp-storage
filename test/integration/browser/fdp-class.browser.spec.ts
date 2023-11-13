@@ -3,7 +3,6 @@ import { batchId, beeUrl, createFdp, fdpOptions, generateRandomHexString, genera
 import '../../../src'
 import '../../index'
 import { FdpStorage, MAX_POD_NAME_LENGTH } from '../../../src'
-import { createUserV1 } from '../../../src/account/account'
 import { Pod, PodShareInfo, RawFileMetadata } from '../../../src/pod/types'
 import { FileShareInfo } from '../../../src/file/types'
 import { BatchId, Reference } from '@ethersphere/bee-js'
@@ -161,41 +160,6 @@ describe('Fair Data Protocol class - in browser', () => {
           `ENS: Username ${user.username} is not available`,
         )
       }, JSON.stringify(generateUser()))
-    })
-
-    it('should migrate v1 user to v2', async () => {
-      const fdp = createFdp()
-      const user = generateUser()
-      const user2 = generateUser()
-      await createUserV1(fdp.connection, user.username, user.password, user.mnemonic)
-
-      const result = await page.evaluate(
-        async (user, user2) => {
-          user = JSON.parse(user)
-          user2 = JSON.parse(user2)
-          const fdp = eval(await window.initFdp()) as FdpStorage
-          const fdp2 = eval(await window.initFdp()) as FdpStorage
-          fdp.account.setAccountFromMnemonic(user.mnemonic)
-          fdp2.account.setAccountFromMnemonic(user2.mnemonic)
-          await window.topUpAddress(fdp)
-          await window.topUpAddress(fdp2)
-
-          await fdp.account.migrate(user.username, user.password, {
-            mnemonic: user.mnemonic,
-          })
-          const loggedWallet = await fdp.account.login(user.username, user.password)
-          await window.shouldFail(
-            fdp2.account.register(fdp.account.createRegistrationRequest(user.username, user.password)),
-            `ENS: Username ${user.username} is not available`,
-          )
-
-          return { address: loggedWallet.address }
-        },
-        JSON.stringify(user),
-        JSON.stringify(user2),
-      )
-
-      expect(result.address).toEqual(user.address)
     })
   })
 

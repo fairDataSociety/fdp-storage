@@ -47,48 +47,6 @@ export async function getRawMetadata(
 }
 
 /**
- * Checks if file or directory exists at the specified path
- *
- * @param bee Bee instance
- * @param fullPath full path to the item
- * @param address uploader address
- * @param requestOptions options for downloading
- */
-export async function isItemExists(
-  bee: Bee,
-  fullPath: string,
-  address: EthAddress,
-  requestOptions: BeeRequestOptions | undefined,
-): Promise<boolean> {
-  try {
-    return (await getFeedData(bee, fullPath, address, requestOptions)).data.text() === DELETE_FEED_MAGIC_WORD
-  } catch (e) {
-    return false
-  }
-}
-
-/**
- * Asserts whether item is not exists
- *
- * @param contentType human readable content type explanation
- * @param bee Bee instance
- * @param fullPath full path to the item
- * @param address uploader address
- * @param downloadOptions options for downloading
- */
-export async function assertItemIsNotExists(
-  contentType: string,
-  bee: Bee,
-  fullPath: string,
-  address: EthAddress,
-  downloadOptions: BeeRequestOptions | undefined,
-): Promise<void> {
-  if (await isItemExists(bee, fullPath, address, downloadOptions)) {
-    throw new Error(`${contentType} "${fullPath}" already uploaded to the network`)
-  }
-}
-
-/**
  * Converts FairOS directory metadata to a `DirectoryItem`
  *
  * @param item raw directory metadata from FairOS

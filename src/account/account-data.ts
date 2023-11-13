@@ -1,10 +1,8 @@
 import { utils, Wallet } from 'ethers'
-import { assertAccount, assertMnemonic, assertPassword, assertUsername, HD_PATH, removeZeroFromHex } from './utils'
-import { getEncryptedMnemonic } from './mnemonic'
-import { decryptText } from '../utils/encryption'
-import { downloadPortableAccount, uploadPortableAccount, UserAccountWithMnemonic } from './account'
+import { assertAccount, assertPassword, assertUsername, HD_PATH, removeZeroFromHex } from './utils'
+import { downloadPortableAccount, uploadPortableAccount } from './account'
 import { Connection } from '../connection/connection'
-import { AddressOptions, isAddressOptions, isMnemonicOptions, MnemonicOptions, RegistrationRequest } from './types'
+import { RegistrationRequest } from './types'
 import { ENS, PublicKey } from '@fairdatasociety/fdp-contracts-js'
 import { Reference, Utils } from '@ethersphere/bee-js'
 import CryptoJS from 'crypto-js'
@@ -75,61 +73,6 @@ export class AccountData {
     this.setAccountFromMnemonic(wallet.mnemonic.phrase)
 
     return wallet
-  }
-
-  /**
-   * Exports wallet from version 1 account
-   *
-   * Account and postage batch id are not required
-   *
-   * @deprecated the method will be removed after an accounts' migration process is completed
-   *
-   * @param username username from version 1 account
-   * @param password password from version 1 account
-   * @param options migration options with address or mnemonic from version 1 account
-   */
-  async exportWallet(
-    username: string,
-    password: string,
-    options: AddressOptions | MnemonicOptions,
-  ): Promise<UserAccountWithMnemonic> {
-    assertUsername(username)
-    assertPassword(password)
-
-    let mnemonic = isMnemonicOptions(options) ? options.mnemonic : undefined
-
-    if (isAddressOptions(options)) {
-      const address = prepareEthAddress(options.address)
-      const encryptedMnemonic = await getEncryptedMnemonic(this.connection.bee, username, address)
-      mnemonic = decryptText(password, encryptedMnemonic)
-    }
-
-    assertMnemonic(mnemonic)
-
-    const wallet = Wallet.fromMnemonic(mnemonic)
-
-    return { wallet, mnemonic }
-  }
-
-  /**
-   * Migrates from FDP account without ENS to account with ENS
-   *
-   * Account and postage batch id are not required
-   *
-   * @deprecated the method will be removed after an accounts' migration process is completed
-   *
-   * @param username username from version 1 account
-   * @param password password from version 1 account
-   * @param options migration options with address or mnemonic from version 1 account
-   */
-  async migrate(username: string, password: string, options: AddressOptions | MnemonicOptions): Promise<Reference> {
-    assertUsername(username)
-    assertPassword(password)
-
-    const exported = await this.exportWallet(username, password, options)
-    this.setAccountFromMnemonic(exported.mnemonic)
-
-    return this.register(this.createRegistrationRequest(username, password))
   }
 
   /**

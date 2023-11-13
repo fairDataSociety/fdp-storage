@@ -2,13 +2,10 @@ import { Data, Utils } from '@ethersphere/bee-js'
 import { bmtHash } from '../chunk/bmt'
 import { makeSpan, stringToBytes, wrapBytesWithHelpers } from '../utils/bytes'
 import { AccountData } from './account-data'
-import { isValidMnemonic } from 'ethers/lib/utils'
-import CryptoJS from 'crypto-js'
-import { assertBatchId, replaceAll } from '../utils/string'
+import { assertBatchId } from '../utils/string'
 import { assertString } from '../utils/type'
 import { AssertAccountOptions } from './types'
 
-export const MNEMONIC_LENGTH = 12
 export const MAX_CHUNK_LENGTH = 4096
 export const AUTH_VERSION = 'FDP-login-v1.0'
 export const CHUNK_SIZE = 4096
@@ -16,34 +13,6 @@ export const SEED_SIZE = 64
 export const HD_PATH = `m/44'/60'/0'/0/0`
 export const ERROR_CHUNK_ALREADY_EXISTS = 'chunk already exists'
 export const ERROR_INSUFFICIENT_FUNDS = 'insufficient funds for gas * price + value'
-
-/**
- * Encode input data to Base64Url with Go lang compatible paddings
- *
- * @param data input data to encode
- */
-export function encodeBase64Url(data: CryptoJS.lib.WordArray): string {
-  const base64url = data.toString(CryptoJS.enc.Base64url)
-  const paddingNumber = base64url.length % 4
-  let padding = ''
-
-  if (paddingNumber === 2) {
-    padding = '=='
-  } else if (paddingNumber === 3) {
-    padding = '='
-  }
-
-  return base64url + padding
-}
-
-/**
- * Decode input Base64Url data to string
- *
- * @param data Base64Url data
- */
-export function decodeBase64Url(data: string): CryptoJS.lib.WordArray {
-  return CryptoJS.enc.Base64url.parse(replaceAll(data, '=', ''))
-}
 
 /**
  * Extracts only content from chunk data
@@ -111,20 +80,6 @@ export function assertPassword(value: unknown): asserts value is string {
 
   if (!value) {
     throw new Error('Incorrect password')
-  }
-}
-
-/**
- * Asserts whether a valid mnemonic phrase has been passed
- *
- * @param value mnemonic phrase
- */
-export function assertMnemonic(value: unknown): asserts value is string {
-  assertString(value)
-  const words = value.split(' ')
-
-  if (!(words.length === MNEMONIC_LENGTH && isValidMnemonic(value))) {
-    throw new Error('Incorrect mnemonic')
   }
 }
 
