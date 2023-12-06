@@ -6,7 +6,6 @@ export type HexEthAddress = HexString<40>
 /**
  * Nominal type to represent hex strings WITHOUT '0x' prefix.
  * For example for 32 bytes hex representation you have to use 64 length.
- * TODO: Make Length mandatory: https://github.com/ethersphere/bee-js/issues/208
  */
 export type HexString<Length extends number = number> = FlavoredType<
   string & {

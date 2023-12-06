@@ -1,18 +1,18 @@
 import {
+  FileMetadataWithLookupAnswer,
   Pod,
-  PodPrepared,
   PodName,
+  PodPrepared,
   PodShareInfo,
+  PodsList,
+  PodsListPrepared,
   RawDirectoryMetadata,
   SharedPod,
   SharedPodPrepared,
-  PodsListPrepared,
-  PodsList,
 } from './types'
-import { Bee, Data, Utils } from '@ethersphere/bee-js'
+import { Bee, BeeRequestOptions, Data, Utils } from '@ethersphere/bee-js'
 import {
   assertAllowedZeroBytes,
-  assertMaxLength,
   bytesToString,
   MAX_ZEROS_PERCENTAGE_ALLOWED,
   stringToBytes,
@@ -36,24 +36,67 @@ import { bytesToHex, EncryptedReference, isHexEthAddress } from '../utils/hex'
 import { getExtendedPodsList } from './api'
 import { Epoch, getFirstEpoch } from '../feed/lookup/epoch'
 import { getUnixTimestamp } from '../utils/time'
-import { writeFeedData } from '../feed/api'
-import { preparePrivateKey } from '../utils/wallet'
+import { getFeedData } from '../feed/api'
 import { createRootDirectory } from '../directory/handler'
-import { POD_TOPIC } from './personal-storage'
 import { Connection } from '../connection/connection'
 import { AccountData } from '../account/account-data'
 import { decryptBytes, POD_PASSWORD_LENGTH, PodPasswordBytes } from '../utils/encryption'
 import CryptoJS from 'crypto-js'
 import { jsonParse } from '../utils/json'
-import { DEFAULT_DIRECTORY_PERMISSIONS, getDirectoryMode } from '../directory/utils'
+import { assertRawFileMetadata, DEFAULT_DIRECTORY_PERMISSIONS, getDirectoryMode } from '../directory/utils'
 import { getCacheKey, setEpochCache } from '../cache/utils'
 import { getWalletByIndex } from '../utils/cache/wallet'
 import { getPodsList } from './cache/api'
-import { CHUNK_SIZE } from '../account/utils'
+import { LookupAnswer } from '../feed/types'
+import { prepareDataByMeta, uploadData } from '../file/handler'
+import { Compression } from '../file/types'
+import { MINIMUM_BLOCK_SIZE } from '../content-items/handler'
+import { downloadBlocksManifest } from '../file/utils'
+import { extractMetadata } from '../content-items/utils'
+import { rawFileMetadataToFileMetadata } from '../file/adapter'
+import { decompress } from '../utils/compression'
 
 export const META_VERSION = 2
 export const MAX_PODS_COUNT = 65536
 export const MAX_POD_NAME_LENGTH = 64
+
+/**
+ * Represents the topic for Pods version 1
+ */
+export const POD_TOPIC = 'Pods'
+
+/**
+ * Represents the topic for Pods version 2
+ */
+export const POD_TOPIC_V2 = 'PodsV2'
+
+/**
+ * Enum representing the version of PODs
+ */
+export enum PodsVersion {
+  /**
+   * Version 1
+   */
+  V1 = 'v1',
+  /**
+   * Version 2
+   */
+  V2 = 'v2',
+}
+
+/**
+ * Answer with LookupAnswer and pods version
+ */
+export interface PodsLookupAnswer {
+  /**
+   * Pods version
+   */
+  podsVersion: PodsVersion
+  /**
+   * Lookup answer
+   */
+  lookupAnswer: LookupAnswer
+}
 
 /**
  * Information about pods list
@@ -83,12 +126,45 @@ export interface PathInfo {
 
 /**
  * Extracts pod information from raw data
- *
  * @param data raw data with pod information
  * @param podPassword bytes of pod password
  */
-export function extractPods(data: Data, podPassword: PodPasswordBytes): PodsListPrepared {
-  return jsonToPodsList(bytesToString(decryptBytes(bytesToHex(podPassword), data)))
+export function extractPodsV1(data: Data, podPassword: PodPasswordBytes): PodsListPrepared {
+  return jsonToPodsList(bytesToString(extractPodsBytes(data, podPassword)))
+}
+
+/**
+ * Extracts and prepares a list of pods from the given V2 data using the provided pod password
+ * @param accountData
+ * @param {Data} data - The data from which to extract the pods.
+ * @param {PodPasswordBytes} podPassword - The password to decrypt the pods.
+ * @param downloadOptions
+ * @return {PodsListPrepared} - The list of pods that have been extracted and prepared.
+ */
+export async function extractPodsV2(
+  accountData: AccountData,
+  data: Data,
+  podPassword: PodPasswordBytes,
+  downloadOptions?: BeeRequestOptions,
+): Promise<PodsListPrepared> {
+  const meta = extractMetadata(data, podPassword)
+  assertRawFileMetadata(meta)
+  const fileMeta = rawFileMetadataToFileMetadata(meta)
+  const blocksData = await downloadBlocksManifest(accountData.connection.bee, fileMeta.blocksReference, downloadOptions)
+  const preparedData = bytesToString(
+    decompress(await prepareDataByMeta(blocksData.blocks, accountData.connection.bee, downloadOptions)),
+  )
+
+  return jsonToPodsList(preparedData)
+}
+
+/**
+ * Decrypts pod information from raw data
+ * @param data raw data with pod information
+ * @param podPassword bytes of pod password
+ */
+export function extractPodsBytes(data: Data, podPassword: PodPasswordBytes): Uint8Array {
+  return decryptBytes(bytesToHex(podPassword), data)
 }
 
 /**
@@ -380,14 +456,14 @@ export function getRandomPodPassword(): PodPasswordBytes {
 /**
  * Creates user's pod or add a shared pod to an account
  *
- * @param bee Bee instance
+ * @param accountData AccountData instance
  * @param connection Connection instance
  * @param userWallet FDP account wallet
  * @param seed FDP account seed
  * @param pod pod information to create
  */
 export async function createPod(
-  bee: Bee,
+  accountData: AccountData,
   connection: Connection,
   userWallet: utils.HDNode,
   seed: Uint8Array,
@@ -401,7 +477,7 @@ export async function createPod(
   let podsList: PodsListPrepared = { pods: [], sharedPods: [] }
   let podsInfo
   try {
-    podsInfo = await getPodsList(bee, userWallet, {
+    podsInfo = await getPodsList(accountData, connection.bee, userWallet, {
       requestOptions: connection.options?.requestOptions,
       cacheInfo,
     })
@@ -432,8 +508,7 @@ export async function createPod(
   }
 
   const allPodsData = podListToBytes(pods, sharedPods)
-  assertMaxLength(allPodsData.length, CHUNK_SIZE, `Exceeded pod list size by ${allPodsData.length - CHUNK_SIZE} bytes`)
-  await writeFeedData(connection, POD_TOPIC, allPodsData, userWallet, preparePrivateKey(userWallet.privateKey), epoch)
+  await uploadPodDataV2(accountData, allPodsData)
 
   if (isPod(realPod)) {
     const podWallet = await getWalletByIndex(seed, nextIndex, cacheInfo)
@@ -449,6 +524,21 @@ export async function createPod(
 }
 
 /**
+ * Uploads pods data using version 2 method
+ * @param accountData AccountData instance
+ * @param allPodsData pods data
+ */
+export async function uploadPodDataV2(
+  accountData: AccountData,
+  allPodsData: Uint8Array,
+): Promise<FileMetadataWithLookupAnswer> {
+  return uploadData('', POD_TOPIC_V2, allPodsData, accountData, {
+    blockSize: MINIMUM_BLOCK_SIZE,
+    compression: Compression.GZIP,
+  })
+}
+
+/**
  * Gets extended information about pods using AccountData instance and pod name
  *
  * @param accountData AccountData instance
@@ -458,7 +548,7 @@ export async function getExtendedPodsListByAccountData(
   accountData: AccountData,
   podName: string,
 ): Promise<ExtendedPodInfo> {
-  return getExtendedPodsList(accountData.connection.bee, podName, accountData.wallet!, accountData.seed!, {
+  return getExtendedPodsList(accountData, accountData.connection.bee, podName, accountData.wallet!, accountData.seed!, {
     requestOptions: accountData.connection.options?.requestOptions,
     cacheInfo: accountData.connection.cacheInfo,
   })
@@ -551,7 +641,11 @@ export function assertJsonPod(value: unknown): asserts value is Pod {
 }
 
 /**
- * Asserts that json shared pod is correct
+ * Asserts that a value is a valid SharedPod.
+ *
+ * @param {unknown} value - The value to assert.
+ *
+ * @throws {Error} Invalid json shared pod if the value is not a valid SharedPod.
  */
 export function assertJsonSharedPod(value: unknown): asserts value is SharedPod {
   if (!isJsonSharedPod(value)) {
@@ -560,7 +654,10 @@ export function assertJsonSharedPod(value: unknown): asserts value is SharedPod 
 }
 
 /**
- * Converts JsonSharedPod to SharedPod
+ * Converts a SharedPod object from JSON format to a preprocessed SharedPod object.
+ *
+ * @param {SharedPod} pod - The SharedPod object in JSON format.
+ * @return {SharedPodPrepared} - The preprocessed SharedPod object.
  */
 export function jsonSharedPodToSharedPod(pod: SharedPod): SharedPodPrepared {
   const password = Utils.hexToBytes(pod.password) as PodPasswordBytes
@@ -568,4 +665,65 @@ export function jsonSharedPodToSharedPod(pod: SharedPod): SharedPodPrepared {
   assertPodPasswordBytes(password)
 
   return { ...pod, password, address }
+}
+
+/**
+ * Retrieves pods data for a given address.
+ *
+ * @param {Bee} bee - The bee client object.
+ * @param {Utils.EthAddress} address - The address to look up pods data for.
+ * @param {BeeRequestOptions} [requestOptions] - The request options.
+ * @returns {Promise<PodsLookupAnswer>} The pods data.
+ * @throws {Error} If the pods data cannot be found.
+ */
+export async function getPodsData(
+  bee: Bee,
+  address: Utils.EthAddress,
+  requestOptions?: BeeRequestOptions,
+): Promise<PodsLookupAnswer> {
+  let podsVersion = PodsVersion.V2
+  let lookupAnswer
+  try {
+    lookupAnswer = await getFeedData(bee, POD_TOPIC_V2, address, requestOptions)
+    // eslint-disable-next-line no-empty
+  } catch (e) {}
+
+  // if V2 does not exist, try V1
+  if (!lookupAnswer) {
+    try {
+      lookupAnswer = await getFeedData(bee, POD_TOPIC, address, requestOptions)
+      podsVersion = PodsVersion.V1
+      // eslint-disable-next-line no-empty
+    } catch (e) {}
+  }
+
+  if (!lookupAnswer) {
+    throw new Error('Pods data can not be found')
+  }
+
+  return {
+    podsVersion,
+    lookupAnswer,
+  }
+}
+
+/**
+ * Migrates a pod from version 1 to version 2.
+ *
+ * @param {AccountData} accountData - The account data.
+ * @param {PodsLookupAnswer} podsData - The pods data.
+ * @param {PodPasswordBytes} privateKey - The private key used for migration.
+ * @return {Promise<PodsLookupAnswer>} - The pods data with the migrated version.
+ */
+export async function migratePodV1ToV2(
+  accountData: AccountData,
+  podsData: PodsLookupAnswer,
+  privateKey: PodPasswordBytes,
+): Promise<PodsLookupAnswer> {
+  const podsBytes = extractPodsBytes(podsData.lookupAnswer.data, privateKey)
+
+  return {
+    podsVersion: PodsVersion.V2,
+    lookupAnswer: (await uploadPodDataV2(accountData, podsBytes)).lookupAnswer,
+  }
 }

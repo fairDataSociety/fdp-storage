@@ -78,7 +78,7 @@ export class File {
     assertAccount(this.accountData, { writeRequired: true })
     assertPodName(podName)
 
-    return uploadData(podName, fullPath, data, this.accountData, options)
+    return (await uploadData(podName, fullPath, data, this.accountData, options)).meta
   }
 
   /**

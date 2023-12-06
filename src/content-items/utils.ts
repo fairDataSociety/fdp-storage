@@ -1,4 +1,4 @@
-import { Bee, Reference, BeeRequestOptions } from '@ethersphere/bee-js'
+import { Bee, Reference, BeeRequestOptions, Data } from '@ethersphere/bee-js'
 import { EthAddress } from '@ethersphere/bee-js/dist/types/utils/eth'
 import { RawDirectoryMetadata, RawFileMetadata } from '../pod/types'
 import { DELETE_FEED_MAGIC_WORD, getFeedData, writeFeedData } from '../feed/api'
@@ -11,6 +11,32 @@ import { Connection } from '../connection/connection'
 import { utils, Wallet } from 'ethers'
 import { Epoch } from '../feed/lookup/epoch'
 import { stringToBytes } from '../utils/bytes'
+
+/**
+ * Extracts metadata from encrypted source data using a pod password
+ *
+ * @param {Data} sourceData - The encrypted source data from which to extract metadata.
+ * @param {PodPasswordBytes} podPassword - The pod password used to decrypt the source data.
+ * @throws {Error} If the metadata is invalid.
+ * @returns {RawDirectoryMetadata | RawFileMetadata} The extracted metadata.
+ */
+export function extractMetadata(
+  sourceData: Data,
+  podPassword: PodPasswordBytes,
+): RawDirectoryMetadata | RawFileMetadata {
+  const data = decryptJson(podPassword, sourceData)
+  let metadata
+
+  if (isRawDirectoryMetadata(data)) {
+    metadata = data as RawDirectoryMetadata
+  } else if (isRawFileMetadata(data)) {
+    metadata = data as RawFileMetadata
+  } else {
+    throw new Error('Invalid metadata')
+  }
+
+  return metadata
+}
 
 /**
  * Get raw metadata by path
@@ -29,20 +55,10 @@ export async function getRawMetadata(
   requestOptions?: BeeRequestOptions,
 ): Promise<RawMetadataWithEpoch> {
   const feedData = await getFeedData(bee, path, address, requestOptions)
-  const data = decryptJson(podPassword, feedData.data.chunkContent())
-  let metadata
-
-  if (isRawDirectoryMetadata(data)) {
-    metadata = data as RawDirectoryMetadata
-  } else if (isRawFileMetadata(data)) {
-    metadata = data as RawFileMetadata
-  } else {
-    throw new Error('Invalid metadata')
-  }
 
   return {
     epoch: feedData.epoch,
-    metadata,
+    metadata: extractMetadata(feedData.data.chunkContent(), podPassword),
   }
 }
 

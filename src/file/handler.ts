@@ -1,5 +1,5 @@
 import { assertMinLength, stringToBytes, wrapBytesWithHelpers } from '../utils/bytes'
-import { Bee, Data, BeeRequestOptions } from '@ethersphere/bee-js'
+import { Bee, BeeRequestOptions, Data } from '@ethersphere/bee-js'
 import { EthAddress } from '@ethersphere/bee-js/dist/types/utils/eth'
 import {
   assertFullPathWithName,
@@ -16,7 +16,7 @@ import {
   updateUploadProgress,
   uploadBytes,
 } from './utils'
-import { FileMetadata } from '../pod/types'
+import { FileMetadata, FileMetadataWithLookupAnswer } from '../pod/types'
 import { blocksToManifest, getFileMetadataRawBytes, rawFileMetadataToFileMetadata } from './adapter'
 import { assertRawFileMetadata } from '../directory/utils'
 import { getCreationPathInfo, getRawMetadata } from '../content-items/utils'
@@ -24,6 +24,7 @@ import { PodPasswordBytes } from '../utils/encryption'
 import {
   Block,
   Blocks,
+  Compression,
   DataDownloadOptions,
   DataUploadOptions,
   DownloadProgressType,
@@ -34,12 +35,14 @@ import {
 import { assertPodName, getExtendedPodsListByAccountData, META_VERSION } from '../pod/utils'
 import { getUnixTimestamp } from '../utils/time'
 import { addEntryToDirectory, DEFAULT_UPLOAD_OPTIONS, MINIMUM_BLOCK_SIZE } from '../content-items/handler'
-import { writeFeedData } from '../feed/api'
+import { prepareEpoch, writeFeedData } from '../feed/api'
 import { AccountData } from '../account/account-data'
-import { prepareEthAddress } from '../utils/wallet'
+import { prepareEthAddress, preparePrivateKey } from '../utils/wallet'
 import { assertWallet } from '../utils/type'
 import { getNextEpoch } from '../feed/lookup/utils'
 import { Connection } from '../connection/connection'
+import { compress } from '../utils/compression'
+import { wrapChunkHelper } from '../feed/utils'
 
 /**
  * File prefix
@@ -111,32 +114,21 @@ export async function getFileMetadataWithBlocks(
 }
 
 /**
- * Downloads file parts and compile them into Data
+ * Downloads entire data using metadata.
  *
- * @param accountData account data
- * @param podName pod name
- * @param fullPath full path to the file
- * @param downloadOptions download options
- * @param dataDownloadOptions data download options
+ * @param {Block[]} blocks - The array of blocks to download.
+ * @param {Bee} bee - The Bee object to use for downloading.
+ * @param {BeeRequestOptions} [downloadOptions] - The options to be passed to the bee.downloadData() method.
+ * @param {DataDownloadOptions} [dataDownloadOptions] - The options for tracking progress during downloading.
+ * @returns {Promise<Data>} - A promise that resolves with the downloaded data.
  */
-export async function downloadData(
-  accountData: AccountData,
-  podName: string,
-  fullPath: string,
+export async function prepareDataByMeta(
+  blocks: Block[],
+  bee: Bee,
   downloadOptions?: BeeRequestOptions,
   dataDownloadOptions?: DataDownloadOptions,
 ): Promise<Data> {
   dataDownloadOptions = dataDownloadOptions ?? {}
-  const bee = accountData.connection.bee
-  const { blocks } = await getFileMetadataWithBlocks(
-    bee,
-    accountData,
-    podName,
-    fullPath,
-    downloadOptions,
-    dataDownloadOptions,
-  )
-
   let totalLength = 0
   for (const block of blocks) {
     totalLength += block.size
@@ -164,6 +156,36 @@ export async function downloadData(
 }
 
 /**
+ * Downloads file parts and compile them into Data
+ *
+ * @param accountData account data
+ * @param podName pod name
+ * @param fullPath full path to the file
+ * @param downloadOptions download options
+ * @param dataDownloadOptions data download options
+ */
+export async function downloadData(
+  accountData: AccountData,
+  podName: string,
+  fullPath: string,
+  downloadOptions?: BeeRequestOptions,
+  dataDownloadOptions?: DataDownloadOptions,
+): Promise<Data> {
+  dataDownloadOptions = dataDownloadOptions ?? {}
+  const bee = accountData.connection.bee
+  const { blocks } = await getFileMetadataWithBlocks(
+    bee,
+    accountData,
+    podName,
+    fullPath,
+    downloadOptions,
+    dataDownloadOptions,
+  )
+
+  return prepareDataByMeta(blocks, bee, downloadOptions, dataDownloadOptions)
+}
+
+/**
  * Generate block name by block number
  */
 export function generateBlockName(blockNumber: number): string {
@@ -185,9 +207,15 @@ export async function uploadData(
   data: Uint8Array | string | ExternalDataBlock[],
   accountData: AccountData,
   options: DataUploadOptions,
-): Promise<FileMetadata> {
-  assertPodName(podName)
-  assertFullPathWithName(fullPath)
+): Promise<FileMetadataWithLookupAnswer> {
+  // empty pod name is acceptable in case of uploading the list of pods
+  const isPodUploading = podName === ''
+
+  if (podName) {
+    assertPodName(podName)
+    assertFullPathWithName(fullPath)
+  }
+
   assertWallet(accountData.wallet)
 
   const blockSize = options.blockSize ?? Number(DEFAULT_UPLOAD_OPTIONS!.blockSize)
@@ -195,7 +223,18 @@ export async function uploadData(
   const contentType = options.contentType ?? String(DEFAULT_UPLOAD_OPTIONS!.contentType)
   const connection = accountData.connection
   updateUploadProgress(options, UploadProgressType.GetPodInfo)
-  const { podWallet, pod } = await getExtendedPodsListByAccountData(accountData, podName)
+
+  let podWallet
+  let pod
+
+  // if pod name is empty, we use root wallet which is for pods management
+  if (podName) {
+    ;({ podWallet, pod } = await getExtendedPodsListByAccountData(accountData, podName))
+  } else if (!podName && accountData.wallet) {
+    podWallet = accountData.wallet
+  } else {
+    throw new Error('Pod name or root wallet is required')
+  }
 
   updateUploadProgress(options, UploadProgressType.GetPathInfo)
   const fullPathInfo = await getCreationPathInfo(
@@ -204,7 +243,7 @@ export async function uploadData(
     prepareEthAddress(podWallet.address),
     connection.options?.requestOptions,
   )
-  const pathInfo = extractPathInfo(fullPath)
+  const pathInfo = extractPathInfo(fullPath, isPodUploading)
   const now = getUnixTimestamp()
 
   const blocks: Blocks = { blocks: [] }
@@ -224,7 +263,12 @@ export async function uploadData(
         percentage: calcUploadBlockPercentage(i, totalBlocks),
       }
       updateUploadProgress(options, UploadProgressType.UploadBlockStart, blockData)
-      const currentBlock = getDataBlock(data, blockSize, i)
+      let currentBlock = getDataBlock(data, blockSize, i)
+
+      if (options.compression === Compression.GZIP) {
+        currentBlock = compress(currentBlock)
+      }
+
       blocks.blocks.push(await uploadDataBlock(connection, currentBlock))
       updateUploadProgress(options, UploadProgressType.UploadBlockEnd, blockData)
     }
@@ -235,12 +279,12 @@ export async function uploadData(
   const blocksReference = (await uploadBytes(connection, manifestBytes)).reference
   const meta: FileMetadata = {
     version: META_VERSION,
-    filePath: pathInfo.path,
+    filePath: isPodUploading ? '' : pathInfo.path,
     fileName: pathInfo.filename,
     fileSize,
     blockSize,
     contentType,
-    compression: '',
+    compression: options.compression ?? '',
     creationTime: now,
     accessTime: now,
     modificationTime: now,
@@ -249,20 +293,30 @@ export async function uploadData(
   }
 
   updateUploadProgress(options, UploadProgressType.WriteDirectoryInfo)
-  await addEntryToDirectory(connection, podWallet, pod.password, pathInfo.path, pathInfo.filename, true)
+
+  // add entry to the directory only if pod provided, if not pod provided it means we are uploading pods list
+  if (pod) {
+    await addEntryToDirectory(connection, podWallet, pod.password, pathInfo.path, pathInfo.filename, true)
+  }
+
   updateUploadProgress(options, UploadProgressType.WriteFileInfo)
+  const nextEpoch = prepareEpoch(getNextEpoch(fullPathInfo?.lookupAnswer.epoch))
+  const fileMetadataRawBytes = getFileMetadataRawBytes(meta)
   await writeFeedData(
     connection,
     fullPath,
-    getFileMetadataRawBytes(meta),
+    fileMetadataRawBytes,
     podWallet,
-    pod.password,
-    getNextEpoch(fullPathInfo?.lookupAnswer.epoch),
+    pod ? pod.password : preparePrivateKey(podWallet.privateKey),
+    nextEpoch,
   )
 
   updateUploadProgress(options, UploadProgressType.Done)
 
-  return meta
+  return {
+    lookupAnswer: { data: wrapChunkHelper(wrapBytesWithHelpers(fileMetadataRawBytes)), epoch: nextEpoch },
+    meta,
+  }
 }
 
 /**

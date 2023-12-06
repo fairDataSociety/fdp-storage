@@ -12,7 +12,6 @@ import { PodShareInfo, RawFileMetadata } from '../../../src/pod/types'
 import { FileShareInfo } from '../../../src/file/types'
 import { getFeedData } from '../../../src/feed/api'
 import * as feedApi from '../../../src/feed/api'
-import { POD_TOPIC } from '../../../src/pod/personal-storage'
 import { decryptBytes } from '../../../src/utils/encryption'
 import { Wallet } from 'ethers'
 import { removeZeroFromHex } from '../../../src/account/utils'
@@ -26,6 +25,7 @@ import { ETH_ADDR_HEX_LENGTH } from '../../../src/utils/type'
 import * as walletApi from '../../../src/utils/wallet'
 import { HIGHEST_LEVEL } from '../../../src/feed/lookup/epoch'
 import { getWalletByIndex } from '../../../src/utils/cache/wallet'
+import { POD_TOPIC_V2 } from '../../../src/pod/utils'
 
 jest.setTimeout(400000)
 describe('Fair Data Protocol class', () => {
@@ -725,13 +725,15 @@ describe('Fair Data Protocol class', () => {
 
       // check pod metadata
       const pod1 = await fdp.personalStorage.create(pod)
-      const podData = await getFeedData(bee, POD_TOPIC, prepareEthAddress(user.address))
+      const podData = await getFeedData(bee, POD_TOPIC_V2, prepareEthAddress(user.address))
       const encryptedText1 = podData.data.chunkContent().text()
       const encryptedBytes1 = podData.data.chunkContent()
       // data decrypts with wallet for the pod. Data inside the pod will be encrypted with a password stored in the pod
       const decryptedText1 = bytesToString(decryptBytes(privateKey, encryptedBytes1))
       expect(encryptedText1).not.toContain(pod)
-      expect(decryptedText1).toContain(pod)
+      expect(decryptedText1).toContain('version')
+      expect(decryptedText1).toContain('filePath')
+      expect(decryptedText1).toContain(POD_TOPIC_V2)
       // HDNode with index 1 is for first pod
       const node1 = await getWalletByIndex(seed, 1)
       const rootDirectoryData = await getFeedData(bee, '/', prepareEthAddress(node1.address))
@@ -811,15 +813,16 @@ describe('Fair Data Protocol class', () => {
       await fdpNoCache.personalStorage.create(pod1)
       // for the first feed write it should be the highest level
       expect(writeFeedDataSpy.mock.calls[0][5]?.level).toEqual(HIGHEST_LEVEL)
-      // getting info about pods from the network
-      expect(getFeedDataSpy).toBeCalledTimes(1)
+      // getting old V1 pods info + getting V2 pods info + getting V2 pods info for data uploading (todo: can be reduced)
+      expect(getFeedDataSpy).toBeCalledTimes(3)
       // calculating wallet by index for the pod
       expect(getWalletByIndexSpy).toBeCalledTimes(1)
 
       jest.clearAllMocks()
       await fdpNoCache.personalStorage.create(pod2)
       expect(writeFeedDataSpy.mock.calls[0][5]?.level).toEqual(HIGHEST_LEVEL - 1)
-      expect(getFeedDataSpy).toBeCalledTimes(1)
+      // get V1 pods info + V2 pods info
+      expect(getFeedDataSpy).toBeCalledTimes(2)
       expect(getWalletByIndexSpy).toBeCalledTimes(1)
 
       jest.clearAllMocks()
@@ -858,8 +861,8 @@ describe('Fair Data Protocol class', () => {
       await fdpNoCache.personalStorage.delete(pod1)
       // writing info about pods to the network
       expect(writeFeedDataSpy).toBeCalledTimes(1)
-      // get pods info
-      expect(getFeedDataSpy).toBeCalledTimes(1)
+      // get V1 pods info + V2 pods info
+      expect(getFeedDataSpy).toBeCalledTimes(2)
       expect(getWalletByIndexSpy).toBeCalledTimes(0)
 
       jest.restoreAllMocks()
@@ -889,15 +892,15 @@ describe('Fair Data Protocol class', () => {
       await fdpWithCache.personalStorage.create(pod1)
       // for the first feed write it should be the highest level
       expect(writeFeedDataSpy.mock.calls[0][5]?.level).toEqual(HIGHEST_LEVEL)
-      // getting info about pods from the network
-      expect(getFeedDataSpy).toBeCalledTimes(1)
+      // getting V1 pods info + V2 pods info + V2 pods info for data uploading (todo: can be reduced)
+      expect(getFeedDataSpy).toBeCalledTimes(3)
       // calculating wallet by index for the pod
       expect(getWalletByIndexSpy).toBeCalledTimes(1)
 
       jest.clearAllMocks()
       await fdpWithCache.personalStorage.create(pod2)
-      // data about pods shouldn't be retrieved
-      expect(getFeedDataSpy).toBeCalledTimes(0)
+      // V2 pods info for data uploading (todo: can be reduced)
+      expect(getFeedDataSpy).toBeCalledTimes(1)
       // should be calculated correct level without getting previous one from the network
       expect(writeFeedDataSpy.mock.calls[0][5]?.level).toEqual(HIGHEST_LEVEL - 1)
       // calc a wallet for the new pod
@@ -939,8 +942,8 @@ describe('Fair Data Protocol class', () => {
       await fdpWithCache.personalStorage.delete(pod1)
       // writing info about pods to the network
       expect(writeFeedDataSpy).toBeCalledTimes(1)
-      // should not get pods info
-      expect(getFeedDataSpy).toBeCalledTimes(0)
+      // V2 pods info for data uploading (todo: can be reduced)
+      expect(getFeedDataSpy).toBeCalledTimes(1)
       expect(getWalletByIndexSpy).toBeCalledTimes(0)
 
       // recovering cache data

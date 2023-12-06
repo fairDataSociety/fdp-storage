@@ -1,6 +1,7 @@
 import { Utils, Reference } from '@ethersphere/bee-js'
 import { PodPasswordBytes } from '../utils/encryption'
 import { HexString } from '../utils/hex'
+import { LookupAnswer } from '../feed/types'
 
 /**
  * Pods information prepared for internal usage
@@ -91,6 +92,20 @@ export interface FileMetadata {
   modificationTime: number
   blocksReference: Reference
   mode: number
+}
+
+/**
+ * Information about a file with lookup answer
+ */
+export interface FileMetadataWithLookupAnswer {
+  /**
+   * File metadata
+   */
+  meta: FileMetadata
+  /**
+   * Lookup answer
+   */
+  lookupAnswer: LookupAnswer
 }
 
 /**

@@ -2,7 +2,7 @@ import { Bee, Data, Reference, BeeRequestOptions, Utils } from '@ethersphere/bee
 import { bmtHashString } from '../account/utils'
 import { getId } from './handler'
 import { lookup } from './lookup/linear'
-import { Epoch, HIGHEST_LEVEL } from './lookup/epoch'
+import { Epoch, getFirstEpoch } from './lookup/epoch'
 import { bytesToHex } from '../utils/hex'
 import { getUnixTimestamp } from '../utils/time'
 import { LookupAnswer } from './types'
@@ -57,14 +57,22 @@ export async function writeFeedData(
   podPassword: PodPasswordBytes,
   epoch?: Epoch,
 ): Promise<Reference> {
-  if (!epoch) {
-    epoch = new Epoch(HIGHEST_LEVEL, getUnixTimestamp())
-  }
+  epoch = prepareEpoch(epoch)
   data = encryptBytes(podPassword, data)
-
   const topicHash = bmtHashString(topic)
   const id = getId(topicHash, epoch.time, epoch.level)
   const socWriter = connection.bee.makeSOCWriter(wallet.privateKey)
 
   return socWriter.upload(connection.postageBatchId, id, data)
+}
+
+/**
+ * Prepares an epoch for further processing.
+ *
+ * @param {Epoch} [epoch] - The epoch to prepare. If not provided, a new epoch will be created.
+ *
+ * @return {Epoch} The prepared epoch.
+ */
+export function prepareEpoch(epoch?: Epoch): Epoch {
+  return epoch ?? getFirstEpoch(getUnixTimestamp())
 }
