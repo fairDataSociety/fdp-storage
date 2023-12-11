@@ -25,7 +25,7 @@ import { ETH_ADDR_HEX_LENGTH } from '../../../src/utils/type'
 import * as walletApi from '../../../src/utils/wallet'
 import { HIGHEST_LEVEL } from '../../../src/feed/lookup/epoch'
 import { getWalletByIndex } from '../../../src/utils/cache/wallet'
-import { POD_TOPIC_V2 } from '../../../src/pod/utils'
+import { getPodV2Topic, POD_TOPIC_V2 } from '../../../src/pod/utils'
 
 jest.setTimeout(400000)
 describe('Fair Data Protocol class', () => {
@@ -725,7 +725,7 @@ describe('Fair Data Protocol class', () => {
 
       // check pod metadata
       const pod1 = await fdp.personalStorage.create(pod)
-      const podData = await getFeedData(bee, POD_TOPIC_V2, prepareEthAddress(user.address))
+      const podData = await getFeedData(bee, getPodV2Topic(), prepareEthAddress(user.address))
       const encryptedText1 = podData.data.chunkContent().text()
       const encryptedBytes1 = podData.data.chunkContent()
       // data decrypts with wallet for the pod. Data inside the pod will be encrypted with a password stored in the pod

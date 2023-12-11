@@ -54,7 +54,6 @@ import { MINIMUM_BLOCK_SIZE } from '../content-items/handler'
 import { downloadBlocksManifest } from '../file/utils'
 import { extractMetadata } from '../content-items/utils'
 import { rawFileMetadataToFileMetadata } from '../file/adapter'
-import { decompress } from '../utils/compression'
 
 export const META_VERSION = 2
 export const MAX_PODS_COUNT = 65536
@@ -152,7 +151,7 @@ export async function extractPodsV2(
   const fileMeta = rawFileMetadataToFileMetadata(meta)
   const blocksData = await downloadBlocksManifest(accountData.connection.bee, fileMeta.blocksReference, downloadOptions)
   const preparedData = bytesToString(
-    decompress(await prepareDataByMeta(blocksData.blocks, accountData.connection.bee, downloadOptions)),
+    await prepareDataByMeta(fileMeta, blocksData.blocks, accountData.connection.bee, downloadOptions),
   )
 
   return jsonToPodsList(preparedData)
@@ -532,7 +531,7 @@ export async function uploadPodDataV2(
   accountData: AccountData,
   allPodsData: Uint8Array,
 ): Promise<FileMetadataWithLookupAnswer> {
-  return uploadData('', POD_TOPIC_V2, allPodsData, accountData, {
+  return uploadData('', getPodV2Topic(), allPodsData, accountData, {
     blockSize: MINIMUM_BLOCK_SIZE,
     compression: Compression.GZIP,
   })
@@ -684,7 +683,7 @@ export async function getPodsData(
   let podsVersion = PodsVersion.V2
   let lookupAnswer
   try {
-    lookupAnswer = await getFeedData(bee, POD_TOPIC_V2, address, requestOptions)
+    lookupAnswer = await getFeedData(bee, getPodV2Topic(), address, requestOptions)
     // eslint-disable-next-line no-empty
   } catch (e) {}
 
@@ -726,4 +725,13 @@ export async function migratePodV1ToV2(
     podsVersion: PodsVersion.V2,
     lookupAnswer: (await uploadPodDataV2(accountData, podsBytes)).lookupAnswer,
   }
+}
+
+/**
+ * Retrieves the topic for Pod version 2.
+ *
+ * @returns {string} The topic for Pod version 2.
+ */
+export function getPodV2Topic(): string {
+  return `/${POD_TOPIC_V2}`
 }

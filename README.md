@@ -233,7 +233,7 @@ const blocks = []
 for (let i = 0; i < blocksCount; i++) {
   const dataBlock = getDataBlock(data, blockSize, i)
   // fdp instance with or without logged in user
-  blocks.push(await fdp.file.uploadDataBlock(dataBlock, i))
+  blocks.push(await fdp.file.uploadDataBlock(dataBlock, i, dataBlock.length))
 }
 
 // fdp instance with logged in user

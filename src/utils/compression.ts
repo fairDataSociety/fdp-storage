@@ -5,7 +5,7 @@ import pako from 'pako'
  * @param data input data
  */
 export function compress(data: Uint8Array): Uint8Array {
-  return pako.deflate(data)
+  return pako.gzip(data)
 }
 
 /**
@@ -13,5 +13,5 @@ export function compress(data: Uint8Array): Uint8Array {
  * @param data input data
  */
 export function decompress(data: Uint8Array): Uint8Array {
-  return pako.inflate(data)
+  return pako.ungzip(data)
 }

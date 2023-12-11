@@ -182,12 +182,13 @@ export class File {
    *
    * @param block block data
    * @param blockIndex block index
+   * @param originalSize original size of the block
    */
-  async uploadDataBlock(block: Uint8Array, blockIndex: number): Promise<ExternalDataBlock> {
+  async uploadDataBlock(block: Uint8Array, blockIndex: number, originalSize: number): Promise<ExternalDataBlock> {
     assertBatchId(this.accountData.connection.postageBatchId)
 
     return {
-      ...(await uploadDataBlock(this.accountData.connection, block)),
+      ...(await uploadDataBlock(this.accountData.connection, block, originalSize)),
       index: blockIndex,
     }
   }

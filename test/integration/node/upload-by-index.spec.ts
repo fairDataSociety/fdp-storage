@@ -14,7 +14,7 @@ it('Upload by index', async () => {
   const blocks = []
   for (let i = 0; i < blocksCount; i++) {
     const block = getDataBlock(content, blockSize, i)
-    blocks.push(await fdp.file.uploadDataBlock(block, i))
+    blocks.push(await fdp.file.uploadDataBlock(block, i, block.length))
   }
 
   generateUser(fdp)

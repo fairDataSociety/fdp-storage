@@ -41,7 +41,7 @@ import { prepareEthAddress, preparePrivateKey } from '../utils/wallet'
 import { assertWallet } from '../utils/type'
 import { getNextEpoch } from '../feed/lookup/utils'
 import { Connection } from '../connection/connection'
-import { compress } from '../utils/compression'
+import { compress, decompress } from '../utils/compression'
 import { wrapChunkHelper } from '../feed/utils'
 
 /**
@@ -116,6 +116,7 @@ export async function getFileMetadataWithBlocks(
 /**
  * Downloads entire data using metadata.
  *
+ * @param {FileMetadata} meta - The metadata of the file to download.
  * @param {Block[]} blocks - The array of blocks to download.
  * @param {Bee} bee - The Bee object to use for downloading.
  * @param {BeeRequestOptions} [downloadOptions] - The options to be passed to the bee.downloadData() method.
@@ -123,6 +124,7 @@ export async function getFileMetadataWithBlocks(
  * @returns {Promise<Data>} - A promise that resolves with the downloaded data.
  */
 export async function prepareDataByMeta(
+  meta: FileMetadata,
   blocks: Block[],
   bee: Bee,
   downloadOptions?: BeeRequestOptions,
@@ -144,7 +146,12 @@ export async function prepareDataByMeta(
       percentage: calcUploadBlockPercentage(currentBlockId, totalBlocks),
     }
     updateDownloadProgress(dataDownloadOptions, DownloadProgressType.DownloadBlockStart, blockData)
-    const data = await bee.downloadData(block.reference, downloadOptions)
+    let data = (await bee.downloadData(block.reference, downloadOptions)) as Uint8Array
+
+    if (meta.compression === Compression.GZIP) {
+      data = decompress(data)
+    }
+
     updateDownloadProgress(dataDownloadOptions, DownloadProgressType.DownloadBlockEnd, blockData)
     result.set(data, offset)
     offset += data.length
@@ -173,7 +180,7 @@ export async function downloadData(
 ): Promise<Data> {
   dataDownloadOptions = dataDownloadOptions ?? {}
   const bee = accountData.connection.bee
-  const { blocks } = await getFileMetadataWithBlocks(
+  const fileMeta = await getFileMetadataWithBlocks(
     bee,
     accountData,
     podName,
@@ -182,7 +189,7 @@ export async function downloadData(
     dataDownloadOptions,
   )
 
-  return prepareDataByMeta(blocks, bee, downloadOptions, dataDownloadOptions)
+  return prepareDataByMeta(fileMeta, fileMeta.blocks, bee, downloadOptions, dataDownloadOptions)
 }
 
 /**
@@ -264,12 +271,13 @@ export async function uploadData(
       }
       updateUploadProgress(options, UploadProgressType.UploadBlockStart, blockData)
       let currentBlock = getDataBlock(data, blockSize, i)
+      const originalSize = currentBlock.length
 
       if (options.compression === Compression.GZIP) {
         currentBlock = compress(currentBlock)
       }
 
-      blocks.blocks.push(await uploadDataBlock(connection, currentBlock))
+      blocks.blocks.push(await uploadDataBlock(connection, currentBlock, originalSize))
       updateUploadProgress(options, UploadProgressType.UploadBlockEnd, blockData)
     }
   }
@@ -279,7 +287,7 @@ export async function uploadData(
   const blocksReference = (await uploadBytes(connection, manifestBytes)).reference
   const meta: FileMetadata = {
     version: META_VERSION,
-    filePath: isPodUploading ? '' : pathInfo.path,
+    filePath: isPodUploading ? '/' : pathInfo.path,
     fileName: pathInfo.filename,
     fileSize,
     blockSize,
@@ -323,10 +331,11 @@ export async function uploadData(
  * Upload data block
  * @param connection connection
  * @param block block to upload
+ * @param originalSize original size of the block
  */
-export async function uploadDataBlock(connection: Connection, block: Uint8Array): Promise<Block> {
+export async function uploadDataBlock(connection: Connection, block: Uint8Array, originalSize: number): Promise<Block> {
   return {
-    size: block.length,
+    size: originalSize,
     compressedSize: block.length,
     reference: (await uploadBytes(connection, block)).reference,
   }
