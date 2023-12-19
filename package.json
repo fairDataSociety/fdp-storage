@@ -1,6 +1,6 @@
 {
   "name": "@fairdatasociety/fdp-storage",
-  "version": "0.16.0",
+  "version": "0.17.0",
   "description": "Typescript implementation of FairOS-dfs",
   "keywords": [
     "fairdata",
