@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.17.0](https://github.com/fairDataSociety/fdp-storage/compare/v0.16.0...v0.17.0) (2023-12-19)
+
+
+### Features
+
+* enforce await-thenable eslint rule and update tsconfig.test.json ([#282](https://github.com/fairDataSociety/fdp-storage/issues/282)) ([a26dadc](https://github.com/fairDataSociety/fdp-storage/commit/a26dadc8aaf172a68d541bfa7c0fad71cbb565ab))
+* fdp-contract 3.10.0 ([#294](https://github.com/fairDataSociety/fdp-storage/issues/294)) ([97a3172](https://github.com/fairDataSociety/fdp-storage/commit/97a31723d5939a6a25d1457a91db655317bb8abd))
+
 ## [0.16.0](https://github.com/fairDataSociety/fdp-storage/compare/v0.15.0...v0.16.0) (2023-10-25)
 
 

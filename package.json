@@ -1,6 +1,6 @@
 {
   "name": "@fairdatasociety/fdp-storage",
-  "version": "0.16.0",
+  "version": "0.17.0",
   "description": "Typescript implementation of FairOS-dfs",
   "keywords": [
     "fairdata",
@@ -54,7 +54,7 @@
   },
   "dependencies": {
     "@ethersphere/bee-js": "^6.2.0",
-    "@fairdatasociety/fdp-contracts-js": "^3.8.0",
+    "@fairdatasociety/fdp-contracts-js": "^3.10.0",
     "crypto-js": "^4.2.0",
     "ethers": "^5.5.2",
     "js-sha3": "^0.9.2",
