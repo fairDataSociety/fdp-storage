@@ -7,6 +7,7 @@ import { getRawMetadata } from '../../../src/content-items/utils'
 import { RawDirectoryMetadata, RawFileMetadata } from '../../../src/pod/types'
 import { DEFAULT_FILE_PERMISSIONS, getFileMode } from '../../../src/file/utils'
 import { DEFAULT_DIRECTORY_PERMISSIONS, getDirectoryMode } from '../../../src/directory/utils'
+import { getIndexFileContent } from '../../../src/file/handler'
 
 jest.setTimeout(400000)
 describe('Fair Data Protocol with FairOS-dfs', () => {
@@ -205,26 +206,25 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
       await fdp.account.register(fdp.account.createRegistrationRequest(user.username, user.password))
       await fdp.personalStorage.create(podName1)
       await fdp.directory.create(podName1, fullDirectoryName1)
-      await fairos.login(user.username, user.password)
-      await fairos.podOpen(podName1, user.password)
-      const response = await fairos.dirLs(podName1)
-      const data = response.data as Directories
-      expect(response.status).toEqual(200)
-      expect(data.dirs).toHaveLength(1)
-      const dir1 = data.dirs[0]
-      expect(dir1.name).toEqual(directoryName1)
-      expect(dir1.contentType).toEqual('inode/directory')
-      expect(dir1.creationTime).toBeDefined()
-      expect(dir1.modificationTime).toBeDefined()
-      expect(dir1.accessTime).toBeDefined()
-
       await fdp.directory.create(podName1, fullSubDirectoryName1)
       await fdp.directory.create(podName1, fullDirectoryName2)
-      const response2 = await fairos.dirLs(podName1)
-      expect(response2.data?.dirs).toHaveLength(2)
-      const dirs2 = (response2.data as Directories).dirs
-      expect(dirs2.find(item => item.name === directoryName1)).toBeDefined()
-      expect(dirs2.find(item => item.name === directoryName2)).toBeDefined()
+
+      await fairos.login(user.username, user.password)
+      await fairos.podOpen(podName1, user.password)
+      const response1 = await fairos.dirLs(podName1)
+      const data1 = response1.data as Directories
+      expect(response1.status).toEqual(200)
+      expect(data1.dirs).toHaveLength(2)
+      for (const dir of data1.dirs) {
+        expect(dir.contentType).toEqual('inode/directory')
+        expect(dir.creationTime).toBeDefined()
+        expect(dir.modificationTime).toBeDefined()
+        expect(dir.accessTime).toBeDefined()
+      }
+
+      const dirs1 = data1.dirs
+      expect(dirs1.find(item => item.name === directoryName1)).toBeDefined()
+      expect(dirs1.find(item => item.name === directoryName2)).toBeDefined()
 
       const data3 = (await fairos.dirLs(podName1, fullDirectoryName1)).data as Directories
       const dirs3 = data3.dirs
@@ -273,6 +273,9 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
 
       // test mixed clients directory creation in the same account
       await fdp.directory.create(podName1, fullDirectoryName3)
+      // reset the cache by using podClose and podOpen
+      await fairos.podClose(podName1)
+      await fairos.podOpen(podName1, user.password)
       const response3 = (await fairos.dirLs(podName1)).data as Directories
       expect(response3.dirs).toHaveLength(3)
       expect(response3.dirs.find(item => item.name === directoryName3)).toBeDefined()
@@ -300,6 +303,8 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
       expect(dirs1[0].contentType).toEqual('inode/directory')
 
       await fdp.directory.delete(podName1, fullDirectoryName1)
+      await fairos.podClose(podName1)
+      await fairos.podOpen(podName1, user.password)
       const response2 = await fairos.dirLs(podName1)
       const dirs2 = response2.data?.dirs
       expect(dirs2).toBeUndefined()
@@ -396,6 +401,9 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
         },
       ])
 
+      const itemsList1 = await fdp.directory.read(podName1, '/')
+      expect(itemsList1.files).toHaveLength(1)
+      expect(itemsList1.files[0].name).toEqual(filenameBig)
       const file1 = wrapBytesWithHelpers(await fdp.file.downloadData(podName1, fullFilenameBigPath))
       expect(file1.text()).toEqual(contentBig)
 
@@ -539,9 +547,7 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
       await fairos.fileUpload(podName1, '/', contentBig, filenameBig)
 
       const { podAddress, pod } = await getExtendedPodsListByAccountData(fdp.account, podName1)
-      const rawDirectoryMetadata = (
-        await getRawMetadata(fdp.connection.bee, fullNewDirectory1, podAddress, pod.password)
-      ).metadata as RawDirectoryMetadata
+      const rawDirectoryMetadata = await getIndexFileContent(fdp.account, podName1, fullNewDirectory1)
       checkDirectoryMetadata(rawDirectoryMetadata, newDirectory1)
 
       const rawFileMetadata = (await getRawMetadata(fdp.connection.bee, fullFilenameBigPath, podAddress, pod.password))
@@ -550,9 +556,7 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
 
       await fdp.directory.create(podName1, fullNewDirectory2)
       await fdp.file.uploadData(podName1, fullFilenameBigPath2, contentBig2)
-      const rawDirectoryMetadata1 = (
-        await getRawMetadata(fdp.connection.bee, fullNewDirectory2, podAddress, pod.password)
-      ).metadata as RawDirectoryMetadata
+      const rawDirectoryMetadata1 = await getIndexFileContent(fdp.account, podName1, fullNewDirectory2)
       checkDirectoryMetadata(rawDirectoryMetadata1, newDirectory2)
 
       const rawFileMetadata1 = (

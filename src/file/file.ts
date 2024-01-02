@@ -28,6 +28,7 @@ import { getRawMetadata } from '../content-items/utils'
 import { assertRawFileMetadata, combine, splitPath } from '../directory/utils'
 import { assertEncryptedReference, EncryptedReference } from '../utils/hex'
 import { assertBatchId } from '../utils/string'
+import { prepareEthAddress } from '../utils/wallet'
 
 /**
  * Files management class
@@ -78,7 +79,31 @@ export class File {
     assertAccount(this.accountData, { writeRequired: true })
     assertPodName(podName)
 
-    return (await uploadData(podName, fullPath, data, this.accountData, options)).meta
+    const { podWallet, pod } = await getExtendedPodsListByAccountData(this.accountData, podName)
+    const socOwnerAddress = prepareEthAddress(podWallet.address)
+    const meta = (
+      await uploadData(
+        this.accountData.connection,
+        socOwnerAddress,
+        podWallet.privateKey,
+        pod.password,
+        fullPath,
+        data,
+        options,
+      )
+    ).meta
+    const pathInfo = extractPathInfo(fullPath)
+    await addEntryToDirectory(
+      this.accountData,
+      socOwnerAddress,
+      podWallet.privateKey,
+      pod.password,
+      pathInfo.path,
+      pathInfo.filename,
+      true,
+    )
+
+    return meta
   }
 
   /**
@@ -165,12 +190,21 @@ export class File {
     const sharedInfo = await this.getSharedInfo(reference)
     const connection = this.accountData.connection
     const { podWallet, pod } = await getExtendedPodsListByAccountData(this.accountData, podName)
+    const socOwnerAddress = prepareEthAddress(podWallet.address)
     let meta = rawFileMetadataToFileMetadata(sharedInfo.meta)
     const fileName = options?.name ?? sharedInfo.meta.fileName
     meta = updateFileMetadata(meta, parentPath, fileName)
     const fullPath = combine(...splitPath(parentPath), fileName)
-    await addEntryToDirectory(connection, podWallet, pod.password, parentPath, fileName, true)
-    await writeFeedData(connection, fullPath, getFileMetadataRawBytes(meta), podWallet, pod.password)
+    await addEntryToDirectory(
+      this.accountData,
+      socOwnerAddress,
+      podWallet.privateKey,
+      pod.password,
+      parentPath,
+      fileName,
+      true,
+    )
+    await writeFeedData(connection, fullPath, getFileMetadataRawBytes(meta), podWallet.privateKey, pod.password)
 
     return meta
   }

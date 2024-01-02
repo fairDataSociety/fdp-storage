@@ -1,4 +1,4 @@
-import { Bee, Data, Reference, BeeRequestOptions, Utils } from '@ethersphere/bee-js'
+import { Bee, Data, Reference, BeeRequestOptions, Utils, Signer } from '@ethersphere/bee-js'
 import { bmtHashString } from '../account/utils'
 import { getId } from './handler'
 import { lookup } from './lookup/linear'
@@ -8,7 +8,7 @@ import { getUnixTimestamp } from '../utils/time'
 import { LookupAnswer } from './types'
 import { Connection } from '../connection/connection'
 import { encryptBytes, PodPasswordBytes } from '../utils/encryption'
-import { utils, Wallet } from 'ethers'
+import { EthAddress } from '../utils/eth'
 
 /**
  * Magic word for replacing content after deletion
@@ -26,7 +26,7 @@ export const DELETE_FEED_MAGIC_WORD = '__Fair__'
 export async function getFeedData(
   bee: Bee,
   topic: string,
-  address: Utils.EthAddress | Uint8Array,
+  address: EthAddress | Uint8Array,
   requestOptions?: BeeRequestOptions,
 ): Promise<LookupAnswer> {
   const topicHash = bmtHashString(topic)
@@ -45,23 +45,23 @@ export async function getFeedData(
  * @param connection connection information for data uploading
  * @param topic key for data
  * @param data data to upload
- * @param wallet feed owner's wallet
- * @param podPassword bytes for data encryption from pod metadata
+ * @param socSigner feed owner's signer
+ * @param encryptionPassword data encryption password
  * @param epoch feed epoch
  */
 export async function writeFeedData(
   connection: Connection,
   topic: string,
   data: Uint8Array,
-  wallet: utils.HDNode | Wallet,
-  podPassword: PodPasswordBytes,
+  socSigner: string | Uint8Array | Signer,
+  encryptionPassword: PodPasswordBytes,
   epoch?: Epoch,
 ): Promise<Reference> {
   epoch = prepareEpoch(epoch)
-  data = encryptBytes(podPassword, data)
+  data = encryptBytes(encryptionPassword, data)
   const topicHash = bmtHashString(topic)
   const id = getId(topicHash, epoch.time, epoch.level)
-  const socWriter = connection.bee.makeSOCWriter(wallet.privateKey)
+  const socWriter = connection.bee.makeSOCWriter(socSigner)
 
   return socWriter.upload(connection.postageBatchId, id, data)
 }

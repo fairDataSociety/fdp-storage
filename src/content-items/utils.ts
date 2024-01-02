@@ -1,8 +1,7 @@
 import { Bee, Reference, BeeRequestOptions, Data } from '@ethersphere/bee-js'
-import { EthAddress } from '@ethersphere/bee-js/dist/types/utils/eth'
 import { RawDirectoryMetadata, RawFileMetadata } from '../pod/types'
 import { DELETE_FEED_MAGIC_WORD, getFeedData, writeFeedData } from '../feed/api'
-import { isRawDirectoryMetadata, isRawFileMetadata } from '../directory/utils'
+import { combine, isRawDirectoryMetadata, isRawFileMetadata, splitPath } from '../directory/utils'
 import { DirectoryItem, FileItem, PathInformation, RawMetadataWithEpoch } from './types'
 import { decryptJson, PodPasswordBytes } from '../utils/encryption'
 import CryptoJS from 'crypto-js'
@@ -11,6 +10,8 @@ import { Connection } from '../connection/connection'
 import { utils, Wallet } from 'ethers'
 import { Epoch } from '../feed/lookup/epoch'
 import { stringToBytes } from '../utils/bytes'
+import { INDEX_ITEM_NAME } from '../file/handler'
+import { EthAddress } from '../utils/eth'
 
 /**
  * Extracts metadata from encrypted source data using a pod password
@@ -157,5 +158,15 @@ export async function deleteFeedData(
   podPassword: PodPasswordBytes,
   epoch?: Epoch,
 ): Promise<Reference> {
-  return writeFeedData(connection, topic, stringToBytes(DELETE_FEED_MAGIC_WORD), wallet, podPassword, epoch)
+  return writeFeedData(connection, topic, stringToBytes(DELETE_FEED_MAGIC_WORD), wallet.privateKey, podPassword, epoch)
+}
+
+/**
+ * Returns the index file path for a given path.
+ *
+ * @param {string} path - The path for which the index file path is needed.
+ * @return {string} - The index file path for the given path.
+ */
+export function getIndexFilePath(path: string): string {
+  return combine(...splitPath(path), INDEX_ITEM_NAME)
 }

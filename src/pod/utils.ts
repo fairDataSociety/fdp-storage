@@ -54,6 +54,8 @@ import { MINIMUM_BLOCK_SIZE } from '../content-items/handler'
 import { downloadBlocksManifest } from '../file/utils'
 import { extractMetadata } from '../content-items/utils'
 import { rawFileMetadataToFileMetadata } from '../file/adapter'
+import { prepareEthAddress, preparePrivateKey } from '../utils/wallet'
+import { EthAddress } from '../utils/eth'
 
 export const META_VERSION = 2
 export const MAX_PODS_COUNT = 65536
@@ -111,7 +113,7 @@ export interface PodsInfo {
 export interface ExtendedPodInfo {
   pod: PodPrepared
   podWallet: utils.HDNode
-  podAddress: Utils.EthAddress
+  podAddress: EthAddress
   epoch: Epoch
 }
 
@@ -410,8 +412,8 @@ export function assertSharedPods(value: unknown): asserts value is SharedPodPrep
  */
 export function createPodShareInfo(
   podName: string,
-  podAddress: Utils.EthAddress,
-  userAddress: Utils.EthAddress,
+  podAddress: EthAddress,
+  userAddress: EthAddress,
   password: PodPasswordBytes,
 ): PodShareInfo {
   return {
@@ -468,6 +470,12 @@ export async function createPod(
   seed: Uint8Array,
   pod: PodName | SharedPodPrepared,
 ): Promise<PodPrepared | SharedPodPrepared> {
+  const wallet = accountData.wallet!
+
+  if (!wallet) {
+    throw new Error('Wallet is not initialized')
+  }
+
   assertPodNameType(pod)
   pod.name = pod.name.trim()
   assertPodName(pod.name)
@@ -507,7 +515,7 @@ export async function createPod(
   }
 
   const allPodsData = podListToBytes(pods, sharedPods)
-  await uploadPodDataV2(accountData, allPodsData)
+  await uploadPodDataV2(accountData.connection, prepareEthAddress(wallet?.address), wallet.privateKey, allPodsData)
 
   if (isPod(realPod)) {
     const podWallet = await getWalletByIndex(seed, nextIndex, cacheInfo)
@@ -524,17 +532,29 @@ export async function createPod(
 
 /**
  * Uploads pods data using version 2 method
- * @param accountData AccountData instance
+ * @param connection Connection instance
+ * @param socOwnerAddress Single Owner Chunk owner address
+ * @param socSigner Single Owner Chunk signer
  * @param allPodsData pods data
  */
 export async function uploadPodDataV2(
-  accountData: AccountData,
+  connection: Connection,
+  socOwnerAddress: EthAddress,
+  socSigner: string,
   allPodsData: Uint8Array,
 ): Promise<FileMetadataWithLookupAnswer> {
-  return uploadData('', getPodV2Topic(), allPodsData, accountData, {
-    blockSize: MINIMUM_BLOCK_SIZE,
-    compression: Compression.GZIP,
-  })
+  return uploadData(
+    connection,
+    socOwnerAddress,
+    socSigner,
+    preparePrivateKey(socSigner),
+    getPodV2Topic(),
+    allPodsData,
+    {
+      blockSize: MINIMUM_BLOCK_SIZE,
+      compression: Compression.GZIP,
+    },
+  )
 }
 
 /**
@@ -660,7 +680,7 @@ export function assertJsonSharedPod(value: unknown): asserts value is SharedPod 
  */
 export function jsonSharedPodToSharedPod(pod: SharedPod): SharedPodPrepared {
   const password = Utils.hexToBytes(pod.password) as PodPasswordBytes
-  const address = Utils.hexToBytes(pod.address) as Utils.EthAddress
+  const address = Utils.hexToBytes(pod.address) as EthAddress
   assertPodPasswordBytes(password)
 
   return { ...pod, password, address }
@@ -670,14 +690,14 @@ export function jsonSharedPodToSharedPod(pod: SharedPod): SharedPodPrepared {
  * Retrieves pods data for a given address.
  *
  * @param {Bee} bee - The bee client object.
- * @param {Utils.EthAddress} address - The address to look up pods data for.
+ * @param {EthAddress} address - The address to look up pods data for.
  * @param {BeeRequestOptions} [requestOptions] - The request options.
  * @returns {Promise<PodsLookupAnswer>} The pods data.
  * @throws {Error} If the pods data cannot be found.
  */
 export async function getPodsData(
   bee: Bee,
-  address: Utils.EthAddress,
+  address: EthAddress,
   requestOptions?: BeeRequestOptions,
 ): Promise<PodsLookupAnswer> {
   let podsVersion = PodsVersion.V2
@@ -720,10 +740,14 @@ export async function migratePodV1ToV2(
   privateKey: PodPasswordBytes,
 ): Promise<PodsLookupAnswer> {
   const podsBytes = extractPodsBytes(podsData.lookupAnswer.data, privateKey)
+  const wallet = accountData.wallet!
+  const lookupAnswer = (
+    await uploadPodDataV2(accountData.connection, prepareEthAddress(wallet.address), wallet.privateKey, podsBytes)
+  ).lookupAnswer
 
   return {
     podsVersion: PodsVersion.V2,
-    lookupAnswer: (await uploadPodDataV2(accountData, podsBytes)).lookupAnswer,
+    lookupAnswer,
   }
 }
 

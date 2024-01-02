@@ -1,10 +1,11 @@
-import { Bee, PrivateKeyBytes, Reference, Utils } from '@ethersphere/bee-js'
+import { Bee, PrivateKeyBytes, Reference } from '@ethersphere/bee-js'
 import { utils, Wallet } from 'ethers'
 import { IV_LENGTH, decryptBytes, encryptBytes } from '../utils/encryption'
 import { assertChunkSizeLength, CHUNK_SIZE, SEED_SIZE, createCredentialsTopic, HD_PATH } from './utils'
 import { Connection } from '../connection/connection'
 import CryptoJS from 'crypto-js'
 import { wordArrayToBytes } from '../utils/bytes'
+import { EthAddress } from '../utils/eth'
 
 /**
  * User account with seed phrase
@@ -54,7 +55,7 @@ export async function uploadPortableAccount(
  */
 export async function downloadPortableAccount(
   bee: Bee,
-  address: Utils.EthAddress,
+  address: EthAddress,
   username: string,
   password: string,
 ): Promise<UserAccountWithSeed> {

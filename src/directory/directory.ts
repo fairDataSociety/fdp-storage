@@ -1,7 +1,7 @@
 import { AccountData } from '../account/account-data'
 import { createDirectory, readDirectory, DEFAULT_UPLOAD_DIRECTORY_OPTIONS, UploadDirectoryOptions } from './handler'
 import { assertAccount } from '../account/utils'
-import { removeEntryFromDirectory } from '../content-items/handler'
+import { addEntryToDirectory, removeEntryFromDirectory } from '../content-items/handler'
 import { extractPathInfo, readBrowserFileAsBytes } from '../file/utils'
 import { assertPodName, getExtendedPodsListByAccountData } from '../pod/utils'
 import { isNode } from '../shim/utils'
@@ -20,6 +20,7 @@ import {
 import { uploadData } from '../file/handler'
 import { assertNodeFileInfo, isBrowserFileInfo } from './types'
 import { DirectoryItem } from '../content-items/types'
+import { prepareEthAddress } from '../utils/wallet'
 
 /**
  * Directory related class
@@ -42,7 +43,8 @@ export class Directory {
     const { podAddress, pod } = await getExtendedPodsListByAccountData(this.accountData, podName)
 
     return readDirectory(
-      this.accountData.connection.bee,
+      this.accountData,
+      podName,
       path,
       podAddress,
       pod.password,
@@ -65,7 +67,7 @@ export class Directory {
     const { podWallet, pod } = await getExtendedPodsListByAccountData(this.accountData, podName)
 
     return createDirectory(
-      this.accountData.connection,
+      this.accountData,
       fullPath,
       podWallet,
       pod.password,
@@ -143,7 +145,7 @@ export class Directory {
     for (const directory of directoriesToCreate) {
       try {
         await createDirectory(
-          this.accountData.connection,
+          this.accountData,
           directory,
           podWallet,
           pod.password,
@@ -171,7 +173,26 @@ export class Directory {
       }
 
       const uploadPath = getUploadPath(file, options.isIncludeDirectoryName!)
-      await uploadData(podName, uploadPath, bytes, this.accountData, options.uploadOptions!)
+      const socOwnerAddress = prepareEthAddress(podWallet.address)
+      await uploadData(
+        this.accountData.connection,
+        socOwnerAddress,
+        podWallet.privateKey,
+        pod.password,
+        uploadPath,
+        bytes,
+        options.uploadOptions!,
+      )
+      const pathInfo = extractPathInfo(uploadPath)
+      await addEntryToDirectory(
+        this.accountData,
+        socOwnerAddress,
+        podWallet.privateKey,
+        pod.password,
+        pathInfo.path,
+        pathInfo.filename,
+        true,
+      )
     }
   }
 }

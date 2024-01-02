@@ -1,8 +1,6 @@
 import { assertMinLength, stringToBytes, wrapBytesWithHelpers } from '../utils/bytes'
-import { Bee, BeeRequestOptions, Data } from '@ethersphere/bee-js'
-import { EthAddress } from '@ethersphere/bee-js/dist/types/utils/eth'
+import { Bee, BeeRequestOptions, Data, Signer } from '@ethersphere/bee-js'
 import {
-  assertFullPathWithName,
   assertSequenceOfExternalDataBlocksCorrect,
   calcUploadBlockPercentage,
   DEFAULT_FILE_PERMISSIONS,
@@ -16,10 +14,10 @@ import {
   updateUploadProgress,
   uploadBytes,
 } from './utils'
-import { FileMetadata, FileMetadataWithLookupAnswer } from '../pod/types'
+import { FileMetadata, FileMetadataWithLookupAnswer, RawDirectoryMetadata } from '../pod/types'
 import { blocksToManifest, getFileMetadataRawBytes, rawFileMetadataToFileMetadata } from './adapter'
-import { assertRawFileMetadata } from '../directory/utils'
-import { getCreationPathInfo, getRawMetadata } from '../content-items/utils'
+import { assertRawDirectoryMetadata, assertRawFileMetadata } from '../directory/utils'
+import { getCreationPathInfo, getIndexFilePath, getRawMetadata } from '../content-items/utils'
 import { PodPasswordBytes } from '../utils/encryption'
 import {
   Block,
@@ -32,17 +30,17 @@ import {
   FileMetadataWithBlocks,
   UploadProgressType,
 } from './types'
-import { assertPodName, getExtendedPodsListByAccountData, META_VERSION } from '../pod/utils'
+import { getExtendedPodsListByAccountData, META_VERSION } from '../pod/utils'
 import { getUnixTimestamp } from '../utils/time'
-import { addEntryToDirectory, DEFAULT_UPLOAD_OPTIONS, MINIMUM_BLOCK_SIZE } from '../content-items/handler'
+import { DEFAULT_UPLOAD_OPTIONS, MINIMUM_BLOCK_SIZE } from '../content-items/handler'
 import { prepareEpoch, writeFeedData } from '../feed/api'
 import { AccountData } from '../account/account-data'
-import { prepareEthAddress, preparePrivateKey } from '../utils/wallet'
-import { assertWallet } from '../utils/type'
 import { getNextEpoch } from '../feed/lookup/utils'
 import { Connection } from '../connection/connection'
 import { compress, decompress } from '../utils/compression'
 import { wrapChunkHelper } from '../feed/utils'
+import { jsonParse } from '../utils/json'
+import { EthAddress } from '../utils/eth'
 
 /**
  * File prefix
@@ -52,6 +50,12 @@ export const FILE_TOKEN = '_F_'
  * Directory prefix
  */
 export const DIRECTORY_TOKEN = '_D_'
+
+/**
+ * Index item for storing data with files and directories items
+ * https://github.com/fairDataSociety/FIPs/pull/75
+ */
+export const INDEX_ITEM_NAME = 'index.dfs'
 
 /**
  * Get converted metadata by path
@@ -98,14 +102,9 @@ export async function getFileMetadataWithBlocks(
   const { podAddress, pod } = await getExtendedPodsListByAccountData(accountData, podName)
   updateDownloadProgress(dataDownloadOptions, DownloadProgressType.GetPathInfo)
   const fileMetadata = await getFileMetadata(bee, fullPath, podAddress, pod.password, downloadOptions)
-
-  if (fileMetadata.compression) {
-    // TODO: implement compression support
-    throw new Error('Compressed data is not supported yet')
-  }
-
   updateDownloadProgress(dataDownloadOptions, DownloadProgressType.DownloadBlocksMeta)
   const blocks = await downloadBlocksManifest(bee, fileMetadata.blocksReference, downloadOptions)
+  await prepareDataByMeta(fileMetadata, blocks.blocks, accountData.connection.bee, downloadOptions)
 
   return {
     ...fileMetadata,
@@ -193,66 +192,35 @@ export async function downloadData(
 }
 
 /**
- * Generate block name by block number
+ * Interface representing information about blocks.
+ * @interface
  */
-export function generateBlockName(blockNumber: number): string {
-  return 'block-' + blockNumber.toString().padStart(5, '0')
+export interface BlocksInfo {
+  /**
+   * Blocks
+   */
+  blocks: Blocks
+  /**
+   * File size
+   */
+  fileSize: number
 }
 
 /**
- * Uploads file content
+ * Uploads data blocks to a connection using the specified options.
  *
- * @param podName pod where file is stored
- * @param fullPath full path of the file
- * @param data file content
- * @param accountData account data
- * @param options upload options
+ * @param {Connection} connection - The connection to upload the data blocks to.
+ * @param {Uint8Array | string | ExternalDataBlock[]} data - The data to be uploaded. It can be either a Uint8Array, a string, or an array of ExternalDataBlocks.
+ * @param {DataUploadOptions} options - The options for the data upload.
+ * @returns {Promise<BlocksInfo>} - A promise that resolves to an object containing the BlocksInfo.
  */
-export async function uploadData(
-  podName: string,
-  fullPath: string,
+export async function uploadBlocks(
+  connection: Connection,
   data: Uint8Array | string | ExternalDataBlock[],
-  accountData: AccountData,
   options: DataUploadOptions,
-): Promise<FileMetadataWithLookupAnswer> {
-  // empty pod name is acceptable in case of uploading the list of pods
-  const isPodUploading = podName === ''
-
-  if (podName) {
-    assertPodName(podName)
-    assertFullPathWithName(fullPath)
-  }
-
-  assertWallet(accountData.wallet)
-
+): Promise<BlocksInfo> {
   const blockSize = options.blockSize ?? Number(DEFAULT_UPLOAD_OPTIONS!.blockSize)
   assertMinLength(blockSize, MINIMUM_BLOCK_SIZE, `Block size is too small. Minimum is ${MINIMUM_BLOCK_SIZE} bytes.`)
-  const contentType = options.contentType ?? String(DEFAULT_UPLOAD_OPTIONS!.contentType)
-  const connection = accountData.connection
-  updateUploadProgress(options, UploadProgressType.GetPodInfo)
-
-  let podWallet
-  let pod
-
-  // if pod name is empty, we use root wallet which is for pods management
-  if (podName) {
-    ;({ podWallet, pod } = await getExtendedPodsListByAccountData(accountData, podName))
-  } else if (!podName && accountData.wallet) {
-    podWallet = accountData.wallet
-  } else {
-    throw new Error('Pod name or root wallet is required')
-  }
-
-  updateUploadProgress(options, UploadProgressType.GetPathInfo)
-  const fullPathInfo = await getCreationPathInfo(
-    connection.bee,
-    fullPath,
-    prepareEthAddress(podWallet.address),
-    connection.options?.requestOptions,
-  )
-  const pathInfo = extractPathInfo(fullPath, isPodUploading)
-  const now = getUnixTimestamp()
-
   const blocks: Blocks = { blocks: [] }
   let fileSize = data.length
 
@@ -282,43 +250,114 @@ export async function uploadData(
     }
   }
 
-  updateUploadProgress(options, UploadProgressType.UploadBlocksMeta)
+  return {
+    blocks,
+    fileSize,
+  }
+}
+
+/**
+ * Uploads the metadata of blocks.
+ *
+ * @param {Connection} connection - The connection to upload the metadata to.
+ * @param {Blocks} blocks - The blocks to generate the metadata from.
+ * @param {string} filePath - The path of the file.
+ * @param {string} fileName - The name of the file.
+ * @param {number} fileSize - The size of the file in bytes.
+ * @param {number} blockSize - The size of each block in bytes.
+ * @param {string} contentType - The content type of the file.
+ * @param {string} compression - The compression algorithm used.
+ * @param {number} time - The Unix timestamp for the creation, access, and modification time of the file. Defaults to the current Unix timestamp.
+ *
+ * @returns {Promise<FileMetadata>} - The metadata of the uploaded blocks.
+ */
+export async function uploadBlocksMeta(
+  connection: Connection,
+  blocks: Blocks,
+  filePath: string,
+  fileName: string,
+  fileSize: number,
+  blockSize: number,
+  contentType: string,
+  compression: string,
+  time = getUnixTimestamp(),
+): Promise<FileMetadata> {
   const manifestBytes = stringToBytes(blocksToManifest(blocks))
   const blocksReference = (await uploadBytes(connection, manifestBytes)).reference
-  const meta: FileMetadata = {
+
+  return {
     version: META_VERSION,
-    filePath: isPodUploading ? '/' : pathInfo.path,
-    fileName: pathInfo.filename,
+    filePath,
+    fileName,
     fileSize,
     blockSize,
     contentType,
-    compression: options.compression ?? '',
-    creationTime: now,
-    accessTime: now,
-    modificationTime: now,
+    compression,
+    creationTime: time,
+    accessTime: time,
+    modificationTime: time,
     blocksReference,
     mode: getFileMode(DEFAULT_FILE_PERMISSIONS),
   }
+}
 
-  updateUploadProgress(options, UploadProgressType.WriteDirectoryInfo)
+/**
+ * Uploads file content
+ *
+ * @param connection connection information for data management
+ * @param socOwnerAddress owner address of the Single Owner Chunk
+ * @param socSigner signer of the Single Owner Chunk
+ * @param encryptionPassword data encryption password
+ * @param fullPath full path of the file
+ * @param data file content
+ * @param options upload options
+ */
+export async function uploadData(
+  connection: Connection,
+  socOwnerAddress: EthAddress,
+  socSigner: string | Uint8Array | Signer,
+  encryptionPassword: PodPasswordBytes,
+  fullPath: string,
+  data: Uint8Array | string | ExternalDataBlock[],
+  options: DataUploadOptions,
+): Promise<FileMetadataWithLookupAnswer> {
+  // empty pod name is acceptable in case of uploading the list of pods
+  const isPodUploading = fullPath === ''
 
-  // add entry to the directory only if pod provided, if not pod provided it means we are uploading pods list
-  if (pod) {
-    await addEntryToDirectory(connection, podWallet, pod.password, pathInfo.path, pathInfo.filename, true)
-  }
+  const blockSize = options.blockSize ?? Number(DEFAULT_UPLOAD_OPTIONS!.blockSize)
+  assertMinLength(blockSize, MINIMUM_BLOCK_SIZE, `Block size is too small. Minimum is ${MINIMUM_BLOCK_SIZE} bytes.`)
+  const contentType = options.contentType ?? String(DEFAULT_UPLOAD_OPTIONS!.contentType)
+  updateUploadProgress(options, UploadProgressType.GetPathInfo)
+  const fullPathInfo = await getCreationPathInfo(
+    connection.bee,
+    fullPath,
+    socOwnerAddress,
+    connection.options?.requestOptions,
+  )
+  const pathInfo =
+    fullPath === '/'
+      ? {
+          path: '/',
+          filename: '',
+        }
+      : extractPathInfo(fullPath, isPodUploading)
+  const { blocks, fileSize } = await uploadBlocks(connection, data, options)
 
+  updateUploadProgress(options, UploadProgressType.UploadBlocksMeta)
+  const meta = await uploadBlocksMeta(
+    connection,
+    blocks,
+    isPodUploading ? '/' : pathInfo.path,
+    pathInfo.filename,
+    fileSize,
+    blockSize,
+    contentType,
+    options.compression ?? '',
+  )
   updateUploadProgress(options, UploadProgressType.WriteFileInfo)
   const nextEpoch = prepareEpoch(getNextEpoch(fullPathInfo?.lookupAnswer.epoch))
   const fileMetadataRawBytes = getFileMetadataRawBytes(meta)
-  await writeFeedData(
-    connection,
-    fullPath,
-    fileMetadataRawBytes,
-    podWallet,
-    pod ? pod.password : preparePrivateKey(podWallet.privateKey),
-    nextEpoch,
-  )
-
+  await writeFeedData(connection, fullPath, fileMetadataRawBytes, socSigner, encryptionPassword, nextEpoch)
   updateUploadProgress(options, UploadProgressType.Done)
 
   return {
@@ -339,4 +378,32 @@ export async function uploadDataBlock(connection: Connection, block: Uint8Array,
     compressedSize: block.length,
     reference: (await uploadBytes(connection, block)).reference,
   }
+}
+
+/**
+ * Retrieves the content of an index file about the directory.
+ *
+ * @param {AccountData} accountData - The account data.
+ * @param {string} podName - The name of the pod.
+ * @param {string} path - The path to the index file.
+ * @param {BeeRequestOptions} [downloadOptions] - The download options.
+ * @param {DataDownloadOptions} [dataDownloadOptions] - The data download options.
+ *
+ * @returns {Promise<RawDirectoryMetadata>} - A promise that resolves with the content of the index file.
+ */
+export async function getIndexFileContent(
+  accountData: AccountData,
+  podName: string,
+  path: string,
+  downloadOptions?: BeeRequestOptions,
+  dataDownloadOptions?: DataDownloadOptions,
+): Promise<RawDirectoryMetadata> {
+  const combinedPath = getIndexFilePath(path)
+  const data = jsonParse(
+    (await downloadData(accountData, podName, combinedPath, downloadOptions, dataDownloadOptions)).text(),
+    'getIndexFileContent',
+  )
+  assertRawDirectoryMetadata(data)
+
+  return data
 }

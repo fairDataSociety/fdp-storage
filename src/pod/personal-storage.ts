@@ -109,7 +109,12 @@ export class PersonalStorage {
     const allPodsData = podListToBytes(podsFiltered, podsSharedFiltered)
     const wallet = this.accountData.wallet!
     const epoch = getNextEpoch(podsInfo.epoch)
-    await uploadPodDataV2(this.accountData, allPodsData)
+    await uploadPodDataV2(
+      this.accountData.connection,
+      prepareEthAddress(wallet.address),
+      wallet.privateKey,
+      allPodsData,
+    )
     await setEpochCache(this.accountData.connection.cacheInfo, getCacheKey(wallet.address), {
       epoch,
       data: podListToJSON(podsFiltered, podsSharedFiltered),
