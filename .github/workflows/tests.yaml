@@ -9,8 +9,8 @@ on:
       - '**'
 
 env:
-  BEE_VERSION: '1.11.1'
-  FAIROS_IMAGE: 'fairdatasociety/fairos-dfs:v0.9.6'
+  BEE_VERSION: '1.17.5'
+  FAIROS_IMAGE: 'fairdatasociety/fairos-dfs:v0.10.0-rc6'
 
 jobs:
   nodejs:
