@@ -9,7 +9,7 @@ on:
       - '**'
 
 env:
-  BEE_VERSION: '1.17.5'
+  BEE_VERSION: '1.13.0'
   FAIROS_IMAGE: 'fairdatasociety/fairos-dfs:v0.10.0-rc6'
 
 jobs:
