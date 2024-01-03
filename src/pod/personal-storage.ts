@@ -1,3 +1,4 @@
+import { ec as EC } from 'elliptic'
 import { SharedPod, PodReceiveOptions, PodShareInfo, PodsList, Pod, PodsListPrepared } from './types'
 import { assertAccount } from '../account/utils'
 import { writeFeedData } from '../feed/api'
@@ -15,21 +16,29 @@ import {
   podPreparedToPod,
   sharedPodPreparedToSharedPod,
   podListToJSON,
+  assertPodShareInfo,
 } from './utils'
 import { getExtendedPodsList } from './api'
 import { uploadBytes } from '../file/utils'
-import { stringToBytes } from '../utils/bytes'
+import { bytesToString, stringToBytes } from '../utils/bytes'
 import { Reference, Utils } from '@ethersphere/bee-js'
-import { assertEncryptedReference, EncryptedReference } from '../utils/hex'
+import { assertEncryptedReference, EncryptedReference, HexString } from '../utils/hex'
 import { prepareEthAddress, preparePrivateKey } from '../utils/wallet'
 import { getCacheKey, setEpochCache } from '../cache/utils'
 import { getPodsList } from './cache/api'
 import { getNextEpoch } from '../feed/lookup/utils'
+import { DataHub, ENS, ENS_DOMAIN, Subscription } from '@fairdatasociety/fdp-contracts-js'
+import { decryptBytes } from '../utils/encryption'
+import { namehash } from 'ethers/lib/utils'
 
 export const POD_TOPIC = 'Pods'
 
 export class PersonalStorage {
-  constructor(private accountData: AccountData) {}
+  constructor(
+    private accountData: AccountData,
+    private ens: ENS,
+    private dataHub: DataHub,
+  ) {}
 
   /**
    * Gets the list of pods for the active account
@@ -197,5 +206,42 @@ export class PersonalStorage {
     assertSharedPod(pod)
 
     return sharedPodPreparedToSharedPod(pod)
+  }
+
+  async getSubscriptions(ens: string): Promise<Subscription[]> {
+    const subItems = await this.dataHub.getAllSubItemsForNameHash(namehash(`${ens}.${ENS_DOMAIN}`))
+
+    const subscriptions: Subscription[] = []
+
+    for (let i = 0; i < subItems.length; i++) {
+      const sub = await this.dataHub.getSubBy(subItems[i].subHash)
+
+      subscriptions.push(sub)
+    }
+
+    return subscriptions
+  }
+
+  async openSubscribedPod(subHash: HexString, swarmLocation: HexString): Promise<unknown> {
+    const sub = await this.dataHub.getSubBy(subHash)
+
+    const publicKeyHex = await this.ens.getPublicKeyByUsernameHash(sub.fdpSellerNameHash)
+
+    const wallet = this.accountData.wallet!
+
+    const ec = new EC('secp256k1')
+
+    const privateKey = ec.keyFromPrivate(wallet.privateKey)
+    const publicKey = ec.keyFromPublic(publicKeyHex.substring(2), 'hex')
+
+    const secret = privateKey.derive(publicKey.getPublic()).toString(16)
+
+    const encryptedData = await this.accountData.connection.bee.downloadData(swarmLocation)
+
+    const data = JSON.parse(bytesToString(decryptBytes(secret, encryptedData)))
+
+    assertPodShareInfo(data)
+
+    return data
   }
 }
