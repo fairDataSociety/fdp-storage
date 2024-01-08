@@ -39,7 +39,7 @@ jobs:
         run: npm install -g @fairdatasociety/fdp-play
 
       - name: Run fdp-play
-        run: fdp-play start -d --bee-version $BEE_VERSION
+        run: fdp-play start -d --without-bees --bee-version $BEE_VERSION
 
       ## Try getting the node modules from cache, if failed npm ci
       - uses: actions/cache@v3
@@ -84,7 +84,7 @@ jobs:
         run: npm install -g @fairdatasociety/fdp-play
 
       - name: Run fdp-play
-        run: fdp-play start -d --fairos --fairos-image $FAIROS_IMAGE --bee-version $BEE_VERSION
+        run: fdp-play start -d --fairos --fairos-image $FAIROS_IMAGE --without-bees --bee-version $BEE_VERSION
 
       ## Try getting the node modules from cache, if failed npm ci
       - uses: actions/cache@v3
