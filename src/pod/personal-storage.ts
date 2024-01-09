@@ -27,7 +27,7 @@ import { prepareEthAddress, preparePrivateKey } from '../utils/wallet'
 import { getCacheKey, setEpochCache } from '../cache/utils'
 import { getPodsList } from './cache/api'
 import { getNextEpoch } from '../feed/lookup/utils'
-import { DataHub, ENS, ENS_DOMAIN, Subscription } from '@fairdatasociety/fdp-contracts-js'
+import { DataHub, ENS, ENS_DOMAIN, SubItem, Subscription } from '@fairdatasociety/fdp-contracts-js'
 import { decryptBytes } from '../utils/encryption'
 import { namehash } from 'ethers/lib/utils'
 
@@ -208,18 +208,16 @@ export class PersonalStorage {
     return sharedPodPreparedToSharedPod(pod)
   }
 
-  async getSubscriptions(ens: string): Promise<Subscription[]> {
-    const subItems = await this.dataHub.getAllSubItemsForNameHash(namehash(`${ens}.${ENS_DOMAIN}`))
+  async getSubscriptions(address: string): Promise<Subscription[]> {
+    return this.dataHub.getUsersSubscriptions(address)
+  }
 
-    const subscriptions: Subscription[] = []
+  async getAllSubItems(address: string): Promise<SubItem[]> {
+    return this.dataHub.getAllSubItems(address)
+  }
 
-    for (let i = 0; i < subItems.length; i++) {
-      const sub = await this.dataHub.getSubBy(subItems[i].subHash)
-
-      subscriptions.push(sub)
-    }
-
-    return subscriptions
+  async getAllSubItemsForNameHash(name: string): Promise<SubItem[]> {
+    return this.dataHub.getAllSubItemsForNameHash(namehash(`${name}.${ENS_DOMAIN}`))
   }
 
   async openSubscribedPod(subHash: HexString, swarmLocation: HexString): Promise<unknown> {
@@ -236,9 +234,9 @@ export class PersonalStorage {
 
     const secret = privateKey.derive(publicKey.getPublic()).toString(16)
 
-    const encryptedData = await this.accountData.connection.bee.downloadData(swarmLocation)
+    const encryptedData = await this.accountData.connection.bee.downloadFile(swarmLocation.substring(2))
 
-    const data = JSON.parse(bytesToString(decryptBytes(secret, encryptedData)))
+    const data = JSON.parse(bytesToString(decryptBytes(secret, encryptedData.data)))
 
     assertPodShareInfo(data)
 
