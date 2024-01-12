@@ -146,7 +146,7 @@ jobs:
         run: npm ci
 
       - name: Run browser tests
-        uses: mujo-code/puppeteer-headful@16.6.0
+        uses: vojtechsimetka/puppeteer-headful@master
         env:
           CI: 'true'
         with:
