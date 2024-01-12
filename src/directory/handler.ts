@@ -110,11 +110,9 @@ export async function readDirectory(
         assertRawDirectoryMetadata(data)
         const currentMetadata = rawDirectoryMetadataToDirectoryItem(data)
         resultDirectoryItem.directories.push(currentMetadata)
-        const directoriesInside = (data.fileOrDirNames ? data.fileOrDirNames : []).filter(item =>
-          item.startsWith(DIRECTORY_TOKEN),
-        )
+        const allItems = data.fileOrDirNames ? data.fileOrDirNames : []
 
-        if (isRecursive && directoriesInside.length > 0) {
+        if (isRecursive && allItems.length > 0) {
           const content = await readDirectory(
             accountData,
             podName,

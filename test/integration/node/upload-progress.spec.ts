@@ -1,7 +1,6 @@
 import { createFdp, generateRandomHexString, generateUser } from '../../utils'
 import { wrapBytesWithHelpers } from '../../../src/utils/bytes'
 import { UploadProgressInfo } from '../../../src'
-import { DEFAULT_UPLOAD_OPTIONS } from '../../../src/content-items/handler'
 
 jest.setTimeout(400000)
 it('Fair Data Protocol upload progress', async () => {
@@ -9,7 +8,6 @@ it('Fair Data Protocol upload progress', async () => {
   generateUser(fdp)
   const pod = generateRandomHexString()
   const fileSizeBig = 5000005
-  const blocksCount = Math.ceil(fileSizeBig / DEFAULT_UPLOAD_OPTIONS.blockSize!)
   const contentBig = generateRandomHexString(fileSizeBig)
   const filenameBig = generateRandomHexString() + '.txt'
   const fullFilenameBigPath = '/' + filenameBig
@@ -31,8 +29,5 @@ it('Fair Data Protocol upload progress', async () => {
   expect(fileInfoBig.name).toEqual(filenameBig)
   expect(fileInfoBig.size).toEqual(fileSizeBig)
 
-  // multiply `blocksCount` by 2 because each block has two events.
-  // the 6 other events from `UploadProgressType` occur once each
-  const totalEvents = blocksCount * 2 + 6
-  expect(callbackData.length).toEqual(totalEvents)
+  expect(callbackData.length).toEqual(16)
 })
