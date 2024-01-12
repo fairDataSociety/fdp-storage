@@ -116,8 +116,6 @@ jobs:
         with:
           fetch-depth: 1
 
-      - uses: browser-actions/setup-chrome@v1
-
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v3
         with:
@@ -148,4 +146,8 @@ jobs:
         run: npm ci
 
       - name: Run browser tests
-        run: npm run test:browser
+        uses: mujo-code/puppeteer-headful@16.6.0
+        env:
+          CI: 'true'
+        with:
+          args: npm run test:browser
