@@ -116,6 +116,8 @@ jobs:
         with:
           fetch-depth: 1
 
+      - uses: browser-actions/setup-chrome@v1
+
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v3
         with:
