@@ -4,6 +4,8 @@ const { join } = require('path')
 const { executablePath } = require('puppeteer')
 
 // eslint-disable-next-line no-console
+console.log('pre executablePath2')
+// eslint-disable-next-line no-console
 console.log('executablePath2', executablePath())
 
 /**
