@@ -6,6 +6,7 @@ console.log('process.env.PUPPETEER_EXEC_PATH', executablePath)
  */
 module.exports = {
   // Changes the cache location for Puppeteer.
-  // cacheDirectory: join(__dirname, '.cache', 'puppeteer-data'),
-  executablePath,
+  cacheDirectory: join(__dirname, '.cache', 'puppeteer-data'),
+  // executablePath,
+  skipDownload: false,
 }

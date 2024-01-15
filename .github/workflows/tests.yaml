@@ -146,8 +146,4 @@ jobs:
         run: npm ci
 
       - name: Run browser tests
-        uses: vojtechsimetka/puppeteer-headful@master
-        env:
-          CI: 'true'
-        with:
-          args: npm run test:browser
+        run: npm run test:browser
