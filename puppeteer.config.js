@@ -9,4 +9,6 @@ module.exports = {
   cacheDirectory: join(__dirname, '.cache', 'puppeteer-data'),
   // executablePath,
   skipDownload: false,
+  // executablePath: require('puppeteer').executablePath()
+  channel: 'chrome',
 }
