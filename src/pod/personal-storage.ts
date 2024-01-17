@@ -1,4 +1,3 @@
-import { ec as EC } from 'elliptic'
 import { SharedPod, PodReceiveOptions, PodShareInfo, PodsList, Pod, PodsListPrepared } from './types'
 import { assertAccount } from '../account/utils'
 import { writeFeedData } from '../feed/api'
@@ -28,7 +27,7 @@ import { getCacheKey, setEpochCache } from '../cache/utils'
 import { getPodsList } from './cache/api'
 import { getNextEpoch } from '../feed/lookup/utils'
 import { DataHub, ENS, ENS_DOMAIN, SubItem, Subscription } from '@fairdatasociety/fdp-contracts-js'
-import { decryptBytes } from '../utils/encryption'
+import { decryptWithBytes, deriveSecretFromKeys } from '../utils/encryption'
 import { namehash } from 'ethers/lib/utils'
 
 export const POD_TOPIC = 'Pods'
@@ -220,23 +219,16 @@ export class PersonalStorage {
     return this.dataHub.getAllSubItemsForNameHash(namehash(`${name}.${ENS_DOMAIN}`))
   }
 
-  async openSubscribedPod(subHash: HexString, swarmLocation: HexString): Promise<unknown> {
+  async openSubscribedPod(subHash: HexString, swarmLocation: HexString): Promise<PodShareInfo> {
     const sub = await this.dataHub.getSubBy(subHash)
 
-    const publicKeyHex = await this.ens.getPublicKeyByUsernameHash(sub.fdpSellerNameHash)
+    const publicKey = await this.ens.getPublicKeyByUsernameHash(sub.fdpSellerNameHash)
 
-    const wallet = this.accountData.wallet!
+    const encryptedData = await this.accountData.connection.bee.downloadData(swarmLocation.substring(2))
 
-    const ec = new EC('secp256k1')
+    const secret = deriveSecretFromKeys(this.accountData.wallet!.privateKey, publicKey)
 
-    const privateKey = ec.keyFromPrivate(wallet.privateKey)
-    const publicKey = ec.keyFromPublic(publicKeyHex.substring(2), 'hex')
-
-    const secret = privateKey.derive(publicKey.getPublic()).toString(16)
-
-    const encryptedData = await this.accountData.connection.bee.downloadFile(swarmLocation.substring(2))
-
-    const data = JSON.parse(bytesToString(decryptBytes(secret, encryptedData.data)))
+    const data = JSON.parse(bytesToString(decryptWithBytes(secret, encryptedData)))
 
     assertPodShareInfo(data)
 
