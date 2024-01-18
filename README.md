@@ -335,6 +335,24 @@ const fdpCache = new FdpStorage('https://localhost:1633', batchId, {
 fdpCache.cache.object = JSON.parse(cache)
 ```
 
+There are available function for interacting with DataHub contract. For example to list all available subscriptions:
+
+```js
+const subs = await fdp.personalStorage.getAllSubscriptions()
+```
+
+To get user's subscriptions:
+
+```js
+const subItems = await fdp.personalStorage.getAllSubItems()
+```
+
+And to get pod information of a subItem:
+
+```js
+const podShareInfo = await fdp.personalStorage.openSubscribedPod(subItems[0].subHash, subItems[0].unlockKeyLocation)
+```
+
 ## Documentation
 
 You can generate API docs locally with:

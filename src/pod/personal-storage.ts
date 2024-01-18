@@ -26,9 +26,18 @@ import { prepareEthAddress, preparePrivateKey } from '../utils/wallet'
 import { getCacheKey, setEpochCache } from '../cache/utils'
 import { getPodsList } from './cache/api'
 import { getNextEpoch } from '../feed/lookup/utils'
-import { DataHub, ENS, ENS_DOMAIN, SubItem, Subscription } from '@fairdatasociety/fdp-contracts-js'
+import {
+  ActiveBid,
+  DataHub,
+  ENS,
+  ENS_DOMAIN,
+  SubItem,
+  Subscription,
+  SubscriptionRequest,
+} from '@fairdatasociety/fdp-contracts-js'
 import { decryptWithBytes, deriveSecretFromKeys } from '../utils/encryption'
 import { namehash } from 'ethers/lib/utils'
+import { BigNumber } from 'ethers'
 
 export const POD_TOPIC = 'Pods'
 
@@ -233,5 +242,53 @@ export class PersonalStorage {
     assertPodShareInfo(data)
 
     return data
+  }
+
+  async getActiveBids(): Promise<ActiveBid[]> {
+    return this.dataHub.getActiveBids(this.accountData.wallet!.address)
+  }
+
+  async getListedSubs(address: string): Promise<string[]> {
+    return this.dataHub.getListedSubs(address)
+  }
+
+  async getSubRequests(address: string): Promise<SubscriptionRequest[]> {
+    return this.dataHub.getSubRequests(address)
+  }
+
+  async bidSub(subHash: string, buyerUsername: string, value: BigNumber): Promise<void> {
+    return this.dataHub.requestSubscription(subHash, buyerUsername, value)
+  }
+
+  async createSubscription(
+    sellerUsername: string,
+    swarmLocation: string,
+    price: BigNumber,
+    categoryHash: string,
+    podAddress: string,
+    daysValid: number,
+    value?: BigNumber,
+  ): Promise<void> {
+    return this.dataHub.createSubscription(
+      sellerUsername,
+      swarmLocation,
+      price,
+      categoryHash,
+      podAddress,
+      daysValid,
+      value,
+    )
+  }
+
+  async getAllSubscriptions(): Promise<Subscription[]> {
+    return this.dataHub.getSubs()
+  }
+
+  async getSubscriptionsByCategory(categoryHash: string) {
+    const subs = await this.getAllSubscriptions()
+
+    // TODO temporary until the category gets added to fdp-contracts
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return subs.filter(sub => (sub as any).category === categoryHash)
   }
 }
