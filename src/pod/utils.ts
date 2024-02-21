@@ -739,7 +739,10 @@ export async function migratePodV1ToV2(
   podsData: PodsLookupAnswer,
   privateKey: PodPasswordBytes,
 ): Promise<PodsLookupAnswer> {
-  const podsBytes = extractPodsBytes(podsData.lookupAnswer.data, privateKey)
+  const podList = extractPodsV1(podsData.lookupAnswer.data.chunkContent(), privateKey)
+
+  const podsBytes = podListToBytes(podList.pods, podList.sharedPods)
+
   const wallet = accountData.wallet!
   const lookupAnswer = (
     await uploadPodDataV2(accountData.connection, prepareEthAddress(wallet.address), wallet.privateKey, podsBytes)

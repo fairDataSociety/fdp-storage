@@ -226,6 +226,7 @@ export async function createDirectoryIndexFile(
  * @param podWallet pod wallet
  * @param podPassword bytes for decrypting pod content
  * @param downloadOptions options for downloading
+ * @param updateParentDirectory used for migration to V2 only
  */
 export async function createDirectory(
   accountData: AccountData,
@@ -233,6 +234,7 @@ export async function createDirectory(
   podWallet: utils.HDNode,
   podPassword: PodPasswordBytes,
   downloadOptions?: BeeRequestOptions,
+  updateParentDirectory = true,
 ): Promise<void> {
   const parts = getPathParts(fullPath)
   assertPartsLength(parts)
@@ -249,16 +251,18 @@ export async function createDirectory(
     accountData.connection.options?.requestOptions,
   )
 
-  await addEntryToDirectory(
-    accountData,
-    podAddress,
-    podWallet.privateKey,
-    podPassword,
-    parentPath,
-    name,
-    false,
-    downloadOptions,
-  )
+  if (updateParentDirectory) {
+    await addEntryToDirectory(
+      accountData,
+      podAddress,
+      podWallet.privateKey,
+      podPassword,
+      parentPath,
+      name,
+      false,
+      downloadOptions,
+    )
+  }
 
   await createDirectoryInfo(
     accountData.connection,

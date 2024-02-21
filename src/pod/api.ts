@@ -24,7 +24,8 @@ export async function getPodsList(
   let podsData = await getPodsData(bee, prepareEthAddress(userWallet.address), downloadOptions?.requestOptions)
 
   if (podsData.podsVersion === PodsVersion.V1) {
-    podsData = await migratePodV1ToV2(accountData, podsData, privateKeyToBytes(userWallet.privateKey))
+    await migratePodV1ToV2(accountData, podsData, privateKeyToBytes(userWallet.privateKey))
+    podsData = await getPodsData(bee, prepareEthAddress(userWallet.address), downloadOptions?.requestOptions)
   }
 
   const podsList = await extractPodsV2(

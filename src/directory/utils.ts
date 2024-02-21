@@ -1,4 +1,4 @@
-import { MAX_DIRECTORY_NAME_LENGTH } from './handler'
+import { MAX_DIRECTORY_NAME_LENGTH, createDirectory, createRootDirectory } from './handler'
 import { RawDirectoryMetadata, RawFileMetadata } from '../pod/types'
 import { assertString, isNumber, isString } from '../utils/type'
 import { replaceAll } from '../utils/string'
@@ -6,6 +6,16 @@ import * as fs from 'fs'
 import * as nodePath from 'path'
 import { isNode } from '../shim/utils'
 import { getBaseName } from '../file/utils'
+import { Bee, BeeRequestOptions } from '@ethersphere/bee-js'
+import { getRawMetadata, rawDirectoryMetadataToDirectoryItem, rawFileMetadataToFileItem } from '../content-items/utils'
+import { EthAddress } from '../utils/eth'
+import { PodPasswordBytes } from '../utils/encryption'
+import { DirectoryItem } from '../types'
+import { DIRECTORY_TOKEN, FILE_TOKEN } from '../file/handler'
+import { AccountData } from '../account/account-data'
+import { HDNode } from 'ethers/lib/utils'
+import { prepareEthAddress } from '../utils/wallet'
+import { addEntryToDirectory } from '../content-items/handler'
 
 /**
  * Default directory permission in octal format
@@ -365,4 +375,104 @@ export function getUploadPath(fileInfo: FileInfo, isIncludeDirectoryName: boolea
  */
 export function getDirectoryMode(mode: number): number {
   return DIRECTORY_MODE | mode
+}
+
+/**
+ * Depricated, used for migration only
+ * Get files and directories under path with recursion or not
+ *
+ * @param bee Bee instance
+ * @param path path to start searching from
+ * @param address Ethereum address of the pod which owns the path
+ * @param podPassword bytes for data encryption from pod metadata
+ * @param isRecursive search with recursion or not
+ * @param downloadOptions options for downloading
+ */
+export async function readDirectoryV1(
+  bee: Bee,
+  path: string,
+  address: EthAddress,
+  podPassword: PodPasswordBytes,
+  isRecursive?: boolean,
+  downloadOptions?: BeeRequestOptions,
+): Promise<DirectoryItem> {
+  const parentRawDirectoryMetadata = (await getRawMetadata(bee, path, address, podPassword, downloadOptions)).metadata
+  assertRawDirectoryMetadata(parentRawDirectoryMetadata)
+  const resultDirectoryItem = rawDirectoryMetadataToDirectoryItem(parentRawDirectoryMetadata)
+
+  if (!parentRawDirectoryMetadata.fileOrDirNames) {
+    return resultDirectoryItem
+  }
+
+  for (let item of parentRawDirectoryMetadata.fileOrDirNames) {
+    const isFile = item.startsWith(FILE_TOKEN)
+    const isDirectory = item.startsWith(DIRECTORY_TOKEN)
+
+    if (isFile) {
+      item = combine(...splitPath(path), item.substring(FILE_TOKEN.length))
+      const data = (await getRawMetadata(bee, item, address, podPassword, downloadOptions)).metadata
+      assertRawFileMetadata(data)
+      resultDirectoryItem.files.push(rawFileMetadataToFileItem(data))
+    } else if (isDirectory) {
+      item = combine(...splitPath(path), item.substring(DIRECTORY_TOKEN.length))
+      const data = (await getRawMetadata(bee, item, address, podPassword, downloadOptions)).metadata
+      assertRawDirectoryMetadata(data)
+      const currentMetadata = rawDirectoryMetadataToDirectoryItem(data)
+
+      if (isRecursive) {
+        const content = await readDirectoryV1(bee, item, address, podPassword, isRecursive, downloadOptions)
+        currentMetadata.files = content.files
+        currentMetadata.directories = content.directories
+      }
+
+      resultDirectoryItem.directories.push(currentMetadata)
+    }
+  }
+
+  return resultDirectoryItem
+}
+
+export async function migrateDirectoryV1ToV2(
+  accountData: AccountData,
+  path: string,
+  address: EthAddress,
+  podPassword: PodPasswordBytes,
+  podWallet: HDNode,
+  isRecursive?: boolean,
+  downloadOptions?: BeeRequestOptions,
+): Promise<DirectoryItem> {
+  const directoryItem = await readDirectoryV1(
+    accountData.connection.bee,
+    path,
+    address,
+    podPassword,
+    isRecursive,
+    downloadOptions,
+  )
+
+  if (path === '/') {
+    await createRootDirectory(accountData.connection, podPassword, podWallet)
+  } else {
+    await createDirectory(accountData, path, podWallet, podPassword, downloadOptions, false)
+  }
+
+  const socOwnerAddress = prepareEthAddress(podWallet.address)
+
+  for (const directory of directoryItem.directories) {
+    await addEntryToDirectory(
+      accountData,
+      socOwnerAddress,
+      podWallet.privateKey,
+      podPassword,
+      path,
+      directory.name,
+      false,
+    )
+  }
+
+  for (const file of directoryItem.files) {
+    await addEntryToDirectory(accountData, socOwnerAddress, podWallet.privateKey, podPassword, path, file.name, true)
+  }
+
+  return directoryItem
 }

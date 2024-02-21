@@ -16,6 +16,7 @@ import {
   getUploadPath,
   BrowserFileInfo,
   NodeFileInfo,
+  migrateDirectoryV1ToV2,
 } from './utils'
 import { uploadData } from '../file/handler'
 import { assertNodeFileInfo, isBrowserFileInfo } from './types'
@@ -40,17 +41,62 @@ export class Directory {
   async read(podName: string, path: string, isRecursive?: boolean): Promise<DirectoryItem> {
     assertAccount(this.accountData)
     assertPodName(podName)
-    const { podAddress, pod } = await getExtendedPodsListByAccountData(this.accountData, podName)
 
-    return readDirectory(
-      this.accountData,
-      podName,
-      path,
-      podAddress,
-      pod.password,
-      isRecursive,
-      this.accountData.connection.options?.requestOptions,
-    )
+    const { podAddress, pod, podWallet } = await getExtendedPodsListByAccountData(this.accountData, podName)
+
+    try {
+      return await readDirectory(
+        this.accountData,
+        podName,
+        path,
+        podAddress,
+        pod.password,
+        isRecursive,
+        this.accountData.connection.options?.requestOptions,
+      )
+    } catch (error) {
+      if (!String(error).includes('Index content file not found')) {
+        throw error
+      }
+
+      const folders = path.split('/').filter(part => part)
+
+      for (let i = 0; i < folders.length; i++) {
+        const currentPath = `/${i === 0 ? '' : folders.slice(0, i).join('/')}`
+
+        try {
+          await readDirectory(
+            this.accountData,
+            podName,
+            currentPath,
+            podAddress,
+            pod.password,
+            false,
+            this.accountData.connection.options?.requestOptions,
+          )
+        } catch (error) {
+          await migrateDirectoryV1ToV2(
+            this.accountData,
+            currentPath,
+            podAddress,
+            pod.password,
+            podWallet,
+            false,
+            this.accountData.connection.options?.requestOptions,
+          )
+        }
+      }
+
+      return migrateDirectoryV1ToV2(
+        this.accountData,
+        path,
+        podAddress,
+        pod.password,
+        podWallet,
+        isRecursive,
+        this.accountData.connection.options?.requestOptions,
+      )
+    }
   }
 
   /**
