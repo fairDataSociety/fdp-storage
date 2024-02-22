@@ -44,6 +44,8 @@ export default async (): Promise<Config.InitialOptions> => {
     // An array of directory names to be searched recursively up from the requiring module's location
     moduleDirectories: ['node_modules'],
 
+    testTimeout: 90000,
+
     // Run tests from one or more projects
     projects: [
       {
@@ -66,6 +68,11 @@ export default async (): Promise<Config.InitialOptions> => {
         displayName: 'node:integration',
         testEnvironment: 'node',
         testRegex: 'test/integration/((?!\\.(browser|fairos)).)*\\.spec\\.ts',
+      },
+      {
+        displayName: 'node:migration',
+        testEnvironment: 'node',
+        testRegex: 'test/migration/((?!\\.(browser|fairos)).)*\\.spec\\.ts',
       },
     ] as unknown[] as string[], // bad types
 

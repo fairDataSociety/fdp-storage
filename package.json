@@ -43,6 +43,7 @@
     "test:unit:browser": "npm run compile:browser && jest --verbose --selectProjects=dom:unit:browser --config=jest.config.ts",
     "test:integration:node": "jest --verbose --selectProjects=node:integration --config=jest.config.ts",
     "test:integration": "npm run compile:browser && jest --verbose --selectProjects=node:integration dom:integration --config=jest.config.ts",
+    "test:migration": "jest --verbose --selectProjects=node:migration --config=jest.config.ts",
     "test:unit": "jest --verbose --selectProjects=node:unit --config=jest.config.ts ",
     "test:node": "jest --verbose --selectProjects=node:unit node:integration --config=jest.config.ts",
     "test:fairos": "jest --verbose --selectProjects=node:fairos --config=jest.config.ts",

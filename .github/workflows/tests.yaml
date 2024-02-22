@@ -58,6 +58,9 @@ jobs:
       - name: Run unit and integration tests for node
         run: npm run test:node -- --detectOpenHandles
 
+      - name: Run migration tests for node
+        run: npm run test:migration -- --detectOpenHandles
+
   fairos:
     runs-on: ubuntu-latest
 
