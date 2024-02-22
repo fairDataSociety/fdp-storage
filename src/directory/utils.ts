@@ -15,7 +15,7 @@ import { DIRECTORY_TOKEN, FILE_TOKEN } from '../file/handler'
 import { AccountData } from '../account/account-data'
 import { HDNode } from 'ethers/lib/utils'
 import { prepareEthAddress } from '../utils/wallet'
-import { addEntryToDirectory } from '../content-items/handler'
+import { addEntriesToDirectory } from '../content-items/handler'
 
 /**
  * Default directory permission in octal format
@@ -457,22 +457,10 @@ export async function migrateDirectoryV1ToV2(
   }
 
   const socOwnerAddress = prepareEthAddress(podWallet.address)
+  const entries = directoryItem.directories.map(({ name }) => name).concat(directoryItem.files.map(({ name }) => name))
+  const isFile = directoryItem.directories.map(() => false).concat(directoryItem.files.map(() => true))
 
-  for (const directory of directoryItem.directories) {
-    await addEntryToDirectory(
-      accountData,
-      socOwnerAddress,
-      podWallet.privateKey,
-      podPassword,
-      path,
-      directory.name,
-      false,
-    )
-  }
-
-  for (const file of directoryItem.files) {
-    await addEntryToDirectory(accountData, socOwnerAddress, podWallet.privateKey, podPassword, path, file.name, true)
-  }
+  await addEntriesToDirectory(accountData, socOwnerAddress, podWallet.privateKey, podPassword, path, entries, isFile)
 
   return directoryItem
 }

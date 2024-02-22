@@ -30,7 +30,7 @@ describe('Migration tests', () => {
 
     const folder2 = await fdp.directory.read(pod.name, '/folder1/folder2')
 
-    expect(folder2.directories.length).toEqual(0)
+    expect(folder2.directories.length).toEqual(1)
     expect(folder2.files.length).toEqual(0)
 
     const root = await fdp.directory.read(pod.name, '/')
@@ -44,5 +44,16 @@ describe('Migration tests', () => {
     const file1 = await fdp.file.downloadData(pod.name, '/file1.txt')
 
     expect(wrapBytesWithHelpers(file1).text()).toEqual('nakamoto\n')
+
+    let deepDir = await fdp.directory.read(pod.name, '/folder1/folder2/3/4/5')
+
+    expect(deepDir.directories.length).toEqual(0)
+    expect(deepDir.files.length).toEqual(1)
+    expect(deepDir.files[0].name).toEqual('file2.txt')
+
+    deepDir = await fdp.directory.read(pod.name, '/folder1/folder2/3')
+
+    expect(deepDir.directories.length).toEqual(1)
+    expect(deepDir.files.length).toEqual(0)
   })
 })

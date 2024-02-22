@@ -110,6 +110,92 @@ export async function addEntryToDirectory(
 }
 
 /**
+ * Adds multiple entries to a directory.
+ *
+ * @param {AccountData} accountData - The account data.
+ * @param {EthAddress} socOwnerAddress - The address of the owner of the Single Owner Chunk.
+ * @param {(string|Uint8Array|Signer)} socSigner - The signer for the Single Owner Chunk.
+ * @param {PodPasswordBytes} encryptionPassword - The encryption password.
+ * @param {string} parentPath - The parent directory path.
+ * @param {string} entryNames - An array of entry names to be added.
+ * @param {boolean} isFile - Specifies whether each entry is a file (true) or a directory (false).
+ * @param {BeeRequestOptions} [downloadOptions] - The download options for retrieving metadata.
+ *
+ * @returns {Promise<FileMetadataWithLookupAnswer>} - The metadata of the file with lookup answer.
+ *
+ * @throws {Error} If the parent path is incorrect.
+ * @throws {Error} If the entry name is incorrect.
+ * @throws {Error} If the parent directory does not exist.
+ * @throws {Error} If the item already exists in the parent directory list.
+ */
+export async function addEntriesToDirectory(
+  accountData: AccountData,
+  socOwnerAddress: EthAddress,
+  socSigner: string | Uint8Array | Signer,
+  encryptionPassword: PodPasswordBytes,
+  parentPath: string,
+  entryNames: string[],
+  isFileArray: boolean[],
+  downloadOptions?: BeeRequestOptions,
+): Promise<FileMetadataWithLookupAnswer> {
+  if (!parentPath) {
+    throw new Error('Incorrect parent path')
+  }
+
+  if (entryNames.some(value => !value)) {
+    throw new Error('Incorrect entry name')
+  }
+
+  const bee = accountData.connection.bee
+
+  let parentData: RawDirectoryMetadata
+  let metadataWithEpoch: RawMetadataWithEpoch | undefined
+  const indexFilePath = getIndexFilePath(parentPath)
+  try {
+    metadataWithEpoch = await getRawMetadata(bee, indexFilePath, socOwnerAddress, encryptionPassword, downloadOptions)
+    assertRawFileMetadata(metadataWithEpoch.metadata)
+    const fileMeta = rawFileMetadataToFileMetadata(metadataWithEpoch.metadata)
+    const blocks = await downloadBlocksManifest(bee, fileMeta.blocksReference, downloadOptions)
+    const directoryMeta = jsonParse(
+      bytesToString(await prepareDataByMeta(fileMeta, blocks.blocks, bee, downloadOptions)),
+      'addEntryToDirectory',
+    )
+    assertRawDirectoryMetadata(directoryMeta)
+    parentData = directoryMeta
+  } catch (e) {
+    throw new Error('Parent directory does not exist')
+  }
+
+  entryNames.forEach((entryName, index) => {
+    const isFile = isFileArray[index]
+    const itemText = isFile ? 'File' : 'Directory'
+    const fullPath = combine(...splitPath(parentPath), entryName)
+
+    const itemToAdd = (isFile ? FILE_TOKEN : DIRECTORY_TOKEN) + entryName
+    parentData.fileOrDirNames = parentData.fileOrDirNames ?? []
+
+    if (parentData.fileOrDirNames.includes(itemToAdd)) {
+      throw new Error(`${itemText} "${fullPath}" already listed in the parent directory list`)
+    }
+
+    parentData.fileOrDirNames.push(itemToAdd)
+    parentData.meta.modificationTime = getUnixTimestamp()
+  })
+
+  return uploadData(
+    accountData.connection,
+    socOwnerAddress,
+    socSigner,
+    encryptionPassword,
+    indexFilePath,
+    stringToBytes(JSON.stringify(parentData)),
+    {
+      compression: Compression.GZIP,
+    },
+  )
+}
+
+/**
  * Uploads magic word data on the next epoch's level
  *
  * Magic word should be uploaded if data is not found (in case of data pruning) or not deleted

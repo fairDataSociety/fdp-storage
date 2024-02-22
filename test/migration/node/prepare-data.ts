@@ -26,6 +26,11 @@ async function run() {
   await fdp.file.uploadData('pod1', '/folder1/file2.txt', readFileSync(filesPath + '/file2.txt'))
 
   await fdp.directory.create('pod1', '/folder1/folder2')
+  await fdp.directory.create('pod1', '/folder1/folder2/3')
+  await fdp.directory.create('pod1', '/folder1/folder2/3/4')
+  await fdp.directory.create('pod1', '/folder1/folder2/3/4/5')
+
+  await fdp.file.uploadData('pod1', '/folder1/folder2/3/4/5/file2.txt', readFileSync(filesPath + '/file2.txt'))
 }
 
 run()
