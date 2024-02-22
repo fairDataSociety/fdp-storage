@@ -335,6 +335,18 @@ const fdpCache = new FdpStorage('https://localhost:1633', batchId, {
 fdpCache.cache.object = JSON.parse(cache)
 ```
 
+## Data migration
+
+Starting from the version `0.18.0`, pods and directories are stored in different format than the older versions. For all new accounts this doesn't have any impact. But to access pods and folders from existing accounts, migration is required.
+
+Migration is done transparently, but there are some requirements that users should follow.
+
+Pod list is converted to V2 when the `fdp.personalStorage.list()` method is invoked. So before working with existing pods, call the `fdp.personalStorage.list()` method first.
+
+Directories are converted on the fly. Here the same principle applies as for pods. The `fdp.directory.read()` method must be invoked first, before invoking any other operation on the provided directory. The read method will convert not only the provided directory, but also all parent directories. That process happens only once, and all subsequent accesses will work with V2 data instantly.
+
+Existing files are accessible in the new version. But from the `0.18.0` version, files are compressed before upload, which wasn't the case before. To compress files, they must be reuploaded.
+
 ## Documentation
 
 You can generate API docs locally with:
