@@ -11,6 +11,7 @@ import {
   getSharedPodInfo,
   podListToBytes,
   podListToJSON,
+  assertPodShareInfo,
   podPreparedToPod,
   podsListPreparedToPodsList,
   sharedPodPreparedToSharedPod,
@@ -18,16 +19,32 @@ import {
 } from './utils'
 import { getExtendedPodsList } from './api'
 import { uploadBytes } from '../file/utils'
-import { stringToBytes } from '../utils/bytes'
+import { bytesToString, stringToBytes } from '../utils/bytes'
 import { Reference, Utils } from '@ethersphere/bee-js'
-import { assertEncryptedReference, EncryptedReference } from '../utils/hex'
+import { assertEncryptedReference, EncryptedReference, HexString } from '../utils/hex'
 import { prepareEthAddress } from '../utils/wallet'
 import { getCacheKey, setEpochCache } from '../cache/utils'
 import { getPodsList } from './cache/api'
 import { getNextEpoch } from '../feed/lookup/utils'
+import {
+  ActiveBid,
+  DataHub,
+  ENS,
+  ENS_DOMAIN,
+  SubItem,
+  Subscription,
+  SubscriptionRequest,
+} from '@fairdatasociety/fdp-contracts-js'
+import { decryptWithBytes, deriveSecretFromKeys } from '../utils/encryption'
+import { namehash } from 'ethers/lib/utils'
+import { BigNumber } from 'ethers'
 
 export class PersonalStorage {
-  constructor(private accountData: AccountData) {}
+  constructor(
+    private accountData: AccountData,
+    private ens: ENS,
+    private dataHub: DataHub,
+  ) {}
 
   /**
    * Gets the list of pods for the active account
@@ -200,5 +217,81 @@ export class PersonalStorage {
     assertSharedPod(pod)
 
     return sharedPodPreparedToSharedPod(pod)
+  }
+
+  async getSubscriptions(address: string): Promise<Subscription[]> {
+    return this.dataHub.getUsersSubscriptions(address)
+  }
+
+  async getAllSubItems(address: string): Promise<SubItem[]> {
+    return this.dataHub.getAllSubItems(address)
+  }
+
+  async getAllSubItemsForNameHash(name: string): Promise<SubItem[]> {
+    return this.dataHub.getAllSubItemsForNameHash(namehash(`${name}.${ENS_DOMAIN}`))
+  }
+
+  async openSubscribedPod(subHash: HexString, swarmLocation: HexString): Promise<PodShareInfo> {
+    const sub = await this.dataHub.getSubBy(subHash)
+
+    const publicKey = await this.ens.getPublicKeyByUsernameHash(sub.fdpSellerNameHash)
+
+    const encryptedData = await this.accountData.connection.bee.downloadData(swarmLocation.substring(2))
+
+    const secret = deriveSecretFromKeys(this.accountData.wallet!.privateKey, publicKey)
+
+    const data = JSON.parse(bytesToString(decryptWithBytes(secret, encryptedData)))
+
+    assertPodShareInfo(data)
+
+    return data
+  }
+
+  async getActiveBids(): Promise<ActiveBid[]> {
+    return this.dataHub.getActiveBids(this.accountData.wallet!.address)
+  }
+
+  async getListedSubs(address: string): Promise<string[]> {
+    return this.dataHub.getListedSubs(address)
+  }
+
+  async getSubRequests(address: string): Promise<SubscriptionRequest[]> {
+    return this.dataHub.getSubRequests(address)
+  }
+
+  async bidSub(subHash: string, buyerUsername: string, value: BigNumber): Promise<void> {
+    return this.dataHub.requestSubscription(subHash, buyerUsername, value)
+  }
+
+  async createSubscription(
+    sellerUsername: string,
+    swarmLocation: string,
+    price: BigNumber,
+    categoryHash: string,
+    podAddress: string,
+    daysValid: number,
+    value?: BigNumber,
+  ): Promise<void> {
+    return this.dataHub.createSubscription(
+      sellerUsername,
+      swarmLocation,
+      price,
+      categoryHash,
+      podAddress,
+      daysValid,
+      value,
+    )
+  }
+
+  async getAllSubscriptions(): Promise<Subscription[]> {
+    return this.dataHub.getSubs()
+  }
+
+  async getSubscriptionsByCategory(categoryHash: string) {
+    const subs = await this.getAllSubscriptions()
+
+    // TODO temporary until the category gets added to fdp-contracts
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return subs.filter(sub => (sub as any).category === categoryHash)
   }
 }

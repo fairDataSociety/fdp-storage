@@ -335,6 +335,24 @@ const fdpCache = new FdpStorage('https://localhost:1633', batchId, {
 fdpCache.cache.object = JSON.parse(cache)
 ```
 
+There are available function for interacting with DataHub contract. For example to list all available subscriptions:
+
+```js
+const subs = await fdp.personalStorage.getAllSubscriptions()
+```
+
+To get user's subscriptions:
+
+```js
+const subItems = await fdp.personalStorage.getAllSubItems()
+```
+
+And to get pod information of a subItem:
+
+```js
+const podShareInfo = await fdp.personalStorage.openSubscribedPod(subItems[0].subHash, subItems[0].unlockKeyLocation)
+```
+
 ## Data migration
 
 Starting from the version `0.18.0`, pods and directories are stored in different format than the older versions. For all new accounts this doesn't have any impact. But to access pods and folders from existing accounts, migration is required.
