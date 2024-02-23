@@ -9,11 +9,59 @@ on:
       - '**'
 
 env:
-  BEE_VERSION: '1.11.1'
-  FAIROS_IMAGE: 'fairdatasociety/fairos-dfs:v0.9.6'
+  BEE_VERSION: '1.13.0'
+  FAIROS_IMAGE: 'fairdatasociety/fairos-dfs:v0.10.0-rc6'
 
 jobs:
   nodejs:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [16.x, 18.x]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Auth to Github Package Docker Registry
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login https://docker.pkg.github.com -u ${GITHUB_ACTOR} --password-stdin
+
+      - name: Install fdp-play
+        run: npm install -g @fairdatasociety/fdp-play
+
+      - name: Run fdp-play
+        run: fdp-play start -d --bee-version $BEE_VERSION
+
+      ## Try getting the node modules from cache, if failed npm ci
+      - uses: actions/cache@v3
+        id: cache-npm
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ matrix.node }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-${{ matrix.node }}-${{ env.cache-name }}-
+            ${{ runner.os }}-node-${{ matrix.node }}-
+
+      - name: Install npm deps
+        if: steps.cache-npm.outputs.cache-hit != 'true'
+        run: npm ci
+
+      - name: Run unit and integration tests for node
+        run: npm run test:node -- --detectOpenHandles
+
+      - name: Run migration tests for node
+        run: npm run test:migration -- --detectOpenHandles
+
+  fairos:
     runs-on: ubuntu-latest
 
     strategy:
@@ -48,15 +96,12 @@ jobs:
           path: node_modules
           key: ${{ runner.os }}-node-${{ matrix.node }}-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
-            ${{ runner.OS }}-node-${{ matrix.node }}-${{ env.cache-name }}-
-            ${{ runner.OS }}-node-${{ matrix.node }}-
+            ${{ runner.os }}-node-${{ matrix.node }}-${{ env.cache-name }}-
+            ${{ runner.os }}-node-${{ matrix.node }}-
 
       - name: Install npm deps
         if: steps.cache-npm.outputs.cache-hit != 'true'
         run: npm ci
-
-      - name: Run unit and integration tests for node
-        run: npm run test:node -- --detectOpenHandles
 
       - name: Run unit and integration tests for FairOS
         run: npm run test:fairos -- --detectOpenHandles
@@ -96,8 +141,8 @@ jobs:
           path: node_modules
           key: ${{ runner.os }}-node-${{ matrix.node }}-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
-            ${{ runner.OS }}-node-${{ matrix.node }}-${{ env.cache-name }}-
-            ${{ runner.OS }}-node-${{ matrix.node }}-
+            ${{ runner.os }}-node-${{ matrix.node }}-${{ env.cache-name }}-
+            ${{ runner.os }}-node-${{ matrix.node }}-
 
       - name: Install npm deps
         if: steps.cache-npm.outputs.cache-hit != 'true'

@@ -25,7 +25,7 @@ it('Batch Id only for write operations', async () => {
 
   await expect(fdp.file.share(testPod, testFilePath)).rejects.toThrow(error)
   await expect(fdp.file.delete(testPod, testFilePath)).rejects.toThrow(error)
-  await expect(fdp.file.uploadDataBlock(testData, 0)).rejects.toThrow(error)
+  await expect(fdp.file.uploadDataBlock(testData, 0, testData.length)).rejects.toThrow(error)
   await expect(fdp.file.saveShared(testPod, testFilePath, testReference)).rejects.toThrow(error)
   await expect(fdp.file.uploadData(testPod, testFilePath, testData)).rejects.toThrow(error)
 
