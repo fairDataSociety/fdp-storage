@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.18.0](https://github.com/fairDataSociety/fdp-storage/compare/v0.17.0...v0.18.0) (2024-02-23)
+
+
+### Features
+
+* ability to upload any amount of items ([#293](https://github.com/fairDataSociety/fdp-storage/issues/293)) ([fffe4af](https://github.com/fairDataSociety/fdp-storage/commit/fffe4af319a8a4fa0487e3aa0b565dce5ddda64e))
+* pod subscriptions ([#295](https://github.com/fairDataSociety/fdp-storage/issues/295)) ([0df06d8](https://github.com/fairDataSociety/fdp-storage/commit/0df06d81e0d26a2c2d08a389c3eefa52d89327fe))
+
 ## [0.17.0](https://github.com/fairDataSociety/fdp-storage/compare/v0.16.0...v0.17.0) (2023-12-19)
 
 
