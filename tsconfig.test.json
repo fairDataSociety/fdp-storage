@@ -5,6 +5,8 @@
     "test",
     "jest.config.ts",
     ".eslintrc.js",
+    "jest-puppeteer.config.js",
+    "puppeteer.config.js",
   ],
   "compilerOptions": {
     "noEmit": true,

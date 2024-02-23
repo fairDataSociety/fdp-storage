@@ -86,9 +86,13 @@ export async function uploadBytes(connection: Connection, data: Uint8Array): Pro
  * Extracts filename and path from full path
  *
  * @param fullPath full absolute path with filename
+ * @param isPod is pod path
  */
-export function extractPathInfo(fullPath: string): PathInfo {
-  assertFullPathWithName(fullPath)
+export function extractPathInfo(fullPath: string, isPod = false): PathInfo {
+  if (!isPod) {
+    assertFullPathWithName(fullPath)
+  }
+
   const exploded = splitPath(fullPath)
   const filename = exploded.pop()
 
@@ -125,7 +129,16 @@ export async function downloadBlocksManifest(
   reference: Reference,
   downloadOptions?: BeeRequestOptions,
 ): Promise<Blocks> {
-  const data = (await bee.downloadData(reference, downloadOptions)).text()
+  return extractBlocksManifest((await bee.downloadData(reference, downloadOptions)).text())
+}
+
+/**
+ * Extracts blocks manifest from the given data.
+ *
+ * @param {string} data - The data from which to extract the blocks manifest.
+ * @return {Blocks} The extracted blocks manifest.
+ */
+export function extractBlocksManifest(data: string): Blocks {
   const rawBlocks = jsonParse(data, 'blocks manifest')
   assertRawBlocks(rawBlocks)
 

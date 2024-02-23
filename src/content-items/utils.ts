@@ -1,8 +1,7 @@
-import { Bee, Reference, BeeRequestOptions } from '@ethersphere/bee-js'
-import { EthAddress } from '@ethersphere/bee-js/dist/types/utils/eth'
+import { Bee, Reference, BeeRequestOptions, Data } from '@ethersphere/bee-js'
 import { RawDirectoryMetadata, RawFileMetadata } from '../pod/types'
 import { DELETE_FEED_MAGIC_WORD, getFeedData, writeFeedData } from '../feed/api'
-import { isRawDirectoryMetadata, isRawFileMetadata } from '../directory/utils'
+import { combine, isRawDirectoryMetadata, isRawFileMetadata, splitPath } from '../directory/utils'
 import { DirectoryItem, FileItem, PathInformation, RawMetadataWithEpoch } from './types'
 import { decryptJson, PodPasswordBytes } from '../utils/encryption'
 import CryptoJS from 'crypto-js'
@@ -11,6 +10,34 @@ import { Connection } from '../connection/connection'
 import { utils, Wallet } from 'ethers'
 import { Epoch } from '../feed/lookup/epoch'
 import { stringToBytes } from '../utils/bytes'
+import { INDEX_ITEM_NAME } from '../file/handler'
+import { EthAddress } from '../utils/eth'
+
+/**
+ * Extracts metadata from encrypted source data using a pod password
+ *
+ * @param {Data} sourceData - The encrypted source data from which to extract metadata.
+ * @param {PodPasswordBytes} podPassword - The pod password used to decrypt the source data.
+ * @throws {Error} If the metadata is invalid.
+ * @returns {RawDirectoryMetadata | RawFileMetadata} The extracted metadata.
+ */
+export function extractMetadata(
+  sourceData: Data,
+  podPassword: PodPasswordBytes,
+): RawDirectoryMetadata | RawFileMetadata {
+  const data = decryptJson(podPassword, sourceData)
+  let metadata
+
+  if (isRawDirectoryMetadata(data)) {
+    metadata = data as RawDirectoryMetadata
+  } else if (isRawFileMetadata(data)) {
+    metadata = data as RawFileMetadata
+  } else {
+    throw new Error('Invalid metadata')
+  }
+
+  return metadata
+}
 
 /**
  * Get raw metadata by path
@@ -29,20 +56,10 @@ export async function getRawMetadata(
   requestOptions?: BeeRequestOptions,
 ): Promise<RawMetadataWithEpoch> {
   const feedData = await getFeedData(bee, path, address, requestOptions)
-  const data = decryptJson(podPassword, feedData.data.chunkContent())
-  let metadata
-
-  if (isRawDirectoryMetadata(data)) {
-    metadata = data as RawDirectoryMetadata
-  } else if (isRawFileMetadata(data)) {
-    metadata = data as RawFileMetadata
-  } else {
-    throw new Error('Invalid metadata')
-  }
 
   return {
     epoch: feedData.epoch,
-    metadata,
+    metadata: extractMetadata(feedData.data.chunkContent(), podPassword),
   }
 }
 
@@ -141,5 +158,15 @@ export async function deleteFeedData(
   podPassword: PodPasswordBytes,
   epoch?: Epoch,
 ): Promise<Reference> {
-  return writeFeedData(connection, topic, stringToBytes(DELETE_FEED_MAGIC_WORD), wallet, podPassword, epoch)
+  return writeFeedData(connection, topic, stringToBytes(DELETE_FEED_MAGIC_WORD), wallet.privateKey, podPassword, epoch)
+}
+
+/**
+ * Returns the index file path for a given path.
+ *
+ * @param {string} path - The path for which the index file path is needed.
+ * @return {string} - The index file path for the given path.
+ */
+export function getIndexFilePath(path: string): string {
+  return combine(...splitPath(path), INDEX_ITEM_NAME)
 }

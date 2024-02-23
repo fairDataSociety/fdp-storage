@@ -1,6 +1,7 @@
 import { utils } from 'ethers'
 import { PrivateKeyBytes, Utils } from '@ethersphere/bee-js'
 import { removeZeroFromHex } from '../account/utils'
+import { EthAddress } from './eth'
 
 /**
  * Get Hierarchical Deterministic Wallet from seed by index
@@ -37,7 +38,7 @@ export function mnemonicToSeed(mnemonic: string): Uint8Array {
  *
  * @param address Ethereum address for preparation
  */
-export function prepareEthAddress(address: string | Uint8Array): Utils.EthAddress {
+export function prepareEthAddress(address: string | Uint8Array): EthAddress {
   return Utils.makeEthAddress(address)
 }
 

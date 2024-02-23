@@ -1,7 +1,7 @@
 import { AccountData } from '../account/account-data'
 import { createDirectory, readDirectory, DEFAULT_UPLOAD_DIRECTORY_OPTIONS, UploadDirectoryOptions } from './handler'
 import { assertAccount } from '../account/utils'
-import { removeEntryFromDirectory } from '../content-items/handler'
+import { addEntryToDirectory, removeEntryFromDirectory } from '../content-items/handler'
 import { extractPathInfo, readBrowserFileAsBytes } from '../file/utils'
 import { assertPodName, getExtendedPodsListByAccountData } from '../pod/utils'
 import { isNode } from '../shim/utils'
@@ -16,10 +16,12 @@ import {
   getUploadPath,
   BrowserFileInfo,
   NodeFileInfo,
+  migrateDirectoryV1ToV2,
 } from './utils'
 import { uploadData } from '../file/handler'
 import { assertNodeFileInfo, isBrowserFileInfo } from './types'
 import { DirectoryItem } from '../content-items/types'
+import { prepareEthAddress } from '../utils/wallet'
 
 /**
  * Directory related class
@@ -39,16 +41,62 @@ export class Directory {
   async read(podName: string, path: string, isRecursive?: boolean): Promise<DirectoryItem> {
     assertAccount(this.accountData)
     assertPodName(podName)
-    const { podAddress, pod } = await getExtendedPodsListByAccountData(this.accountData, podName)
 
-    return readDirectory(
-      this.accountData.connection.bee,
-      path,
-      podAddress,
-      pod.password,
-      isRecursive,
-      this.accountData.connection.options?.requestOptions,
-    )
+    const { podAddress, pod, podWallet } = await getExtendedPodsListByAccountData(this.accountData, podName)
+
+    try {
+      return await readDirectory(
+        this.accountData,
+        podName,
+        path,
+        podAddress,
+        pod.password,
+        isRecursive,
+        this.accountData.connection.options?.requestOptions,
+      )
+    } catch (error) {
+      if (!String(error).includes('Index content file not found')) {
+        throw error
+      }
+
+      const folders = path.split('/').filter(part => part)
+
+      for (let i = 0; i < folders.length; i++) {
+        const currentPath = `/${i === 0 ? '' : folders.slice(0, i).join('/')}`
+
+        try {
+          await readDirectory(
+            this.accountData,
+            podName,
+            currentPath,
+            podAddress,
+            pod.password,
+            false,
+            this.accountData.connection.options?.requestOptions,
+          )
+        } catch (error) {
+          await migrateDirectoryV1ToV2(
+            this.accountData,
+            currentPath,
+            podAddress,
+            pod.password,
+            podWallet,
+            false,
+            this.accountData.connection.options?.requestOptions,
+          )
+        }
+      }
+
+      return migrateDirectoryV1ToV2(
+        this.accountData,
+        path,
+        podAddress,
+        pod.password,
+        podWallet,
+        isRecursive,
+        this.accountData.connection.options?.requestOptions,
+      )
+    }
   }
 
   /**
@@ -65,7 +113,7 @@ export class Directory {
     const { podWallet, pod } = await getExtendedPodsListByAccountData(this.accountData, podName)
 
     return createDirectory(
-      this.accountData.connection,
+      this.accountData,
       fullPath,
       podWallet,
       pod.password,
@@ -143,7 +191,7 @@ export class Directory {
     for (const directory of directoriesToCreate) {
       try {
         await createDirectory(
-          this.accountData.connection,
+          this.accountData,
           directory,
           podWallet,
           pod.password,
@@ -171,7 +219,26 @@ export class Directory {
       }
 
       const uploadPath = getUploadPath(file, options.isIncludeDirectoryName!)
-      await uploadData(podName, uploadPath, bytes, this.accountData, options.uploadOptions!)
+      const socOwnerAddress = prepareEthAddress(podWallet.address)
+      await uploadData(
+        this.accountData.connection,
+        socOwnerAddress,
+        podWallet.privateKey,
+        pod.password,
+        uploadPath,
+        bytes,
+        options.uploadOptions!,
+      )
+      const pathInfo = extractPathInfo(uploadPath)
+      await addEntryToDirectory(
+        this.accountData,
+        socOwnerAddress,
+        podWallet.privateKey,
+        pod.password,
+        pathInfo.path,
+        pathInfo.filename,
+        true,
+      )
     }
   }
 }

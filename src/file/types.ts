@@ -128,6 +128,16 @@ export interface ProgressCallback<T> {
 }
 
 /**
+ * Enumeration representing compression algorithms
+ */
+export enum Compression {
+  /**
+   * GZIP compression
+   */
+  GZIP = 'gzip',
+}
+
+/**
  * File upload options
  */
 export interface DataUploadOptions extends ProgressCallback<UploadProgressInfo> {
@@ -139,6 +149,10 @@ export interface DataUploadOptions extends ProgressCallback<UploadProgressInfo> 
    * Content type of the file
    */
   contentType?: string
+  /**
+   * Compression algorithm
+   */
+  compression?: Compression
 }
 
 /**
