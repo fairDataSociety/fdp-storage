@@ -100,8 +100,33 @@ export async function getFileMetadataWithBlocks(
   dataDownloadOptions = dataDownloadOptions ?? {}
   updateDownloadProgress(dataDownloadOptions, DownloadProgressType.GetPodInfo)
   const { podAddress, pod } = await getExtendedPodsListByAccountData(accountData, podName)
+
+  return getFileMetadataWithBlocksAndPod(bee, accountData, podAddress, pod.password, fullPath, downloadOptions)
+}
+
+/**
+ * Gets file metadata with blocks
+ *
+ * @param bee Bee
+ * @param accountData account data
+ * @param podAddress pod address
+ * @param podPassword pod password
+ * @param fullPath full path to the file
+ * @param downloadOptions download options
+ * @param dataDownloadOptions data download options
+ */
+export async function getFileMetadataWithBlocksAndPod(
+  bee: Bee,
+  accountData: AccountData,
+  podAddress: EthAddress,
+  podPassword: PodPasswordBytes,
+  fullPath: string,
+  downloadOptions?: BeeRequestOptions,
+  dataDownloadOptions?: DataDownloadOptions,
+): Promise<FileMetadataWithBlocks> {
+  dataDownloadOptions = dataDownloadOptions ?? {}
   updateDownloadProgress(dataDownloadOptions, DownloadProgressType.GetPathInfo)
-  const fileMetadata = await getFileMetadata(bee, fullPath, podAddress, pod.password, downloadOptions)
+  const fileMetadata = await getFileMetadata(bee, fullPath, podAddress, podPassword, downloadOptions)
   updateDownloadProgress(dataDownloadOptions, DownloadProgressType.DownloadBlocksMeta)
   const blocks = await downloadBlocksManifest(bee, fileMetadata.blocksReference, downloadOptions)
   await prepareDataByMeta(fileMetadata, blocks.blocks, accountData.connection.bee, downloadOptions)
@@ -183,6 +208,39 @@ export async function downloadData(
     bee,
     accountData,
     podName,
+    fullPath,
+    downloadOptions,
+    dataDownloadOptions,
+  )
+
+  return prepareDataByMeta(fileMeta, fileMeta.blocks, bee, downloadOptions, dataDownloadOptions)
+}
+
+/**
+ * Downloads file parts and compile them into Data
+ *
+ * @param accountData account data
+ * @param podAddress pod address
+ * @param podPassword pod password
+ * @param fullPath full path to the file
+ * @param downloadOptions download options
+ * @param dataDownloadOptions data download options
+ */
+export async function downloadArbitraryPodData(
+  accountData: AccountData,
+  podAddress: EthAddress,
+  podPassword: PodPasswordBytes,
+  fullPath: string,
+  downloadOptions?: BeeRequestOptions,
+  dataDownloadOptions?: DataDownloadOptions,
+): Promise<Data> {
+  dataDownloadOptions = dataDownloadOptions ?? {}
+  const bee = accountData.connection.bee
+  const fileMeta = await getFileMetadataWithBlocksAndPod(
+    bee,
+    accountData,
+    podAddress,
+    podPassword,
     fullPath,
     downloadOptions,
     dataDownloadOptions,
