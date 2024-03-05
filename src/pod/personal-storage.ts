@@ -16,8 +16,9 @@ import {
   podsListPreparedToPodsList,
   sharedPodPreparedToSharedPod,
   uploadPodDataV2,
+  ExtendedPodInfo,
 } from './utils'
-import { getExtendedPodsList } from './api'
+import { getExtendedPodsList, getPodListExtended } from './api'
 import { uploadBytes } from '../file/utils'
 import { bytesToString, stringToBytes } from '../utils/bytes'
 import { Reference, Utils } from '@ethersphere/bee-js'
@@ -72,6 +73,21 @@ export class PersonalStorage {
     } catch (e) {}
 
     return podsListPreparedToPodsList(podsList)
+  }
+
+  async listExtended(): Promise<ExtendedPodInfo[]> {
+    assertAccount(this.accountData)
+
+    return getPodListExtended(
+      this.accountData,
+      this.accountData.connection.bee,
+      this.accountData.wallet!,
+      this.accountData.seed!,
+      {
+        requestOptions: this.accountData.connection.options?.requestOptions,
+        cacheInfo: this.accountData.connection.cacheInfo,
+      },
+    )
   }
 
   /**

@@ -22,6 +22,8 @@ import { uploadData } from '../file/handler'
 import { assertNodeFileInfo, isBrowserFileInfo } from './types'
 import { DirectoryItem } from '../content-items/types'
 import { prepareEthAddress } from '../utils/wallet'
+import { PodShareInfo } from '../pod/types'
+import { Utils } from '@ethersphere/bee-js'
 
 /**
  * Directory related class
@@ -97,6 +99,31 @@ export class Directory {
         this.accountData.connection.options?.requestOptions,
       )
     }
+  }
+
+  /**
+   * Get files and directories under the given path from a shared pod
+   *
+   * Account is required, postage batch id is not required
+   *
+   * @param pod a PodShareInfo object
+   * @param path path to start searching from
+   * @param isRecursive search with recursion or not
+   */
+  async readFromShared(pod: PodShareInfo, path: string, isRecursive?: boolean): Promise<DirectoryItem> {
+    const { podName, podAddress, password } = pod
+    assertAccount(this.accountData)
+    assertPodName(pod.podName)
+
+    return await readDirectory(
+      this.accountData,
+      podName,
+      path,
+      prepareEthAddress(podAddress),
+      Utils.hexToBytes(password),
+      isRecursive,
+      this.accountData.connection.options?.requestOptions,
+    )
   }
 
   /**

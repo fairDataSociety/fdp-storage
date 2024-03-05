@@ -75,3 +75,37 @@ export async function getExtendedPodsList(
     epoch,
   }
 }
+
+/**
+ * Gets pods list with pod addresses
+ *
+ * @param accountData account data
+ * @param bee Bee client
+ * @param userWallet root wallet for downloading and decrypting data
+ * @param seed seed of wallet owns the FDP account
+ * @param downloadOptions request options
+ */
+export async function getPodListExtended(
+  accountData: AccountData,
+  bee: Bee,
+  userWallet: utils.HDNode,
+  seed: Uint8Array,
+  downloadOptions?: DownloadOptions,
+): Promise<ExtendedPodInfo[]> {
+  const { podsList, epoch } = await getPodsListCached(accountData, bee, userWallet, downloadOptions)
+
+  const extendedPodList: ExtendedPodInfo[] = []
+
+  for (const pod of podsList.pods) {
+    const podWallet = await getWalletByIndex(seed, pod.index, downloadOptions?.cacheInfo)
+
+    extendedPodList.push({
+      pod,
+      podAddress: prepareEthAddress(podWallet.address),
+      podWallet,
+      epoch,
+    })
+  }
+
+  return extendedPodList
+}

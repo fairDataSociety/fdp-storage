@@ -12,7 +12,13 @@ import {
   uploadBytes,
 } from './utils'
 import { writeFeedData } from '../feed/api'
-import { downloadData, getFileMetadataWithBlocks, uploadData, uploadDataBlock } from './handler'
+import {
+  downloadArbitraryPodData,
+  downloadData,
+  getFileMetadataWithBlocks,
+  uploadData,
+  uploadDataBlock,
+} from './handler'
 import { getFileMetadataRawBytes, rawFileMetadataToFileMetadata } from './adapter'
 import {
   DataDownloadOptions,
@@ -23,7 +29,7 @@ import {
   FileShareInfo,
 } from './types'
 import { addEntryToDirectory, DEFAULT_UPLOAD_OPTIONS, removeEntryFromDirectory } from '../content-items/handler'
-import { BeeRequestOptions, Reference } from '@ethersphere/bee-js'
+import { BeeRequestOptions, Reference, Utils } from '@ethersphere/bee-js'
 import { getRawMetadata } from '../content-items/utils'
 import { assertRawFileMetadata, combine, splitPath } from '../directory/utils'
 import { assertEncryptedReference, EncryptedReference } from '../utils/hex'
@@ -53,6 +59,35 @@ export class File {
     return downloadData(
       this.accountData,
       podName,
+      fullPath,
+      this.accountData.connection.options?.requestOptions,
+      options,
+    )
+  }
+
+  /**
+   * Downloads file content from any pod
+   *
+   * Account is required, postage batch id is not required
+   *
+   * @param podAddress pod address
+   * @param podPassword pod password
+   * @param fullPath full path of the file
+   * @param options download options
+   */
+  async downloadArbitraryPodData(
+    podAddress: string,
+    podPassword: string,
+    fullPath: string,
+    options?: DataDownloadOptions,
+  ): Promise<Uint8Array> {
+    assertAccount(this.accountData)
+    assertFullPathWithName(fullPath)
+
+    return downloadArbitraryPodData(
+      this.accountData,
+      prepareEthAddress(podAddress),
+      Utils.hexToBytes(podPassword),
       fullPath,
       this.accountData.connection.options?.requestOptions,
       options,
