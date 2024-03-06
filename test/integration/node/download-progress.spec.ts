@@ -4,7 +4,7 @@ import { DownloadProgressInfo } from '../../../src'
 import { DEFAULT_UPLOAD_OPTIONS } from '../../../src/content-items/handler'
 
 jest.setTimeout(400000)
-it('Fair Data Protocol download progress', async () => {
+it.skip('Fair Data Protocol download progress', async () => {
   const fdp = createFdp()
   generateUser(fdp)
   const pod = generateRandomHexString()

@@ -215,6 +215,8 @@ export async function createUsableBatch(): Promise<BatchId> {
     await sleep(3000)
   }
 
+  sleep(90000)
+
   return getUsableBatch(beeDebug)
 }
 
