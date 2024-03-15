@@ -1,6 +1,7 @@
 import { BeeRequestOptions } from '@ethersphere/bee-js'
 import { DataHubEnvironment, EnsEnvironment } from '@fairdatasociety/fdp-contracts-js'
 import { CacheOptions } from './cache/types'
+import { utils } from 'ethers'
 
 export { DirectoryItem, FileItem } from './content-items/types'
 export {
@@ -54,4 +55,8 @@ export interface Options {
    * Cache options
    */
   cacheOptions?: CacheOptions
+  /**
+   * Provider options
+   */
+  providerOptions?: utils.ConnectionInfo
 }

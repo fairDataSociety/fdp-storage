@@ -7,6 +7,7 @@ import {
   GET_FEED_DATA_TIMEOUT,
   getBee,
   topUpFdp,
+  fdpOptions,
 } from '../../utils'
 import { PodShareInfo, RawFileMetadata } from '../../../src/pod/types'
 import { FileShareInfo } from '../../../src/file/types'
@@ -33,6 +34,9 @@ describe('Fair Data Protocol class', () => {
     const fdp = new FdpStorage('http://localhost:1633/', batchId(), {
       requestOptions: {
         timeout: GET_FEED_DATA_TIMEOUT,
+      },
+      ensOptions: {
+        ...fdpOptions.ensOptions!,
       },
     })
     expect(fdp.connection.bee.url).toEqual('http://localhost:1633')

@@ -146,9 +146,15 @@ export const fdpOptions: Options = {
   ensOptions: {
     ...getEnsEnvironmentConfig(Environments.LOCALHOST),
     performChecks: true,
+    rpcUrl: '127.0.0.1:8545',
   },
   cacheOptions: {
     isUseCache: false,
+  },
+  providerOptions: {
+    url: 'http://127.0.0.1:8545/',
+    allowInsecureAuthentication: true,
+    skipFetchSetup: true,
   },
 }
 
@@ -264,7 +270,10 @@ export async function topUpFdp(fdp: FdpStorage): Promise<void> {
  * Top up balance for address
  */
 export async function topUpAddress(address: string, amountInEther = '0.01'): Promise<void> {
-  const ens = new FdpStorage(beeUrl(), batchId()).ens
+  const ens = new FdpStorage(beeUrl(), batchId(), {
+    ensOptions: fdpOptions.ensOptions!,
+    providerOptions: fdpOptions!.providerOptions,
+  }).ens
   const account = (await ens.provider.listAccounts())[0]
   const txHash = await ens.provider.send('eth_sendTransaction', [
     {
