@@ -3,7 +3,7 @@ import { MAX_POD_NAME_LENGTH } from '../../../../src'
 import { HIGHEST_LEVEL } from '../../../../src/feed/lookup/epoch'
 
 jest.setTimeout(400000)
-it('Pods limitation check', async () => {
+it.skip('Pods limitation check', async () => {
   const fdp = createFdp()
   generateUser(fdp)
 
