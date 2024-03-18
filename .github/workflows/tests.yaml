@@ -58,6 +58,12 @@ jobs:
         if: steps.cache-npm.outputs.cache-hit != 'true'
         run: npm ci
 
+      - name: Buy stamps
+        run: curl -s -XPOST http://localhost:1635/stamps/10000000/18
+
+      - name: Wait to batch become usable
+        run: sleep 200
+
       - name: Run unit and integration tests for node
         run: npm run test:node -- --detectOpenHandles
 
