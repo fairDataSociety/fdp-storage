@@ -15,6 +15,8 @@ export interface CreateFdpOptions {
    * Options for FDP initialization
    */
   batchId?: BatchId
+
+  rpc?: string
 }
 
 /**
@@ -146,9 +148,15 @@ export const fdpOptions: Options = {
   ensOptions: {
     ...getEnsEnvironmentConfig(Environments.LOCALHOST),
     performChecks: true,
+    rpcUrl: '127.0.0.1:8545',
   },
   cacheOptions: {
     isUseCache: false,
+  },
+  providerOptions: {
+    url: 'http://127.0.0.1:8545/',
+    allowInsecureAuthentication: true,
+    skipFetchSetup: true,
   },
 }
 
@@ -156,10 +164,14 @@ export const fdpOptions: Options = {
  * Creates FDP instance with default configuration for testing
  */
 export function createFdp(cacheOptions?: CacheOptions, options?: CreateFdpOptions): FdpStorage {
-  return new FdpStorage(beeUrl(), options?.batchId ?? batchId(), {
+  const fdpStorageOptions = {
     ...fdpOptions,
     ...(cacheOptions ? { cacheOptions } : undefined),
-  })
+  }
+  fdpStorageOptions.ensOptions!.rpcUrl = options?.rpc || fdpOptions.ensOptions!.rpcUrl!
+  fdpStorageOptions.providerOptions!.url = options?.rpc || fdpOptions.providerOptions!.url!
+
+  return new FdpStorage(beeUrl(), options?.batchId ?? batchId(), fdpStorageOptions)
 }
 
 /**
@@ -264,7 +276,10 @@ export async function topUpFdp(fdp: FdpStorage): Promise<void> {
  * Top up balance for address
  */
 export async function topUpAddress(address: string, amountInEther = '0.01'): Promise<void> {
-  const ens = new FdpStorage(beeUrl(), batchId()).ens
+  const ens = new FdpStorage(beeUrl(), batchId(), {
+    ensOptions: fdpOptions.ensOptions!,
+    providerOptions: fdpOptions!.providerOptions,
+  }).ens
   const account = (await ens.provider.listAccounts())[0]
   const txHash = await ens.provider.send('eth_sendTransaction', [
     {

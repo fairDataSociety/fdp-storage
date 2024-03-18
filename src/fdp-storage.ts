@@ -24,8 +24,8 @@ export class FdpStorage {
       options: options?.cacheOptions || DEFAULT_CACHE_OPTIONS,
     }
     this.connection = new Connection(new Bee(beeUrl), postageBatchId, this.cache, options)
-    this.ens = new ENS(options?.ensOptions, null, options?.ensDomain)
-    this.dataHub = new DataHub(options?.dataHubOptions, null, options?.ensDomain)
+    this.ens = new ENS(options?.ensOptions, null, options?.ensDomain, options?.providerOptions)
+    this.dataHub = new DataHub(options?.dataHubOptions, null, options?.ensDomain, options?.providerOptions)
     this.account = new AccountData(this.connection, this.ens)
     this.personalStorage = new PersonalStorage(this.account, this.ens, this.dataHub)
     this.directory = new Directory(this.account)

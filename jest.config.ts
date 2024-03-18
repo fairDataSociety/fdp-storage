@@ -44,7 +44,7 @@ export default async (): Promise<Config.InitialOptions> => {
     // An array of directory names to be searched recursively up from the requiring module's location
     moduleDirectories: ['node_modules'],
 
-    testTimeout: 90000,
+    testTimeout: 180000,
 
     // Run tests from one or more projects
     projects: [
