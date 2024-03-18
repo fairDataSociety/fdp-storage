@@ -98,6 +98,9 @@ jobs:
       - name: Run fdp-play
         run: fdp-play start -d --fairos --fairos-image $FAIROS_IMAGE --bee-version $BEE_VERSION
 
+      - name: Run fdp-contracts
+        run: docker run -d -p 8545:9545 fairdatasociety/fdp-contracts-blockchain:latest
+
       ## Try getting the node modules from cache, if failed npm ci
       - uses: actions/cache@v3
         id: cache-npm
@@ -111,6 +114,12 @@ jobs:
       - name: Install npm deps
         if: steps.cache-npm.outputs.cache-hit != 'true'
         run: npm ci
+
+      - name: Buy stamps
+        run: curl -s -XPOST http://localhost:1635/stamps/10000000/18
+
+      - name: Wait to batch become usable
+        run: sleep 200
 
       - name: Run unit and integration tests for FairOS
         run: npm run test:fairos -- --detectOpenHandles
@@ -143,6 +152,9 @@ jobs:
       - name: Run fdp-play
         run: fdp-play start -d --bee-version $BEE_VERSION
 
+      - name: Run fdp-contracts
+        run: docker run -d -p 8545:9545 fairdatasociety/fdp-contracts-blockchain:latest
+
       ## Try getting the node modules from cache, if failed npm ci
       - uses: actions/cache@v3
         id: cache-npm
@@ -156,6 +168,12 @@ jobs:
       - name: Install npm deps
         if: steps.cache-npm.outputs.cache-hit != 'true'
         run: npm ci
+
+      - name: Buy stamps
+        run: curl -s -XPOST http://localhost:1635/stamps/10000000/18
+
+      - name: Wait to batch become usable
+        run: sleep 200
 
       - name: Run browser tests
         run: npm run test:browser
