@@ -15,6 +15,8 @@ export interface CreateFdpOptions {
    * Options for FDP initialization
    */
   batchId?: BatchId
+
+  rpc?: string
 }
 
 /**
@@ -162,10 +164,14 @@ export const fdpOptions: Options = {
  * Creates FDP instance with default configuration for testing
  */
 export function createFdp(cacheOptions?: CacheOptions, options?: CreateFdpOptions): FdpStorage {
-  return new FdpStorage(beeUrl(), options?.batchId ?? batchId(), {
+  const fdpStorageOptions = {
     ...fdpOptions,
     ...(cacheOptions ? { cacheOptions } : undefined),
-  })
+  }
+  fdpStorageOptions.ensOptions!.rpcUrl = options?.rpc || fdpOptions.ensOptions!.rpcUrl!
+  fdpStorageOptions.providerOptions!.url = options?.rpc || fdpOptions.providerOptions!.url!
+
+  return new FdpStorage(beeUrl(), options?.batchId ?? batchId(), fdpStorageOptions)
 }
 
 /**

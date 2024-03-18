@@ -10,6 +10,9 @@ import { DEFAULT_DIRECTORY_PERMISSIONS, getDirectoryMode } from '../../../src/di
 import { getIndexFileContent } from '../../../src/file/handler'
 
 jest.setTimeout(400000)
+
+const fdpOptions = { rpc: 'http://127.0.0.1:9545' }
+
 describe('Fair Data Protocol with FairOS-dfs', () => {
   beforeAll(async () => {
     await waitFairOS()
@@ -18,7 +21,7 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
   describe('Account', () => {
     it('should register in fdp and login in fairos', async () => {
       const fairos = new FairOSApi()
-      const fdp = createFdp()
+      const fdp = createFdp(undefined, fdpOptions)
       const user = generateUser(fdp)
       await topUpFdp(fdp)
       const nameHash = utils.namehash(`${user.username}.fds`)
@@ -35,7 +38,7 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
 
     it('should register in fairos and login in fdp', async () => {
       const fairos = new FairOSApi()
-      const fdp = createFdp()
+      const fdp = createFdp(undefined, fdpOptions)
       const user = generateUser()
       const nameHash = utils.namehash(`${user.username}.fds`)
       const publicKey = Wallet.fromMnemonic(user.mnemonic).publicKey.replace('0x', '')
@@ -58,7 +61,7 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
   describe('Pod', () => {
     it('should create pods in fdp and list them in fairos', async () => {
       const fairos = new FairOSApi()
-      const fdp = createFdp()
+      const fdp = createFdp(undefined, fdpOptions)
       const user = generateUser(fdp)
       const podName1 = generateRandomHexString()
       const podName2 = generateRandomHexString()
@@ -86,7 +89,7 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
 
     it('should create pods in fairos and list them in fdp', async () => {
       const fairos = new FairOSApi()
-      const fdp = createFdp()
+      const fdp = createFdp(undefined, fdpOptions)
       const user = generateUser()
       const podName1 = generateRandomHexString()
       const podName2 = generateRandomHexString()
@@ -126,7 +129,7 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
 
     it('should delete pod in fdp and it will disappear in fairos', async () => {
       const fairos = new FairOSApi()
-      const fdp = createFdp()
+      const fdp = createFdp(undefined, fdpOptions)
       const user = generateUser(fdp)
       const podName1 = generateRandomHexString()
 
@@ -193,7 +196,7 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
   describe('Directory', () => {
     it('should create directories in fdp and list them in fairos', async () => {
       const fairos = new FairOSApi()
-      const fdp = createFdp()
+      const fdp = createFdp(undefined, fdpOptions)
       const user = generateUser(fdp)
       const podName1 = generateRandomHexString()
       const directoryName1 = generateRandomHexString()
@@ -240,7 +243,7 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
 
     it('should create directories in fairos and list them in fdp', async () => {
       const fairos = new FairOSApi()
-      const fdp = createFdp()
+      const fdp = createFdp(undefined, fdpOptions)
       const user = generateUser(fdp)
       const podName1 = generateRandomHexString()
       const directoryName1 = generateRandomHexString()
@@ -284,7 +287,7 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
 
     it('should delete directory in fdp and it will disappear in fairos', async () => {
       const fairos = new FairOSApi()
-      const fdp = createFdp()
+      const fdp = createFdp(undefined, fdpOptions)
       const user = generateUser(fdp)
       const podName1 = generateRandomHexString()
       const directoryName1 = generateRandomHexString()
@@ -349,7 +352,7 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
   describe('File', () => {
     it('should upload file with fdp and it should available via fairos', async () => {
       const fairos = new FairOSApi()
-      const fdp = createFdp()
+      const fdp = createFdp(undefined, fdpOptions)
       const user = generateUser(fdp)
       const podName1 = generateRandomHexString()
       const fileSizeBig = 5000015
@@ -378,7 +381,7 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
 
     it('should upload file with fairos and it should available via fdp', async () => {
       const fairos = new FairOSApi()
-      const fdp = createFdp()
+      const fdp = createFdp(undefined, fdpOptions)
       const user = generateUser(fdp)
       const podName1 = generateRandomHexString()
       const fileSizeBig = 5000015
@@ -424,7 +427,7 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
 
     it('should delete file in fdp and it will disappear in fairos', async () => {
       const fairos = new FairOSApi()
-      const fdp = createFdp()
+      const fdp = createFdp(undefined, fdpOptions)
       const user = generateUser(fdp)
       const podName1 = generateRandomHexString()
       const fileSizeBig = 1000015
@@ -493,7 +496,7 @@ describe('Fair Data Protocol with FairOS-dfs', () => {
   describe('Metadata', () => {
     it('should exists fields for file and directory in fairos and fdp', async () => {
       const fairos = new FairOSApi()
-      const fdp = createFdp()
+      const fdp = createFdp(undefined, fdpOptions)
       const user = generateUser(fdp)
       const podName1 = generateRandomHexString()
       const fileSizeBig = 1000015
