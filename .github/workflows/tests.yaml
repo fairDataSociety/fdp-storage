@@ -42,7 +42,7 @@ jobs:
         run: fdp-play start -d --bee-version $BEE_VERSION
 
       - name: Run fdp-contracts
-        run: docker run -p 8545:9545 fairdatasociety/fdp-contracts-blockchain:latest
+        run: docker run -d -p 8545:9545 fairdatasociety/fdp-contracts-blockchain:latest
 
       ## Try getting the node modules from cache, if failed npm ci
       - uses: actions/cache@v3
