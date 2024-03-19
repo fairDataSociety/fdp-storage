@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.19.0](https://github.com/fairDataSociety/fdp-storage/compare/v0.18.0...v0.19.0) (2024-03-18)
+
+
+### Features
+
+* subscription pods improvements ([#297](https://github.com/fairDataSociety/fdp-storage/issues/297)) ([ba89596](https://github.com/fairDataSociety/fdp-storage/commit/ba895960d73b1bcddde86ab3b736c9e3a775c7b8))
+
 ## [0.18.0](https://github.com/fairDataSociety/fdp-storage/compare/v0.17.0...v0.18.0) (2024-02-23)
 
 
