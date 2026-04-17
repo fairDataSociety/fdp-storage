@@ -19,7 +19,11 @@ const base = async (env?: Partial<WebpackEnvParams>): Promise<Configuration> => 
   const filename =
     env?.fileName ||
     ['index', isBrowser ? '.browser' : null, isProduction ? '.min' : null, '.js'].filter(Boolean).join('')
-  const entry = Path.resolve(__dirname, 'src')
+  // For Node.js builds, include base64 polyfill to provide atob/btoa compatibility
+  // Fixes: https://github.com/fairDataSociety/fdp-storage/issues/244
+  const entry = isBrowser
+    ? Path.resolve(__dirname, 'src')
+    : [Path.resolve(__dirname, 'src', 'polyfills', 'base64.ts'), Path.resolve(__dirname, 'src')]
   const path = Path.resolve(__dirname, 'dist')
   const target = env?.target || 'web' // 'node' or 'web'
   const plugins: WebpackPluginInstance[] = [
