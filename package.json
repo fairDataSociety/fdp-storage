@@ -117,5 +117,8 @@
   "engines": {
     "node": ">=16.0.0",
     "npm": ">=9.0.0"
+  },
+  "overrides": {
+    "basic-ftp": "^5.2.0"
   }
 }

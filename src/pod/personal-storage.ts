@@ -18,6 +18,8 @@ import {
   uploadPodDataV2,
   ExtendedPodInfo,
 } from './utils'
+import { deleteFeedData } from '../content-items/utils'
+import { getWalletByIndex } from '../utils/cache/wallet'
 import { getExtendedPodsList, getPodListExtended } from './api'
 import { uploadBytes } from '../file/utils'
 import { bytesToString, stringToBytes } from '../utils/bytes'
@@ -136,6 +138,15 @@ export class PersonalStorage {
     if (!pod) {
       throw new Error(`Pod "${name}" does not exist`)
     }
+
+    // Mark pod root directory as deleted before removing from list
+    // This allows the pod name to be reused later (fixes #257)
+    const podWallet = await getWalletByIndex(
+      this.accountData.seed!,
+      pod.index,
+      this.accountData.connection.cacheInfo,
+    )
+    await deleteFeedData(this.accountData.connection, '/', podWallet, pod.password)
 
     const podsFiltered = podsInfo.podsList.pods.filter(item => item.name !== name)
     const podsSharedFiltered = podsInfo.podsList.sharedPods.filter(item => item.name !== name)

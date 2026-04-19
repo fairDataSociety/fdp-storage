@@ -36,7 +36,7 @@ import { bytesToHex, EncryptedReference, isHexEthAddress } from '../utils/hex'
 import { getExtendedPodsList } from './api'
 import { Epoch, getFirstEpoch } from '../feed/lookup/epoch'
 import { getUnixTimestamp } from '../utils/time'
-import { getFeedData } from '../feed/api'
+import { getFeedData, getFeedDataWithRetry } from '../feed/api'
 import { createRootDirectory } from '../directory/handler'
 import { Connection } from '../connection/connection'
 import { AccountData } from '../account/account-data'
@@ -689,6 +689,9 @@ export function jsonSharedPodToSharedPod(pod: SharedPod): SharedPodPrepared {
 /**
  * Retrieves pods data for a given address.
  *
+ * Uses retry logic to handle eventual consistency issues with Bee gateways
+ * where pods data may not be immediately available after write operations (issue #259)
+ *
  * @param {Bee} bee - The bee client object.
  * @param {EthAddress} address - The address to look up pods data for.
  * @param {BeeRequestOptions} [requestOptions] - The request options.
@@ -703,14 +706,14 @@ export async function getPodsData(
   let podsVersion = PodsVersion.V2
   let lookupAnswer
   try {
-    lookupAnswer = await getFeedData(bee, getPodV2Topic(), address, requestOptions)
+    lookupAnswer = await getFeedDataWithRetry(bee, getPodV2Topic(), address, requestOptions)
     // eslint-disable-next-line no-empty
   } catch (e) {}
 
   // if V2 does not exist, try V1
   if (!lookupAnswer) {
     try {
-      lookupAnswer = await getFeedData(bee, POD_TOPIC, address, requestOptions)
+      lookupAnswer = await getFeedDataWithRetry(bee, POD_TOPIC, address, requestOptions)
       podsVersion = PodsVersion.V1
       // eslint-disable-next-line no-empty
     } catch (e) {}
