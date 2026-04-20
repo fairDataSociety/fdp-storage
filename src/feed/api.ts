@@ -16,6 +16,40 @@ import { EthAddress } from '../utils/eth'
 export const DELETE_FEED_MAGIC_WORD = '__Fair__'
 
 /**
+ * Helper to retry feed data reads with exponential backoff
+ *
+ * Handles eventual consistency issues with Bee gateways where chunks
+ * may not be immediately available after write operations (issue #259)
+ *
+ * @param fn async function to retry
+ * @param maxRetries maximum number of retry attempts (default: 3)
+ * @param initialDelayMs initial delay in milliseconds (default: 500)
+ */
+async function retryWithBackoff<T>(
+  fn: () => Promise<T>,
+  maxRetries = 3,
+  initialDelayMs = 500,
+): Promise<T> {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await fn()
+    } catch (error) {
+      // On last attempt, throw the error
+      if (attempt === maxRetries - 1) {
+        throw error
+      }
+
+      // Exponential backoff: 500ms, 1000ms, 2000ms
+      const delayMs = initialDelayMs * Math.pow(2, attempt)
+      await new Promise(resolve => setTimeout(resolve, delayMs))
+    }
+  }
+
+  // TypeScript safety - should never reach here
+  throw new Error('Retry logic error')
+}
+
+/**
  * Finds and downloads the latest feed content
  *
  * @param bee Bee client
@@ -37,6 +71,34 @@ export async function getFeedData(
 
     return bee.downloadChunk(chunkReference, requestOptions)
   })
+}
+
+/**
+ * Finds and downloads the latest feed content with retry logic
+ *
+ * Use this variant when reading feed data immediately after a write operation
+ * to handle eventual consistency issues with Bee gateways (issue #259)
+ *
+ * @param bee Bee client
+ * @param topic topic for calculation swarm chunk
+ * @param address Ethereum address for calculation swarm chunk
+ * @param requestOptions download chunk requestOptions
+ * @param maxRetries maximum number of retry attempts (default: 3)
+ * @param initialDelayMs initial delay in milliseconds (default: 500)
+ */
+export async function getFeedDataWithRetry(
+  bee: Bee,
+  topic: string,
+  address: EthAddress | Uint8Array,
+  requestOptions?: BeeRequestOptions,
+  maxRetries = 3,
+  initialDelayMs = 500,
+): Promise<LookupAnswer> {
+  return retryWithBackoff(
+    () => getFeedData(bee, topic, address, requestOptions),
+    maxRetries,
+    initialDelayMs,
+  )
 }
 
 /**
