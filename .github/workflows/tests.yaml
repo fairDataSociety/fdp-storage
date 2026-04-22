@@ -39,7 +39,10 @@ jobs:
         run: npm install -g @fairdatasociety/fdp-play@3.2.0
 
       - name: Run fdp-play
-        run: fdp-play start -d --bee-version $BEE_VERSION --fdp-contracts
+        run: fdp-play start -d --bee-version $BEE_VERSION
+
+      - name: Run fdp-contracts
+        run: docker run -d -p 8545:9545 fairdatasociety/fdp-contracts-blockchain:latest
 
       ## Try getting the node modules from cache, if failed npm ci
       - uses: actions/cache@v3
@@ -93,7 +96,10 @@ jobs:
         run: npm install -g @fairdatasociety/fdp-play@3.2.0
 
       - name: Run fdp-play
-        run: fdp-play start -d --fairos --fairos-image $FAIROS_IMAGE --bee-version $BEE_VERSION --fdp-contracts
+        run: fdp-play start -d --fairos --fairos-image $FAIROS_IMAGE --bee-version $BEE_VERSION
+
+      - name: Run fdp-contracts
+        run: docker run -d -p 8545:9545 fairdatasociety/fdp-contracts-blockchain:latest
 
       ## Try getting the node modules from cache, if failed npm ci
       - uses: actions/cache@v3
@@ -144,7 +150,10 @@ jobs:
         run: npm install -g @fairdatasociety/fdp-play@3.2.0
 
       - name: Run fdp-play
-        run: fdp-play start -d --bee-version $BEE_VERSION --fdp-contracts
+        run: fdp-play start -d --bee-version $BEE_VERSION
+
+      - name: Run fdp-contracts
+        run: docker run -d -p 8545:9545 fairdatasociety/fdp-contracts-blockchain:latest
 
       ## Try getting the node modules from cache, if failed npm ci
       - uses: actions/cache@v3
