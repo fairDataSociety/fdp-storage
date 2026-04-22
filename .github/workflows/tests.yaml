@@ -36,7 +36,7 @@ jobs:
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login https://docker.pkg.github.com -u ${GITHUB_ACTOR} --password-stdin
 
       - name: Install fdp-play
-        run: npm install -g @fairdatasociety/fdp-play
+        run: npm install -g @fairdatasociety/fdp-play@3.0.0
 
       - name: Run fdp-play
         run: fdp-play start -d --bee-version $BEE_VERSION
@@ -147,7 +147,7 @@ jobs:
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login https://docker.pkg.github.com -u ${GITHUB_ACTOR} --password-stdin
 
       - name: Install fdp-play
-        run: npm install -g @fairdatasociety/fdp-play
+        run: npm install -g @fairdatasociety/fdp-play@3.0.0
 
       - name: Run fdp-play
         run: fdp-play start -d --bee-version $BEE_VERSION
