@@ -36,13 +36,10 @@ jobs:
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login https://docker.pkg.github.com -u ${GITHUB_ACTOR} --password-stdin
 
       - name: Install fdp-play
-        run: npm install -g @fairdatasociety/fdp-play@3.0.0
+        run: npm install -g @fairdatasociety/fdp-play@3.1.0
 
       - name: Run fdp-play
-        run: fdp-play start -d --bee-version $BEE_VERSION
-
-      - name: Run fdp-contracts
-        run: docker run -d -p 8545:9545 fairdatasociety/fdp-contracts-blockchain:latest
+        run: fdp-play start -d --bee-version $BEE_VERSION --fdp-contracts
 
       ## Try getting the node modules from cache, if failed npm ci
       - uses: actions/cache@v3
@@ -93,13 +90,10 @@ jobs:
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login https://docker.pkg.github.com -u ${GITHUB_ACTOR} --password-stdin
 
       - name: Install fdp-play
-        run: npm install -g @fairdatasociety/fdp-play@3.0.0
+        run: npm install -g @fairdatasociety/fdp-play@3.1.0
 
       - name: Run fdp-play
-        run: fdp-play start -d --fairos --fairos-image $FAIROS_IMAGE --bee-version $BEE_VERSION
-
-      - name: Run fdp-contracts
-        run: docker run -d -p 8545:9545 fairdatasociety/fdp-contracts-blockchain:latest
+        run: fdp-play start -d --fairos --fairos-image $FAIROS_IMAGE --bee-version $BEE_VERSION --fdp-contracts
 
       ## Try getting the node modules from cache, if failed npm ci
       - uses: actions/cache@v3
@@ -147,13 +141,10 @@ jobs:
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login https://docker.pkg.github.com -u ${GITHUB_ACTOR} --password-stdin
 
       - name: Install fdp-play
-        run: npm install -g @fairdatasociety/fdp-play@3.0.0
+        run: npm install -g @fairdatasociety/fdp-play@3.1.0
 
       - name: Run fdp-play
-        run: fdp-play start -d --bee-version $BEE_VERSION
-
-      - name: Run fdp-contracts
-        run: docker run -d -p 8545:9545 fairdatasociety/fdp-contracts-blockchain:latest
+        run: fdp-play start -d --bee-version $BEE_VERSION --fdp-contracts
 
       ## Try getting the node modules from cache, if failed npm ci
       - uses: actions/cache@v3
