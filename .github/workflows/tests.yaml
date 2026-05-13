@@ -40,7 +40,7 @@ jobs:
         run: npm install -g @fairdatasociety/fdp-play@3.1.0
 
       - name: Run fdp-play
-        run: fdp-play start -d --bee-version $BEE_VERSION
+        run: fdp-play start -d --workers 1 --bee-version $BEE_VERSION
 
       - name: Run fdp-contracts sidecar
         run: docker run -d -p 8545:9545 fairdatasociety/fdp-contracts-blockchain:latest
@@ -98,7 +98,7 @@ jobs:
         run: npm install -g @fairdatasociety/fdp-play@3.1.0
 
       - name: Run fdp-play
-        run: fdp-play start -d --fairos --fairos-image $FAIROS_IMAGE --bee-version $BEE_VERSION
+        run: fdp-play start -d --workers 1 --fairos --fairos-image $FAIROS_IMAGE --bee-version $BEE_VERSION
 
       - name: Run fdp-contracts sidecar
         run: docker run -d -p 8545:9545 fairdatasociety/fdp-contracts-blockchain:latest
@@ -153,7 +153,7 @@ jobs:
         run: npm install -g @fairdatasociety/fdp-play@3.1.0
 
       - name: Run fdp-play
-        run: fdp-play start -d --bee-version $BEE_VERSION
+        run: fdp-play start -d --workers 1 --bee-version $BEE_VERSION
 
       - name: Run fdp-contracts sidecar
         run: docker run -d -p 8545:9545 fairdatasociety/fdp-contracts-blockchain:latest
