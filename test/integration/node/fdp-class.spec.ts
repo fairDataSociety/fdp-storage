@@ -896,8 +896,8 @@ describe('Fair Data Protocol class', () => {
       await fdpWithCache.personalStorage.create(pod1)
       // for the first feed write it should be the highest level
       expect(writeFeedDataSpy.mock.calls[0][5]?.level).toEqual(HIGHEST_LEVEL)
-      // getting V1 pods info + V2 pods info + V2 pods info for data uploading + 2 additional calls
-      expect(getFeedDataSpy).toBeCalledTimes(5)
+      // getting V1 pods info + V2 pods info + V2 pods info for data uploading + 2 additional calls + 1 deleteFeedData path
+      expect(getFeedDataSpy).toBeCalledTimes(6)
       // calculating wallet by index for the pod
       expect(getWalletByIndexSpy).toBeCalledTimes(1)
 
