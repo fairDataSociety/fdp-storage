@@ -1,0 +1,194 @@
+From 0538bce523c1393af5e3987f71a06f808805a120 Mon Sep 17 00:00:00 2001
+From: Miles <gregor+miles@datafund.io>
+Date: Wed, 13 May 2026 11:22:59 +0000
+Subject: [PATCH 1/2] chore: update patch to reflect iteration-4 CI fix
+ (restore sidecar + fdp-play 3.1.0)
+
+---
+ fix-ci-contracts-305.patch | 91 ++++++++++++++------------------------
+ 1 file changed, 34 insertions(+), 57 deletions(-)
+
+diff --git a/fix-ci-contracts-305.patch b/fix-ci-contracts-305.patch
+index 1f8476b..f3edd70 100644
+--- a/fix-ci-contracts-305.patch
++++ b/fix-ci-contracts-305.patch
+@@ -1,80 +1,57 @@
+-From e247d26afde9ca7a1e4dc20dae7ba3caea66c72e Mon Sep 17 00:00:00 2001
++From 5bb4d210e7098f02172a56d05bb771154f07cb11 Mon Sep 17 00:00:00 2001
+ From: Miles <gregor+miles@datafund.io>
+-Date: Wed, 13 May 2026 07:38:07 +0000
+-Subject: [PATCH] =?UTF-8?q?fix(ci):=20bump=20fdp-play=203.0.0=E2=86=923.1.?=
+- =?UTF-8?q?0=20+=20use=20--fdp-contracts=20across=20all=20jobs?=
+-MIME-Version: 1.0
+-Content-Type: text/plain; charset=UTF-8
+-Content-Transfer-Encoding: 8bit
++Date: Wed, 13 May 2026 10:36:06 +0000
++Subject: [PATCH] fix(ci): restore fdp-contracts sidecar + keep fdp-play 3.1.0
+ 
+-fdp-play 3.1.0 (2024-06-14) added two things that make it the sweet spot:
+-1. `--fdp-contracts` flag (PR #123) — embeds ENS contract deployment in fdp-play
+-   itself, eliminating the separate fdp-contracts-blockchain:latest sidecar that
+-   was drifting out of sync with fdp-contracts-js@3.11.0
+-2. bee 1.13 worker node compatibility (commit f903da74 "build: ethereum client 1.13")
+-   — 3.0.0 was built for bee 1.17.2; worker nodes timed out with bee 1.13.0 in CI
++fdp-play 3.1.0 fixes the queen-node timeout with bee 1.13.0.
++But --fdp-contracts deploys Ganache internally on a non-8545 port,
++so nodejs/browser tests get ECONNREFUSED and FairOS signup gets
++"no contract code at given address".
+ 
+-fdp-play 3.2.0 (2024-09-12) broke queen-node startup with bee 1.13.0 (status 404,
+-~27s in) because it targeted bee 2.2 — so 3.1.0 is the only version with both
+-the flag AND bee 1.13 compatibility.
+-
+-Changes: all three jobs (nodejs, fairos, browser) updated identically.
+-Removes the three `docker run fdp-contracts-blockchain:latest` sidecar steps.
+-
+-Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
++Fix: run fdp-play WITHOUT --fdp-contracts (queen works in 3.1.0),
++and restore the fdp-contracts-blockchain sidecar container on port 8545.
++This is the hybrid that resolves both failure modes simultaneously.
+ ---
+- .github/workflows/tests.yaml | 21 ++++++---------------
+- 1 file changed, 6 insertions(+), 15 deletions(-)
++ .github/workflows/tests.yaml | 15 ++++++++++++---
++ 1 file changed, 12 insertions(+), 3 deletions(-)
+ 
+ diff --git a/.github/workflows/tests.yaml b/.github/workflows/tests.yaml
+-index 64b5ff6..b4a101b 100644
++index b4a101b..5e013d9 100644
+ --- a/.github/workflows/tests.yaml
+ +++ b/.github/workflows/tests.yaml
+-@@ -36,13 +36,10 @@ jobs:
+-           echo "${{ secrets.GITHUB_TOKEN }}" | docker login https://docker.pkg.github.com -u ${GITHUB_ACTOR} --password-stdin
+- 
+-       - name: Install fdp-play
+--        run: npm install -g @fairdatasociety/fdp-play@3.0.0
+-+        run: npm install -g @fairdatasociety/fdp-play@3.1.0
++@@ -39,7 +39,10 @@ jobs:
++         run: npm install -g @fairdatasociety/fdp-play@3.1.0
+  
+        - name: Run fdp-play
+--        run: fdp-play start -d --bee-version $BEE_VERSION
+--
+--      - name: Run fdp-contracts
+--        run: docker run -d -p 8545:9545 fairdatasociety/fdp-contracts-blockchain:latest
+-+        run: fdp-play start -d --bee-version $BEE_VERSION --fdp-contracts
++-        run: fdp-play start -d --bee-version $BEE_VERSION --fdp-contracts
+++        run: fdp-play start -d --bee-version $BEE_VERSION
+++
+++      - name: Run fdp-contracts sidecar
+++        run: docker run -d -p 8545:9545 fairdatasociety/fdp-contracts-blockchain:latest
+  
+        ## Try getting the node modules from cache, if failed npm ci
+        - uses: actions/cache@v3
+-@@ -93,13 +90,10 @@ jobs:
+-           echo "${{ secrets.GITHUB_TOKEN }}" | docker login https://docker.pkg.github.com -u ${GITHUB_ACTOR} --password-stdin
+- 
+-       - name: Install fdp-play
+--        run: npm install -g @fairdatasociety/fdp-play@3.0.0
+-+        run: npm install -g @fairdatasociety/fdp-play@3.1.0
++@@ -93,7 +96,10 @@ jobs:
++         run: npm install -g @fairdatasociety/fdp-play@3.1.0
+  
+        - name: Run fdp-play
+--        run: fdp-play start -d --fairos --fairos-image $FAIROS_IMAGE --bee-version $BEE_VERSION
+--
+--      - name: Run fdp-contracts
+--        run: docker run -d -p 8545:9545 fairdatasociety/fdp-contracts-blockchain:latest
+-+        run: fdp-play start -d --fairos --fairos-image $FAIROS_IMAGE --bee-version $BEE_VERSION --fdp-contracts
++-        run: fdp-play start -d --fairos --fairos-image $FAIROS_IMAGE --bee-version $BEE_VERSION --fdp-contracts
+++        run: fdp-play start -d --fairos --fairos-image $FAIROS_IMAGE --bee-version $BEE_VERSION
+++
+++      - name: Run fdp-contracts sidecar
+++        run: docker run -d -p 8545:9545 fairdatasociety/fdp-contracts-blockchain:latest
+  
+        ## Try getting the node modules from cache, if failed npm ci
+        - uses: actions/cache@v3
+-@@ -147,13 +141,10 @@ jobs:
+-           echo "${{ secrets.GITHUB_TOKEN }}" | docker login https://docker.pkg.github.com -u ${GITHUB_ACTOR} --password-stdin
+- 
+-       - name: Install fdp-play
+--        run: npm install -g @fairdatasociety/fdp-play@3.0.0
+-+        run: npm install -g @fairdatasociety/fdp-play@3.1.0
++@@ -144,7 +150,10 @@ jobs:
++         run: npm install -g @fairdatasociety/fdp-play@3.1.0
+  
+        - name: Run fdp-play
+--        run: fdp-play start -d --bee-version $BEE_VERSION
+--
+--      - name: Run fdp-contracts
+--        run: docker run -d -p 8545:9545 fairdatasociety/fdp-contracts-blockchain:latest
+-+        run: fdp-play start -d --bee-version $BEE_VERSION --fdp-contracts
++-        run: fdp-play start -d --bee-version $BEE_VERSION --fdp-contracts
+++        run: fdp-play start -d --bee-version $BEE_VERSION
+++
+++      - name: Run fdp-contracts sidecar
+++        run: docker run -d -p 8545:9545 fairdatasociety/fdp-contracts-blockchain:latest
+  
+        ## Try getting the node modules from cache, if failed npm ci
+        - uses: actions/cache@v3
+-- 
+2.43.0
+
+
+From 2e0815018956b401b7c4e627200270b3d9dda8d5 Mon Sep 17 00:00:00 2001
+From: Miles <gregor+miles@datafund.io>
+Date: Wed, 13 May 2026 12:31:47 +0000
+Subject: [PATCH 2/2] =?UTF-8?q?fix(ci):=20bump=20fdp-contracts-js=20to=203?=
+ =?UTF-8?q?.12.0=20in=20lock=20file=20=E2=80=94=20aligns=20with=20sidecar?=
+ =?UTF-8?q?=20addresses?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+fdp-contracts-blockchain:latest (v2.10.0, 2024-03-20) deployed contracts at
+addresses matching fdp-contracts-js@3.12.0. The lock file was pinned to 3.11.0
+which has the OLD addresses (before the 2024-03-20 redeployment), causing all
+ENS/registration tests to fail with CALL_EXCEPTION.
+
+Root cause: fdp-contracts/commit a4d991c (2024-03-20) redeployed contracts and
+bumped the Docker image to v2.10.0 and released js-lib 3.12.0. The lock file
+was never updated to match.
+
+ENS registry address change:
+  OLD (3.11.0): 0xDb56f2e9369E0D7bD191099125a3f6C370F8ed15
+  NEW (3.12.0): 0xE57492bF96a296D59ab31522f30b808f0c60e8ca
+
+Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
+---
+ package-lock.json | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/package-lock.json b/package-lock.json
+index bfdcfd2..2d4c620 100644
+--- a/package-lock.json
++++ b/package-lock.json
+@@ -3296,9 +3296,9 @@
+       }
+     },
+     "node_modules/@fairdatasociety/fdp-contracts-js": {
+-      "version": "3.11.0",
+-      "resolved": "https://registry.npmjs.org/@fairdatasociety/fdp-contracts-js/-/fdp-contracts-js-3.11.0.tgz",
+-      "integrity": "sha512-TomzmqKlKYetmzwbGtPp20XAvHzP6Td1r8pouAPe8uCmnW4Fu7OT06z2VEhy9WuApleUx++jqFxTyzfIqFPhrA==",
++      "version": "3.12.0",
++      "resolved": "https://registry.npmjs.org/@fairdatasociety/fdp-contracts-js/-/fdp-contracts-js-3.12.0.tgz",
++      "integrity": "sha512-pfmRucv40GMGAMfXB8hFDRvdxkY5nX172dQFnWh4vGCS2iRKbz6p78cqnF8Xyu9lYSjtSVEWAnXOk9Yug6X5OQ==",
+       "peerDependencies": {
+         "ethers": ">=5.6.4"
+       }
+@@ -17553,9 +17553,9 @@
+       }
+     },
+     "@fairdatasociety/fdp-contracts-js": {
+-      "version": "3.11.0",
+-      "resolved": "https://registry.npmjs.org/@fairdatasociety/fdp-contracts-js/-/fdp-contracts-js-3.11.0.tgz",
+-      "integrity": "sha512-TomzmqKlKYetmzwbGtPp20XAvHzP6Td1r8pouAPe8uCmnW4Fu7OT06z2VEhy9WuApleUx++jqFxTyzfIqFPhrA==",
++      "version": "3.12.0",
++      "resolved": "https://registry.npmjs.org/@fairdatasociety/fdp-contracts-js/-/fdp-contracts-js-3.12.0.tgz",
++      "integrity": "sha512-pfmRucv40GMGAMfXB8hFDRvdxkY5nX172dQFnWh4vGCS2iRKbz6p78cqnF8Xyu9lYSjtSVEWAnXOk9Yug6X5OQ==",
+       "requires": {}
+     },
+     "@fluffy-spoon/substitute": {
+-- 
+2.43.0
+
