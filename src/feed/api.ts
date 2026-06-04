@@ -1,4 +1,5 @@
 import { Bee, Data, Reference, BeeRequestOptions, Utils, Signer } from '@ethersphere/bee-js'
+import * as feedApiSelf from './api'
 import { bmtHashString } from '../account/utils'
 import { getId } from './handler'
 import { lookup } from './lookup/linear'
@@ -95,7 +96,7 @@ export async function getFeedDataWithRetry(
   initialDelayMs = 500,
 ): Promise<LookupAnswer> {
   return retryWithBackoff(
-    () => getFeedData(bee, topic, address, requestOptions),
+    () => feedApiSelf.getFeedData(bee, topic, address, requestOptions),
     maxRetries,
     initialDelayMs,
   )
